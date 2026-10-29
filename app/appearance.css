@@ -1,0 +1,93 @@
+/* Color mode is independent from Paint/Pixel. Both styles resolve these exact tokens. */
+:root,html[data-color-mode='light']{
+ --canvas:#fff;--paper:#fff;--surface:#f7f7f8;--surface-raised:#fff;--subtle:#eeeeF1;
+ --ink:#18181c;--muted:#62626b;--line:#d9d9df;--line-strong:#9898a3;
+ --accent:#2563eb;--accent-hover:#1d4ed8;--accent-ink:#fff;--accent-soft:#edf3ff;
+ --sage:#ededf0;--forest:var(--accent);--apricot:var(--accent-soft);
+ --danger:#b42318;--danger-fill:#b42318;--success:#147d48;--warning:#a02c85;
+ --shadow:0 2px 5px #00000012;--shadow-hover:0 4px 10px #0000001c;--panel-shadow:0 12px 40px #00000020;
+ --overlay:#00000050;--board-world:#c8e0cf;color-scheme:light;
+}
+html[data-color-mode='dark']{
+ --canvas:#000;--paper:#000;--surface:#101012;--surface-raised:#19191d;--subtle:#242429;
+ --ink:#f4f4f5;--muted:#a1a1aa;--line:#303036;--line-strong:#62626d;
+ --accent:#7da7ff;--accent-hover:#a3c0ff;--accent-ink:#08152f;--accent-soft:#15233e;
+ --sage:#232328;--forest:var(--accent);--apricot:var(--accent-soft);
+ --danger:#ff8a80;--danger-fill:#b42318;--success:#5fd79a;--warning:#eca5e3;
+ --shadow:0 2px 6px #00000080;--shadow-hover:0 4px 12px #000000a0;--panel-shadow:0 12px 45px #000000b0;
+ --overlay:#0000009c;color-scheme:dark;
+}
+html[data-color-mode][data-theme],html[data-color-mode][data-theme] body{background:var(--canvas);color:var(--ink)}
+html[data-color-mode][data-theme] ::selection{background:var(--accent);color:var(--accent-ink)}
+html[data-color-mode][data-theme] :is(button,a,summary,input,select,textarea,[role=button],[role=separator]):focus-visible{outline-color:var(--accent)}
+html[data-color-mode][data-theme] :is(input,select,textarea){accent-color:var(--accent)}
+html[data-color-mode][data-theme] :is(.field input,.field select,.library-search input,.replay-transport select){background:var(--surface-raised);border-color:var(--line);color:var(--ink)}
+html[data-color-mode][data-theme] :is(input,textarea)::placeholder{color:var(--muted);opacity:.8}
+html[data-color-mode][data-theme] :is(.field input,.field select,.library-search input,.replay-transport select):hover{border-color:var(--line-strong)}
+html[data-color-mode][data-theme] :is(.button,.action-button,.class-option,.binding-slot,.game-options){box-shadow:var(--shadow)}
+html[data-color-mode][data-theme] .button{border-color:var(--line-strong)}
+html[data-color-mode][data-theme] .button.paper{background:var(--surface-raised);color:var(--ink)}
+html[data-color-mode][data-theme] .button.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+html[data-color-mode][data-theme] .button:hover:not(:disabled){box-shadow:var(--shadow-hover);filter:none}
+html[data-color-mode][data-theme] .button.primary:hover:not(:disabled){background:var(--accent-hover);border-color:var(--accent-hover)}
+html[data-color-mode][data-theme] .button.paper:hover:not(:disabled){background:var(--sage);border-color:var(--line-strong)}
+html[data-color-mode][data-theme] .button:active:not(:disabled){box-shadow:none}
+html[data-color-mode][data-theme] .button.danger{background:var(--danger-fill);border-color:var(--danger-fill);color:#fff}
+html[data-color-mode][data-theme] :is(.danger-text,.leave-button,.lobby-exit button:last-child){color:var(--danger)}
+html[data-color-mode][data-theme] :is(.text-button,.icon-button,button.brand):hover:not(:disabled){background:var(--sage);color:var(--ink)}
+html[data-color-mode][data-theme] .brand-die{background:var(--accent-soft);border-color:var(--ink);box-shadow:2px 2px 0 var(--line-strong);color:var(--ink)}
+html[data-color-mode][data-theme] :is(.menu-copy>p,.menu-caption,.menu-footer,.hand-note,.map-corner,.ready-label,.you-mark,.health-row i,.party-objective .mono,.scene-heading .mono,.round-label>svg,.map-compass>span,.target-summary,.action-button>kbd,.action-button>small,.action-hint,.entry-symbol,.journal-entry p,.journal-entry.system p,.journal-entry.story .mono,.play-footer,.chapter-copy>div>span,.budget-banner>span,.integration-list article>svg){color:var(--muted)}
+html[data-color-mode][data-theme] :is(.chapter-copy>p,.journal-entry.story p){color:var(--ink)}
+html[data-color-mode][data-theme] :is(.menu-copy h1 em,.small-stars){color:var(--accent)}
+html[data-color-mode][data-theme] .menu-links button{text-decoration-color:var(--line-strong)}
+html[data-color-mode][data-theme] .menu-footer i{background:var(--muted)}
+html[data-color-mode][data-theme] :is(.illustration-frame,.map-title){background:var(--surface);box-shadow:var(--shadow);border-color:var(--line)}
+html[data-color-mode][data-theme] .class-option{background:var(--surface-raised);border-color:var(--line)}
+html[data-color-mode][data-theme] .class-option:hover{background:var(--sage);border-color:var(--line-strong)}
+html[data-color-mode][data-theme] .class-option.selected{background:var(--accent-soft);border-color:var(--accent);box-shadow:var(--shadow)}
+html[data-color-mode][data-theme] .class-check{background:var(--accent);color:var(--accent-ink)}
+html[data-color-mode][data-theme] :is(.segmented,.theme-toggle,.color-mode-toggle){background:var(--surface);border-color:var(--line)}
+html[data-color-mode][data-theme] :is(.segmented button,.theme-toggle button,.color-mode-toggle button){color:var(--muted)}
+html[data-color-mode][data-theme] :is(.segmented button,.theme-toggle button,.color-mode-toggle button):hover:not(:disabled){background:var(--sage);color:var(--ink)}
+html[data-color-mode][data-theme] :is(.segmented .active,.theme-toggle button[aria-pressed=true],.color-mode-toggle button[aria-pressed=true]){background:var(--surface-raised);border-color:var(--line);box-shadow:var(--shadow);color:var(--ink)}
+html[data-color-mode][data-theme] :is(.theme-toggle button[aria-pressed=true],.color-mode-toggle button[aria-pressed=true]):hover{background:var(--surface-raised);box-shadow:var(--shadow-hover)}
+html[data-color-mode][data-theme] .input-button button{background:var(--surface)}
+html[data-color-mode][data-theme] .input-button button:hover{background:var(--sage);color:var(--ink)}
+html[data-color-mode][data-theme] :is(.invite-ticket,.lobby-player,.rules-note,.budget-banner,.narrator-portrait,.roll-die,.leave-confirm){background:var(--surface);border-color:var(--line);color:var(--ink)}
+html[data-color-mode][data-theme] .mini-panorama{border-color:var(--line);box-shadow:var(--shadow)}
+html[data-color-mode][data-theme] .ready-label.ready{color:var(--success)}
+html[data-color-mode][data-theme] .live-dot{background:var(--success)}
+html[data-color-mode][data-theme] .connection.offline .live-dot{background:var(--warning)}
+html[data-color-mode][data-theme] .live-dot.waiting{background:var(--muted)}
+html[data-color-mode][data-theme] .party-member:hover{background:var(--sage)}
+html[data-color-mode][data-theme] .party-member.active{background:var(--accent-soft);border-color:var(--accent)}
+html[data-color-mode][data-theme] .health-track{background:var(--subtle)}
+html[data-color-mode][data-theme] .health-track>span{background:var(--success)}
+html[data-color-mode][data-theme] .shard-progress>span{background:var(--surface);border-color:var(--line);color:var(--muted)}
+html[data-color-mode][data-theme] .shard-progress>span.collected{background:var(--accent-soft);border-color:var(--accent);color:var(--accent)}
+html[data-color-mode][data-theme] .board-container{background:var(--surface);border-color:var(--line-strong);box-shadow:var(--shadow)}
+html[data-color-mode][data-theme] .board-caption{background:var(--surface);border-color:var(--line);color:var(--ink)}
+html[data-color-mode][data-theme] .board-viewport{background:var(--board-world)}
+html[data-color-mode][data-theme] .board-tools{background:var(--surface-raised);border-color:var(--line-strong);box-shadow:var(--shadow);color:var(--ink)}
+html[data-color-mode][data-theme] .board-tools button:hover{background:var(--sage)}
+html[data-color-mode][data-theme] .board-note{color:var(--muted);background:var(--surface-raised)}
+html[data-color-mode][data-theme] .game-board .tile-hit.reachable:hover,html[data-color-mode][data-theme] .game-board .tile-hit.reachable:focus-visible{fill:var(--accent);stroke:var(--accent)}
+html[data-color-mode][data-theme] .board-actor:hover>ellipse{stroke:var(--accent)}
+html[data-color-mode][data-theme] .action-button{background:var(--surface-raised);border-color:var(--line);color:var(--ink)}
+html[data-color-mode][data-theme] .action-button:hover:not(:disabled),html[data-color-mode][data-theme] .action-button.chosen{background:var(--accent-soft);border-color:var(--accent);box-shadow:var(--shadow);color:var(--ink)}
+html[data-color-mode][data-theme] .action-button.quest-action{background:var(--accent-soft);border-color:var(--accent)}
+html[data-color-mode][data-theme] .journal-entry{border-color:var(--line)}
+html[data-color-mode][data-theme] .modal{background:var(--paper);border-color:var(--line-strong);box-shadow:var(--panel-shadow);color:var(--ink)}
+html[data-color-mode][data-theme] .modal-head{background:var(--paper)}
+html[data-color-mode][data-theme] .modal::backdrop{background:var(--overlay)}
+html[data-color-mode][data-theme] :is(.drawer-backdrop,.drawer-backdrop:hover,.replay-scrim){background:var(--overlay)}
+html[data-color-mode][data-theme] :is(.resizable-layout .party-rail.drawer-open,.resizable-layout .story-rail.drawer-open,.replay-sidebar.open){box-shadow:var(--panel-shadow)}
+html[data-color-mode][data-theme] .toast{background:var(--surface-raised);border-color:var(--line-strong);box-shadow:var(--panel-shadow);color:var(--ink)}
+html[data-color-mode][data-theme] .toast button:hover{background:var(--sage)}
+html[data-color-mode][data-theme] .game-options{background:var(--surface-raised);border-color:var(--line);box-shadow:var(--panel-shadow)}
+html[data-color-mode][data-theme] .binding-slot{box-shadow:var(--shadow)}
+html[data-color-mode][data-theme] .replay-timeline input{accent-color:var(--accent)}
+.appearance-settings .settings-row{gap:16px}.appearance-settings .settings-row>strong{font-size:13px}
+.color-mode-toggle{display:flex;gap:3px;padding:3px;border:1px solid var(--line);border-radius:7px}
+.color-mode-toggle button{border-radius:4px;padding:9px 13px;min-height:38px;min-width:64px;font-size:12px;font-weight:500}
+@media(max-width:420px){.color-mode-toggle button{min-width:54px;padding:9px 10px}.appearance-settings .settings-row{flex-wrap:wrap}.appearance-settings .settings-row .color-mode-toggle{margin-left:auto}}

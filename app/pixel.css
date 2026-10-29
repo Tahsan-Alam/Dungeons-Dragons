@@ -1,76 +1,17 @@
 @font-face{font-family:'Pixelify Sans';src:url('/fonts/pixelify-sans.ttf') format('truetype');font-style:normal;font-weight:400 700;font-display:swap}
 
-/* A shared line box keeps chrome in place when the display font changes. */
+/* Art style changes shapes, typography and SVG artwork. Color lives in appearance.css. */
 .rail-heading h2,.scene-heading h1,.party-objective h3,.modal-head h2,.setup-title h1,.lobby-heading h1,.section-heading h2,.adventure-settings h2,.lobby-adventure h2,.help-grid h3,.character-detail h3,.integration-list h3{line-height:1.2}
-
-/* Only presentation changes. No grid, spacing, control size, or position changes. */
-html[data-theme='pixel']{--paper:#f0edda;--surface:#faf4df;--ink:#283b36;--sage:#d2dfb9;--forest:#365744;--apricot:#e5a16d;--muted:#6c7d60;--line:#b2bea0;--shadow:3px 4px 0 #61755850;--heading:'Pixelify Sans',Georgia,serif}
-html[data-theme='pixel'] body{background-color:var(--paper)}
-html[data-theme='pixel'] .menu-copy h1{letter-spacing:-.035em}
-html[data-theme='pixel'] .menu-copy h1 em{font-style:normal;color:#527b50}
-html[data-theme='pixel'] :is(.button,.icon-button,.brand-die,.class-option,.class-check,.field input,.field select,.segmented,.segmented button,.input-button button,.invite-ticket,.lobby-player,.lobby-portrait,.mini-panorama,.party-member,.party-avatar,.health-track,.turn-marker,.shard-progress>span,.board-container,.board-tools,.board-tools button,.board-note,.action-button,.narrator-portrait,.roll-die,.modal,.rules-note,.budget-banner,.detail-portrait,.toast,.theme-toggle,.theme-toggle button,kbd){border-radius:0}
-html[data-theme='pixel'] :is(.button,.class-option.selected,.modal,.toast,.board-container,.mini-panorama){box-shadow:3px 4px 0 #61755850}
-html[data-theme='pixel'] .button:hover:not(:disabled){box-shadow:3px 6px 0 #52674f70}
-html[data-theme='pixel'] .button:active:not(:disabled){box-shadow:none}
-html[data-theme='pixel'] .button.primary{background:#365744;color:#fff3ca}
+html[data-theme='pixel']{--heading:'Pixelify Sans',Georgia,serif}
+html[data-theme='pixel'] :is(.button,.icon-button,.brand-die,.class-option,.class-check,.field input,.field select,.segmented,.segmented button,.input-button button,.invite-ticket,.lobby-player,.lobby-portrait,.mini-panorama,.party-member,.party-avatar,.health-track,.turn-marker,.shard-progress>span,.board-container,.board-tools,.board-tools button,.board-note,.action-button,.narrator-portrait,.roll-die,.modal,.rules-note,.budget-banner,.detail-portrait,.toast,.theme-toggle,.theme-toggle button,.color-mode-toggle,.color-mode-toggle button,.leave-confirm,.modal-head,.text-button,button.brand,kbd){border-radius:0}
 html[data-theme='pixel'] :is(.brand-die,.narrator-portrait,.roll-die,.invite-ticket){transform:none}
-html[data-theme='pixel'] .brand-die{box-shadow:3px 3px 0 var(--ink)}
-html[data-theme='pixel'] .illustration-frame{border-radius:0;box-shadow:8px 8px 0 #849a6a45;transform:none;background:#e2e8ce}
-html[data-theme='pixel'] .map-title{border-radius:0;transform:translateX(-50%);box-shadow:4px 4px 0 #61755850;background:#f7efd1}
-html[data-theme='pixel'] .map-title span{color:#365744}
-html[data-theme='pixel'] .hand-note{font-style:normal;transform:none;color:#698358}
-html[data-theme='pixel'] :is(.field input,.field select){border-color:#9dac8e;background:#faf4df;box-shadow:inset 2px 2px 0 #b5bd9a25}
-html[data-theme='pixel'] .class-option{border-color:#b7c2a2;background:#f8f1db}
-html[data-theme='pixel'] .class-option:hover{background:#dce6c5;border-color:#88a175}
-html[data-theme='pixel'] .class-option.selected{background:#d5e1ba;border-color:#365744}
-html[data-theme='pixel'] .class-check{background:#365744;color:#fff3ca}
-html[data-theme='pixel'] .segmented{background:#cdd9b8;border-color:#a7b996}
-html[data-theme='pixel'] .segmented .active{border-color:#7f9770;box-shadow:2px 2px 0 #647f5b40;background:#faf4df}
-html[data-theme='pixel'] .input-button button{background:#d2dfb9}
-html[data-theme='pixel'] .invite-ticket{background:#e9dfb9;border-style:solid;border-color:#a9af7d}
-html[data-theme='pixel'] .lobby-player{background:#f7f1dc;border-color:#b2bea0}
-html[data-theme='pixel'] .ready-label.ready{color:#416e42}
-html[data-theme='pixel'] :is(.live-dot,.menu-footer i){border-radius:0;background:#6e945c}
-html[data-theme='pixel'] .connection.offline .live-dot{background:#c88d4b}
-html[data-theme='pixel'] .party-member:hover{background:#dce5c6}
-html[data-theme='pixel'] .party-member.active{background:#d2dfb9;border-color:#90a67a}
-html[data-theme='pixel'] .health-track{background:#c5d1ad}
-html[data-theme='pixel'] .health-track>span{background:#5b854e}
-html[data-theme='pixel'] .shard-progress>span{border-style:solid;border-color:#a5b78e;color:#9caf86}
-html[data-theme='pixel'] .shard-progress>span.collected{background:#e8cd80;border-color:#ae914d;color:#7c5d2b}
-html[data-theme='pixel'] .board-container{border-color:#708b62;background:#d2dfb8}
-html[data-theme='pixel'] .board-caption{background:#dce5c4;border-color:#a3b78d}
-html[data-theme='pixel'] .board-viewport{background:#c5d4a0}
+html[data-theme='pixel'] .illustration-frame{border-radius:0;transform:none}
+html[data-theme='pixel'] .map-title{border-radius:0;transform:translateX(-50%)}
+html[data-theme='pixel'] .hand-note{font-style:normal;transform:none}
+html[data-theme='pixel'] :is(.live-dot,.menu-footer i){border-radius:0}
+html[data-theme='pixel'] .shard-progress>span{border-style:solid}
 html[data-theme='pixel'] .game-board rect{rx:0;ry:0}
-html[data-theme='pixel'] .board-tools{background:#f6efd8f2;border-color:#8fa07b;box-shadow:2px 2px 0 #627b5140}
-html[data-theme='pixel'] .board-tools button:hover{background:#d2dfb9}
-html[data-theme='pixel'] .board-note{background:#d3dfb9dc;color:#5e7952}
-html[data-theme='pixel'] .action-button{border-color:#a7b795;background:#faf4df;box-shadow:0 2px 0 #6f87502b}
-html[data-theme='pixel'] .action-button:hover:not(:disabled),html[data-theme='pixel'] .action-button.chosen{background:#ccddb1;border-color:#698859;box-shadow:0 2px 0 #69885955}
-html[data-theme='pixel'] .action-button.quest-action{background:#e6d38d;border-color:#b49e62}
-html[data-theme='pixel'] .narrator-portrait{background:#cfddb3;border-color:#91a875;color:#61804e}
-html[data-theme='pixel'] .journal-entry{border-color:#d4dbc0}
-html[data-theme='pixel'] .journal-entry.story p{color:#34513b}
-html[data-theme='pixel'] .roll-die{background:#e9dbad;border-color:#9b9f6a;box-shadow:2px 2px 0 #7e8f6430;color:#52673b}
-html[data-theme='pixel'] .modal{background:#f0edda;box-shadow:7px 8px 0 #283b3655}
-html[data-theme='pixel'] .modal::backdrop{background:#283b367a;backdrop-filter:none}
-html[data-theme='pixel'] .rules-note{background:#dce5c6;border-color:#b0c196}
-html[data-theme='pixel'] .budget-banner{background:#cfdfb3;border-color:#9fb88a}
-html[data-theme='pixel'] .toast{background:#283b36;border-color:#a6b98a;box-shadow:4px 4px 0 #7f926b70;color:#fff3ca}
-html[data-theme='pixel'] .theme-toggle{background:#cdd9b8;border-color:#91a77c}
-html[data-theme='pixel'] .theme-toggle button[aria-pressed=true]{background:#faf4df;box-shadow:2px 2px 0 #61755850}
-html[data-theme='pixel'] :is(button,input,select,a,[role=button]):focus-visible{outline-color:#bc8746}
 html[data-theme='pixel'] .pixel-art{image-rendering:pixelated}
-html[data-theme='pixel'] .game-board rect{rx:0;ry:0}
-
-/* The same interaction geometry, rendered with the pixel theme's surfaces. */
-html[data-theme='pixel'] :is(.leave-confirm,.modal-head,.text-button,button.brand){border-radius:0}
 html[data-theme='pixel'] .games-heading h1{font-family:'Pixelify Sans',monospace;letter-spacing:-.02em}
-html[data-theme='pixel'] .button.danger{background:#a34d3e;border-color:#a34d3e;color:#fff3ca}
-html[data-theme='pixel'] .leave-confirm{background:var(--surface);border-color:var(--line);box-shadow:3px 3px 0 #61755830}
-html[data-theme='pixel'] .theme-toggle button:hover:not(:disabled){background:#e5ebd2}
-html[data-theme='pixel'] .theme-toggle button[aria-pressed=true]:hover{background:var(--surface);box-shadow:2px 2px 0 #61755850}
-html[data-theme='pixel'] .text-button:hover:not(:disabled),html[data-theme='pixel'] button.brand:hover{background:#dce5c6;color:var(--forest)}
-html[data-theme='pixel'] .modal-head{background:var(--paper)}
 html[data-theme='pixel'] .chapter-art>.panorama{animation-name:pixel-scene-in}
 @keyframes pixel-scene-in{from{opacity:.6}to{opacity:1}}

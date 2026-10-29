@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import "./pixel.css";
+import "./appearance.css";
+import {APPEARANCE_BOOTSTRAP} from "./ui/appearance";
 import {ThemeProvider} from "./ui/Theme";
 
 export const metadata: Metadata = {
@@ -18,8 +20,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <head><link rel="preload" href="/fonts/pixelify-sans.ttf" as="font" type="font/ttf" crossOrigin="anonymous"/></head>
+    <html lang="en" data-theme="paint" data-color-mode="light" data-color-preference="system" suppressHydrationWarning>
+      <head><script dangerouslySetInnerHTML={{__html:APPEARANCE_BOOTSTRAP}}/><link rel="preload" href="/fonts/pixelify-sans.ttf" as="font" type="font/ttf" crossOrigin="anonymous"/></head>
       <body><ThemeProvider>{children}</ThemeProvider></body>
     </html>
   );
