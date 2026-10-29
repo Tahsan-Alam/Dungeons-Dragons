@@ -1,4 +1,14 @@
 /* Shared, restrained depth. Art changes the corners, not the controls' geometry. */
+/* Icons keep their shape when a label wraps or a control group gets narrower. */
+button>svg{flex-shrink:0}
+.icon-button{flex-shrink:0}
+@media(max-width:420px){
+ .modal-head{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px}
+ .modal-head h2{grid-column:1;grid-row:1;overflow-wrap:normal}
+ .modal-tools{display:contents}
+ .modal-tools>.theme-toggle{grid-column:1;grid-row:2;justify-self:start}
+ .modal-tools>.icon-button{grid-column:2;grid-row:1}
+}
 html:root[data-color-mode][data-theme]{
  --button-radius:9px;
  --button-top:#ffffffcc;

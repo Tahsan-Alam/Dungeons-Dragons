@@ -9,3 +9,11 @@
 .board-container[data-board-view='2.5d'] .map-compass svg{transform-origin:center center}
 
 .game-board .board-actor.defeated{opacity:.16;pointer-events:none}
+
+.board-container{container-type:inline-size;container-name:board-surface}
+.board-tools button{flex-shrink:0}
+@container board-surface (max-width:340px){
+ .board-container .board-tools{right:7px;bottom:7px;max-width:calc(100% - 14px);gap:2px;padding:4px}
+ .board-tools>i{margin:0 1px}
+ .board-tools>span{min-width:30px;padding:0 2px}
+}

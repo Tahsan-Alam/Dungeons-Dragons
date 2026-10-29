@@ -3,7 +3,9 @@ html[data-theme=pixel] .settings-leave{border-radius:0}
 @media(max-width:600px){.settings-tabs{padding:0 20px}.settings-tabs button{min-height:50px}.general-settings{padding:0 20px 22px}.help-shortcuts,.rules-details{margin-left:22px;margin-right:22px}.ai-summary{padding:20px}.settings-link{min-height:54px}.help-list li{margin-bottom:10px}.chapter-copy .results-row>.button{width:100%}}
 
 /* One settings surface with direct sections; bindings are searchable instead of nested. */
-.modal:has(.settings-shell){width:min(880px,calc(100vw - 32px));overflow:hidden}
+.modal:has(.settings-shell){display:flex;flex-direction:column;width:min(880px,calc(100vw - 32px));overflow:hidden}
+.modal:has(.settings-shell) .modal-head{flex:none}
+.modal:has(.settings-shell) .settings-shell{flex:1 1 auto}
 .settings-shell{display:grid;grid-template-columns:156px minmax(0,1fr);height:min(580px,calc(100dvh - 140px));min-height:0}
 .settings-navigation{display:flex;flex-direction:column;gap:4px;padding:20px 12px;border-right:1px solid var(--line);background:var(--surface);min-width:0}
 .settings-navigation>button{padding:12px 13px;min-height:44px;border-radius:6px;text-align:left;font-size:13px;color:var(--muted);border:1px solid transparent}
@@ -50,3 +52,23 @@ html[data-theme=pixel] :is(.settings-navigation>button,.accent-options button,.a
 
 .settings-navigation>button:disabled,.settings-link:disabled{opacity:.45;cursor:wait}.settings-navigation>button:disabled:hover,.settings-link:disabled:hover{background:transparent;color:var(--muted)}.setting-confirm>.settings-leave-error{color:var(--danger);margin:4px 0 0}
 .settings-content .world-view-setting{flex-wrap:wrap}.world-view-setting>div:first-child{flex:1 1 180px;min-width:0}.world-view-setting .world-view-toggle{margin-left:auto;flex-shrink:0}.settings-content .world-view-toggle button{min-width:56px;min-height:44px}
+
+/* Reflow whole controls, never squeeze the labels inside them. */
+.settings-content .settings-row{flex-wrap:wrap}
+.settings-content .settings-row>div:first-child{flex:1 1 180px;min-width:0}
+.settings-content .settings-row>:last-child{flex-shrink:0;margin-left:auto}
+.settings-content :is(.theme-toggle,.color-mode-toggle){max-width:100%;flex-wrap:wrap}
+.settings-content .binding-key{overflow-wrap:anywhere;line-height:1.4}
+.voice-preview,.setting-reset-row{flex-wrap:wrap}
+.voice-preview>p,.setting-reset-row>div{flex:1 1 150px;min-width:0}
+.setting-reset-row>.button{flex-shrink:0;margin-left:auto}
+@media(max-width:420px){
+ .settings-navigation{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}
+ .settings-navigation>button{padding:9px 6px;min-height:40px}
+ .settings-content .binding-column-labels,.settings-content .binding-row{grid-template-columns:repeat(2,minmax(0,1fr));gap:6px 8px}
+ .settings-content .binding-column-labels>span:first-child{grid-column:1/-1}
+ .settings-content .binding-row{padding:12px 0}
+ .settings-content .binding-row>span{grid-column:1/-1}
+ .settings-content .binding-clear{width:30px}
+ .settings-content .binding-key{min-height:44px;font-size:11px}
+}

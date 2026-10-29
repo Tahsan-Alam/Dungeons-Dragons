@@ -1,4 +1,7 @@
 /* Shared game-library controls retain the current theme's palette and geometry. */
+.game-library .library-toolbar{padding-block:10px}
+.game-library .library-tabs{gap:6px;flex-wrap:wrap}
+.game-library .library-tabs button{padding:10px 12px;min-height:44px}
 .game-library .library-tabs button:focus-visible,.game-library .game-row-more summary:focus-visible{outline:2px solid var(--accent,var(--forest));outline-offset:3px}
 .game-library .game-options button{min-height:40px;transition:background 130ms,color 130ms}
 .game-library .game-options button:focus-visible{outline:2px solid var(--accent,var(--forest));outline-offset:-2px;background:var(--sage)}
@@ -7,6 +10,12 @@
 .game-library .library-notice button{min-width:40px;min-height:40px;display:grid;place-items:center}
 .game-library .game-row-info p{line-height:1.5}.game-library .game-row-title{flex-wrap:wrap;row-gap:4px}
 .game-row-primary{display:flex;align-items:center;gap:inherit}
+.dialog-actions{flex-wrap:wrap}
+.dialog-actions>.button{flex:0 0 auto;max-width:100%}
+@media(min-width:601px) and (max-width:900px){
+ .game-library .game-row{display:grid;grid-template-columns:60px minmax(0,1fr);gap:14px}
+ .game-library .game-row-actions{grid-column:1/-1;justify-content:flex-end;flex-wrap:wrap}
+}
 @media(max-width:600px){
  .game-library .library-tabs{gap:4px}
  .game-library .library-tabs button{flex:1 1 0;min-width:0;justify-content:center;gap:5px;padding:8px 4px;font-size:11px}
