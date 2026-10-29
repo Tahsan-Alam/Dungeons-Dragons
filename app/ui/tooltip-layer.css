@@ -1,0 +1,15 @@
+.app-button-tooltip{
+ position:fixed;inset:auto;margin:0;z-index:2147483647;pointer-events:none;user-select:none;
+ width:max-content;max-width:min(320px,calc(100vw - 16px));padding:9px 12px;
+ border:1px solid var(--line);border-radius:var(--button-radius,8px);background:var(--surface);color:var(--ink);
+ box-shadow:0 5px 16px #00000020,inset 0 1px 0 #ffffff14;font:12px/1.45 var(--body);font-weight:500;
+ overflow:hidden;overflow-wrap:anywhere;text-align:left;white-space:normal;
+ animation:button-tooltip-in 110ms ease-out both;
+}
+.app-button-tooltip[hidden]{display:none!important}
+.app-button-tooltip::backdrop{background:transparent;pointer-events:none}
+.app-button-tooltip-shortcut{display:block;margin-top:5px;font:10px/1.4 var(--mono);color:var(--muted);font-weight:400}
+.app-button-tooltip-shortcut[hidden]{display:none}
+html[data-motion='reduced'] .app-button-tooltip{animation:none}
+@keyframes button-tooltip-in{from{opacity:0;transform:translateY(2px)}to{opacity:1;transform:translateY(0)}}
+@media(prefers-reduced-motion:reduce){html:not([data-motion='full']) .app-button-tooltip{animation:none}}

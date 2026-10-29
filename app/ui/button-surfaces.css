@@ -1,0 +1,122 @@
+/* Shared, restrained depth. Art changes the corners, not the controls' geometry. */
+html:root[data-color-mode][data-theme]{
+ --button-radius:9px;
+ --button-top:#ffffffcc;
+ --button-bottom:#00000003;
+ --button-edge:#ffffffed;
+ --button-drop:0 1px 2px #00000008,0 3px 6px #00000009;
+ --button-drop-hover:0 2px 3px #0000000a,0 5px 9px #0000000d;
+}
+html:root[data-color-mode='dark'][data-theme]{
+ --button-top:#ffffff0c;
+ --button-bottom:#0000000a;
+ --button-edge:#ffffff16;
+ --button-drop:0 1px 2px #0000004d,0 3px 6px #00000033;
+ --button-drop-hover:0 2px 3px #00000059,0 5px 9px #00000040;
+}
+html:root[data-color-mode][data-theme='pixel']{--button-radius:6px}
+
+/* Insets form the rim without changing the measured size or covering focus outlines. */
+html:root[data-color-mode][data-theme] body :is(button[class],button:not([class]),.game-row-more>summary):not(:where(.drawer-backdrop,.replay-scrim,.panel-edge)){
+ --button-fill:var(--surface-raised);
+ --button-rim:var(--line);
+ --button-highlight:var(--button-top);
+ border-radius:var(--button-radius);
+ border-color:transparent;
+ background-color:var(--button-fill);
+ background-image:linear-gradient(180deg,var(--button-highlight),transparent 48%,var(--button-bottom));
+ box-shadow:inset 0 1px 0 var(--button-edge),inset 0 0 0 1px var(--button-rim),var(--button-drop);
+ transition:background-color 140ms ease,border-color 140ms ease,color 140ms ease,box-shadow 140ms ease,transform 140ms cubic-bezier(.2,.7,.2,1);
+ transform:none;
+ -webkit-tap-highlight-color:transparent;
+}
+
+/* Quiet actions retain their hierarchy; their surface appears on interaction. */
+html:root[data-color-mode][data-theme] body :is(button.text-button,button.brand,button.leave-button,button.settings-link,button.hero-inspect,.game-options button,.library-tabs button,.settings-navigation>button,.app-main-nav button,button.header-tool,.menu-links button,.binding-footer button){
+ --button-fill:transparent;
+ --button-highlight:transparent;
+ --button-rim:transparent;
+ background-image:none;
+ box-shadow:inset 0 0 0 1px transparent;
+}
+
+html:root[data-color-mode][data-theme] body button.button.primary{
+ --button-fill:var(--accent);
+ --button-rim:color-mix(in srgb,var(--accent) 85%,#000);
+ --button-highlight:#ffffff08;
+ color:var(--accent-ink);
+ box-shadow:inset 0 1px 0 #ffffff38,inset 0 0 0 1px var(--button-rim),var(--button-drop);
+}
+html:root[data-color-mode][data-theme] body button.button.danger{
+ --button-fill:var(--danger-fill);
+ --button-rim:color-mix(in srgb,var(--danger-fill) 85%,#000);
+ --button-highlight:#ffffff08;
+ color:#fff;
+}
+
+/* Selected states remain inside their hit boxes, including tightly packed choices. */
+html:root[data-color-mode][data-theme] body :is(button[aria-pressed='true'],button[aria-selected='true'],button.chosen,button.class-option.selected,button.party-member.active,button.library-pin.is-pinned,.app-main-nav button.active){
+ --button-fill:var(--accent-soft);
+ --button-rim:color-mix(in srgb,var(--accent) 70%,var(--line));
+ --button-highlight:var(--button-top);
+ background-color:var(--button-fill);
+ background-image:linear-gradient(180deg,var(--button-highlight),transparent 48%,var(--button-bottom));
+ box-shadow:inset 0 1px 0 var(--button-edge),inset 0 0 0 1px var(--button-rim);
+ color:var(--ink);
+}
+html:root[data-color-mode][data-theme] body :is(.theme-toggle,.color-mode-toggle,.segmented,.board-tools,.binding-slot){
+ border-radius:calc(var(--button-radius) + 3px);
+}
+html:root[data-color-mode][data-theme] body :is(.theme-toggle,.color-mode-toggle,.segmented) button{
+ --button-fill:transparent;
+ --button-highlight:transparent;
+ --button-rim:transparent;
+ background-image:none;
+ box-shadow:inset 0 0 0 1px transparent;
+}
+html:root[data-color-mode][data-theme] body :is(.theme-toggle,.color-mode-toggle,.segmented) :is(button[aria-pressed='true'],button.active){
+ --button-fill:var(--surface-raised);
+ --button-rim:var(--line);
+ background-color:var(--button-fill);
+ background-image:linear-gradient(180deg,var(--button-top),transparent 65%);
+ box-shadow:inset 0 1px 0 var(--button-edge),inset 0 0 0 1px var(--button-rim);
+ color:var(--ink);
+}
+html:root[data-color-mode][data-theme] body .binding-slot button.binding-key{border-radius:calc(var(--button-radius) + 1px) 0 0 calc(var(--button-radius) + 1px);box-shadow:inset 0 1px 0 var(--button-edge)}
+html:root[data-color-mode][data-theme] body .binding-slot button.binding-clear{border-radius:0 calc(var(--button-radius) + 1px) calc(var(--button-radius) + 1px) 0;box-shadow:inset 0 1px 0 var(--button-edge),inset 1px 0 0 var(--line)}
+html:root[data-color-mode][data-theme] body button.binding-key.listening{--button-fill:var(--accent);--button-highlight:#ffffff08;color:var(--accent-ink)}
+
+@media(hover:hover){
+ html:root[data-color-mode][data-theme] body :is(button[class],button:not([class]),.game-row-more>summary):not(:where(.drawer-backdrop,.replay-scrim,.panel-edge)):hover:not(:disabled){
+  --button-fill:var(--surface-raised);
+  --button-rim:var(--line-strong);
+  background-color:var(--button-fill);
+  background-image:linear-gradient(180deg,var(--button-highlight),transparent 48%,var(--button-bottom));
+  box-shadow:inset 0 1px 0 var(--button-edge),inset 0 0 0 1px var(--button-rim),var(--button-drop-hover);
+  transform:translateY(-1px);
+  filter:none;
+ }
+ html:root[data-color-mode][data-theme] body button.button.primary:hover:not(:disabled){--button-fill:var(--accent-hover);--button-rim:color-mix(in srgb,var(--accent-hover) 85%,#000);color:var(--accent-ink)}
+ html:root[data-color-mode][data-theme] body button.button.danger:hover:not(:disabled){--button-fill:color-mix(in srgb,var(--danger-fill) 94%,#000);--button-rim:var(--danger-fill);color:#fff}
+ html:root[data-color-mode][data-theme] body :is(button[aria-pressed='true'],button[aria-selected='true'],button.chosen,button.class-option.selected,button.party-member.active,button.library-pin.is-pinned,.app-main-nav button.active):hover:not(:disabled){--button-fill:var(--accent-soft);--button-rim:var(--accent);box-shadow:inset 0 1px 0 var(--button-edge),inset 0 0 0 1px var(--button-rim)}
+ html:root[data-color-mode][data-theme] body :is(.theme-toggle,.color-mode-toggle,.segmented) button:hover:not(:disabled){--button-fill:var(--surface-raised);--button-rim:var(--line);box-shadow:inset 0 1px 0 var(--button-edge),inset 0 0 0 1px var(--button-rim)}
+ html:root[data-color-mode][data-theme] body .binding-slot button:hover:not(:disabled){transform:none}
+ html:root[data-color-mode][data-theme] body .binding-slot button.binding-key.listening:hover:not(:disabled){--button-fill:var(--accent);--button-rim:var(--accent);--button-highlight:#ffffff08;color:var(--accent-ink)}
+}
+html:root[data-color-mode][data-theme] body :is(button[class],button:not([class]),.game-row-more>summary):not(:where(.drawer-backdrop,.replay-scrim,.panel-edge)):active:not(:disabled){
+ transform:translateY(0);
+ box-shadow:inset 0 1px 2px #00000018,inset 0 0 0 1px var(--button-rim);
+ transition-duration:80ms;
+}
+html:root[data-color-mode][data-theme] body button:disabled{
+ transform:none;
+ box-shadow:inset 0 0 0 1px var(--line);
+}
+html:root[data-color-mode][data-theme] body :is(.drawer-backdrop,.replay-scrim,.panel-edge){border-radius:0;box-shadow:none;transform:none}
+html:root[data-color-mode][data-theme] body .accent-options button{box-shadow:inset 0 1px 0 var(--button-edge),inset 0 0 0 1px var(--button-rim)}
+
+/* No hover displacement when motion is reduced; explicit Full still wins over the OS. */
+html[data-motion='reduced'][data-color-mode][data-theme] body :is(button,.game-row-more>summary){transform:none!important;transition:none!important}
+@media(prefers-reduced-motion:reduce){
+ html:not([data-motion='full'])[data-color-mode][data-theme] body :is(button,.game-row-more>summary){transform:none!important;transition:none!important}
+}

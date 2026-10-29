@@ -1,0 +1,11 @@
+/* Raised scenery uses projected ground coordinates; actors and labels remain upright. */
+.board-view-depth .board-ground-overlay{pointer-events:auto}
+.board-view-depth .board-actor .actor-floor-marker{stroke-linejoin:round}
+.board-view-depth .board-route-line{stroke-width:4}
+.board-view-depth .board-route-destination{stroke-width:3}
+.board-view-depth .tile-hit.reachable:focus-visible{stroke:var(--world-route);stroke-width:3}
+.board-view-depth .board-actor:focus-visible{outline:none}
+.board-view-depth .board-actor:focus-visible>.actor-floor-marker{stroke:var(--world-marker);stroke-width:4}
+.board-container[data-board-view='2.5d'] .map-compass svg{transform-origin:center center}
+
+.game-board .board-actor.defeated{opacity:.16;pointer-events:none}

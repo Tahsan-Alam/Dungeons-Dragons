@@ -1,0 +1,20 @@
+/* Shared game-library controls retain the current theme's palette and geometry. */
+.game-library .library-tabs button:focus-visible,.game-library .game-row-more summary:focus-visible{outline:2px solid var(--accent,var(--forest));outline-offset:3px}
+.game-library .game-options button{min-height:40px;transition:background 130ms,color 130ms}
+.game-library .game-options button:focus-visible{outline:2px solid var(--accent,var(--forest));outline-offset:-2px;background:var(--sage)}
+.game-library .game-options button:disabled{opacity:.45;cursor:not-allowed}
+.game-library .game-row-actions :is(.library-pin,summary){min-width:40px;min-height:40px}
+.game-library .library-notice button{min-width:40px;min-height:40px;display:grid;place-items:center}
+.game-library .game-row-info p{line-height:1.5}.game-library .game-row-title{flex-wrap:wrap;row-gap:4px}
+.game-row-primary{display:flex;align-items:center;gap:inherit}
+@media(max-width:600px){
+ .game-library .library-tabs{gap:4px}
+ .game-library .library-tabs button{flex:1 1 0;min-width:0;justify-content:center;gap:5px;padding:8px 4px;font-size:11px}
+ .game-library .game-row-actions{display:grid;grid-template-columns:minmax(0,1fr) 44px 44px;gap:6px 8px}
+ .game-row-primary{grid-column:1/-1;display:flex;gap:8px;min-width:0}
+ .game-row-primary>.button{flex:1;min-width:0;min-height:44px;padding:9px 10px}
+ .game-library .game-row-actions>.library-pin{grid-column:2;grid-row:2}
+ .game-library .game-row-more{grid-column:3;grid-row:2;margin-left:0}
+}
+@media(pointer:coarse){.game-library .game-options button,.game-library .game-row-actions :is(.library-pin,summary){min-height:44px;min-width:44px}}
+@media(prefers-reduced-motion:reduce){html:not([data-motion="full"]) .game-library .game-options button{transition:none}}

@@ -17,7 +17,7 @@ html[data-theme=pixel] .app-header :is(.app-main-nav button,.header-tool){border
  .lobby-title{gap:15px}.lobby-title h1{font-size:32px}.lobby-title .text-button{font-size:11px}
 }
 @media(max-width:360px){.app-header{padding-left:10px;padding-right:10px;column-gap:6px}.app-header .theme-toggle button{padding-left:7px;padding-right:7px}.app-main-nav button{min-width:61px;padding-left:10px;padding-right:10px}.app-header-brand .brand>span:last-child{display:block}}
-@media(prefers-reduced-motion:reduce){.app-main-nav button,.header-tool{transition:none}}
+@media(prefers-reduced-motion:reduce){html:not([data-motion="full"]) .app-main-nav button,html:not([data-motion="full"]) .header-tool{transition:none}}
 @media(max-width:600px){
  .app-content .replay-transport{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:center}
  .app-content .replay-transport .transport-group{grid-column:1;grid-row:1}
@@ -36,3 +36,7 @@ html[data-theme=pixel] .app-header :is(.app-main-nav button,.header-tool){border
 .app-root.immersive>.app-content>.loading-screen{min-height:0;flex:1}
 
 .app-header-brand .brand{width:100%}
+
+/* Allocate fixed navigation slots so longer labels and art-style changes stay aligned. */
+.app-main-nav button{flex:0 0 70px;width:70px;min-width:0;white-space:nowrap}.app-main-nav button:last-child{flex-basis:108px;width:108px}
+@media(max-width:650px){.app-main-nav button{flex-basis:56px;width:56px;min-width:0;padding-left:7px;padding-right:7px}.app-main-nav button:last-child{flex-basis:92px;width:92px}}

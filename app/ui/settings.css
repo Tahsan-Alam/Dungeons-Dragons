@@ -1,3 +1,52 @@
 .settings-tabs{display:flex;gap:25px;border-bottom:1px solid var(--line);padding:0 28px}.settings-tabs button{padding:17px 0;border-bottom:2px solid transparent;font-size:13px;color:var(--muted)}.settings-tabs button[aria-selected=true]{border-bottom-color:var(--forest);color:var(--ink);font-weight:600}.settings-tabs button:hover{color:var(--forest)}.general-settings{padding:0 28px 26px}.general-settings .settings-row{margin:0;padding:20px 0}.general-settings .settings-row p{font-size:12px}.general-settings .full-width{width:100%;margin-top:18px}.settings-link{display:flex;align-items:center;justify-content:space-between;width:100%;padding:20px 0;text-align:left;border-bottom:1px solid var(--line);font-size:13px}.settings-link:hover{color:var(--forest);background:color-mix(in srgb,var(--sage) 35%,transparent)}.settings-leave{padding:15px;background:var(--sage);border:1px solid var(--line);border-radius:7px;display:flex;gap:10px;flex-wrap:wrap;align-items:center}.settings-leave p{width:100%;font-size:12px}.help-shortcuts{margin:0 28px 22px}.help-shortcuts>.text-button{margin-top:10px}.rules-details{margin:0 28px 20px;border-top:1px solid var(--line);padding-top:17px;font-size:12px;color:var(--muted)}.rules-details summary{cursor:pointer;color:var(--ink);padding:5px 0}.rules-details summary:hover{color:var(--forest);text-decoration:underline;text-underline-offset:4px}.rules-details p{margin-top:12px}.ai-summary{padding:24px 28px}.ai-summary>p{font-size:13px}.ai-summary .rules-details{margin:22px 0}.ai-summary .source-links{margin:20px 0 0}.ai-summary .integration-list article{padding:20px 0}.ai-summary .integration-list h3{font-size:22px}.ai-summary .integration-list p{font-size:12px}.ai-summary .integration-list{margin-top:12px}.help-grid h3{margin-bottom:15px}.chapter-copy .results-row{flex-wrap:wrap}.chapter-copy .results-row>span{flex:1;max-width:none}
 html[data-theme=pixel] .settings-leave{border-radius:0}
 @media(max-width:600px){.settings-tabs{padding:0 20px}.settings-tabs button{min-height:50px}.general-settings{padding:0 20px 22px}.help-shortcuts,.rules-details{margin-left:22px;margin-right:22px}.ai-summary{padding:20px}.settings-link{min-height:54px}.help-list li{margin-bottom:10px}.chapter-copy .results-row>.button{width:100%}}
+
+/* One settings surface with direct sections; bindings are searchable instead of nested. */
+.modal:has(.settings-shell){width:min(880px,calc(100vw - 32px));overflow:hidden}
+.settings-shell{display:grid;grid-template-columns:156px minmax(0,1fr);height:min(580px,calc(100dvh - 140px));min-height:0}
+.settings-navigation{display:flex;flex-direction:column;gap:4px;padding:20px 12px;border-right:1px solid var(--line);background:var(--surface);min-width:0}
+.settings-navigation>button{padding:12px 13px;min-height:44px;border-radius:6px;text-align:left;font-size:13px;color:var(--muted);border:1px solid transparent}
+.settings-navigation>button:hover{background:var(--sage);color:var(--ink)}
+.settings-navigation>button[aria-selected=true]{background:var(--accent-soft);border-color:var(--accent);color:var(--accent);font-weight:600}
+.settings-saved-note{font-size:10px;line-height:1.6;color:var(--muted);margin-top:auto;padding:20px 12px 0}
+.settings-content{overflow:auto;overscroll-behavior:contain;min-height:0;padding:25px 28px 30px;scrollbar-width:thin;scrollbar-gutter:stable}
+.settings-content>h3{font:600 18px/1.3 var(--body);margin:0 0 6px}
+.settings-content .settings-row{margin:0;padding:22px 0;gap:18px}
+.settings-content .settings-row strong,.accent-setting>strong{font-size:13px;font-weight:600}
+.settings-content .settings-row p,.settings-description{font-size:12px;color:var(--muted);line-height:1.6;margin-top:6px}
+.settings-content .setting-toggle{min-width:58px;min-height:40px}
+.accent-setting{padding:22px 0;border-bottom:1px solid var(--line)}
+.accent-options{display:flex;flex-wrap:wrap;gap:8px;margin-top:15px}
+.accent-options button{display:flex;align-items:center;gap:7px;min-height:42px;padding:8px 11px;border:1px solid var(--line);border-radius:6px;background:var(--surface-raised);font-size:12px}
+.accent-options button:hover{background:var(--sage);border-color:var(--line-strong)}
+.accent-options button[aria-pressed=true]{border-color:var(--accent);background:var(--accent-soft);box-shadow:0 0 0 1px var(--accent)}
+.accent-swatch{display:grid;place-items:center;flex:none;width:19px;height:19px;border-radius:50%;background:var(--swatch);color:var(--accent-ink)}
+.settings-content .motion-setting{flex-wrap:wrap}.settings-content .motion-setting .color-mode-toggle{margin-left:auto}
+.settings-content .control-settings{margin:0}.settings-content .control-section-bindings{margin-top:10px}.settings-content .binding-message:empty{display:none}
+.settings-content .interaction-settings{padding-top:8px}.settings-content .preference-check{padding:16px 0;border-bottom:1px solid var(--line);font-size:13px;align-items:flex-start}.settings-content .preference-check input{margin-top:1px}
+.setting-reset-row{display:flex;justify-content:space-between;align-items:center;gap:14px;padding:20px 0;border-bottom:1px solid var(--line)}
+.setting-reset-row strong{font-size:13px}.setting-reset-row p{font-size:12px;color:var(--muted);margin-top:5px}
+.shortcut-filters{display:flex;gap:8px;margin:17px 0 20px}.shortcut-filters>label:first-child{flex:1;min-width:0}
+.shortcut-filters input,.shortcut-filters select{width:100%;min-height:40px;border:1px solid var(--line);border-radius:5px;background:var(--surface-raised);color:var(--ink);padding:9px 11px;font-size:12px}
+.shortcut-filters select{min-width:110px}.shortcut-filters input:hover,.shortcut-filters select:hover{border-color:var(--line-strong)}
+.settings-content .binding-column-labels,.settings-content .binding-row{grid-template-columns:minmax(125px,1fr) minmax(100px,.78fr) minmax(100px,.78fr);gap:8px}
+.settings-content .binding-group h4{font-size:11px;letter-spacing:.02em;margin-top:22px}
+.settings-content .binding-key{min-height:38px}.settings-content .binding-key.listening{background:var(--accent);color:var(--accent-ink)}
+.shortcut-empty{font-size:13px;color:var(--muted);padding:25px 0}
+.setting-confirm{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:14px;background:var(--surface);border:1px solid var(--line);border-radius:7px;margin:12px 0}
+.setting-confirm>p{flex-basis:100%;font-size:12px;line-height:1.6;color:var(--ink);margin-bottom:5px}
+.settings-content .binding-footer{flex-wrap:wrap;margin-bottom:5px}.settings-content .binding-message{padding:10px 0;min-height:0}
+.current-game-settings{margin-top:25px}.current-game-settings h4{font-size:13px;margin:0 0 15px}.current-game-settings>.full-width{width:100%;margin:18px 0}.current-game-settings .leave-button{margin:4px 0 12px!important}
+.seed-setting{display:flex;align-items:center;gap:15px;padding:13px 0}.seed-setting>div{flex:1;min-width:0}.seed-setting span{font-size:10px;color:var(--muted);display:block;margin-bottom:5px}.seed-setting code{font:12px/1.6 var(--mono);overflow-wrap:anywhere;user-select:all}
+html[data-theme=pixel] :is(.settings-navigation>button,.accent-options button,.accent-swatch,.shortcut-filters input,.shortcut-filters select,.setting-confirm){border-radius:0}
+@media(max-width:650px){
+ .settings-shell{display:flex;flex-direction:column;height:min(640px,calc(100dvh - 112px));min-height:0}.settings-navigation{flex-direction:row;gap:3px;padding:7px 12px;border-right:0;border-bottom:1px solid var(--line);flex-shrink:0}.settings-navigation>button{flex:1;min-width:0;padding:10px 4px;text-align:center;font-size:12px;min-height:42px}.settings-saved-note{display:none}
+ .settings-content{padding:21px 20px 25px;flex:1}.settings-content>h3{font-size:17px}.settings-content .settings-row{gap:12px;padding:20px 0}.settings-content .settings-row p{font-size:11px}.accent-options{gap:8px}.accent-options button{padding:9px 10px;min-height:44px}.settings-content .color-mode-toggle button{min-width:56px;padding:9px 10px}
+ .settings-content .binding-column-labels,.settings-content .binding-row{grid-template-columns:minmax(92px,1fr) minmax(78px,.8fr) minmax(78px,.8fr);gap:6px}.settings-content .binding-key{min-height:44px;font-size:10px}.settings-content .binding-clear{width:26px}.shortcut-filters input,.shortcut-filters select{min-height:44px;font-size:14px}.shortcut-filters select{min-width:95px}.settings-content .preference-check{font-size:12px;padding:17px 0}.setting-reset-row .button{min-height:44px}
+}
+@media(max-width:370px){.settings-content{padding-left:15px;padding-right:15px}.settings-navigation{padding-left:8px;padding-right:8px}.settings-navigation>button{font-size:11px}.settings-content .binding-column-labels,.settings-content .binding-row{grid-template-columns:minmax(78px,1fr) minmax(72px,.8fr) minmax(72px,.8fr);gap:4px}.settings-content .color-mode-toggle button{min-width:48px;padding:9px 8px}.settings-content .binding-clear{width:22px}}
+.audio-sliders{padding:18px 0 8px;border-bottom:1px solid var(--line)}.audio-range{display:block;margin-bottom:18px}.audio-range>span{display:flex;align-items:center;justify-content:space-between;font-size:12px;gap:16px;margin-bottom:10px}.audio-range output{font:11px var(--mono);color:var(--muted);min-width:40px;text-align:right}.audio-range input{display:block;width:100%;min-height:24px;margin:0;accent-color:var(--accent);cursor:pointer}.audio-range input:disabled{opacity:.45;cursor:not-allowed}.voice-preview{display:flex;align-items:center;justify-content:space-between;gap:15px;margin:0 0 18px}.voice-preview p{font-size:11px;color:var(--muted);line-height:1.6}.voice-preview .button{flex-shrink:0}@media(pointer:coarse){.audio-range input{min-height:38px}.voice-preview .button{min-height:44px}}
+
+.settings-navigation>button:disabled,.settings-link:disabled{opacity:.45;cursor:wait}.settings-navigation>button:disabled:hover,.settings-link:disabled:hover{background:transparent;color:var(--muted)}.setting-confirm>.settings-leave-error{color:var(--danger);margin:4px 0 0}
+.settings-content .world-view-setting{flex-wrap:wrap}.world-view-setting>div:first-child{flex:1 1 180px;min-width:0}.world-view-setting .world-view-toggle{margin-left:auto;flex-shrink:0}.settings-content .world-view-toggle button{min-width:56px;min-height:44px}

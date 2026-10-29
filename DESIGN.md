@@ -23,3 +23,23 @@ Home is a compact introduction with a real SVG game preview, separate from the G
 One shared header remains mounted on Home, Games, setup, lobby, gameplay, and replay. It contains the logo, Home/Games, Paint/Pixel, How to play and Settings in the same positions. Mobile uses two short rows. Resizing panels and opening drawers account for the measured header height.
 
 Layout: open two-column hero on desktop, roughly 45% descriptive copy / 55% board preview, neutral framing, 48–66px display title and 12–15px controls/body; stacked on phones with the preview immediately after the primary actions. Existing SVG system is the reference, following the user's code-drawn art direction. White stays #fff, black stays #000. Light/dark mode changes interface surfaces; scene colors remain coherent and identical across art styles.
+
+## Play table, preferences and language revision
+
+The board fills the remaining viewport below a compact scene row. The bottom dock always keeps the player's health, armor, remaining movement and action visible beside the main actions. Narrow layouts use Party and Adventure log drawers, mobile camera framing, and 44px-or-larger primary actions. Desktop rails have smaller initial widths and retain their resizable boundaries.
+
+Directional shortcuts move one legal tile, Shift+direction pans, and pointer/focus route previews show the actual cardinal path and movement cost. Animated paths use validated prior/new state and avoid crossing walls or occupied squares. New snapshots, timeline seeks and reduced motion safely cancel animation; presentation never mutates the rules.
+
+The shared world palette has both light and muted dark variants. Paint and Pixel continue to use identical semantic colors at each brightness. Personal accents, brightness, art style and motion remain independent. Settings has Appearance, Sound & voice, Key bindings, and At the table sections. Searchable bindings retain two slots; audio levels, motion, chapter screens and turn confirmation are explicit preferences.
+
+Use restrained tabletop terms across the product: Camp, Adventures, Solo quest, Gather party, Join party, Continue quest, Adventurer’s guide, Table settings, and Adventure log. Keep conventional gameplay verbs and operational labels clear. Do not add decorative slogans or explanatory filler.
+
+The final button treatment follows the user's revised direction: modern, subtly raised surfaces with soft 9px Paint / 6px Pixel corners, faint highlights and short shadows. Pixel identity remains in type and world sprites. Focus and selected rings are contained within control bounds so they cannot overlap adjacent stats or actions. Hover/press movement is small and honors the motion preference. Tooltips explain controls and current shortcuts without becoming persistent UI copy.
+
+## 2D and 2.5D presentation
+
+World view is a personal Appearance setting, independent of Paint/Pixel, brightness, accent and motion. 2D remains the default for existing players. 2.5D uses a dimetric ground plane, dimensional scenery, upright character cutouts and the same canonical palette/identity. Menus and labels retain their geometry and legibility. The preview, live table, chapter illustrations, portraits and replay all consume this preference.
+
+Projection operates only in rendering. Game coordinates, legal movement, dice, room commands and saved/replayed events do not change. Projected route previews and hit regions use the same transform as the floor; actor motion uses projected waypoints. Camera framing uses projected bounds. View changes safely finish presentation motion and reframe without resetting a game.
+
+Efficiency rule: reuse asset components, palettes and seed data across every view. Construct depth with bounded SVG faces and layers, avoid per-sprite filters or a second generated image set, and never connect a paid provider just to change presentation. The canonical recipe contract and future caching strategy are documented in AI-OPTIONS.md.
