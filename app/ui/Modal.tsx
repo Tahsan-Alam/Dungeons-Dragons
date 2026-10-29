@@ -1,9 +1,24 @@
 'use client';
-import {useEffect,useRef} from 'react';
+import {useCallback,useEffect,useId,useRef,useState} from 'react';
 import {Icon} from './Art';
 import {ThemeToggle} from './Theme';
-export default function Modal({title,onClose,children,wide=false}:{title:string;onClose:()=>void;children:React.ReactNode;wide?:boolean}){
- const dialog=useRef<HTMLDialogElement>(null);const close=useRef(onClose);close.current=onClose;
- useEffect(()=>{dialog.current?.showModal();const el=dialog.current;const handler=(e:Event)=>{e.preventDefault();close.current()};el?.addEventListener('cancel',handler);return()=>{el?.removeEventListener('cancel',handler);el?.close()}},[]);
- return <dialog ref={dialog} className={`modal ${wide?'wide':''}`} onClick={e=>{if(e.target===dialog.current){const rect=dialog.current.getBoundingClientRect();if(e.clientX<rect.left||e.clientX>rect.right||e.clientY<rect.top||e.clientY>rect.bottom)onClose()}}}><div className="modal-head"><h2>{title}</h2><div className="modal-tools"><ThemeToggle/><button className="icon-button" aria-label="Close dialog" onClick={onClose}><Icon name="close"/></button></div></div>{children}</dialog>
+
+export default function Modal({title,onClose,children,wide=false,dismissible=true}:{title:string;onClose:()=>void;children:React.ReactNode;wide?:boolean;dismissible?:boolean}) {
+ const dialog=useRef<HTMLDialogElement>(null),close=useRef(onClose),timer=useRef<ReturnType<typeof setTimeout>|null>(null),closingRef=useRef(false);
+ const[closing,setClosing]=useState(false);const titleId=useId(),canDismiss=useRef(dismissible);close.current=onClose;canDismiss.current=dismissible;
+ const requestClose=useCallback(()=>{
+  if(closingRef.current||!canDismiss.current)return;
+  closingRef.current=true;
+  if(window.matchMedia('(prefers-reduced-motion: reduce)').matches){dialog.current?.close();close.current();return}
+  setClosing(true);
+  timer.current=setTimeout(()=>{dialog.current?.close();close.current()},140);
+ },[]);
+ useEffect(()=>{
+  const el=dialog.current;el?.showModal();
+  const handler=(e:Event)=>{e.preventDefault();requestClose()};el?.addEventListener('cancel',handler);
+  return()=>{if(timer.current)clearTimeout(timer.current);el?.removeEventListener('cancel',handler);el?.close()};
+ },[requestClose]);
+ return <dialog ref={dialog} aria-labelledby={titleId} className={`modal ${wide?'wide':''} ${closing?'is-closing':''}`} onClick={e=>{if(e.target===dialog.current){const rect=dialog.current.getBoundingClientRect();if(e.clientX<rect.left||e.clientX>rect.right||e.clientY<rect.top||e.clientY>rect.bottom)requestClose()}}}>
+  <div className="modal-head"><h2 id={titleId}>{title}</h2><div className="modal-tools"><ThemeToggle/><button className="icon-button" aria-label="Close dialog" title="Close (Esc)" disabled={!dismissible} onClick={requestClose}><Icon name="close"/></button></div></div>{children}
+ </dialog>;
 }

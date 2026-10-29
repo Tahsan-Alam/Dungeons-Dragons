@@ -13,3 +13,75 @@
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
 .modal-tools{display:flex;align-items:center;gap:10px;flex-shrink:0}.modal-head .theme-toggle{flex-shrink:0}@media(max-width:700px){.modal-head{gap:10px;flex-wrap:wrap}.modal-head h2{flex:1;min-width:160px}.modal-tools{margin-left:auto}.modal-head .theme-toggle button{font-size:8px}}
 .lobby-exit{display:flex;gap:18px;align-items:center}.lobby-exit button:last-child{color:#9a705c}@media(max-width:700px){.lobby-exit{gap:8px}.lobby-exit button{font-size:9px}}
+
+/* Shared interaction language: concise chrome, stable geometry and short motion. */
+:root{--motion-fast:140ms;--motion-normal:200ms;--danger:#9c493b}
+button,a,summary,input,select,textarea{transition:background-color var(--motion-fast),color var(--motion-fast),border-color var(--motion-fast),box-shadow var(--motion-fast),opacity var(--motion-fast),transform var(--motion-fast)}
+:where(button,a,summary,input,select,textarea,[role=button],[role=separator]):focus-visible{outline:3px solid #b27d38;outline-offset:3px}
+button:disabled:hover{transform:none;filter:none}
+button:not(:disabled):active{filter:brightness(.93)}
+.button.danger{background:var(--danger);border-color:var(--danger);color:#fff}
+button.brand{border-radius:8px;padding:4px;margin:-4px}
+button.brand:hover{background:var(--sage)}
+.text-button{border-radius:5px;padding:8px 5px;min-height:36px}
+.text-button:hover:not(:disabled){background:color-mix(in srgb,var(--sage) 65%,transparent);color:var(--forest)}
+.theme-toggle button{min-height:30px;transition:background-color var(--motion-fast),box-shadow var(--motion-fast),color var(--motion-fast)}
+.theme-toggle button:hover:not(:disabled){background:color-mix(in srgb,var(--surface) 75%,var(--sage));color:var(--ink)}
+.theme-toggle button[aria-pressed=true]:hover{background:var(--surface);box-shadow:0 1px 4px #293e3530}
+.segmented button:hover:not(:disabled){background:color-mix(in srgb,var(--surface) 65%,var(--sage))}
+.input-button button:hover:not(:disabled){background:var(--sage);color:var(--forest)}
+.field input:hover,.field select:hover{border-color:#7c9470}
+.credits summary{padding:7px 0;min-height:36px}
+.credits summary:hover,.source-links a:hover,.leave-button:hover,.loading-screen button:hover{color:var(--forest);text-decoration:underline;text-underline-offset:3px}
+.toast button{border-radius:4px;min-width:32px;min-height:32px}
+.toast button:hover{background:#ffffff26}
+.menu-screen.library-menu{max-width:1480px;margin:0 auto;padding:0 clamp(20px,4vw,64px) 32px;min-height:100dvh}
+.library-menu .menu-header{padding:25px 0;border-bottom:1px solid var(--line)}
+.library-menu .menu-header nav{gap:18px}
+.games-main{width:100%;margin:0 auto;padding:36px 0;flex:1;min-width:0}
+.games-heading{display:flex;align-items:center;justify-content:space-between;gap:24px;margin-bottom:28px}
+.games-heading h1{font-size:40px;line-height:1.2;letter-spacing:-.035em}
+.games-heading .menu-actions{display:flex;flex-direction:row;gap:10px;flex-wrap:wrap;align-items:center}
+.games-heading .menu-actions .button{min-width:0;min-height:44px;font-size:12px;padding:11px 16px;flex:none}
+.setup-title h1,.lobby-heading h1{font-size:38px;margin:0;line-height:1.2}
+.setup-content{margin-top:25px}.setup-title{margin-bottom:25px}
+.class-option strong{font-size:20px}.class-option>span:not(.class-check){font-size:11px;line-height:1.5}
+.class-power{font-size:11px;line-height:1.6}
+.adventure-settings .start-button{margin-top:18px}
+.lobby-heading{align-items:center;margin-bottom:28px}
+.invite-ticket{display:flex;align-items:center;gap:17px;transform:none;padding:13px 18px;flex-wrap:wrap}
+.invite-ticket>span{font-size:10px;letter-spacing:.04em;text-transform:none}
+.invite-ticket strong{font-size:26px;margin:0}.invite-ticket>small{flex-basis:100%;font-size:11px;color:var(--danger);text-align:left}
+.lobby-adventure dl dd{overflow-wrap:anywhere}
+.lobby-player{min-width:0}.lobby-player>div:nth-child(2){min-width:0}.lobby-player strong{overflow-wrap:anywhere}.lobby-player>div>span{line-height:1.5}
+.ready-label{white-space:nowrap;font-size:11px}
+.leave-confirm{display:flex;align-items:center;justify-content:flex-end;gap:10px;border:1px solid var(--line);background:var(--surface);padding:14px 18px;border-radius:8px;margin-bottom:24px;animation:panel-in var(--motion-normal) ease both}
+.leave-confirm>span{flex:1;font-size:13px}.leave-confirm .button{min-height:38px;padding:8px 12px;font-size:12px}
+.modal[open]{animation:dialog-in var(--motion-normal) cubic-bezier(.2,.8,.2,1) both}
+.modal[open]::backdrop{animation:backdrop-in var(--motion-normal) ease both}
+.modal[open].is-closing{animation:dialog-out var(--motion-fast) ease both;pointer-events:none}
+.modal[open].is-closing::backdrop{animation:backdrop-out var(--motion-fast) ease both}
+.modal-head{position:sticky;top:0;background:var(--paper);z-index:2}
+.modal-head h2{overflow-wrap:anywhere}.modal-head .icon-button{flex-shrink:0}
+.chapter-art{isolation:isolate}.chapter-art>.panorama{animation:scene-in 650ms cubic-bezier(.2,.7,.3,1) both}
+.chapter-copy{animation:panel-in 240ms ease both}
+.toast{animation:toast-in 180ms ease both}
+@keyframes dialog-in{from{opacity:0;transform:translateY(12px) scale(.985)}to{opacity:1;transform:translateY(0) scale(1)}}
+@keyframes dialog-out{from{opacity:1;transform:translateY(0) scale(1)}to{opacity:0;transform:translateY(8px) scale(.99)}}
+@keyframes backdrop-in{from{opacity:0}to{opacity:1}}
+@keyframes backdrop-out{from{opacity:1}to{opacity:0}}
+@keyframes panel-in{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
+@keyframes scene-in{from{opacity:.65;transform:scale(1.025)}to{opacity:1;transform:scale(1)}}
+@keyframes toast-in{from{opacity:0;translate:0 7px}to{opacity:1;translate:0 0}}
+@media(hover:hover){button:not(:disabled):hover{filter:brightness(.97)}}
+@media(max-width:700px){
+ .menu-screen.library-menu{padding:0 18px 20px}.library-menu .menu-header{padding:17px 0;gap:8px}.library-menu .menu-header nav{gap:5px}.library-menu .menu-header nav>.text-button{width:38px;min-height:38px;padding:8px}.library-menu .menu-header nav>.text-button>span{display:none}
+ .games-main{padding-top:26px}.games-heading{display:block;margin-bottom:24px}.games-heading h1{font-size:32px;margin-bottom:20px}.games-heading .menu-actions{gap:7px;display:grid;grid-template-columns:repeat(3,minmax(0,1fr))}.games-heading .menu-actions .button{padding:10px 8px;gap:6px;font-size:11px;min-height:46px}.games-heading .menu-actions .button svg{width:17px;height:17px}
+ .setup-screen,.lobby-screen{padding-left:18px;padding-right:18px}.setup-content{margin-top:22px}.setup-title h1,.lobby-heading h1{font-size:32px}.setup-columns{gap:24px}.field input,.field select{font-size:16px;min-height:44px}.class-option>span:not(.class-check){font-size:11px}.class-grid{gap:10px}.class-option{padding-left:12px;padding-right:12px}.class-power{font-size:12px}
+ .invite-ticket{padding:12px;gap:12px}.invite-ticket strong{font-size:24px}.invite-ticket>span{font-size:9px;max-width:40px;line-height:1.4}.invite-ticket .text-button{font-size:11px;min-height:40px}.lobby-exit .text-button{font-size:11px;min-height:40px}.lobby-player{gap:9px}.lobby-player strong{font-size:13px}.ready-label{font-size:10px}.leave-confirm{flex-wrap:wrap;padding:13px}.leave-confirm>span{flex-basis:100%;margin-bottom:5px}.leave-confirm .button{min-height:44px}
+ .modal{max-height:calc(100dvh - 24px)}.modal-head{padding:16px 18px;gap:8px}.modal-head h2{font-size:23px;min-width:0;flex:1}.modal-tools{gap:5px}.modal-head .theme-toggle{display:flex}.modal-tools .icon-button{width:38px;height:38px}.theme-toggle button{min-height:32px;padding:4px 6px;font-size:9px}
+}
+@media(pointer:coarse){.icon-button{min-width:44px;min-height:44px}.theme-toggle button{min-height:36px}.text-button{min-height:44px}.class-option{touch-action:manipulation}.toast button{min-width:44px;min-height:44px}}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
+
+@media(max-width:360px){.menu-header .brand>span:last-child{display:none}.menu-screen.library-menu{padding-left:14px;padding-right:14px}.games-heading .menu-actions .button{font-size:10px;padding-left:5px;padding-right:5px;gap:4px}}

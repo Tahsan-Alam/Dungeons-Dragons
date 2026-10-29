@@ -4,7 +4,7 @@ import "./pixel.css";
 import {ThemeProvider} from "./ui/Theme";
 
 export const metadata: Metadata = {
-  title: "Painted Realms — a little ink, a big adventure",
+  title: "Painted Realms",
   description: "A hand-drawn cooperative adventure. Play solo or gather a party of up to ten.",
   icons: {
     icon: "/favicon.svg",

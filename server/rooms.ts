@@ -1,10 +1,11 @@
 import { DEFAULT_OPTIONS, HERO_COLORS } from '../game/types.ts';
 import type { GameAction, GameOptions, HeroClass, RoomPlayer, RoomView, Session } from '../game/types.ts';
 import { applyAction, createGame, runBots } from '../game/engine.ts';
+import {appendReplay,newReplay} from '../game/replay.ts';
 import type { RoomStore, StoredRoom } from './room-store.ts';
 
 export const ROOM_CAPACITY = 10;
-export const ROOM_LIFETIME = 72 * 60 * 60 * 1000;
+export const ROOM_LIFETIME = 30 * 24 * 60 * 60 * 1000;
 export const OFFLINE_AFTER = 45_000;
 const HOST_TRANSFER_AFTER = 90_000;
 const CLASSES: HeroClass[] = ['knight', 'ranger', 'mage', 'cleric'];
@@ -138,14 +139,14 @@ export class RoomService {
     return reject('The room is busy. Try joining again.',503,'BUSY');
   }
 
-  async get(codeInput: unknown, token: string, knownVersion?: number): Promise<{room:RoomView}|{unchanged:true;version:number;players:RoomPlayer[];hostId:string}> {
+  async get(codeInput: unknown, token: string, knownVersion?: number, passive=false): Promise<{room:RoomView}|{unchanged:true;version:number;players:RoomPlayer[];hostId:string}> {
     const code=this.code(codeInput), tokenHash=await hash(token);
     for(let i=0;i<16;i++) {
       const record=await this.load(code), playerId=this.authenticate(record,tokenHash), next=structuredClone(record),now=this.now();
       const player=next.room.players.find(p=>p.id===playerId)!;
       let touched=false;
-      if(now-player.lastSeen>=15_000) {player.lastSeen=now;touched=true;}
-      if(this.transferHost(next,now)) {next.room.version++;touched=true;}
+      if(!passive&&now-player.lastSeen>=15_000) {player.lastSeen=now;touched=true;}
+      if(!passive&&this.transferHost(next,now)) {next.room.version++;touched=true;}
       if(touched) {
         this.bump(next,now);
         if(!await this.store.compareAndSwap(code,record.revision,next)) continue;
@@ -170,6 +171,8 @@ export class RoomService {
       if(record.requests.some(r=>r.id===input.requestId && r.playerId===playerId)) return {room:publicView(record)};
       if(record.room.version!==input.version) throw new RoomError('The room changed. Your view has been refreshed; try your action again.',409,'STALE_VERSION',publicView(record));
       const next=structuredClone(record), room=next.room,now=this.now();
+      // Rooms created before replay support retain a truthful partial replay.
+      if(room.game&&!room.replay)room.replay=newReplay(room.game,false);
       const player=room.players.find(p=>p.id===playerId)!;
       player.lastSeen=now;
       const requireHost=()=>{if(room.hostId!==playerId) reject('Only the host can do that.',403,'HOST_ONLY');};
@@ -194,10 +197,10 @@ export class RoomService {
         case 'start':
           requireHost();requireLobby();
           if(room.players.some(p=>!p.ready && !p.bot)) return reject('Wait for everyone to be ready.',409,'NOT_READY');
-          room.game=runBots(createGame(room.players,room.options));break;
+          room.game=createGame(room.players,room.options);room.replay=newReplay(room.game);room.game=runBots(room.game);break;
         case 'action':
           if(!room.game) return reject('Start the adventure first.',409,'NOT_STARTED');
-          try {room.game=runBots(applyAction(room.game,playerId,validateAction(command.action)));}
+          try {const action=validateAction(command.action);room.game=runBots(applyAction(room.game,playerId,action));room.replay=appendReplay(room.replay!,{type:'action',playerId,action});}
           catch(error) {if(error instanceof RoomError)throw error;return reject(error instanceof Error?error.message:'That move is not available.');}
           break;
         case 'skip': {
@@ -206,14 +209,16 @@ export class RoomService {
           const actor=room.game.actors.find(a=>a.id===room.game!.activeActorId);
           const owner=room.players.find(p=>p.id===actor?.playerId);
           if(!actor || !owner || owner.bot || now-owner.lastSeen<OFFLINE_AFTER) return reject('A turn can be skipped only after its player has been offline for 45 seconds.',409,'PLAYER_ONLINE');
-          room.game=runBots(applyAction(room.game,owner.id,{type:'end'}));break;
+          room.game=runBots(applyAction(room.game,owner.id,{type:'end'}));room.replay=appendReplay(room.replay!,{type:'action',playerId:owner.id,action:{type:'end'}});break;
         }
         case 'leave': {
           room.players=room.players.filter(p=>p.id!==playerId);delete next.tokenHashes[playerId];
           if(room.game) {
             const actor=room.game.actors.find(a=>a.playerId===playerId);
             if(actor)actor.bot=true;
-            if(room.players.some(p=>!p.bot))room.game=runBots(room.game);
+            const run=room.players.some(p=>!p.bot);
+            if(run)room.game=runBots(room.game);
+            room.replay=appendReplay(room.replay!,{type:'depart',playerId,run});
           }
           if(room.hostId===playerId)room.hostId=room.players.find(p=>!p.bot)?.id ?? '';
           break;

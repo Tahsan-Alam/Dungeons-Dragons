@@ -348,26 +348,27 @@ export function applyAction(game: GameState, actorPlayerId: string, action: Game
   return copy;
 }
 
-function approach(game: GameState, actor: Actor, target: { x: number; y: number }, desiredRange: number) {
+type FrameObserver=(game:GameState)=>void;
+function approach(game: GameState, actor: Actor, target: { x: number; y: number }, desiredRange: number, observe?:FrameObserver) {
   const candidates = search(game, actor).positions;
   const best = candidates.sort((a, b) => {
     const score = (p: { x: number; y: number }) => Math.max(0, manhattan(p, target) - desiredRange) * 100 + (hasLineOfSight(game, p, target) ? 0 : 20) + manhattan(actor, p);
     return score(a) - score(b);
   })[0];
-  if (best && (best.x !== actor.x || best.y !== actor.y)) perform(game, actor, { type: 'move', ...best });
+  if (best && (best.x !== actor.x || best.y !== actor.y)) {perform(game, actor, { type: 'move', ...best });observe?.(structuredClone(game));}
 }
 
-function botTurn(game: GameState, actor: Actor) {
+function botTurn(game: GameState, actor: Actor, observe?:FrameObserver) {
   if (!actor.enemy && isEncounterClear(game)) {
     const destination = game.chest.opened ? game.exit : game.chest;
-    approach(game, actor, destination, 1);
+    approach(game, actor, destination, 1, observe);
     if (manhattan(actor, destination) <= 1) perform(game, actor, { type: game.chest.opened ? 'advance' : 'interact' });
     return;
   }
   if (!actor.enemy && actor.heroClass === 'cleric' && actor.abilityUses > 0) {
     const ally = game.actors.filter(a => !a.enemy && !a.defeated && a.hp < a.maxHp * 0.65).sort((a, b) => a.hp / a.maxHp - b.hp / b.maxHp)[0];
     if (ally) {
-      approach(game, actor, ally, 4);
+      approach(game, actor, ally, 4, observe);
       if (getValidTargets(game, actor, true).some(a => a.id === ally.id)) { perform(game, actor, { type: 'ability', targetId: ally.id }); return; }
     }
   }
@@ -375,7 +376,7 @@ function botTurn(game: GameState, actor: Actor) {
   const enemies = game.actors.filter(a => a.enemy !== actor.enemy && a.hp > 0 && !a.defeated);
   const target = enemies.sort((a, b) => manhattan(actor, a) - manhattan(actor, b) || a.hp - b.hp)[0];
   if (!target) return;
-  approach(game, actor, target, CLASS[actor.heroClass].range);
+  approach(game, actor, target, CLASS[actor.heroClass].range, observe);
   const available = getValidTargets(game, actor).sort((a, b) => a.hp - b.hp);
   if (available.length) {
     const special = !actor.enemy && actor.heroClass !== 'cleric' && actor.abilityUses > 0 && available[0].hp > 7;
@@ -384,7 +385,7 @@ function botTurn(game: GameState, actor: Actor) {
 }
 
 /** Run scripted turns without timers. This remains authoritative on the room server. */
-export function runBots(game: GameState): GameState {
+export function runBots(game: GameState, observe?:FrameObserver): GameState {
   const copy = structuredClone(game);
   // In normal play this performs at most 17 turns. The larger bound accommodates
   // recovery when the human is down, without permitting an unbounded request.
@@ -393,11 +394,12 @@ export function runBots(game: GameState): GameState {
     if (!actor) break;
     if (!actor.bot && !actor.enemy && actor.hp > 0 && !actor.defeated) break;
     const sceneBefore = copy.scene;
-    if (actor.hp > 0 && !actor.defeated) botTurn(copy, actor);
+    if (actor.hp > 0 && !actor.defeated) botTurn(copy, actor, observe);
     evaluate(copy);
+    observe?.(structuredClone(copy));
     if (copy.status !== 'playing') break;
     // Advancing has already selected the new scene's first actor.
-    if (copy.scene === sceneBefore) nextTurn(copy);
+    if (copy.scene === sceneBefore) {nextTurn(copy);observe?.(structuredClone(copy));}
   }
   return copy;
 }

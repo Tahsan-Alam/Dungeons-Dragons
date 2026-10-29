@@ -5,10 +5,12 @@ A playable, 2D cooperative browser adventure with a hand-drawn Paint theme and a
 ## Play
 
 - **Play solo:** choose a class, rules, setting, seed and 0–3 scripted companions. Click highlighted tiles to move, then attack, use a power, guard, or drink a potion. End your turn to let the other characters act.
-- **Gather a party:** create a room and share its invite link/code. Up to ten heroes total, including companions. Everyone clicks Ready, then the host begins.
+- **Create room:** create a room and share its invite link/code. Up to ten heroes total, including companions. Everyone clicks Ready, then the host begins.
 - Defeat the enemies, move beside the chest and open it, then reach the gateway. Recover three lantern shards to win.
 - Paint/Pixel switches are in the headers and dialogs. Art preferences stay local; each player can use their preferred theme.
-- Solo progress saves in this browser. Online rooms save to the server for 72 hours after the last game or lobby change. Keep your browser session to recover your character. Room codes let a friend claim an open seat; they are not passwords.
+- Games saves multiple solo adventures and online seats in this browser. Pin, rename, archive, restore, or delete entries independently. Solo games pause when you return to Games; online friends can continue their turns. Online rooms remain available for 30 days after the last active visit or game change. Keep your browser data to recover your character. Room codes let a friend claim an open seat; they are not passwords.
+- Drag the dividers beside Party and Journal to resize; double-click a divider to reset it. Keyboard users can focus the divider and use arrows or Home. Settings → Controls includes two shortcuts per action, optional unused-action confirmation and mouse edge reveal. Touch users can drag/pinch the board and open Party/Journal with buttons.
+- Replays contain the starting state and every accepted input, including scripted turns and departures. Finished and in-progress games can be scrubbed without changing the saved game. Games made before replay support are labeled as starting at their imported save. Replay data already downloaded to this browser remains available after an online room expires.
 
 ## Run locally
 
@@ -26,7 +28,7 @@ Run that initial migration only once. The dev and built previews share `.wrangle
 
 ```sh
 npx tsc --noEmit
-node --experimental-strip-types --test game/*.test.ts server/*.test.ts
+node --experimental-strip-types --test game/*.test.ts server/*.test.ts app/ui/controls.test.ts
 npm run build
 ```
 

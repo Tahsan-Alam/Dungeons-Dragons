@@ -23,11 +23,17 @@ Commands: `ready` with `ready`; `options` with complete `options`; `addBot` with
 
 Poll about once per second during an active game and more slowly in the lobby. Presence writes happen at most every 15 seconds per seat. Unchanged responses omit the full board and history. A host may skip a current player's turn after that player has not polled for 45 seconds. After 90 seconds without host presence, an active human becomes host. Closing a tab does not remove a seat; explicitly Leave to release it.
 
+The Games screen checks one unarchived waiting room every 2.5 seconds, rotating through saved seats. These reads use `background=1`, which does not heartbeat, transfer hosts, or extend expiration. Archiving stops these checks. Background checks stop when the page is hidden or a game is open. Human turns are never automatically submitted while away.
+
+The local library uses IndexedDB, with one record per adventure. Each record contains its own board, saved seat, metadata, and replay. Serialized saves and revision checks prevent another tab's newer progress from being silently overwritten. Opening a saved game reloads its persisted record. Legacy solo data imports once; each legacy online seat imports independently. Deleting an entry removes this browser's copy and seat and atomically stores a deletion marker, so another tab's pending save or a legacy import cannot resurrect it. Explicitly leaving a live room converts its character to a companion. Neither action deletes another player's shared room.
+
+Replays store an initial state and a deterministic log of accepted actions and departures inside the authoritative room record. Missed polls therefore cannot drop another player's turns from a replay. A retry does not append twice. Reconstructing yields each bot movement, action, and turn handoff; map data is shared per chapter. Legacy rooms begin a clearly labeled partial replay at their preserved position. The viewer reconstructs in batches to keep long timelines responsive and never modifies live state. Browser copies already downloaded remain replayable after server expiry; clearing browser data removes those copies.
+
 The database has a separate internal revision counter. All mutations, including presence, use compare-and-swap. Concurrent joins retry safely; stale game commands cannot overwrite each other. Only token hashes are stored. Authentication material and admission receipts are omitted from every room response.
 
 Distributed D1 rate limits use hashed connection identifiers and atomic counters. Each connection has fixed one-minute limits of 12 creates, 40 joins, 900 reads, and 600 commands. Each seat also has a 120-command limit. The poll allowance supports ten players on a shared connection at a one-second interval. HTTP 429 includes `Retry-After: 60`. Production trusts Cloudflare's supplied client-address header; previews without it share one local bucket. Expired rate-limit buckets receive bounded cleanup on new buckets. No raw IP address or token is stored in this rate-limit table. These limits slow code guessing and accidental loops; they are not comprehensive protection against a distributed attack.
 
-Room records expire after 72 hours without activity; an abandoned room with no humans expires after a minute. Expiration is enforced when loading. Expired records remain in D1 until maintenance removes them; no scheduled job or paid service is installed by this implementation.
+Room records expire after 30 days without activity; an abandoned room with no humans expires after a minute. Expiration is enforced when loading. Expired records remain in D1 until maintenance removes them; no scheduled job or paid service is installed by this implementation.
 
 ## Deployment and limits
 

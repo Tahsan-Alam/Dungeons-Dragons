@@ -3,6 +3,9 @@ import { useEffect, useRef, useState } from 'react';
 import type { GameState, GameOptions, HeroClass, RoomView, RoomPlayer, Session, GameAction, PlayerSpec } from '../../game/types';
 import { HERO_COLORS } from '../../game/types';
 import { createGame, applyAction, runBots } from '../../game/engine';
+import {AdventureStore,soloRecord,roomRecord,updateSoloRecord,sortedLibrary} from '../../game/library';
+import type {AdventureRecord,SavedAdventure} from '../../game/library';
+import {newReplay,appendReplay} from '../../game/replay';
 
 const SOLO_KEY='painted-realms.solo.v1';
 const SESSION_KEY='painted-realms.room.v1';
@@ -54,21 +57,42 @@ function mergePresence(previous:RoomPlayer[],incoming:RoomPlayer[]):RoomPlayer[]
 export function useSession(){
  const [solo,setSolo]=useState<GameState|null>(null),[room,setRoom]=useState<RoomView|null>(null),[session,setSession]=useState<Session|null>(null);
  const [saved,setSaved]=useState<GameState|null>(null),[savedSession,setSavedSession]=useState<Session|null>(null);
+ const [library,setLibrary]=useState<SavedAdventure[]>([]),[libraryReady,setLibraryReady]=useState(false),[activeId,setActiveId]=useState<string|null>(null),[inLibrary,setInLibrary]=useState(true);
+ const records=useRef(new Map<string,AdventureRecord>()),store=useRef<AdventureStore|null>(null),active=useRef<string|null>(null),persisted=useRef(new Map<string,number>()),saving=useRef(Promise.resolve()),deleting=useRef(new Set<string>()),generation=useRef(0),failedWrites=useRef(new Map<string,boolean>());
  const [busy,setBusy]=useState(false),[error,setError]=useState(''),[connection,setConnection]=useState<'online'|'reconnecting'|'local'>('local');
  const latest=useRef({room,session});latest.current={room,session};
  const lock=useRef(false),mounted=useRef(true),controllers=useRef(new Set<AbortController>());
  const pendingAdmission=useRef<PendingAdmission|null>(null),pendingCommand=useRef<PendingCommand|null>(null);
  useEffect(()=>{
   mounted.current=true;
-  const s=read(SOLO_KEY,localStorage);if(validGame(s))setSaved(s);
-  const r=read(SESSION_KEY,sessionStorage)||read(SESSION_KEY,localStorage);if(validSession(r))setSavedSession(r);
+  const s=read(SOLO_KEY,localStorage),tabSession=read(SESSION_KEY,sessionStorage),r=validSession(tabSession)?tabSession:read(SESSION_KEY,localStorage);
+  store.current=new AdventureStore();
+  void store.current.migrate(s,r).then(()=>store.current!.all()).then(all=>{if(!mounted.current)return;records.current=new Map(all.map(r=>[r.meta.id,r]));persisted.current=new Map(all.map(r=>[r.meta.id,r.revision]));refreshLibrary();setLibraryReady(true);}).catch(e=>{if(mounted.current){setLibraryReady(true);setError(e instanceof Error?e.message:'Saved games could not be loaded.');}});
   const admission=read(ADMISSION_KEY,sessionStorage);
   if(object(admission)&&typeof admission.path==='string'&&['/api/rooms','/api/rooms/join'].includes(admission.path)&&object(admission.parameters)&&typeof admission.requestId==='string')pendingAdmission.current=admission as PendingAdmission;
   const command=read(COMMAND_KEY,sessionStorage);
   if(object(command)&&typeof command.code==='string'&&typeof command.playerId==='string'&&object(command.payload)&&typeof command.payload.requestId==='string'&&Number.isInteger(command.payload.version))pendingCommand.current=command as PendingCommand;
   return()=>{mounted.current=false;for(const controller of controllers.current)controller.abort();controllers.current.clear();};
  },[]);
- useEffect(()=>{if(solo){if(write(SOLO_KEY,solo,localStorage))setSaved(solo);else setError('Your browser could not save this adventure. Keep this tab open.');}},[solo]);
+ function refreshLibrary(){
+  const all=[...records.current.values()];setLibrary(sortedLibrary(all));
+  const lastSolo=all.filter(r=>r.meta.kind==='solo'&&!r.meta.archived).sort((a,b)=>b.meta.updatedAt-a.meta.updatedAt)[0];setSaved(lastSolo?.game??null);
+  const lastRoom=all.filter(r=>r.meta.kind==='online'&&!r.meta.archived&&r.session).sort((a,b)=>b.meta.updatedAt-a.meta.updatedAt)[0];setSavedSession(lastRoom?.session??null);
+ }
+ function select(id:string|null){active.current=id;setActiveId(id);setInLibrary(id===null);}
+ function saveRecord(record:AdventureRecord){
+  if(deleting.current.has(record.meta.id))return Promise.resolve();
+  generation.current++;
+  records.current.set(record.meta.id,record);refreshLibrary();
+  const writeJob=saving.current.catch(()=>{}).then(async()=>{if(deleting.current.has(record.meta.id))return;await store.current!.put(record,persisted.current.get(record.meta.id)??0);persisted.current.set(record.meta.id,record.revision);failedWrites.current.delete(record.meta.id);});
+  saving.current=writeJob;writeJob.catch(e=>{failedWrites.current.set(record.meta.id,e instanceof Error&&e.message.includes('another tab'));if(mounted.current)setError(e instanceof Error?e.message:'This game could not be saved. Keep this tab open.');});return writeJob;
+ }
+ function saveRoom(incoming:RoomView,auth:Session){
+  const id=`room-${auth.code}-${auth.playerId}`,previous=records.current.get(id);
+  if(deleting.current.has(id))return;
+  if(previous?.room&&previous.room.version>=incoming.version)return;
+  void saveRecord(roomRecord(incoming,auth,previous)).catch(()=>{});
+ }
 
  function acceptRoom(incoming:RoomView,replace=false){
   if(!mounted.current)return;
@@ -77,12 +101,14 @@ export function useSession(){
   if(!replace&&previous?.code===incoming.code&&previous.version>incoming.version)return;
   const next=previous?.code===incoming.code&&previous.version===incoming.version?{...incoming,players:mergePresence(previous.players,incoming.players)}:incoming;
   latest.current.room=next;setRoom(next);
+  if(latest.current.session)saveRoom(next,latest.current.session);
  }
  function closeRoom(forget:boolean){
   const departing=latest.current.session??savedSession;
   latest.current={room:null,session:null};setRoom(null);setSession(null);setConnection('local');
   if(forget){
    setSavedSession(null);
+   if(departing){const id=`room-${departing.code}-${departing.playerId}`,record=records.current.get(id);if(record)void saveRecord({...record,session:null,revision:record.revision+1,meta:{...record.meta,status:record.game?.status==='playing'||!record.game?'unavailable':record.game.status,yourTurn:false,updatedAt:Date.now()}}).catch(()=>{});}
    // Another tab may have saved a different room after this tab joined.
    for(const store of [sessionStorage,localStorage]){const value=read(SESSION_KEY,store);if(!departing||(validSession(value)&&value.token===departing.token))write(SESSION_KEY,null,store);}
    pendingCommand.current=null;write(COMMAND_KEY,null,sessionStorage);
@@ -121,6 +147,7 @@ export function useSession(){
   if(!a&&!b)setError('Your browser could not save your seat. Keep this tab open to stay in the room.');
  }
  async function admit(path:string,parameters:JsonObject){
+  if(!libraryReady)throw new Error('Saved games are still loading. Try again in a moment.');
   const old=pendingAdmission.current;
   const pending=old&&old.path===path&&JSON.stringify(old.parameters)===JSON.stringify(parameters)?old:{path,parameters,requestId:crypto.randomUUID()};
   pendingAdmission.current=pending;write(ADMISSION_KEY,pending,sessionStorage);
@@ -129,7 +156,7 @@ export function useSession(){
    if(!data.session||!data.room)throw new ApiError('Your seat was not confirmed. Retry with the same settings.',503,'INVALID_RESPONSE');
    pendingAdmission.current=null;write(ADMISSION_KEY,null,sessionStorage);
    if(!mounted.current)return;
-   persist(data.session);acceptRoom(data.room,true);setSolo(null);setConnection('online');return true;
+   persist(data.session);acceptRoom(data.room,true);setSolo(null);select(`room-${data.session.code}-${data.session.playerId}`);setConnection('online');return true;
   }catch(e){
    if(e instanceof ApiError&&!e.uncertain&&e.status!==429){pendingAdmission.current=null;write(ADMISSION_KEY,null,sessionStorage);}
    throw e;
@@ -137,31 +164,76 @@ export function useSession(){
  }
  async function createRoom(name:string,heroClass:HeroClass,options:GameOptions){return guarded(()=>admit('/api/rooms',{name,heroClass,options}));}
  async function joinRoom(code:string,name:string,heroClass:HeroClass){return guarded(()=>admit('/api/rooms/join',{code:code.trim().toUpperCase(),name,heroClass}));}
- async function resumeRoom(){
-  if(!savedSession)return;
-  return guarded(async()=>{const data=await api(`/api/rooms/${savedSession.code}`,undefined,savedSession);if(!data.room)throw new ApiError('This room could not be restored.',503,'INVALID_RESPONSE');persist(savedSession);acceptRoom(data.room,true);setSolo(null);setConnection('online');return true;});
+ async function openSaved(id:string){
+  if(deleting.current.has(id))return false;
+  await reloadLibrary(id);
+  if(deleting.current.has(id))return false;
+  const record=records.current.get(id);if(!record)return false;
+  if(record.meta.kind==='solo'){
+   if(!record.game)return false;closeRoom(false);setSolo(record.game);select(id);setError('');
+   if(record.meta.archived)void updateSaved(id,{archived:false});return true;
+  }
+  if(!record.session){setError('This saved seat is no longer available. Its replay is still saved.');return false;}
+  const auth=record.session;
+  return !!await guarded(async()=>{
+   let data:ApiData;try{data=await api(`/api/rooms/${auth.code}`,undefined,auth);}catch(e){if(e instanceof ApiError&&e.terminal){const current=records.current.get(id);if(current)await saveRecord({...current,session:null,revision:current.revision+1,meta:{...current.meta,status:current.game?.status==='victory'||current.game?.status==='defeat'?current.game.status:'unavailable',yourTurn:false}}).catch(()=>{});}throw e;}if(!data.room)throw new ApiError('This room could not be restored.',503,'INVALID_RESPONSE');
+   persist(auth);acceptRoom(data.room,true);setSolo(null);select(id);setConnection('online');
+   if(record.meta.archived)await updateSaved(id,{archived:false});return true;
+  });
  }
+ async function resumeRoom(){const entry=[...records.current.values()].find(r=>r.session?.token===savedSession?.token);return entry?openSaved(entry.meta.id):false;}
  function startSolo(name:string,heroClass:HeroClass,options:GameOptions){
   try{
+   if(!libraryReady)throw new Error('Saved games are still loading. Try again in a moment.');
    const players:PlayerSpec[]=[{id:'you',name,heroClass,color:HERO_COLORS[0],bot:false}];
    const classes:HeroClass[]=['cleric','ranger','mage','knight'],names=['Juniper','Pip','Orla','Wren','Clover','Bramble','Moss','Cricket','Rue'];
    for(let i=0;i<Math.min(9,Math.max(0,options.companions));i++)players.push({id:`companion-${i}`,name:names[i],heroClass:classes[i%classes.length],color:HERO_COLORS[i+1],bot:true});
-   setSolo(runBots(createGame(players,options)));closeRoom(false);setError('');return true;
+   const initial=createGame(players,options),game=runBots(initial),record=soloRecord(game,newReplay(initial),crypto.randomUUID());
+   void saveRecord(record).catch(()=>{});setSolo(game);closeRoom(false);select(record.meta.id);setError('');return true;
   }catch(e){setError(e instanceof Error?e.message:'This adventure could not be started.');return false;}
  }
- function resumeSolo(){if(saved){setSolo(saved);closeRoom(false);}}
+ function resumeSolo(){const entry=[...records.current.values()].filter(r=>r.meta.kind==='solo'&&!r.meta.archived).sort((a,b)=>b.meta.updatedAt-a.meta.updatedAt)[0];if(entry)void openSaved(entry.meta.id);}
+ async function reloadLibrary(reopenId?:string){
+  // Wait for every queued save, including saves queued while an earlier write completes.
+  let pending=saving.current;await pending.catch(()=>{});while(pending!==saving.current){pending=saving.current;await pending.catch(()=>{});}
+  const revision=generation.current;
+  try{const all=await store.current!.all();if(!mounted.current||revision!==generation.current)return;
+   const next=new Map(all.map(r=>[r.meta.id,r]));persisted.current=new Map(all.map(r=>[r.meta.id,r.revision]));
+   for(const [id,conflict]of failedWrites.current){if(conflict&&(id===reopenId||!next.has(id))){failedWrites.current.delete(id);continue;}const unsaved=records.current.get(id);if(unsaved)next.set(id,unsaved);}
+   for(const id of deleting.current)next.delete(id);records.current=next;refreshLibrary();
+  }catch(e){setError(e instanceof Error?e.message:'Saved games could not be loaded.');}
+ }
+ function backToLibrary(){closeRoom(false);setSolo(null);select(null);void reloadLibrary();}
+ useEffect(()=>{if(!inLibrary||!libraryReady)return;const refresh=()=>{if(!document.hidden)void reloadLibrary();};window.addEventListener('focus',refresh);return()=>window.removeEventListener('focus',refresh);},[inLibrary,libraryReady]);
+ async function updateSaved(id:string,changes:{title?:string;pinned?:boolean;archived?:boolean}){
+  const record=records.current.get(id);if(!record)return false;
+  const title=changes.title===undefined?record.meta.title:changes.title.trim().slice(0,80);if(!title){setError('Give this game a name.');return false;}
+  if(changes.archived&&active.current===id)backToLibrary();
+  try{await saveRecord({...record,revision:record.revision+1,meta:{...record.meta,...changes,title}});return true;}catch{return false;}
+ }
+ async function deleteSaved(id:string){
+  const record=records.current.get(id);deleting.current.add(id);generation.current++;
+  if(active.current===id)backToLibrary();
+  try{await saving.current.catch(()=>{});await store.current!.delete(id);records.current.delete(id);persisted.current.delete(id);failedWrites.current.delete(id);generation.current++;
+   if(record?.session){for(const storage of [sessionStorage,localStorage]){const value=read(SESSION_KEY,storage);if(validSession(value)&&value.token===record.session.token)write(SESSION_KEY,null,storage);}const command=pendingCommand.current;if(command?.code===record.session.code&&command.playerId===record.session.playerId){pendingCommand.current=null;write(COMMAND_KEY,null,sessionStorage);}write(`${COMMAND_KEY}.${record.session.code}.${record.session.playerId}`,null,sessionStorage);}
+   if(id==='legacy-solo')write(SOLO_KEY,null,localStorage);
+   refreshLibrary();return true;
+  }catch(e){setError(e instanceof Error?e.message:'Could not delete this saved game.');return false;}finally{deleting.current.delete(id);}
+ }
+ async function replayFor(id:string){await saving.current.catch(()=>{});return records.current.get(id)?.replay??null;}
  async function command(value:unknown){
   return guarded(async()=>{
    const s=latest.current.session,r=latest.current.room;if(!s||!r)return;
-   const old=pendingCommand.current;
+   const commandKey=`${COMMAND_KEY}.${s.code}.${s.playerId}`,cached=read(commandKey,sessionStorage);
+   const old=object(cached)&&cached.code===s.code&&cached.playerId===s.playerId&&object(cached.payload)&&typeof cached.payload.requestId==='string'&&Number.isInteger(cached.payload.version)?cached as PendingCommand:pendingCommand.current;
    const recovering=!!old&&old.code===s.code&&old.playerId===s.playerId;
    const pending:PendingCommand=recovering?old:{code:s.code,playerId:s.playerId,payload:{requestId:crypto.randomUUID(),version:r.version,command:value}};
    const differentIntent=recovering&&JSON.stringify(pending.payload.command)!==JSON.stringify(value);
-   pendingCommand.current=pending;write(COMMAND_KEY,pending,sessionStorage);
+   pendingCommand.current=pending;write(COMMAND_KEY,pending,sessionStorage);write(commandKey,pending,sessionStorage);
    let data:ApiData;
    try{data=await retryOnce(()=>api(`/api/rooms/${s.code}`,pending.payload,s));}
-   catch(e){if(e instanceof ApiError&&!e.uncertain&&e.status!==429){pendingCommand.current=null;write(COMMAND_KEY,null,sessionStorage);}throw e;}
-   pendingCommand.current=null;write(COMMAND_KEY,null,sessionStorage);
+   catch(e){if(e instanceof ApiError&&!e.uncertain&&e.status!==429){pendingCommand.current=null;write(COMMAND_KEY,null,sessionStorage);write(commandKey,null,sessionStorage);}throw e;}
+   pendingCommand.current=null;write(COMMAND_KEY,null,sessionStorage);write(commandKey,null,sessionStorage);
    if(!mounted.current||latest.current.session?.token!==s.token)return;
    if(data.room)acceptRoom(data.room);
    if(data.left)closeRoom(true);
@@ -171,8 +243,26 @@ export function useSession(){
  }
  function action(value:GameAction){
   if(latest.current.room)return command({type:'action',action:value});
-  if(solo){try{setSolo(runBots(applyAction(solo,'you',value)));setError('');}catch(e){setError(e instanceof Error?e.message:'That action is unavailable.');}}
+  const record=active.current?records.current.get(active.current):undefined;
+  if(record?.game&&record.replay){try{const game=runBots(applyAction(record.game,'you',value)),replay=appendReplay(record.replay,{type:'action',playerId:'you',action:value});setSolo(game);void saveRecord(updateSoloRecord(record,game,replay)).catch(()=>{});setError('');}catch(e){setError(e instanceof Error?e.message:'That action is unavailable.');}}
  }
+ // Refresh waiting rooms without heartbeat: being at Games must not claim a player is present at every table.
+ useEffect(()=>{
+  if(!inLibrary||!libraryReady)return;
+  let stopped=false,timer:ReturnType<typeof setTimeout>|undefined,index=0;
+  const poll=async()=>{
+   if(stopped)return;
+   if(!document.hidden){
+    const waiting=[...records.current.values()].filter(r=>r.session&&!r.meta.archived&&!deleting.current.has(r.meta.id)&&['playing','lobby'].includes(r.meta.status));
+    const record=waiting.length?waiting[index++%waiting.length]:null;
+    if(record?.session){try{
+     const data=await api(`/api/rooms/${record.session.code}?version=${record.room?.version??-1}&background=1`,undefined,record.session);
+     if(!stopped&&data.room&&records.current.has(record.meta.id))saveRoom(data.room,record.session);
+    }catch(e){if(!stopped&&e instanceof ApiError&&e.terminal){const current=records.current.get(record.meta.id);if(current)void saveRecord({...current,session:null,revision:current.revision+1,meta:{...current.meta,status:current.game?.status==='playing'||!current.game?'unavailable':current.game.status,yourTurn:false}}).catch(()=>{});}}}
+   }
+   if(!stopped)timer=setTimeout(poll,2500);
+  };void poll();return()=>{stopped=true;if(timer)clearTimeout(timer);};
+ },[inLibrary,libraryReady]);
  useEffect(()=>{
   if(!session)return;
   let stopped=false,timer:ReturnType<typeof setTimeout>|undefined,controller:AbortController|undefined,failures=0;
@@ -201,5 +291,5 @@ export function useSession(){
   timer=setTimeout(poll,1000);
   return()=>{stopped=true;if(timer)clearTimeout(timer);controller?.abort();};
  },[session]);
- return {game:room?.game||solo,room,session,saved,savedSession,busy,error,setError,connection,startSolo,resumeSolo,createRoom,joinRoom,resumeRoom,command,action};
+ return {game:room?.game||solo,room,session,saved,savedSession,busy,error,setError,connection,startSolo,resumeSolo,createRoom,joinRoom,resumeRoom,command,action,library,libraryReady,activeId,openSaved,backToLibrary,updateSaved,deleteSaved,replayFor};
 }

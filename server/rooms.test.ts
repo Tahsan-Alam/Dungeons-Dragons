@@ -4,7 +4,7 @@ import { DatabaseSync } from 'node:sqlite';
 import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { RoomService, RoomError } from './rooms.ts';
+import { RoomService, RoomError, ROOM_LIFETIME } from './rooms.ts';
 import { MemoryRoomStore, D1RoomStore } from './room-store.ts';
 import { DEFAULT_OPTIONS } from '../game/types.ts';
 import type { Session, RoomView } from '../game/types.ts';
@@ -192,7 +192,7 @@ test('invalid and oversized input cannot mutate room state',async()=>{
 });
 
 test('expired rooms cannot be rejoined or resumed',async()=>{
-  let now=100_000;const s=new RoomService(new MemoryRoomStore(),()=>now),host=await make(s);now+=73*60*60*1000;
+  let now=100_000;const s=new RoomService(new MemoryRoomStore(),()=>now),host=await make(s);now+=ROOM_LIFETIME+1;
   await assert.rejects(()=>roomOf(s,host.session),(e:unknown)=>e instanceof RoomError&&e.code==='ROOM_NOT_FOUND');
   await assert.rejects(()=>s.join({code:host.session.code,name:'Friend',heroClass:'mage'}),(e:unknown)=>e instanceof RoomError&&e.code==='ROOM_NOT_FOUND');
 });

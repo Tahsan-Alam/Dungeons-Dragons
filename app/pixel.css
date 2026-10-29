@@ -62,3 +62,15 @@ html[data-theme='pixel'] .theme-toggle button[aria-pressed=true]{background:#faf
 html[data-theme='pixel'] :is(button,input,select,a,[role=button]):focus-visible{outline-color:#bc8746}
 html[data-theme='pixel'] .pixel-art{image-rendering:pixelated}
 html[data-theme='pixel'] .game-board rect{rx:0;ry:0}
+
+/* The same interaction geometry, rendered with the pixel theme's surfaces. */
+html[data-theme='pixel'] :is(.leave-confirm,.modal-head,.text-button,button.brand){border-radius:0}
+html[data-theme='pixel'] .games-heading h1{font-family:'Pixelify Sans',monospace;letter-spacing:-.02em}
+html[data-theme='pixel'] .button.danger{background:#a34d3e;border-color:#a34d3e;color:#fff3ca}
+html[data-theme='pixel'] .leave-confirm{background:var(--surface);border-color:var(--line);box-shadow:3px 3px 0 #61755830}
+html[data-theme='pixel'] .theme-toggle button:hover:not(:disabled){background:#e5ebd2}
+html[data-theme='pixel'] .theme-toggle button[aria-pressed=true]:hover{background:var(--surface);box-shadow:2px 2px 0 #61755850}
+html[data-theme='pixel'] .text-button:hover:not(:disabled),html[data-theme='pixel'] button.brand:hover{background:#dce5c6;color:var(--forest)}
+html[data-theme='pixel'] .modal-head{background:var(--paper)}
+html[data-theme='pixel'] .chapter-art>.panorama{animation-name:pixel-scene-in}
+@keyframes pixel-scene-in{from{opacity:.6}to{opacity:1}}

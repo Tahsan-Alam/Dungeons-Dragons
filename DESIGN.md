@@ -9,3 +9,9 @@ Main surfaces: menu/illustrated adventure preview; setup/class/rules selection; 
 MVP: three encounters, four classes, procedural seeded maps, solo companions, server-authoritative cooperative rooms up to ten players, persisted room progress, simple and classic rules subset. Classic is not the entire D&D rules system. Scripted narrator/enemies are explicitly disclosed. AI hooks live behind replaceable interfaces and fixtures; no provider SDK or credentials.
 
 Future physical tabletop: commands and serializable game state are independent of SVG rendering and networking. A tabletop input adapter can later supply manual movement/rolls, with separate validation rather than silently trusting client state.
+
+## October 29 interface revision
+
+The home screen is now a game library, not a promotional landing page. Removed slogans, decorative subtitles, duplicate turn labels and prominent development details. Keep story prose in the adventure and journal; UI copy names an action, object or useful status. AI/provider information belongs in Settings.
+
+The library uses compact rows with resume/replay, pin and an overflow menu. Both themes keep the same geometry. Party and journal widths use viewport-based defaults, saved proportions, clamps and keyboard-accessible separators; compact screens use touch-first modal drawers. A pointer-only edge reveal is optional. Two shortcuts per action are editable with conflict checks, while typing and dialogs suspend gameplay shortcuts. Replay uses a separate read-only renderer and asynchronously reconstructs immutable recorded frames.

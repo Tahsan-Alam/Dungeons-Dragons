@@ -7,6 +7,7 @@ export function Icon({name,size=20,...rest}:{name:string;size?:number;className?
  const {theme}=useTheme();
  if(theme==='pixel')return <PixelIcon name={name} size={size} {...rest}/>;
  const paths:Record<string,React.ReactNode>={
+ pin:<><path d="M8 3h8m-7 0v6l-3 4v2h12v-2l-3-4V3M12 15v7"/></>,
  dice:<><path d="m12 2 9 5v10l-9 5-9-5V7Z"/><path d="m3 7 9 3 9-3M12 2v8m0 0-5 8h10Zm0 12v-4M3 17l4 1m10 0 4-1"/></>,
  arrow:<path d="M4 12h16m-6-6 6 6-6 6"/>, back:<path d="M20 12H4m6-6-6 6 6 6"/>, close:<path d="m6 6 12 12M6 18 18 6"/>,
  sword:<><path d="m5 19 12-12 3-3v5L8 21M4 14l6 6M3 21l3-3"/><path d="m13 6 5 5"/></>, shield:<path d="m12 3 8 3v7c-1 5-8 8-8 8s-7-3-8-8V6Zm0 4v10"/>, heart:<path d="M12 21S1 14 2 7c1-6 8-5 10-1 2-4 9-5 10 1 1 7-10 14-10 14Z"/>,
