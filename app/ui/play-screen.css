@@ -39,7 +39,7 @@
 .play-refined .action-buttons .action-button>span{font:11px/1.1 system-ui}
 .play-refined .action-buttons .action-button>svg{width:18px;height:18px}
 .play-refined .action-buttons .action-button>small{font:10px/1 system-ui;top:5px;right:7px}
-.play-refined .action-buttons .action-button>kbd{font-size:8px}
+.play-refined .action-buttons .action-button>kbd{font-size:8px;max-width:calc(100% - 26px);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .play-refined .end-turn{min-width:110px;min-height:48px;height:48px;margin:0;padding:8px 12px;font-size:12px;gap:8px;align-self:stretch;border-radius:6px}
 .play-refined .action-hint{grid-column:1/-1;margin:0;min-height:16px;font-size:11px;line-height:1.4;color:var(--muted)}
 .play-refined .action-button:active:not(:disabled),.play-refined .end-turn:active:not(:disabled){transform:translateY(1px)}

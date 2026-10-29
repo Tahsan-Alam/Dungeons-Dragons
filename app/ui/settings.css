@@ -3,7 +3,8 @@ html[data-theme=pixel] .settings-leave{border-radius:0}
 @media(max-width:600px){.settings-tabs{padding:0 20px}.settings-tabs button{min-height:50px}.general-settings{padding:0 20px 22px}.help-shortcuts,.rules-details{margin-left:22px;margin-right:22px}.ai-summary{padding:20px}.settings-link{min-height:54px}.help-list li{margin-bottom:10px}.chapter-copy .results-row>.button{width:100%}}
 
 /* One settings surface with direct sections; bindings are searchable instead of nested. */
-.modal:has(.settings-shell){display:flex;flex-direction:column;width:min(880px,calc(100vw - 32px));overflow:hidden}
+.modal:has(.settings-shell){width:min(880px,calc(100vw - 32px));overflow:hidden}
+.modal[open]:has(.settings-shell){display:flex;flex-direction:column}
 .modal:has(.settings-shell) .modal-head{flex:none}
 .modal:has(.settings-shell) .settings-shell{flex:1 1 auto}
 .settings-shell{display:grid;grid-template-columns:156px minmax(0,1fr);height:min(580px,calc(100dvh - 140px));min-height:0}
