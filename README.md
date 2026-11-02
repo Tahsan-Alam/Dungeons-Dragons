@@ -1,5 +1,9 @@
 # Painted Realms
 
+**Status: `0.1.0-alpha.1` — playable prototype.** Features, rules and saved-game formats may change during alpha.
+
+[Play the hosted game](https://painted-realms.richie-r9.chatgpt.site/) · [Contribute](CONTRIBUTING.md) · [Roadmap](ROADMAP.md) · [Changelog](CHANGELOG.md)
+
 A playable cooperative browser adventure with Paint and Pixel artwork, each available in 2D and 2.5D. All four presentations render the same game state without restarting the room, turn or character. Changing world view reframes the camera; changing art style preserves it. No paid AI service is connected.
 
 ## Play
@@ -17,7 +21,16 @@ A playable cooperative browser adventure with Paint and Pixel artwork, each avai
 
 ## Run locally
 
-Requires Node.js 22.13+; tested with Node 26. Install with `npm ci`, then `npm run dev -- --port 5347 --hostname 127.0.0.1`. Open the address printed by the server.
+Use **Node.js 26**, matching `.nvmrc` and the automated checks. Node 22.13+ is supported, but the tests also require `node:sqlite`.
+
+```sh
+git clone https://github.com/Tahsan-Alam/Dungeons-Dragons.git
+cd Dungeons-Dragons
+npm ci
+npm run dev -- --port 5347 --hostname 127.0.0.1
+```
+
+Open the address printed by the server. Start with solo play; no AI keys are required. Multiplayer also needs the local database initialization below.
 
 For a fresh local multiplayer database, build once with `npm run build`, then run:
 
@@ -30,9 +43,7 @@ Run that initial migration only once. The dev and built previews share `.wrangle
 ## Verify
 
 ```sh
-npx tsc --noEmit
-node --experimental-strip-types --test game/*.test.ts server/*.test.ts app/ui/*.test.ts
-npm run build
+npm run check
 ```
 
 The pure engine and server tests need Node 22.13+ (Node 26 recommended for `node:sqlite`). No provider credentials are needed. See test files for actual coverage rather than treating passing tests as full D&D compliance.
