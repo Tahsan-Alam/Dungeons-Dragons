@@ -40,8 +40,8 @@ function random(game: GameState): number {
 
 function die(game: GameState, sides: number) { return Math.floor(random(game) * sides) + 1; }
 
-function event(game: GameState, kind: GameEvent['kind'], text: string, actorId?: string, roll?: number) {
-  game.events.push({ id: ++game.eventSequence, kind, text, ...(actorId ? { actorId } : {}), ...(roll !== undefined ? { roll } : {}) });
+function event(game: GameState, kind: GameEvent['kind'], text: string, actorId?: string, roll?: number, attack?: GameEvent['attack']) {
+  game.events.push({ id: ++game.eventSequence, kind, text, ...(actorId ? { actorId } : {}), ...(roll !== undefined ? { roll } : {}), ...(attack ? {attack} : {}) });
   if (game.events.length > MAX_EVENTS) game.events.splice(0, game.events.length - MAX_EVENTS);
 }
 
@@ -265,7 +265,7 @@ function strike(game: GameState, actor: Actor, target: Actor, ability: boolean) 
   actor.actionUsed = true;
   if (ability) actor.abilityUses--;
   if (!hit) {
-    event(game, 'roll', `${actor.name} rolls ${roll}${game.options.rules === 'classic' ? ` + ${bonus} vs AC ${target.ac}` : ''} and misses ${target.name}.`, actor.id, roll);
+    event(game, 'roll', `${actor.name} rolls ${roll}${game.options.rules === 'classic' ? ` + ${bonus} vs AC ${target.ac}` : ''} and misses ${target.name}.`, actor.id, roll, {targetId:target.id,action:ability?'ability':'attack',hit:false,critical:false,damage:0});
     return;
   }
   const damageDie = actor.enemy ? 4 : stats.die;
@@ -274,7 +274,7 @@ function strike(game: GameState, actor: Actor, target: Actor, ability: boolean) 
   if (ability) damage += actor.heroClass === 'knight' ? 5 : 4;
   if (game.options.rules === 'simple' && target.guarding) damage = Math.max(1, Math.floor(damage / 2));
   target.hp = Math.max(0, target.hp - damage);
-  event(game, 'roll', `${actor.name} ${ability ? 'uses a special attack on' : 'hits'} ${target.name} for ${damage} damage${roll === 20 ? ' — critical hit!' : '.'} (d20: ${roll})`, actor.id, roll);
+  event(game, 'roll', `${actor.name} ${ability ? 'uses a special attack on' : 'hits'} ${target.name} for ${damage} damage${roll === 20 ? ' — critical hit!' : '.'} (d20: ${roll})`, actor.id, roll, {targetId:target.id,action:ability?'ability':'attack',hit:true,critical:roll===20,damage});
   if (target.hp === 0) {
     target.defeated = target.enemy;
     target.deathSuccesses = 0; target.deathFailures = 0;

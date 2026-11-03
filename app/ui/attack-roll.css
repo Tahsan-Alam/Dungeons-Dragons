@@ -1,0 +1,32 @@
+.attack-roll{padding:20px 28px 28px;text-align:center}
+.attack-roll-target{margin:0;overflow-wrap:anywhere}
+.attack-roll-target strong{display:block;font-size:18px}
+.attack-roll-target span{display:block;margin-top:4px;color:var(--muted);font-size:14px}
+.attack-die{display:block;width:clamp(140px,28vh,210px);max-width:100%;height:auto;margin:8px auto}
+.die-shadow{fill:var(--ink);opacity:.15}
+.die-body{transform-origin:100px 100px}
+.attack-die.is-rolling .die-body{animation:attack-dice-tumble 900ms ease-out both}
+.attack-die.pixel-die.is-rolling .die-body{animation-timing-function:steps(12,end)}
+.attack-roll-status{min-height:66px;display:flex;flex-direction:column;justify-content:center;gap:4px}
+.attack-roll-status p{margin:0;font-size:14px;line-height:1.5;overflow-wrap:anywhere}
+.attack-roll-status p>span{color:var(--muted)}
+.attack-outcome{font:700 28px/1.2 Georgia,serif;color:var(--ink)}
+.attack-outcome.hit{color:var(--world-health,#377d68)}
+.attack-roll-actions{display:flex;flex-wrap:wrap;justify-content:center;gap:12px;margin-top:18px}
+.attack-roll-actions .button{min-height:44px;flex:1}
+@keyframes attack-dice-tumble{
+ 0%{transform:translateY(0) rotate(0) scale(1)}
+ 25%{transform:translateY(-12px) rotate(130deg) scale(.9)}
+ 55%{transform:translateY(-5px) rotate(290deg) scale(1.03)}
+ 78%{transform:translateY(2px) rotate(370deg) scale(.97)}
+ 100%{transform:translateY(0) rotate(360deg) scale(1)}
+}
+html[data-motion=reduced] .attack-die.is-rolling .die-body{animation:none}
+@media(prefers-reduced-motion:reduce){html:not([data-motion=full]) .attack-die.is-rolling .die-body{animation:none}}
+@media(max-width:480px){.attack-roll{padding:16px 18px 20px}.attack-roll-actions{gap:8px}.attack-roll-status{min-height:60px}}
+@media(max-height:550px){
+ .modal:has(.attack-roll) .modal-head{padding-block:10px}
+ .attack-die{width:110px;margin:0 auto}.attack-roll{padding:12px 18px}
+ .attack-roll-target strong{display:inline;font-size:16px}.attack-roll-target span{display:inline;margin-left:8px;font-size:12px}
+ .attack-roll-status{min-height:48px}.attack-roll-actions{margin-top:10px}
+}

@@ -6,6 +6,8 @@ import {encounterCleared,getReachable} from '../../game/engine';
 import Board,{type Tool,type BoardControls} from './Board';
 import {HeroArt,Icon} from './Art';
 import Modal from './Modal';
+import AttackRoll from './AttackRoll';
+import {prepareAttackRoll,type AttackRollRequest} from './attack-roll';
 import {useHeaderInert} from './AppHeader';
 import {useControls} from './useControls';
 import {usePanels} from './usePanels';
@@ -15,6 +17,7 @@ import './play-screen.css';
 export default function PlayTable({game,room,session,busy,connection,onAction,onMenu,onHelp,onAI,onSettings,voice,onVoice,music,onMusic,onSkip}:{game:GameState;room:RoomView|null;session:Session|null;busy:boolean;connection:string;onAction:(a:GameAction)=>unknown;onMenu:()=>void;onHelp:()=>void;onAI:()=>void;onSettings:()=>void;voice:boolean;onVoice:()=>void;music:boolean;onMusic:()=>void;onSkip:()=>void}){
  const {preferences}=useControls(),panels=usePanels();const board=useRef<BoardControls>(null),drawerPanel=useRef<HTMLElement>(null),drawerOpener=useRef<HTMLElement|null>(null),hoverDrawer=useRef(false),edgeGate=useRef(createEdgeRevealGate());const[confirmEnd,setConfirmEnd]=useState(false),[moving,setMoving]=useState(false);const actionPending=useRef(false);
  const[tool,setTool]=useState<Tool>('move'),[selectedId,setSelectedId]=useState(''),[drawer,setDrawer]=useState<'party'|'story'|null>(null),[detailId,setDetailId]=useState<string|null>(null);
+ const[pendingRoll,setPendingRoll]=useState<AttackRollRequest|null>(null);
  useHeaderInert(!!drawer&&panels.compact);
  const detail=game.actors.find(a=>a.id===detailId);
  const actor=game.actors.find(a=>a.id===game.activeActorId),mine=game.actors.find(a=>a.playerId===(session?.playerId||'you'));const myTurn=!!actor&&!actor.bot&&actor.playerId===(session?.playerId||'you')&&game.status==='playing';
@@ -24,7 +27,7 @@ export default function PlayTable({game,room,session,busy,connection,onAction,on
  function act(a:GameAction){
   if(busy||!myTurn||actionPending.current||board.current?.isInteracting()||board.current?.isMoving())return;
   actionPending.current=true;
-  try{const result=onAction(a);if(a.type==='attack'||a.type==='ability')setTool('move');void Promise.resolve(result).then(()=>{actionPending.current=false},()=>{actionPending.current=false})}catch(error){actionPending.current=false;throw error}
+  try{const result=onAction(a);if(a.type==='attack'||a.type==='ability')setTool('move');return Promise.resolve(result).then(value=>{actionPending.current=false;return value},()=>{actionPending.current=false})}catch(error){actionPending.current=false;throw error}
  }
  function step(dx:number,dy:number){
   if(!actor||!myTurn||busy||moving||actionPending.current||board.current?.isMoving())return;
@@ -34,7 +37,7 @@ export default function PlayTable({game,room,session,busy,connection,onAction,on
  const locked=busy||moving;
  const shortcut=(action:ControlAction)=>bindingLabel(preferences.bindings[action][0]||preferences.bindings[action][1]);
  function actionTip(action:'move'|'attack'|'ability'|'guard'|'potion'|'end'){
-  const descriptions={move:'Choose a reachable tile, or use your movement keys.',attack:'Attack an enemy within range.',ability:actor?`${CLASS_INFO[actor.heroClass].ability}. ${actor.abilityUses} uses left.`:'Use your class power.',guard:'Defend yourself until your next turn.',potion:'Drink a potion to restore health.',end:'Finish your turn and let the next character act.'};
+  const descriptions={move:'Choose a reachable tile, or use your movement keys.',attack:'Choose an enemy within range, then roll the dice to attack.',ability:actor?`${CLASS_INFO[actor.heroClass].ability}. ${actor.abilityUses} uses left.`:'Use your class power.',guard:'Defend yourself until your next turn.',potion:'Drink a potion to restore health.',end:'Finish your turn and let the next character act.'};
   const reason=!myTurn?'Wait for your turn.':busy?'Saving your action.':moving?'Movement is in progress.':action!=='move'&&action!=='end'&&actor?.actionUsed?'You have used your action.':action==='potion'&&!actor?.potions?'No potions remaining.':action==='potion'&&actor&&actor.hp>=actor.maxHp?'Your health is full.':action==='ability'&&!actor?.abilityUses?'No power uses remaining.':'';
   return `${descriptions[action]}${reason?' '+reason:''}`;
  }
@@ -56,7 +59,14 @@ export default function PlayTable({game,room,session,busy,connection,onAction,on
  const direction:Partial<Record<ControlAction,[number,number]>>={moveUp:[0,-1],moveDown:[0,1],moveLeft:[-1,0],moveRight:[1,0]};if(direction[action]){e.preventDefault();step(...direction[action]!);return;}
  if(action==='move'){e.preventDefault();setTool('move')}else if(action==='attack'&&!actor?.actionUsed){e.preventDefault();setTool('attack')}else if(action==='ability'&&!actor?.actionUsed&&actor?.abilityUses){e.preventDefault();setTool('ability')}else if(action==='end'){e.preventDefault();endTurn()}else if(action==='guard'&&!actor?.actionUsed){e.preventDefault();act({type:'guard'})}else if(action==='potion'&&!actor?.actionUsed&&actor?.potions&&actor.hp<actor.maxHp){e.preventDefault();act({type:'potion'})}else if(action==='interact'&&clear){e.preventDefault();act({type:game.chest.opened?'advance':'interact'})}
  };window.addEventListener('keydown',handler);return()=>window.removeEventListener('keydown',handler)},[preferences.bindings,preferences.confirmEnd,myTurn,busy,moving,actor,game.chest.opened,clear,drawer,panels.compact,panels.dragging,onMenu,onSettings,onAction]);
- function clickActor(a:Actor){setSelectedId(a.id);if(myTurn&&(tool==='attack'||tool==='ability')){act({type:tool,targetId:a.id})}else if(myTurn&&a.enemy&&actor&&!actor.actionUsed){act({type:'attack',targetId:a.id})}else{setDetailId(a.id)}}
+ function chooseTarget(action:Extract<GameAction,{targetId:string}>){
+  if(!actor||!myTurn||locked||actionPending.current||board.current?.isInteracting()||board.current?.isMoving())return;
+  // Healing keeps its existing flow. Invalid targets still use the engine's error messages.
+  const request=prepareAttackRoll(game,actor,action);
+  if(!request){act(action);return}
+  setPendingRoll(request);
+ }
+ function clickActor(a:Actor){setSelectedId(a.id);if(myTurn&&(tool==='attack'||tool==='ability')){chooseTarget({type:tool,targetId:a.id})}else if(myTurn&&a.enemy&&actor&&!actor.actionUsed){chooseTarget({type:'attack',targetId:a.id})}else{setDetailId(a.id)}}
  const party=game.actors.filter(a=>!a.enemy);const log=useMemo(()=>game.events.slice(-45).reverse(),[game.events]);
  const currentPlayer=room?.players.find(p=>p.id===actor?.playerId);const canSkip=room&&room.hostId===session?.playerId&&currentPlayer&&!currentPlayer.bot&&Date.now()-currentPlayer.lastSeen>45000;
  const selected=target||mine;const hint=!myTurn?`Waiting for ${actor?.name||'the party'}.`:clear?game.chest.opened?'The lantern shard is yours. Reach the marked gateway.':'The clearing is safe. Move beside the chest to open it.':tool==='move'?actor?.actionUsed?'Action used. Reposition, then end your turn.':`Move with ${shortcut('moveUp')} ${shortcut('moveLeft')} ${shortcut('moveDown')} ${shortcut('moveRight')} or select a tile. Select an enemy to attack.`:tool==='ability'?`${CLASS_INFO[actor!.heroClass].ability}: select ${actor!.heroClass==='cleric'?'an injured friend':'a highlighted enemy'}.`:'Select a highlighted enemy to attack.';
@@ -75,6 +85,7 @@ export default function PlayTable({game,room,session,busy,connection,onAction,on
  </main>{panels.separator('right')}<aside onPointerLeave={e=>{if(e.pointerType==='mouse'&&hoverDrawer.current&&!document.querySelector('dialog[open]'))closeDrawer()}} role={drawer==='story'&&panels.compact?'dialog':undefined} aria-modal={drawer==='story'&&panels.compact?true:undefined} aria-label="Adventure log" inert={drawer==='party'&&panels.compact} className={`story-rail ${drawer==='story'?'drawer-open':''}`}><div className="rail-heading"><h2>Adventure log</h2><button className="icon-button" title={voice?'Mute narration':'Enable device narration'} aria-label={voice?'Mute narration':'Enable device narration'} aria-pressed={voice} onClick={onVoice}><Icon name={voice?'sound':'mute'} size={18}/></button><button className="drawer-close icon-button" onClick={closeDrawer} aria-label="Close story"><Icon name="close"/></button></div><div className="story-log" aria-label="Adventure journal">{log.map(e=><article key={e.id} className={`journal-entry ${e.kind}`}><div className="entry-symbol">{e.roll!==undefined?<span className="roll-die">{e.roll}</span>:<Icon name={e.kind==='story'?'book':e.kind==='system'?'flag':'sword'} size={15}/>}</div><div><p>{e.text}</p></div></article>)}</div><footer className="story-footer"><button className="text-button" onClick={onMusic}><Icon name="music" size={16}/>{music?'Music on':'Music off'}</button></footer></aside></div>
  <div className={`game-connection ${connection==='reconnecting'?'connection-warning':''}`} aria-live="polite">{connection==='reconnecting'?'Reconnecting… Your game is saved.':null}</div>
 
+ {pendingRoll?<AttackRoll key={`${pendingRoll.actorId}-${pendingRoll.eventSequence}`} request={pendingRoll} game={game} busy={locked} onRoll={()=>act(pendingRoll.action)} onClose={()=>setPendingRoll(null)}/>:null}
  {confirmEnd?<Modal title="End this turn?" onClose={()=>setConfirmEnd(false)}><div className="confirm-turn"><p>You still have an action available.</p><div><button className="button paper" onClick={()=>setConfirmEnd(false)}>Keep playing</button><button className="button primary" onClick={()=>{setConfirmEnd(false);act({type:'end'})}}>End turn</button></div></div></Modal>:null}
  {detail?<Modal title={detail.name} onClose={()=>setDetailId(null)}><div className="character-detail"><div className="detail-portrait" style={{background:detail.color+'30'}}><HeroArt heroClass={detail.heroClass} color={detail.color}/></div><div><h3>{CLASS_INFO[detail.heroClass].name}</h3><p>{CLASS_INFO[detail.heroClass].description}</p><dl className="stats-grid"><div><dt>Health</dt><dd>{detail.hp}/{detail.maxHp}</dd></div><div><dt>Armor</dt><dd>{detail.ac}</dd></div><div><dt>Speed</dt><dd>{detail.speed*5} ft</dd></div><div><dt>Potions</dt><dd>{detail.potions}</dd></div><div><dt>Power uses</dt><dd>{detail.abilityUses}</dd></div><div><dt>Initiative</dt><dd>{detail.initiative}</dd></div></dl><p><strong>{CLASS_INFO[detail.heroClass].ability}</strong> · {detail.abilityUses} uses left this encounter.</p></div></div></Modal>:null}
  </div>
