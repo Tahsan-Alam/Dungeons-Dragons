@@ -8,7 +8,7 @@ A playable cooperative browser adventure with Paint and Pixel artwork, each avai
 
 ## Play
 
-- **Solo quest:** choose a class, rules, setting, seed and 0–3 scripted companions. Use arrow keys or select highlighted tiles to move, then attack, use a power, guard, or drink a potion. End your turn to let the other characters act.
+- **Solo quest:** choose a class, rules, setting, seed and 0–3 scripted companions. Use arrow keys or select highlighted tiles to move, then attack, use a power, guard, or drink a potion. Select an enemy and press **Roll d20** to animate your attack die, then see the confirmed roll, hit/miss and damage. End your turn to let the other characters act.
 - **Gather party:** create a room and share its invite link/code. Up to ten heroes total, including companions. Everyone clicks Ready, then the host begins.
 - Defeat the enemies, move beside the chest and open it, then reach the gateway. Recover three lantern shards to win.
 - Camp has an interactive example board; Adventures is a separate saved-game library. The same navigation, art controls, help, and settings remain available on every screen.

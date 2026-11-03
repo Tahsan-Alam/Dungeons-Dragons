@@ -5,7 +5,7 @@ Painted Realms is a cooperative, three-encounter adventure. One to ten heroes re
 ## On your turn
 
 1. Click a reachable square to move. Each square is five feet; movement follows horizontal and vertical paths. Walls, water, and occupied squares block movement.
-2. Take one action: attack, use your class power, guard, or drink a potion. You can move before or after your action, within your remaining movement.
+2. Take one action: attack, use your class power, guard, or drink a potion. To attack, select an enemy, then press **Roll d20** to start the animated die. The result shows the confirmed d20, hit/miss or critical hit, and damage; press **Continue** to return to the board. Offensive class powers use the same roll prompt; canceling before rolling spends nothing. Reduced motion skips the tumble. You can move before or after your action, within your remaining movement.
 3. End your turn. Other heroes and enemies then take their turns.
 
 Ranged attacks need a clear line of sight. Walls block sight; water does not. Knights and clerics attack adjacent squares. Rangers attack within five squares and mages within four. Range uses horizontal-plus-vertical distance, matching movement. These are intentionally simple grid conventions.
