@@ -3,6 +3,7 @@ import {useEffect,useRef,useState} from 'react';
 import type {GameEvent,GameState} from '../../game/types';
 import {canStartAttackRoll,findAttackRollResult,type AttackRollRequest} from './attack-roll';
 import DiceArt from './DiceArt';
+import RollOutcome from './RollOutcome';
 import Modal from './Modal';
 import {Icon} from './Art';
 import {useTheme} from './Theme';
@@ -40,7 +41,7 @@ export default function AttackRoll({request,game,busy,onRoll,onClose}:{request:A
    <p className="attack-roll-target"><strong>{request.title}</strong><span>Against {request.targetName}</span></p>
    <DiceArt theme={theme} value={outcome?.roll} rolling={rolling}/>
    <div className="attack-roll-status" role="status" aria-live="polite" aria-atomic="true">
-    {outcome?.attack?<><strong className={`attack-outcome ${outcome.attack.hit?'hit':'miss'}`}>{outcome.attack.critical?'Critical hit!':outcome.attack.hit?'Hit':'Miss'}</strong><p><b>{outcome.attack.damage}</b> damage <span>· d20: {outcome.roll}</span></p></>:waiting?<p>{rolling?'Rolling…':'Waiting for your roll…'}</p>:unconfirmed?<p>No confirmed result yet. Check the adventure log before trying again.</p>:<p>Ready when you are. Roll to attack.</p>}
+    {outcome?<RollOutcome event={outcome}/>:waiting?<p>{rolling?'Rolling…':'Waiting for your roll…'}</p>:unconfirmed?<p>No confirmed result yet. Check the adventure log before trying again.</p>:<p>Ready when you are. Roll to attack.</p>}
    </div>
    <div className="attack-roll-actions">
     {!started?<><button className="button paper" onClick={onClose}>Cancel</button><button className="button primary" disabled={busy||!valid} onClick={()=>void roll()}><Icon name="dice" size={20}/>Roll d20</button></>:<button ref={continueButton} className="button primary" disabled={waiting} onClick={onClose}>{waiting?'Rolling…':unconfirmed?'Close':'Continue'}</button>}

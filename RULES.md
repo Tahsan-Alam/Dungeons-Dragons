@@ -8,6 +8,8 @@ Painted Realms is a cooperative, three-encounter adventure. One to ten heroes re
 2. Take one action: attack, use your class power, guard, or drink a potion. To attack, select an enemy, then press **Roll d20** to start the animated die. The result shows the confirmed d20, hit/miss or critical hit, and damage; press **Continue** to return to the board. Offensive class powers use the same roll prompt; canceling before rolling spends nothing. Reduced motion skips the tumble. You can move before or after your action, within your remaining movement.
 3. End your turn. Other heroes and enemies then take their turns.
 
+Other players', companions' and enemies' rolls appear on your screen automatically, one at a time, with their names and confirmed results. Use **Next roll** or **Continue** to move on sooner, or let the display advance automatically. Watching a roll does not spend an action or roll the dice again. Automatic death saves appear too; reduced motion skips the tumble.
+
 Ranged attacks need a clear line of sight. Walls block sight; water does not. Knights and clerics attack adjacent squares. Rangers attack within five squares and mages within four. Range uses horizontal-plus-vertical distance, matching movement. These are intentionally simple grid conventions.
 
 Each hero begins with two potions and two class-power uses per encounter. Knight: extra damage. Ranger: a longer ranged shot with advantage. Mage: extra arcane damage to one target. Cleric: restore an injured or downed ally's health within four squares. Powers consume the turn's action. Potions heal 2d4 + 6 HP and consume an action.

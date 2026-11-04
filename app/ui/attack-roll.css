@@ -14,6 +14,12 @@
 .attack-outcome.hit{color:var(--world-health,#377d68)}
 .attack-roll-actions{display:flex;flex-wrap:wrap;justify-content:center;gap:12px;margin-top:18px}
 .attack-roll-actions .button{min-height:44px;flex:1}
+.shared-roll-count{margin:10px 0 0;font-size:11px;color:var(--muted)}
+.shared-roll .attack-roll-target span{overflow-wrap:anywhere}
+.shared-roll .attack-roll-target span+span{margin-top:2px}
+.shared-roll[data-paused=true] .die-body{animation-play-state:paused}
+@media(max-height:650px){.shared-roll .attack-die{width:120px}.shared-roll.attack-roll{padding-block:12px}.shared-roll-count{margin-top:6px}}
+@media(max-height:550px){.shared-roll .attack-die{width:90px}.shared-roll-count{font-size:10px;margin-top:5px}}
 @keyframes attack-dice-tumble{
  0%{transform:translateY(0) rotate(0) scale(1)}
  25%{transform:translateY(-12px) rotate(130deg) scale(.9)}

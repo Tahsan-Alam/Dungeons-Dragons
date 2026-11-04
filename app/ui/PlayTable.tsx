@@ -14,10 +14,12 @@ import {usePanels} from './usePanels';
 import {actionForKey,bindingLabel,eventBinding,createEdgeRevealGate,type ControlAction} from './controls';
 import './controls.css';
 import './play-screen.css';
-export default function PlayTable({game,room,session,busy,connection,onAction,onMenu,onHelp,onAI,onSettings,voice,onVoice,music,onMusic,onSkip}:{game:GameState;room:RoomView|null;session:Session|null;busy:boolean;connection:string;onAction:(a:GameAction)=>unknown;onMenu:()=>void;onHelp:()=>void;onAI:()=>void;onSettings:()=>void;voice:boolean;onVoice:()=>void;music:boolean;onMusic:()=>void;onSkip:()=>void}){
+export default function PlayTable({game,room,session,busy,connection,onAction,onMenu,onHelp,onAI,onSettings,onRollDialogChange,voice,onVoice,music,onMusic,onSkip}:{game:GameState;room:RoomView|null;session:Session|null;busy:boolean;connection:string;onAction:(a:GameAction)=>unknown;onMenu:()=>void;onHelp:()=>void;onAI:()=>void;onSettings:()=>void;onRollDialogChange:(open:boolean)=>void;voice:boolean;onVoice:()=>void;music:boolean;onMusic:()=>void;onSkip:()=>void}){
  const {preferences}=useControls(),panels=usePanels();const board=useRef<BoardControls>(null),drawerPanel=useRef<HTMLElement>(null),drawerOpener=useRef<HTMLElement|null>(null),hoverDrawer=useRef(false),edgeGate=useRef(createEdgeRevealGate());const[confirmEnd,setConfirmEnd]=useState(false),[moving,setMoving]=useState(false);const actionPending=useRef(false);
  const[tool,setTool]=useState<Tool>('move'),[selectedId,setSelectedId]=useState(''),[drawer,setDrawer]=useState<'party'|'story'|null>(null),[detailId,setDetailId]=useState<string|null>(null);
  const[pendingRoll,setPendingRoll]=useState<AttackRollRequest|null>(null);
+ const manualRollOpen=!!pendingRoll;
+ useEffect(()=>{onRollDialogChange(manualRollOpen);return()=>onRollDialogChange(false)},[manualRollOpen,onRollDialogChange]);
  useHeaderInert(!!drawer&&panels.compact);
  const detail=game.actors.find(a=>a.id===detailId);
  const actor=game.actors.find(a=>a.id===game.activeActorId),mine=game.actors.find(a=>a.playerId===(session?.playerId||'you'));const myTurn=!!actor&&!actor.bot&&actor.playerId===(session?.playerId||'you')&&game.status==='playing';
