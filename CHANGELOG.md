@@ -4,7 +4,10 @@ Record user-visible changes at version checkpoints. Git history and pull request
 
 ## Unreleased
 
-Add changes here as they are merged, then move them into the next version entry.
+- Player-triggered attack dice and queued results for other players, companions, enemies, and death saves.
+- Pause/resume shared-roll playback or return directly to the board; recent results remain in the adventure log. Incoming rolls wait while another table dialog or mobile drawer is open.
+- Persistent mobile turn guidance, legal-target counts, and clear next steps when movement or actions are exhausted.
+- Chest and gateway controls reflect proximity and show “Finish adventure” at the final gateway. Waiting players retain their own power labels and supply counts.
 
 ## 0.1.0-alpha.1 — 2026-11-02
 

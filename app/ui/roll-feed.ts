@@ -42,3 +42,9 @@ export function dismissSharedRoll(feed:RollFeed,eventId:number):RollFeed {
  // A late animation callback must never dismiss the next item in the queue.
  return feed.queue[0]?.event.id===eventId?{...feed,queue:feed.queue.slice(1)}:feed;
 }
+
+/** Dismiss only the batch the player saw, retaining rolls arriving in the meantime. */
+export function dismissSharedRollsThrough(feed:RollFeed,gameId:string|null,eventId:number):RollFeed {
+ if(feed.gameId!==gameId||!feed.queue.some(roll=>roll.event.id<=eventId))return feed;
+ return {...feed,queue:feed.queue.filter(roll=>roll.event.id>eventId)};
+}

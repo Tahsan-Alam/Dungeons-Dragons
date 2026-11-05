@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 // @ts-ignore Node's built-in TypeScript runner needs the explicit source extension.
-import { applyAction, createGame, encounterCleared, getReachable, getValidTargets, runBots } from './engine.ts';
+import { applyAction, createGame, encounterCleared, getQuestAction, getReachable, getValidTargets, runBots } from './engine.ts';
 import type { GameState, GameOptions, PlayerSpec } from './types';
 
 const options: GameOptions = { rules: 'simple', seed: 'engine-verification', narrator: 'warm', biome: 'woodland', companions: 0 };
@@ -126,6 +126,87 @@ test('a defeated party has a terminal state instead of an infinite bot turn', ()
   const result = runBots(game);
   assert.equal(result.status, 'defeat');
   assert.match(result.events.at(-1)!.text, /party falls/);
+});
+
+test('quest guidance agrees with accepted chest and gateway actions across both rule modes', () => {
+  for (const rules of ['simple', 'classic'] as const) {
+    let game = createGame([player], {...options, rules});
+    game.activeActorId = game.actors[0].id;
+    assert.equal(getQuestAction(game, active(game)), null);
+    clearEnemies(game);
+    const before = structuredClone(game);
+    const distant = getQuestAction(game, active(game))!;
+    assert.deepEqual(distant, {type:'interact', label:'Loot chest', available:false, hint:'Move beside the chest to loot it.'});
+    assert.deepEqual(game, before, 'reading guidance must not mutate the game');
+    assert.throws(() => applyAction(game, player.id, {type:distant.type}), /next to the chest/);
+    const hero = active(game);
+    hero.x = game.chest.x - 1; hero.y = game.chest.y;
+    hero.actionUsed = true; hero.movement = 0;
+    const loot = getQuestAction(game, hero)!;
+    assert.equal(loot.available, true, 'looting requires neither an action nor movement');
+    game = applyAction(game, player.id, {type:loot.type});
+    assert.equal(game.chest.opened, true);
+    assert.equal(active(game).actionUsed, true);
+    assert.equal(getQuestAction(game, active(game))!.type, 'advance');
+    assert.equal(getQuestAction(game, active(game))!.available, false);
+    assert.equal(getQuestAction(game, active(game))!.hint, 'Move beside the gateway to continue.');
+    assert.throws(() => applyAction(game, player.id, {type:'interact'}), /shard is collected/);
+    assert.throws(() => applyAction(game, player.id, {type:'advance'}), /next to the glowing gateway/);
+    active(game).x = game.exit.x - 1; active(game).y = game.exit.y;
+    assert.equal(getQuestAction(game, active(game))!.available, true);
+    assert.equal(getQuestAction(game, active(game))!.label, 'Next chapter');
+    assert.equal(applyAction(game, player.id, {type:'advance'}).scene, 1);
+  }
+});
+
+test('quest availability rejects inactive and downed heroes and missing or terminal games', () => {
+  const game = createGame([player, {...player, id:'p2', name:'Rowan'}], options);
+  clearEnemies(game);
+  const hero = game.actors[0]; game.activeActorId = hero.id;
+  hero.x = game.chest.x - 1; hero.y = game.chest.y;
+  assert.equal(getQuestAction(game, undefined), null);
+  assert.equal(getQuestAction(game, null), null);
+  assert.equal(getQuestAction(game, hero)!.available, true);
+  game.activeActorId = game.actors[1].id;
+  assert.equal(getQuestAction(game, hero)!.available, false);
+  assert.throws(() => applyAction(game, player.id, {type:'interact'}), /not your turn/);
+  game.activeActorId = hero.id;
+  hero.hp = 0;
+  assert.equal(getQuestAction(game, hero)!.available, false);
+  assert.throws(() => applyAction(game, player.id, {type:'interact'}), /down and cannot act/);
+  hero.hp = 1; hero.defeated = true;
+  assert.equal(getQuestAction(game, hero)!.available, false);
+  assert.throws(() => applyAction(game, player.id, {type:'interact'}), /down and cannot act/);
+  hero.defeated = false;
+  for (const status of ['victory', 'defeat'] as const) {
+    game.status = status;
+    assert.equal(getQuestAction(game, hero), null);
+  }
+});
+
+test('quest proximity is cardinal and permits an occupied objective without walking onto it', () => {
+  const game = createGame([player, {...player, id:'p2', name:'Rowan'}], options);
+  clearEnemies(game);
+  const [hero, ally] = game.actors; game.activeActorId = hero.id;
+  ally.x = game.chest.x; ally.y = game.chest.y;
+  hero.x = game.chest.x - 1; hero.y = game.chest.y - 1;
+  assert.equal(getQuestAction(game, hero)!.available, false, 'diagonal proximity is not adjacency');
+  hero.y = game.chest.y;
+  assert.equal(getQuestAction(game, hero)!.available, true);
+  assert.equal(applyAction(game, player.id, {type:'interact'}).chest.opened, true);
+});
+
+test('the final gateway is labeled Finish adventure and uses the unchanged victory action', () => {
+  const game = newGame(); clearEnemies(game);
+  game.scene = 2; game.chest.opened = true; game.relics = 3;
+  assert.equal(getQuestAction(game, active(game))!.label, 'Finish adventure');
+  assert.equal(getQuestAction(game, active(game))!.hint, 'Move beside the gateway to finish the adventure.');
+  const hero = active(game); hero.x = game.exit.x; hero.y = game.exit.y;
+  hero.actionUsed = true; hero.movement = 0;
+  const quest = getQuestAction(game, hero)!;
+  assert.equal(quest.type, 'advance'); assert.equal(quest.available, true);
+  const next = applyAction(game, player.id, {type:quest.type});
+  assert.equal(next.status, 'victory'); assert.equal(getQuestAction(next, active(next)), null);
 });
 
 test('classic natural 1 misses even low AC; natural 20 hits even high AC', () => {

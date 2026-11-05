@@ -15,6 +15,9 @@
 .attack-roll-actions{display:flex;flex-wrap:wrap;justify-content:center;gap:12px;margin-top:18px}
 .attack-roll-actions .button{min-height:44px;flex:1}
 .shared-roll-count{margin:10px 0 0;font-size:11px;color:var(--muted)}
+.shared-roll-controls{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
+.shared-roll-controls .button{flex:1 1 130px;min-height:44px;padding:8px;font-size:12px;white-space:normal}
+.shared-roll-journal{margin:5px 0 0;font-size:11px;color:var(--muted)}
 .shared-roll .attack-roll-target span{overflow-wrap:anywhere}
 .shared-roll .attack-roll-target span+span{margin-top:2px}
 .shared-roll[data-paused=true] .die-body{animation-play-state:paused}
@@ -35,4 +38,14 @@ html[data-motion=reduced] .attack-die.is-rolling .die-body{animation:none}
  .attack-die{width:110px;margin:0 auto}.attack-roll{padding:12px 18px}
  .attack-roll-target strong{display:inline;font-size:16px}.attack-roll-target span{display:inline;margin-left:8px;font-size:12px}
  .attack-roll-status{min-height:48px}.attack-roll-actions{margin-top:10px}
+}
+@media(max-width:480px) and (max-height:650px){
+ .modal:has(.shared-roll) .modal-head{padding-block:10px;gap:6px}
+ .shared-roll .attack-die{width:80px;margin:2px auto}
+ .shared-roll.attack-roll{padding:10px 14px}
+ .shared-roll .attack-roll-target strong{font-size:16px}
+ .shared-roll .attack-roll-target span{font-size:12px;margin-top:2px}
+ .shared-roll .attack-roll-status{min-height:48px}
+ .shared-roll .attack-roll-actions{margin-top:8px}
+ .shared-roll-count,.shared-roll-journal{margin-top:6px}
 }

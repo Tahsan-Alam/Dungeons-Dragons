@@ -205,6 +205,27 @@ export function createGame(players: PlayerSpec[], options: GameOptions): GameSta
 function isEncounterClear(game: GameState) { return !game.actors.some(a => a.enemy && a.hp > 0); }
 export function encounterCleared(game: GameState) { return isEncounterClear(game); }
 
+export interface QuestAction {
+  type: 'interact' | 'advance';
+  label: 'Loot chest' | 'Next chapter' | 'Finish adventure';
+  available: boolean;
+  hint: string;
+}
+
+/** Quest interactions cost no action or movement, but require the active hero nearby. */
+export function getQuestAction(game: GameState, actor?: Actor | null): QuestAction | null {
+  if (!actor || game.status !== 'playing' || !isEncounterClear(game)) return null;
+  const advancing = game.chest.opened, final = game.scene === 2;
+  const destination = advancing ? game.exit : game.chest;
+  const nearby = manhattan(actor, destination) <= 1;
+  const available = actor.id === game.activeActorId && actor.hp > 0 && !actor.defeated && nearby;
+  const hint = actor.hp <= 0 || actor.defeated ? 'Your hero is down and cannot act.'
+    : actor.id !== game.activeActorId ? 'Wait for your turn.'
+    : !nearby ? advancing ? `Move beside the gateway to ${final ? 'finish the adventure' : 'continue'}.` : 'Move beside the chest to loot it.'
+    : advancing ? final ? 'Enter the gateway to finish the adventure.' : 'Enter the gateway to begin the next chapter.' : 'Loot the chest to collect the lantern shard.';
+  return {type: advancing ? 'advance' : 'interact', label: advancing ? final ? 'Finish adventure' : 'Next chapter' : 'Loot chest', available, hint};
+}
+
 function evaluate(game: GameState) {
   if (game.status !== 'playing') return;
   if (game.actors.filter(a => !a.enemy).every(a => a.hp <= 0)) {
@@ -314,14 +335,14 @@ function perform(game: GameState, actor: Actor, action: GameAction) {
   } else if (action.type === 'interact') {
     if (!isEncounterClear(game)) throw new Error('Defeat the guardians before opening the shard chest.');
     if (game.chest.opened) throw new Error('The shard is collected. Head to the gateway.');
-    if (manhattan(actor, game.chest) > 1) throw new Error('Move next to the chest first.');
+    if (!getQuestAction(game, actor)?.available) throw new Error('Move next to the chest first.');
     game.chest.opened = true; game.relics++;
     for (const a of game.actors.filter(a => !a.enemy)) a.potions = Math.min(3, a.potions + 1);
     event(game, 'story', `${actor.name} lifts a lantern shard from the chest. ${game.relics} of 3 recovered! The gateway flickers awake, and everyone finds a fresh potion.`, actor.id);
     game.objective = 'Bring the lantern shard to the glowing gateway.';
   } else if (action.type === 'advance') {
     if (!isEncounterClear(game) || !game.chest.opened) throw new Error('Collect the lantern shard before leaving.');
-    if (manhattan(actor, game.exit) > 1) throw new Error('Move next to the glowing gateway first.');
+    if (!getQuestAction(game, actor)?.available) throw new Error('Move next to the glowing gateway first.');
     if (game.scene === 2) {
       game.status = 'victory';
       game.objective = 'The lantern is whole. Adventure complete!';
