@@ -1,6 +1,6 @@
 # Local AI integration
 
-Verified November 5, 2026. No live API request was made during implementation or testing.
+Verified November 5, 2026 with authorized, budgeted live requests. Luna planning, narration and legal suggestions passed. Realtime access works, but paid speech did not pass end-to-end transcript validation. Paid text and audio were disabled again after testing; see AI-VALIDATION.md for coverage and cost uncertainty.
 
 ## Play and persistence
 
@@ -14,7 +14,9 @@ Accepted campaigns, identities and narration persist in the game/replay. Resume,
 
 One server-side project credential can serve all roles if endpoint/model permissions permit. Separate dev/prod projects and keys isolate usage; a key per model is unnecessary. See [authentication](https://developers.openai.com/api/reference/overview#authentication) and [permissions](https://developers.openai.com/api/docs/guides/rbac).
 
-The connected OpenAI Platform tool found an account/project and supports secure key creation. Complete its private picker and confirm the ignored workspace `.dev.vars` destination. For an existing key, use a private `request_secret` card, never chat. Store `OPENAI_API_KEY` only in the server secret binding/ignored `.dev.vars`, never browser storage, a public environment variable, Git or logs. Account credits/billing and model access remain user-owned prerequisites. This task buys nothing and changes no account limits.
+The existing service-account key is installed in ignored workspace `.dev.vars` and was reused with explicit authorization. Do not create or request another key for this checkout. Store `OPENAI_API_KEY` only in a server secret binding/ignored `.dev.vars`, never browser storage, a public environment variable, Git or logs. No account billing or limits were changed.
+
+`npm start -- --port 5347` now explicitly loads the root `.dev.vars` through `scripts/start-local.mjs`. Wrangler otherwise searches beside the generated `dist/server/wrangler.json` and silently misses the root file. The wrapper passes an absolute path without copying the key into build output. Without a `.dev.vars`, it still starts in fixture mode. Stop the built preview before rebuilding on Windows to avoid a locked `dist` directory.
 
 Initialize a fresh local DB once, after `npm ci` and `npm run build` (Node 26):
 
@@ -57,4 +59,6 @@ OpenAI documents both alerts and enforced hard limits; alerts alone do not stop 
 
 `npm run check` covers types, tests and production build. `server/ai.test.ts` and `server/ai-speech.test.ts` test zero-call fixture/key-only modes, atomic D1 contention, all caps, concurrency/storage exhaustion, duplicate/restart caching, failed requests without retries, malformed/stale results, legal actions without RNG mutation, replay, authenticated rooms and audio gating, bounded Realtime sessions, transcript checks, cancellation and caching. See `AI-VALIDATION.md` for browser results.
 
-Live quality, latency, billing, model access and synthesized audio quality remain unverified. No API key has been installed by this implementation checkpoint.
+Live catalog lookups succeeded for `gpt-6-luna`, `gpt-6.1-terra` and `gpt-realtime-2.1-mini`. Only Luna text and Realtime speech inference were attempted. Safe ledger diagnostics distinguish text authentication, access, quota, rate, invalid-request, transport and invalid-response failures; raw provider messages are never persisted. Speech records upgrade/configuration/transcript failures. Failed reservations remain intact after fixes.
+
+The completed test retained **249,831 microdollars ($0.249831)** in the existing D1 ledger, including failed attempts. Do not clear it to obtain more allowance. Local settings remain `AI_MODE=fixture`, `AI_ENABLE_PAID=DISABLED`, `AI_ENABLE_AUDIO=DISABLED`, with $0.10/campaign, $0.25/day and $0.25/month ceilings. No server or speech session from the test is left running. The installed key is preserved. Live paid-audio playback, exact audible fidelity and provider-confirmed billing remain unverified.

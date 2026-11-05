@@ -22,6 +22,10 @@ export const validSpeechInput = (caption:string) => !!caption.trim() && caption.
  !/[\u0000-\u001f<>]/.test(caption) && new TextEncoder().encode(JSON.stringify(speechRequest(caption))).length<=SPEECH_INPUT_BYTES;
 export interface SpeechClip {version:typeof SPEECH_VERSION;mulaw:string;}
 export interface SpeechResult {clip:SpeechClip;usage:{input:number;output:number};}
+export class SpeechFailure extends Error {
+ readonly outcome:string;readonly httpStatus?:number;
+ constructor(outcome:string,httpStatus?:number){super('Speech unavailable');this.outcome=outcome;this.httpStatus=httpStatus;}
+}
 interface Socket {
  accept():void;send(value:string):void;close(code?:number,reason?:string):void;
  addEventListener(type:string,listener:(event:any)=>void):void;
@@ -34,13 +38,14 @@ export function realtimeSpeech(key:string,caption:string,transport:typeof fetch,
  if(!validSpeechInput(caption)||signal?.aborted)return Promise.reject(new Error('Speech unavailable'));
  return new Promise((resolve,reject)=>{
   const controller=new AbortController();let socket:Socket|undefined,settled=false,requested=false,phase='connecting';
+  let failure='transport_error',httpStatus:number|undefined;
   let responseId='',itemId='',transcript='',audioDone=false,transcriptDone=false,bytes=0,wireBytes=0,events=0;
   const chunks:Uint8Array[]=[];
   const close=(target:Socket)=>{try{if(requested)target.send(JSON.stringify({type:'response.cancel'}));}catch{}try{target.close(1000,'Finished');}catch{}};
   const finish=(result?:SpeechResult)=>{
    if(settled)return;settled=true;clearTimeout(timer);signal?.removeEventListener('abort',abort);controller.abort();
    if(socket){close(socket);socket.removeEventListener('message',message);socket.removeEventListener('error',abort);socket.removeEventListener('close',abort);}
-   if(result)resolve(result);else reject(new Error('Speech unavailable'));
+   if(result)resolve(result);else reject(new SpeechFailure(failure,httpStatus));
   };
   const abort=()=>finish();const timer=setTimeout(abort,Math.min(15_000,Math.max(1,timeoutMs)));
   signal?.addEventListener('abort',abort,{once:true});
@@ -51,14 +56,14 @@ export function realtimeSpeech(key:string,caption:string,transport:typeof fetch,
     wireBytes+=new TextEncoder().encode(event.data).length;
     if(++events>2000||wireBytes>1_000_000)throw new Error();
     const e=JSON.parse(event.data);if(!e||typeof e.type!=='string')throw new Error();
-    if(e.type==='error')throw new Error();
+    if(e.type==='error'){failure='provider_error';throw new Error();}
     if(e.type==='session.created'){
-     if(phase!=='connecting')throw new Error();phase='configuring';
+     if(phase!=='connecting')throw new Error();phase='configuring';failure='session_configuration';
      socket!.send(JSON.stringify({type:'session.update',session:{type:'realtime',instructions,output_modalities:['audio'],tools:[],tool_choice:'none',max_output_tokens:SPEECH_TOKENS,reasoning:{effort:'minimal'},audio:{input:{turn_detection:null,transcription:null},output:{format:{type:'audio/pcmu'},voice:SPEECH_VOICE}}}}));
     }else if(e.type==='session.updated'){
      const s=e.session;
      if(phase!=='configuring'||s?.max_output_tokens!==SPEECH_TOKENS||s.audio?.input?.turn_detection!==null||s.audio?.input?.transcription!==null||s.audio?.output?.format?.type!=='audio/pcmu'||s.audio?.output?.voice!==SPEECH_VOICE||s.tool_choice!=='none'||s.tools?.length!==0)throw new Error();
-     phase='responding';requested=true;socket!.send(JSON.stringify(speechRequest(caption)));
+     phase='responding';failure='invalid_response';requested=true;socket!.send(JSON.stringify(speechRequest(caption)));
     }else if(e.type==='response.created'){
      if(phase!=='responding'||responseId||typeof e.response?.id!=='string')throw new Error();responseId=e.response.id;
     }else if(typeof e.type==='string'&&e.type.startsWith('response.output_audio')){
@@ -71,11 +76,13 @@ export function realtimeSpeech(key:string,caption:string,transport:typeof fetch,
      else if(e.type==='response.output_audio_transcript.delta'){
       if(transcriptDone||typeof e.delta!=='string')throw new Error();transcript+=e.delta;if(transcript.length>1200)throw new Error();
      }else if(e.type==='response.output_audio_transcript.done'){
+      failure='transcript_mismatch';
       if(transcriptDone||typeof e.transcript!=='string'||normalized(e.transcript)!==normalized(caption)||(transcript&&transcript!==e.transcript))throw new Error();transcript=e.transcript;transcriptDone=true;
+      failure='invalid_response';
      }else throw new Error();
     }else if(e.type==='response.done'){
      const r=e.response,u=r?.usage,item=r?.output?.[0],content=item?.content?.[0];
-     if(!responseId||r.id!==responseId||r.status!=='completed'||!audioDone||!transcriptDone||!bytes||r.output?.length!==1||item.type!=='message'||item.role!=='assistant'||item.id!==itemId||item.content?.length!==1||content.type!=='audio'||typeof content.transcript!=='string'||normalized(content.transcript)!==normalized(caption)||!Number.isSafeInteger(u?.input_tokens)||u.input_tokens<0||u.input_tokens>SPEECH_INPUT_BYTES+2048||!Number.isSafeInteger(u?.output_tokens)||u.output_tokens<0||u.output_tokens>SPEECH_TOKENS)throw new Error();
+     if(!responseId||r.id!==responseId||r.status!=='completed'||!audioDone||!transcriptDone||!bytes||r.output?.length!==1||item.type!=='message'||item.role!=='assistant'||item.id!==itemId||item.content?.length!==1||content.type!=='output_audio'||typeof content.transcript!=='string'||normalized(content.transcript)!==normalized(caption)||!Number.isSafeInteger(u?.input_tokens)||u.input_tokens<0||u.input_tokens>SPEECH_INPUT_BYTES+2048||!Number.isSafeInteger(u?.output_tokens)||u.output_tokens<0||u.output_tokens>SPEECH_TOKENS)throw new Error();
      const all=new Uint8Array(bytes);let offset=0;for(const chunk of chunks){all.set(chunk,offset);offset+=chunk.length;}
      requested=false;finish({clip:{version:SPEECH_VERSION,mulaw:base64(all)},usage:{input:u.input_tokens,output:u.output_tokens}});
     }
@@ -83,10 +90,11 @@ export function realtimeSpeech(key:string,caption:string,transport:typeof fetch,
   };
   // Cloudflare Workers' outbound WebSocket upgrade. The HTTP request never
   // reaches the browser; Workers exposes the accepted socket on the response.
-  void transport(`https://api.openai.com/v1/realtime?model=${SPEECH_MODEL}`,{headers:{Authorization:`Bearer ${key}`,Upgrade:'websocket'},signal:controller.signal,redirect:'error'}).then(response=>{
+  void transport(`https://api.openai.com/v1/realtime?model=${SPEECH_MODEL}`,{headers:{Authorization:`Bearer ${key}`,Upgrade:'websocket'},signal:controller.signal,redirect:'manual'}).then(response=>{
    const target=(response as Response&{webSocket?:Socket}).webSocket;
    if(target&&settled){target.accept();close(target);return;}
-   if(response.status!==101||!target){void response.body?.cancel();finish();return;}
+   httpStatus=response.status;
+   if(response.status!==101||!target){failure=response.status===401?'authentication':response.status===403?'access_denied':response.status===429?'rate_or_quota':'upgrade_rejected';void response.body?.cancel();finish();return;}
    socket=target;socket.addEventListener('message',message);socket.addEventListener('error',abort);socket.addEventListener('close',abort);socket.accept();
   }).catch(()=>finish());
  });

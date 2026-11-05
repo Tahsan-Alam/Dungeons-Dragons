@@ -25,12 +25,12 @@ function events(text=caption){return [
  {type:'response.output_audio_transcript.delta',...fields,delta:text},
  {type:'response.output_audio_transcript.done',...fields,transcript:text},
  {type:'response.output_audio.done',...fields},
- {type:'response.done',response:{id:'resp',status:'completed',output:[{id:'item',type:'message',role:'assistant',content:[{type:'audio',transcript:text}]}],usage:{input_tokens:100,output_tokens:80}}},
+ {type:'response.done',response:{id:'resp',status:'completed',output:[{id:'item',type:'message',role:'assistant',content:[{type:'output_audio',transcript:text}]}],usage:{input_tokens:100,output_tokens:80}}},
  ];}
 function mock(sequence=events()){
  const socket=new MockSocket();let calls=0;
  socket.reply=v=>{if(v.type==='session.update')queueMicrotask(()=>socket.emit({type:'session.updated',session:v.session}));if(v.type==='response.create')queueMicrotask(()=>sequence.forEach(e=>socket.emit(e)));};
- const transport:typeof fetch=async(url,init)=>{calls++;assert.equal(String(url),`https://api.openai.com/v1/realtime?model=${SPEECH_MODEL}`);assert.equal((init?.headers as Record<string,string>).Upgrade,'websocket');assert.equal(init?.redirect,'error');return {status:101,webSocket:socket} as unknown as Response;};
+ const transport:typeof fetch=async(url,init)=>{calls++;assert.equal(String(url),`https://api.openai.com/v1/realtime?model=${SPEECH_MODEL}`);assert.equal((init?.headers as Record<string,string>).Upgrade,'websocket');assert.equal(init?.redirect,'manual');return {status:101,webSocket:socket} as unknown as Response;};
  return {socket,transport,get calls(){return calls;}};
 }
 test('bounded Realtime protocol produces verified PCM WAV and closes, without tools or microphone',async()=>{

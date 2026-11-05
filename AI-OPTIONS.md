@@ -1,6 +1,6 @@
 ﻿# AI models for Painted Realms
 
-Independently checked against official OpenAI sources November 5, 2026. These are application API IDs, not inferred coding-agent picker labels. No billable comparison was run; account-specific access is unverified.
+Independently checked against official OpenAI sources November 5, 2026. These are application API IDs, not inferred coding-agent picker labels. All three catalog lookups succeeded with the installed project key. Budgeted Luna text inference passed; Realtime inference reached the service but paid playback remains blocked by transcript validation. Terra inference was not invoked. See AI-VALIDATION.md.
 
 | Role | API model and endpoint | Listed Standard price |
 | --- | --- | --- |

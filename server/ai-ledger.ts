@@ -1,5 +1,5 @@
 // Microdollars, not floating-point dollars. Reservations are never refunded automatically.
-export interface Receipt {campaign:string;day:string;month:string;reserved:number;status:'pending'|'done';cacheBytes?:number;result?:unknown;usage?:{input:number;output:number};}
+export interface Receipt {campaign:string;day:string;month:string;reserved:number;status:'pending'|'done';cacheBytes?:number;result?:unknown;usage?:{input:number;output:number};diagnostic?:{outcome:string;httpStatus?:number};}
 export interface Ledger {revision:number;entries:Record<string,Receipt>;}
 export interface LedgerStore {read():Promise<Ledger>;cas(previous:number,next:Ledger):Promise<boolean>;}
 export class MemoryLedger implements LedgerStore {
@@ -37,11 +37,11 @@ export class BudgetLedger {
    if(await this.store.cas(state.revision,next))return 'reserved';
   }return 'blocked';
  }
- async finish(key:string,result:unknown,usage?:Receipt['usage']){
+ async finish(key:string,result:unknown,usage?:Receipt['usage'],diagnostic?:Receipt['diagnostic']){
   for(let attempt=0;attempt<32;attempt++){
    const state=await this.store.read(),receipt=state.entries[key];if(!receipt||receipt.status==='done')return;
    if(new TextEncoder().encode(JSON.stringify(result)??'null').length>(receipt.cacheBytes??32_000))throw new Error('AI result exceeds reserved storage');
-   const next=structuredClone(state);next.revision++;next.entries[key]={...receipt,status:'done',result,usage};
+   const next=structuredClone(state);next.revision++;next.entries[key]={...receipt,status:'done',result,usage,diagnostic};
    if(new TextEncoder().encode(JSON.stringify(next)).length>LEDGER_BYTES)throw new Error('AI ledger storage exhausted');
    if(await this.store.cas(state.revision,next))return;
   }throw new Error('AI receipt could not be persisted');

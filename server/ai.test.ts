@@ -121,3 +121,18 @@ test('an in-flight narration cannot overwrite an action committed at a newer roo
  release();await assert.rejects(pending,/changed/);
  const final=await base.get(session.code,session.token);assert.ok('room'in final);assert.deepEqual(final.room.game,moved.room.game);
 });
+
+test('safe provider diagnostics distinguish auth, access, quota, rate and schema failures without leaking messages',async()=>{
+ for(const [status,code,outcome] of [[401,'invalid_api_key','authentication'],[403,'permission_denied','access_denied'],[404,'model_not_found','access_denied'],[429,'insufficient_quota','quota_exhausted'],[429,'rate_limit_exceeded','rate_limited'],[400,'invalid_parameter','invalid_request']] as const){
+  const store=new MemoryLedger();let calls=0;
+  const ai=new GameAI(config,new BudgetLedger(store),async()=>{calls++;return Response.json({error:{code,message:'sensitive provider echo'}},{status});});
+  await ai.narrate('diagnostics',game());await ai.narrate('diagnostics',game());
+  const state=await store.read(),receipt=Object.values(state.entries)[0];
+  assert.deepEqual(receipt.diagnostic,{outcome,httpStatus:status});assert.equal(calls,1);assert.ok(receipt.reserved>0);assert.ok(!JSON.stringify(state).includes('sensitive provider echo'));
+ }
+});
+test('rejected generated text still records reported usage and retains its full reservation',async()=>{
+ const store=new MemoryLedger(),ai=new GameAI(config,new BudgetLedger(store),async()=>reply({eventId:-1,caption:'Stale'}));
+ assert.equal((await ai.narrate('usage',game())).source,'fixture');
+ const receipt=Object.values((await store.read()).entries)[0];assert.deepEqual(receipt.usage,{input:100,output:50});assert.equal(receipt.diagnostic?.outcome,'invalid_response');assert.ok(receipt.reserved>0);
+});
