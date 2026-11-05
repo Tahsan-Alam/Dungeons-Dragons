@@ -10,8 +10,8 @@
 .attack-roll-status{min-height:66px;display:flex;flex-direction:column;justify-content:center;gap:4px}
 .attack-roll-status p{margin:0;font-size:14px;line-height:1.5;overflow-wrap:anywhere}
 .attack-roll-status p>span{color:var(--muted)}
-.attack-outcome{font:700 28px/1.2 Georgia,serif;color:var(--ink)}
-.attack-outcome.hit{color:var(--world-health,#377d68)}
+.attack-outcome{font:700 28px/1.2 var(--heading);color:var(--ink)}
+.attack-outcome.hit{color:var(--success)}
 .attack-roll-actions{display:flex;flex-wrap:wrap;justify-content:center;gap:12px;margin-top:18px}
 .attack-roll-actions .button{min-height:44px;flex:1}
 .shared-roll-count{margin:10px 0 0;font-size:11px;color:var(--muted)}

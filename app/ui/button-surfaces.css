@@ -64,6 +64,13 @@ html:root[data-color-mode][data-theme] body button.button.danger{
  color:#fff;
 }
 
+/* A nearby objective remains noticeable without competing with the primary turn action. */
+html:root[data-color-mode][data-theme] body button.action-button.quest-action{
+ --button-fill:var(--accent-soft);
+ --button-rim:color-mix(in srgb,var(--accent) 70%,var(--line));
+ color:var(--ink);
+}
+
 /* Selected states remain inside their hit boxes, including tightly packed choices. */
 html:root[data-color-mode][data-theme] body :is(button[aria-pressed='true'],button[aria-selected='true'],button.chosen,button.class-option.selected,button.party-member.active,button.library-pin.is-pinned,.app-main-nav button.active){
  --button-fill:var(--accent-soft);
@@ -106,6 +113,7 @@ html:root[data-color-mode][data-theme] body button.binding-key.listening{--butto
   transform:translateY(-1px);
   filter:none;
  }
+ html:root[data-color-mode][data-theme] body button.action-button.quest-action:hover:not(:disabled){--button-fill:color-mix(in srgb,var(--accent-soft) 88%,var(--accent));--button-rim:var(--accent)}
  html:root[data-color-mode][data-theme] body button.button.primary:hover:not(:disabled){--button-fill:var(--accent-hover);--button-rim:color-mix(in srgb,var(--accent-hover) 85%,#000);color:var(--accent-ink)}
  html:root[data-color-mode][data-theme] body button.button.danger:hover:not(:disabled){--button-fill:color-mix(in srgb,var(--danger-fill) 94%,#000);--button-rim:var(--danger-fill);color:#fff}
  html:root[data-color-mode][data-theme] body :is(button[aria-pressed='true'],button[aria-selected='true'],button.chosen,button.class-option.selected,button.party-member.active,button.library-pin.is-pinned,.app-main-nav button.active):hover:not(:disabled){--button-fill:var(--accent-soft);--button-rim:var(--accent);box-shadow:inset 0 1px 0 var(--button-edge),inset 0 0 0 1px var(--button-rim)}
@@ -124,6 +132,12 @@ html:root[data-color-mode][data-theme] body button:disabled{
 }
 html:root[data-color-mode][data-theme] body :is(.drawer-backdrop,.replay-scrim,.panel-edge){border-radius:0;box-shadow:none;transform:none}
 html:root[data-color-mode][data-theme] body .accent-options button{box-shadow:inset 0 1px 0 var(--button-edge),inset 0 0 0 1px var(--button-rim)}
+
+/* Keep camera controls comfortably tappable, including in the replay viewer. */
+@media(pointer:coarse){
+ html[data-theme] .board-tools{transform:none}
+ html[data-theme] .board-tools button{min-width:44px;min-height:44px}
+}
 
 /* No hover displacement when motion is reduced; explicit Full still wins over the OS. */
 html[data-motion='reduced'][data-color-mode][data-theme] body :is(button,.game-row-more>summary){transform:none!important;transition:none!important}

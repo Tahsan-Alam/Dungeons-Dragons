@@ -12,7 +12,7 @@ import './attack-roll.css';
 export default function AttackRoll({request,game,busy,onRoll,onClose}:{request:AttackRollRequest;game:GameState;busy:boolean;onRoll:()=>unknown;onClose:()=>void}){
  const {theme,reducedMotion}=useTheme();
  const[started,setStarted]=useState(false),[settled,setSettled]=useState(false),[animationDone,setAnimationDone]=useState(false),[result,setResult]=useState<GameEvent>();
- const submitted=useRef(false),mounted=useRef(true),close=useRef(onClose),continueButton=useRef<HTMLButtonElement>(null);close.current=onClose;
+ const submitted=useRef(false),mounted=useRef(true),close=useRef(onClose),continueButton=useRef<HTMLButtonElement>(null),rollButton=useRef<HTMLButtonElement>(null);close.current=onClose;
  const valid=canStartAttackRoll(game,request);
  const confirmed=findAttackRollResult(game,request);
  useEffect(()=>{mounted.current=true;return()=>{mounted.current=false}},[]);
@@ -36,7 +36,7 @@ export default function AttackRoll({request,game,busy,onRoll,onClose}:{request:A
  const unconfirmed=started&&!waiting&&!outcome;
  const canContinue=!!outcome||unconfirmed;
  useEffect(()=>{if(canContinue)continueButton.current?.focus()},[canContinue]);
- return <Modal title={outcome?'Attack result':'Roll to attack'} onClose={onClose} dismissible={!waiting}>
+ return <Modal title={outcome?'Attack result':'Roll to attack'} onClose={onClose} dismissible={!waiting} initialFocus={rollButton}>{dismiss=>
   <div className="attack-roll">
    <p className="attack-roll-target"><strong>{request.title}</strong><span>Against {request.targetName}</span></p>
    <DiceArt theme={theme} value={outcome?.roll} rolling={rolling}/>
@@ -44,8 +44,8 @@ export default function AttackRoll({request,game,busy,onRoll,onClose}:{request:A
     {outcome?<RollOutcome event={outcome}/>:waiting?<p>{rolling?'Rolling…':'Waiting for your roll…'}</p>:unconfirmed?<p>No confirmed result yet. Check the adventure log before trying again.</p>:<p>Ready when you are. Roll to attack.</p>}
    </div>
    <div className="attack-roll-actions">
-    {!started?<><button className="button paper" onClick={onClose}>Cancel</button><button className="button primary" disabled={busy||!valid} onClick={()=>void roll()}><Icon name="dice" size={20}/>Roll d20</button></>:<button ref={continueButton} className="button primary" disabled={waiting} onClick={onClose}>{waiting?'Rolling…':unconfirmed?'Close':'Continue'}</button>}
+    {!started?<><button className="button paper" onClick={()=>dismiss()}>Cancel</button><button ref={rollButton} className="button primary" disabled={busy||!valid} onClick={()=>void roll()}><Icon name="dice" size={20}/>Roll d20</button></>:<button ref={continueButton} className="button primary" disabled={waiting} onClick={()=>dismiss()}>{waiting?'Rolling…':unconfirmed?'Close':'Continue'}</button>}
    </div>
-  </div>
+  </div>}
  </Modal>;
 }

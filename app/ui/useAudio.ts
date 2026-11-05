@@ -1,10 +1,12 @@
 'use client';
 import {useCallback,useEffect,useRef,useState} from 'react';
 import {AUDIO_PREFERENCES_KEY,DEFAULT_AUDIO_PREFERENCES,normalizeAudioPreferences,type AudioPreferences} from './audio-preferences';
+import {useInterfaceAudio} from './useInterfaceAudio';
 
 /** Device speech and synthesized music. Levels persist; enabling audio always requires a gesture. */
 export function useAudio(){
  const[voice,setVoice]=useState(false),[music,setMusic]=useState(false),[available,setAvailable]=useState(false),[preferences,setPreferences]=useState<AudioPreferences>(DEFAULT_AUDIO_PREFERENCES);
+ const interfaceAudio=useInterfaceAudio(preferences.interfaceVolume,preferences.hoverSounds);
  const voiceEnabled=useRef(false),musicEnabled=useRef(false),lastCaption=useRef(''),currentLine=useRef<SpeechSynthesisUtterance|null>(null),context=useRef<AudioContext|null>(null),masterGain=useRef<GainNode|null>(null),timer=useRef<ReturnType<typeof setInterval>|null>(null),tones=useRef(new Set<OscillatorNode>()),musicRun=useRef(0),mounted=useRef(true),levels=useRef(DEFAULT_AUDIO_PREFERENCES);
  const applyMusicVolume=useCallback(()=>{
   const audio=context.current,gain=masterGain.current;if(!audio||!gain||audio.state==='closed')return;
@@ -62,5 +64,7 @@ export function useAudio(){
  const setVoiceVolume=useCallback((value:number)=>updatePreferences({voiceVolume:value}),[updatePreferences]);
  const setSpeechRate=useCallback((value:number)=>updatePreferences({speechRate:value}),[updatePreferences]);
  const setMusicVolume=useCallback((value:number)=>updatePreferences({musicVolume:value}),[updatePreferences]);
- return{voice,music,available,speak,toggleVoice,toggleMusic,preferences,setVoiceVolume,setSpeechRate,setMusicVolume,previewVoice};
+ const setInterfaceVolume=useCallback((value:number)=>updatePreferences({interfaceVolume:value}),[updatePreferences]);
+ const setHoverSounds=useCallback((value:boolean)=>updatePreferences({hoverSounds:value}),[updatePreferences]);
+ return{voice,music,available,speak,toggleVoice,toggleMusic,preferences,setVoiceVolume,setSpeechRate,setMusicVolume,previewVoice,...interfaceAudio,setInterfaceVolume,setHoverSounds};
 }

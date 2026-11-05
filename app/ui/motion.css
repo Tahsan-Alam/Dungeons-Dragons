@@ -1,0 +1,18 @@
+/* Interface motion shares one cadence; dice and legal movement retain their own pacing. */
+:root{--motion-fast:140ms;--motion-normal:200ms;--motion-slow:280ms;--motion-ease:cubic-bezier(.2,.8,.2,1)}
+html .modal[open]{animation-timing-function:var(--motion-ease)}
+html .modal.is-closing{animation-timing-function:ease}
+html .chapter-copy{animation-duration:var(--motion-normal);animation-timing-function:var(--motion-ease)}
+html .toast{animation-duration:var(--motion-normal);animation-timing-function:var(--motion-ease)}
+html .resizable-layout .party-rail.drawer-open,html .resizable-layout .story-rail.drawer-open,html .replay-sidebar.open{animation-duration:var(--motion-normal);animation-timing-function:var(--motion-ease)}
+html .resizable-layout .drawer-backdrop{animation-duration:var(--motion-fast)}
+.shared-roll{animation:roll-content-in var(--motion-fast) var(--motion-ease) both}
+.attack-roll-status:has(.attack-outcome)>*{animation:roll-outcome-in var(--motion-fast) var(--motion-ease) both}
+@keyframes roll-content-in{from{opacity:.45;transform:translateY(4px)}to{opacity:1;transform:none}}
+@keyframes roll-outcome-in{from{opacity:.4;transform:translateY(3px)}to{opacity:1;transform:none}}
+
+/* The in-app preference must cover every surface, regardless of the OS setting. */
+html[data-motion='reduced'] *,html[data-motion='reduced'] *::before,html[data-motion='reduced'] *::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}
+@media(prefers-reduced-motion:reduce){
+ html:not([data-motion='full']) *,html:not([data-motion='full']) *::before,html:not([data-motion='full']) *::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}
+}

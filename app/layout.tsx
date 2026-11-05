@@ -3,6 +3,7 @@ import "./globals.css";
 import "./pixel.css";
 import "./appearance.css";
 import "./ui/button-surfaces.css";
+import "./ui/motion.css";
 import {APPEARANCE_BOOTSTRAP} from "./ui/appearance";
 import {ThemeProvider} from "./ui/Theme";
 

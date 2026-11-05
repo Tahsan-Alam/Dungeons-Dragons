@@ -3,28 +3,28 @@
 .ui-icon .ui-icon-body,.ui-icon .icon-book-page,.ui-icon .icon-sound-waves{
  transform-box:view-box;
  transform-origin:12px 12px;
- transition:transform 360ms cubic-bezier(.2,.75,.25,1);
+ transition:transform var(--motion-normal,200ms) var(--motion-ease,cubic-bezier(.2,.8,.2,1));
 }
-.ui-icon .icon-book-page{transform-origin:12px 20px;transition-duration:420ms}
+.ui-icon .icon-book-page{transform-origin:12px 20px;transition-duration:var(--motion-slow,280ms)}
 .ui-icon.icon-book>.ui-icon-body{transform:translateY(calc(var(--icon-engaged)*-.3px)) scale(calc(1 - var(--icon-engaged)*.045))}
 .ui-icon .icon-book-left{transform:rotate(calc(var(--icon-engaged)*-6deg))}
 .ui-icon .icon-book-right{transform:rotate(calc(var(--icon-engaged)*6deg))}
-.ui-icon .icon-book-lines{opacity:calc(var(--icon-engaged)*.65);transition:opacity 280ms ease 70ms}
-.ui-icon.icon-gear>.ui-icon-body{transform:rotate(calc(var(--icon-engaged)*72deg));transition-duration:440ms}
-.ui-icon.icon-arrow>.ui-icon-body{transform:translateX(calc(var(--icon-engaged)*1.75px));transition-duration:260ms}
-.ui-icon.icon-back>.ui-icon-body{transform:translateX(calc(var(--icon-engaged)*-1.75px));transition-duration:260ms}
-.ui-icon.icon-sword>.ui-icon-body{transform:rotate(calc(var(--icon-engaged)*-8deg));transition-duration:320ms}
+.ui-icon .icon-book-lines{opacity:calc(var(--icon-engaged)*.65);transition:opacity var(--motion-fast,140ms) ease 50ms}
+.ui-icon.icon-gear>.ui-icon-body{transform:rotate(calc(var(--icon-engaged)*72deg));transition-duration:var(--motion-slow,280ms)}
+.ui-icon.icon-arrow>.ui-icon-body{transform:translateX(calc(var(--icon-engaged)*1.75px));transition-duration:var(--motion-normal,200ms)}
+.ui-icon.icon-back>.ui-icon-body{transform:translateX(calc(var(--icon-engaged)*-1.75px));transition-duration:var(--motion-normal,200ms)}
+.ui-icon.icon-sword>.ui-icon-body{transform:rotate(calc(var(--icon-engaged)*-8deg));transition-duration:var(--motion-normal,200ms)}
 .ui-icon.icon-shield>.ui-icon-body{transform:translateY(calc(var(--icon-engaged)*-.65px)) scale(calc(1 + var(--icon-engaged)*.025))}
 .ui-icon.icon-potion>.ui-icon-body{transform:rotate(calc(var(--icon-engaged)*-5deg))}
 .ui-icon .icon-sound-waves{transform-origin:12px 12px;transform:translateX(calc(var(--icon-engaged)*.35px)) scaleX(calc(1 + var(--icon-engaged)*.08))}
 
 button:enabled:focus-visible>.ui-icon{--icon-engaged:1}
-button:enabled:focus-visible>.ui-icon.icon-music>.ui-icon-body{animation:icon-note-lift 420ms cubic-bezier(.2,.7,.3,1) 1}
-button:enabled:focus-visible>.ui-icon.icon-spark>.ui-icon-body{animation:icon-spark-turn 420ms cubic-bezier(.2,.7,.3,1) 1}
+button:enabled:focus-visible>.ui-icon.icon-music>.ui-icon-body{animation:icon-note-lift var(--motion-slow,280ms) var(--motion-ease,cubic-bezier(.2,.8,.2,1)) 1}
+button:enabled:focus-visible>.ui-icon.icon-spark>.ui-icon-body{animation:icon-spark-turn var(--motion-slow,280ms) var(--motion-ease,cubic-bezier(.2,.8,.2,1)) 1}
 @media(hover:hover) and (pointer:fine){
  button:enabled:hover>.ui-icon{--icon-engaged:1}
- button:enabled:hover>.ui-icon.icon-music>.ui-icon-body{animation:icon-note-lift 420ms cubic-bezier(.2,.7,.3,1) 1}
- button:enabled:hover>.ui-icon.icon-spark>.ui-icon-body{animation:icon-spark-turn 420ms cubic-bezier(.2,.7,.3,1) 1}
+ button:enabled:hover>.ui-icon.icon-music>.ui-icon-body{animation:icon-note-lift var(--motion-slow,280ms) var(--motion-ease,cubic-bezier(.2,.8,.2,1)) 1}
+ button:enabled:hover>.ui-icon.icon-spark>.ui-icon-body{animation:icon-spark-turn var(--motion-slow,280ms) var(--motion-ease,cubic-bezier(.2,.8,.2,1)) 1}
 }
 @keyframes icon-note-lift{
  0%,100%{transform:translateY(0) rotate(0)}
