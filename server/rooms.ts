@@ -253,13 +253,13 @@ export class RoomService {
     return reject('The room is busy. Please try again.',503,'BUSY');
   }
 
-  async assist(codeInput:unknown,token:string,input:{version:unknown;text?:unknown;audio?:unknown}){
+  async assist(codeInput:unknown,token:string,input:{version:unknown;text?:unknown;audio?:unknown},signal?:AbortSignal){
     const code=this.code(codeInput),record=await this.load(code),playerId=this.authenticate(record,await hash(token)),room=record.room;
     if(input.version!==room.version)throw new RoomError('The room changed. Try again.',409,'STALE_VERSION',publicView(record));
     if(!room.game)return reject('Start the adventure first.');
     if(input.audio===true){
       const narration=room.game.story?.narrations.find(n=>n.eventId===room.game!.eventSequence);
-      const audio=narration&&this.ai?await this.ai.speak(code,narration,playerId===room.hostId):null;
+      const audio=narration&&this.ai?await this.ai.speak(code,narration,playerId===room.hostId,signal):null;
       const latest=await this.load(code);
       if(latest.room.version!==room.version)throw new RoomError('The room changed. Request the current caption.',409,'STALE_VERSION',publicView(latest));
       return {audio,version:room.version};

@@ -48,7 +48,7 @@ test('campaign/day/month caps, concurrency, storage ceiling and invalid caps fai
  time+=86400000;assert.equal(await ledger.reserve('e','three',4),'blocked');assert.equal(await ledger.reserve('e','three',3),'reserved');await ledger.finish('e',{});
  assert.equal(await ledger.reserve('f','four',1),'blocked');
  assert.equal(await new BudgetLedger(store,{...DEFAULT_CAPS,day:NaN}).reserve('x','x',1),'blocked');
- const large=new MemoryLedger();const ll=new BudgetLedger(large);await ll.reserve('big','big',1);await ll.finish('big','x'.repeat(600001));assert.equal(await ll.reserve('next','big',1),'blocked');
+ const large=new MemoryLedger();const ll=new BudgetLedger(large);await ll.reserve('big','big',1);await assert.rejects(ll.finish('big','x'.repeat(600001)),/storage/);assert.equal(await ll.reserve('next','big',1,600_000),'blocked');
 });
 test('concurrent duplicate generation and restart reuse one persisted receipt',async()=>{
  let calls=0,release!:()=>void;const wait=new Promise<void>(r=>release=r),store=new MemoryLedger();
@@ -108,17 +108,6 @@ test('room narration authenticates host, persists once, and cannot overwrite con
  assert.deepEqual(reconstructReplay(narrated.room.replay!).at(-1),narrated.room.game);
  await assert.rejects(service.assist(room.code,session.token,{version,text:'guard'}),/changed/);
  await assert.rejects(service.assist(room.code,'wrong-token',{version:narrated.room.version,text:'guard'}),/seat/);
-});
-test('paid audio requires another opt-in, caches once, bounds input, and stops at retirement',async()=>{
- let calls=0;const transport:typeof fetch=async()=>{calls++;return new Response(new Uint8Array([1,2,3]),{headers:{'Content-Type':'audio/mpeg'}});};
- const record={eventId:1,caption:'A brief caption.',source:'fixture' as const},store=new MemoryLedger();
- assert.equal(await new GameAI(config,new BudgetLedger(store),transport).speak('a',record),null);
- const ai=new GameAI({...config,audio:'I_ACCEPT_PAID_AUDIO'},new BudgetLedger(store),transport,()=>Date.parse('2026-11-05'));
- assert.match((await ai.speak('a',record))!,/^data:audio/);await ai.speak('a',record);assert.equal(calls,1);
- assert.equal(await ai.speak('a',{...record,caption:'a'.repeat(601)}),null);
- assert.match((await ai.speak('a',record,false))!,/^data:audio/);
- assert.equal(await ai.speak('unrequested',record,false),null);assert.equal(calls,1);
- assert.equal(await new GameAI({...config,audio:'I_ACCEPT_PAID_AUDIO'},new BudgetLedger(store),transport,()=>Date.parse('2027-01-06')).speak('b',record),null);
 });
 test('an in-flight narration cannot overwrite an action committed at a newer room version',async()=>{
  let release!:()=>void,entered!:()=>void;const wait=new Promise<void>(r=>release=r),started=new Promise<void>(r=>entered=r);

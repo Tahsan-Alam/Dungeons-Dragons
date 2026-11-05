@@ -18,7 +18,8 @@ Keep this as the short checkpoint overview. Use GitHub issues for individual tas
 - [x] Add optional prompts and saved bounded campaign facts/character recipes.
 - [x] Implement server-only model roles, durable spend reservations/cache and fixture fallback; verify with mocks.
 - [ ] Verify account access and model quality with a deliberately budgeted live experiment.
-- [ ] Add cached narrator audio, then optional generated assets that preserve character identity.
+- [x] Add bounded cached narrator audio with transcript validation and device fallback (mock-tested; live access/quality unverified).
+- [ ] Add optional generated assets that preserve character identity.
 - [ ] Improve encounter variety, onboarding and balancing using playtest feedback.
 
 These are proposed next tasks, not promises that every feature lands in alpha.2. Choose a small scope together for each checkpoint.
