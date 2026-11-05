@@ -82,6 +82,8 @@ const boundedText = (text: string, limit: number) => text.replace(/[\u0000-\u001
 
 /** Shared caption for the story panel and optional speech; uses committed story events. */
 export function currentNarration(game: GameState): string {
+  const accepted=game.story?.narrations.find(n=>n.eventId===game.eventSequence);
+  if(accepted)return accepted.caption;
   const story = [...game.events].reverse().find(event => event.kind === 'story');
   return boundedText(story?.text ?? `${game.sceneName}. ${game.objective}`, NARRATION_LIMITS.caption);
 }

@@ -1,4 +1,5 @@
 import type { Actor, GameAction, GameEvent, GameOptions, GameState, HeroClass, PlayerSpec, Tile } from './types';
+import {campaignFixture,installCampaign} from './campaign.ts';
 
 // This module deliberately has no network, clock, browser, or model dependencies.
 // A saved state contains its random generator, so the same action is reproducible.
@@ -199,7 +200,7 @@ export function createGame(players: PlayerSpec[], options: GameOptions): GameSta
       actionUsed: false, guarding: false, potions: 2, abilityUses: 2, initiative: 0, deathSuccesses: 0, deathFailures: 0, defeated: false });
   }
   setupScene(game);
-  return game;
+  return installCampaign(game,campaignFixture(options,players));
 }
 
 function isEncounterClear(game: GameState) { return !game.actors.some(a => a.enemy && a.hp > 0); }

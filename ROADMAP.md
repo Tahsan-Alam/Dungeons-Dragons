@@ -15,8 +15,9 @@ Keep this as the short checkpoint overview. Use GitHub issues for individual tas
 
 - [ ] Have every teammate run the project and complete a first small pull request.
 - [ ] Playtest solo and a full multiplayer session; record and fix reproducible bugs.
-- [ ] Add an adventure prompt and saved world/story facts for consistent generation.
-- [ ] Connect and test one affordable story model with spend limits and a scripted fallback.
+- [x] Add optional prompts and saved bounded campaign facts/character recipes.
+- [x] Implement server-only model roles, durable spend reservations/cache and fixture fallback; verify with mocks.
+- [ ] Verify account access and model quality with a deliberately budgeted live experiment.
 - [ ] Add cached narrator audio, then optional generated assets that preserve character identity.
 - [ ] Improve encounter variety, onboarding and balancing using playtest feedback.
 

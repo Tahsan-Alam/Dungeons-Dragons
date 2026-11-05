@@ -57,7 +57,7 @@ The pure engine and server tests need Node 22.13+ (Node 26 recommended for `node
 - Server-owned dice and game state, optimistic concurrency, ten-seat room cap, readiness, reconnection, host transfer, disconnected-turn recovery, request retry protection and D1 persistence. See [MULTIPLAYER.md](MULTIPLAYER.md).
 - Paint and Pixel SVG sprites, terrain and illustrations, with shared 2D/2.5D identity; projected movement paths and hit areas; board pan/zoom; accessible HTML controls; responsive party/story drawers; reduced-motion support.
 - Table settings groups Appearance, Sound, Controls and Table preferences in one scrolling pane. Sound includes optional Hex Settlers hover/click samples, device narration and synthesized ambient music, each with its own level. Hover/focus feedback can be turned off independently. Levels persist; audio starts only when enabled or explicitly previewed each visit. Browser/device voices vary. No audio feature calls a paid model.
-- Safe fixture interfaces for future narration, decisions, art specifications and speech. See [AI-OPTIONS.md](AI-OPTIONS.md) for verified model options, costs, examples and the spending controls required before connecting any provider.
+- Saved seeded campaigns, canonical character recipes, optional prompt preferences and a Storyteller with persisted narration and legal-action suggestions. Default fixture mode makes no API calls. See [AI-OPTIONS.md](AI-OPTIONS.md) for verified model options and costs; [AI-SETUP.md](AI-SETUP.md) explains the implemented spending controls and secure local setup.
 
 ## Architecture
 
@@ -65,7 +65,7 @@ The pure engine and server tests need Node 22.13+ (Node 26 recommended for `node
 
 The presentation layer in `app/ui/` consumes state and sends actions. Theme state lives separately from game/session state. `Art.tsx` chooses prebuilt vector renderers; `PixelArt.tsx` contains integer-grid pixel artwork. `board-projection.ts` maps canonical coordinates into either view, and `DepthArt.tsx` derives dimensional surfaces from the same asset families. No images are downloaded during a theme or view switch. A later physical-tabletop interface can reuse the same commands, rules, adventure state and storyteller, with its own input adapter.
 
-Visual assets are authored SVG components; the two small interface audio samples are bundled locally. Future models can choose validated artwork properties; they should not insert arbitrary SVG/HTML or overwrite game state. No API key field or provider SDK is included in this version.
+Visual assets are authored SVG components; the two small interface audio samples are bundled locally. Future models can choose validated artwork properties; they should not insert arbitrary SVG/HTML or overwrite game state. No browser API key field is included. The server-only OpenAI adapter uses bounded HTTP requests; see [AI-SETUP.md](AI-SETUP.md) for explicit opt-in and safeguards.
 
 ## Limits
 
