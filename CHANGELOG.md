@@ -4,9 +4,12 @@ Record user-visible changes at version checkpoints. Git history and pull request
 
 ## Unreleased
 
+- Team-password AI access in Table settings → AI. Remembered devices default to enabled, retain their on/off choice, and can forget access. Server checks cover every paid route; the API key never reaches visitors.
+- Shared hosted budget controls support $25/month, $2/day and $0.50/campaign, while local defaults stay conservative. Added private developer key/password setup and additive access migrations.
+
 - Optional server-only Luna campaign recipes, narration and legal suggestions, plus bounded cached Realtime speech. Paid generation remains off by default; persisted captions and engine-authoritative gameplay survive presentation changes and reloads.
 - Clearer local narration fallback messaging and an authorization recheck before returning in-flight suggestions or audio to a revoked seat.
-- Release validation covers fresh local HTTP-route speech/playback and two-seat multiplayer; hosted checks and audible fidelity remain outstanding. See AI-VALIDATION.md.
+- Release validation covers fresh local HTTP-route speech/playback and two-seat multiplayer; hosted generation/playback checks also passed; audible fidelity remains unverified. See AI-VALIDATION.md.
 
 - Compact settings with stable section navigation, grouped sound controls and 44px close target. Appearance includes art style, world view, color, accent and motion.
 - Optional Hex Settlers hover/click sounds with independent interface volume, preview, hover/focus toggle and recoverable playback errors. Audio levels migrate without enabling sound automatically.
