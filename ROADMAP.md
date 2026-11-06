@@ -17,8 +17,9 @@ Keep this as the short checkpoint overview. Use GitHub issues for individual tas
 - [ ] Playtest solo and a full multiplayer session; record and fix reproducible bugs.
 - [x] Add optional prompts and saved bounded campaign facts/character recipes.
 - [x] Implement server-only model roles, durable spend reservations/cache and fixture fallback; verify with mocks.
-- [ ] Verify account access and model quality with a deliberately budgeted live experiment.
-- [x] Add bounded cached narrator audio with transcript validation and device fallback (mock-tested; live access/quality unverified).
+- [x] Verify bounded Luna planning/narration/legal-choice access with budgeted live experiments (small samples; broader quality remains a playtest task).
+- [x] Add bounded cached narrator audio with transcript validation and device fallback; fresh local application-route generation and native Edge playback passed. Hosted operation and audible quality remain unverified.
+- [ ] Publish the reviewed Windows changes to the existing Site and pass hosted runtime/AI checks before GitHub push.
 - [ ] Add optional generated assets that preserve character identity.
 - [ ] Improve encounter variety, onboarding and balancing using playtest feedback.
 

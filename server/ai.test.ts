@@ -136,3 +136,17 @@ test('rejected generated text still records reported usage and retains its full 
  assert.equal((await ai.narrate('usage',game())).source,'fixture');
  const receipt=Object.values((await store.read()).entries)[0];assert.deepEqual(receipt.usage,{input:100,output:50});assert.equal(receipt.diagnostic?.outcome,'invalid_response');assert.ok(receipt.reserved>0);
 });
+
+test('revoked seats cannot receive in-flight suggestions or speech, even without a version change',async()=>{
+ for(const audio of [false,true]){
+  const store=new MemoryRoomStore(),base=new RoomService(store);
+  const {session,room}=await base.create({name:'Ada',heroClass:'ranger',options:{...DEFAULT_OPTIONS,companions:0}});
+  const begun=await base.command(room.code,session.token,{version:room.version,requestId:'begin-revoke',command:{type:'start'}});assert.ok('room'in begun);
+  const narrated=await base.command(room.code,session.token,{version:begun.room.version,requestId:'caption-revoke',command:{type:'narrate'}});assert.ok('room'in narrated);
+  let entered!:()=>void,release!:()=>void;const started=new Promise<void>(r=>entered=r),wait=new Promise<void>(r=>release=r);
+  const ai={async choose(){entered();await wait;return null;},async speak(){entered();await wait;return 'data:audio/wav;base64,fixture';}} as unknown as GameAI;
+  const pending=new RoomService(store,Date.now,ai).assist(room.code,session.token,{version:narrated.room.version,audio,text:'guard'});
+  await started;const record=(await store.read(room.code))!;delete record.tokenHashes[session.playerId];const previous=record.revision;record.revision++;assert.ok(await store.compareAndSwap(room.code,previous,record));
+  release();await assert.rejects(pending,(e:any)=>e.code==='UNAUTHORIZED');
+ }
+});

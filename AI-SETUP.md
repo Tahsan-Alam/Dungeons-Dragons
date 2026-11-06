@@ -1,6 +1,6 @@
 # Local AI integration
 
-Verified November 5, 2026 with authorized, budgeted live requests. Luna planning, narration and legal suggestions passed. A follow-up Realtime request passed transcript validation and produced a 2.85-second clip that played in native Edge media. The browser harness supplied real D1-cached audio; fresh production-route generation/playback and audible fidelity remain unverified. Paid text and audio remain disabled; see AI-VALIDATION.md for coverage and cost uncertainty.
+Verified November 6, 2026 with authorized, budgeted live requests. Luna planning, narration and legal suggestions passed. Fresh speech through the built application's HTTP route produced a 3.05-second clip and played in native Edge media, without route interception. Shared cached playback also passed after disabling generation and restarting. Hosted operation and audible fidelity remain unverified. Paid text and audio remain disabled; see AI-VALIDATION.md for coverage and cost uncertainty.
 
 ## Play and persistence
 
@@ -56,6 +56,16 @@ The durable ledger stores receipts/cache and usage, not credentials or input pro
 OpenAI documents both alerts and enforced hard limits; alerts alone do not stop calls, and hard limits may slightly overshoot while usage propagates. This task changes neither. [Spend limits documentation](https://developers.openai.com/api/docs/guides/spend-limits). App reservations cover only this app's requests.
 
 ## Validation
+
+### Hosted handoff (November 6)
+
+No publication or GitHub push was performed in the Windows release phase. Sites runtime configuration was read without printing values: revision 0 had no entries. The parent must configure the existing Site through Sites runtime tools before deployment; local `.dev.vars` is never packaged. Keep `OPENAI_API_KEY` secret. The server reads Cloudflare Worker `env` bindings; a native Workers integration test exercises the application routes with a fake secret binding, real D1 migrations, and a bounded mock-provider quota error. Actual hosted binding delivery still requires the parent's live check.
+
+For one bounded hosted experiment, use `AI_MODE=openai`, `AI_ENABLE_PAID=I_ACCEPT_SMALL_API_CHARGES`, `AI_ENABLE_AUDIO=I_ACCEPT_PAID_AUDIO`, `AI_PLANNER_MODEL=gpt-6-luna`, `AI_CAMPAIGN_MICRO_USD=100000`, `AI_DAY_MICRO_USD=100000`, and `AI_MONTH_MICRO_USD=100000`. Inspect the hosted ledger first: these are absolute ceilings, not fresh allowances. A separate hosted D1 ledger does not know the Windows spending; retain the cross-machine phase record when enforcing the user's $5 total. Do not clear old receipts. The remaining total authorization after Windows is $4.501506, but this suggested hosted experiment permits only $0.10 in its own ledger. Restore paid flags to disabled after validation unless continued operation is explicitly intended.
+
+Preserve `.openai/hosting.json` Site identity, audience, `DB` binding and `sites()` build integration. The build produces `dist/server/index.js` plus client assets. Existing rooms need the additive `drizzle/0001_ai_ledger.sql`; a fresh database needs `0000` then `0001`. Check applied migrations before applying them, and never replay the initial migration on existing tables. Publication and remote migrations remain the parent's work.
+
+Windows added six inference requests reserving $0.089917; cumulative retained reservations are **$0.498494**. No uncertain historical usage was refunded. The local monthly ceiling temporarily became 508577 microdollars, allowing at most $0.10 beyond the original 408577. It was restored to 250000, with `AI_MODE=fixture`, `AI_ENABLE_PAID=DISABLED`, `AI_ENABLE_AUDIO=DISABLED`. Historical sections below describe earlier runs; the November 6 record in AI-VALIDATION.md is the current accounting.
 
 `npm run check` covers types, tests and production build. `server/ai.test.ts` and `server/ai-speech.test.ts` test zero-call fixture/key-only modes, atomic D1 contention, all caps, concurrency/storage exhaustion, duplicate/restart caching, failed requests without retries, malformed/stale results, legal actions without RNG mutation, replay, authenticated rooms and audio gating, bounded Realtime sessions, transcript checks, cancellation and caching. See `AI-VALIDATION.md` for browser results.
 

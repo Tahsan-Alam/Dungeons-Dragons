@@ -261,6 +261,7 @@ export class RoomService {
       const narration=room.game.story?.narrations.find(n=>n.eventId===room.game!.eventSequence);
       const audio=narration&&this.ai?await this.ai.speak(code,narration,playerId===room.hostId,signal):null;
       const latest=await this.load(code);
+      this.authenticate(latest,await hash(token));
       if(latest.room.version!==room.version)throw new RoomError('The room changed. Request the current caption.',409,'STALE_VERSION',publicView(latest));
       return {audio,version:room.version};
     }
@@ -269,6 +270,7 @@ export class RoomService {
     if(!choices.length)return reject('Wait for your turn.');
     const choiceId=this.ai?await this.ai.choose(code,room.game,playerId,input.text):fixtureChoice(input.text,choices);
     const latest=await this.load(code);
+    this.authenticate(latest,await hash(token));
     if(latest.room.version!==room.version)throw new RoomError('The room changed. Request a new suggestion.',409,'STALE_VERSION',publicView(latest));
     return {choice:choices.find(c=>c.id===choiceId)??null,version:room.version};
   }

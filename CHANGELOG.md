@@ -4,6 +4,10 @@ Record user-visible changes at version checkpoints. Git history and pull request
 
 ## Unreleased
 
+- Optional server-only Luna campaign recipes, narration and legal suggestions, plus bounded cached Realtime speech. Paid generation remains off by default; persisted captions and engine-authoritative gameplay survive presentation changes and reloads.
+- Clearer local narration fallback messaging and an authorization recheck before returning in-flight suggestions or audio to a revoked seat.
+- Release validation covers fresh local HTTP-route speech/playback and two-seat multiplayer; hosted checks and audible fidelity remain outstanding. See AI-VALIDATION.md.
+
 - Compact settings with stable section navigation, grouped sound controls and 44px close target. Appearance includes art style, world view, color, accent and motion.
 - Optional Hex Settlers hover/click sounds with independent interface volume, preview, hover/focus toggle and recoverable playback errors. Audio levels migrate without enabling sound automatically.
 - Consistent interface motion and a complete in-app Reduced override. Attack dialogs focus Roll d20; queued results preserve one dialog/backdrop, and dismissal controls share the exit transition.

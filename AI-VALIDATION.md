@@ -1,5 +1,7 @@
 # Windows AI integration validation
 
+Latest results: see **Windows release validation (November 6, 2026)** at the end of this document; earlier sections are historical evidence.
+
 November 5, 2026. Feature branch based on exact transferred commit `d009c4769858f34e26135bfa5c6c2ad188909273`. Bundle was 31,752 bytes, SHA-256 `81de940b664f4c1f3264ff706c46afc0f0dee01b653bedc872ec3d7899a4272f`; `git bundle verify` succeeded before import. No incoming working-tree changes were present. Only the temporary bundle was deleted.
 
 ## Automated
@@ -145,3 +147,53 @@ The current [model prices](https://developers.openai.com/api/docs/models/gpt-rea
 Evidence remains outside Git in `C:/Users/mexic/.t3/scratch/painted-realms-qa/live-20261105/`: updated `record.json` (original summary retained), `speech-followup-trace.json`, `speech-followup-final-trace.json`, `speech-followup.wav`, `speech-live-browser-results.json`, `speech-live-*` screenshots and `speech-followup-check.log`. Scripts remain in the parent scratch directory. Original receipts and the new cached clip remain in ignored `.wrangler/state`.
 
 Final flags were verified unchanged: `AI_MODE=fixture`, `AI_ENABLE_PAID=DISABLED`, `AI_ENABLE_AUDIO=DISABLED`. Installed key preserved. Task-owned browser contexts, Miniflare runtimes and localhost server were stopped; port 5347 has no listener. Paid speech stays disabled by default. One playable short sample is established; general reliability, acoustic fidelity and fresh production-route playback remain unverified.
+## Windows release validation (November 6, 2026)
+
+This section supersedes earlier readiness/accounting statements above. Work began on clean `feature/conservative-ai-integration` at `523f9b0`. No deployment, access change, PR or GitHub push was performed. Parent publication and hosted verification remain required before push.
+
+### Changes and review
+
+- Reauthorize the seat after awaiting speech or a suggestion, before returning its result. A revoked seat is rejected even if a future revocation path does not change the room version. A regression covers both asynchronous paths.
+- Explain local narration fallback in Storyteller and replace its obsolete claim that no live testing occurred with the actual transcript/acoustic limitation.
+- Add a native Workers test of application create/start routes, runtime secret bindings, both D1 migrations, missing bearer rejection, bounded quota-error fallback, durable receipt retention and idempotent retry. It disables external networking and uses a fake provider; it is not live hosted evidence.
+- Reviewed authoritative actions, transcript gates, budgets, D1 compare-and-swap/cache, stale result protection, timeout/abort paths, build configuration and migrations. No engine or paid default changes. No broader semantic guarantee for generated flavor is implied.
+
+### Actual application and browser evidence
+
+Node 26.13.0, built Worker served at `http://127.0.0.1:5347`, existing local D1. Browser plugin not available; used installed regular Microsoft Edge through Playwright, as explicitly requested. No T3 preview, T3 desktop control or user-owned browser profile. Agent-owned contexts were closed.
+
+| Check | Evidence / result |
+| --- | --- |
+| Live text through application HTTP routes | Two Luna campaign/narration pairs accepted, human names/classes preserved; legal guard suggestion accepted for active seat. |
+| Fresh speech through Storyteller | Actual POST `/api/rooms/:code/assist`, no route interception or fake provider. Caption: `The first shard waits somewhere nearby.` Realtime returned accepted transcript and a 3.05-second, 48,844-byte mono 8 kHz WAV. |
+| Native playback | Edge Audio decoded, advanced time, replayed to `ended`, had no media error; Stop paused, volume changed from 0.75 to 0.35, rate 0.95. Native Audio was observed, not mocked. No audio listening occurred. |
+| Shared durable cache | Twelve browser audio requests produced one new receipt. Guest read the same cached clip after server restart with generation disabled; no new reservation. Non-host fresh generation returned fallback without spending. |
+| Desktop/mobile Paint and Pixel | 1440x900 and 390x844. Page identity, meaningful content, no framework overlay, no console/page errors or horizontal overflow. Screenshots saved and representative desktop/mobile screenshots inspected. |
+| Two seats, real HTTP/D1 | Join request retry retained the seat; rejoin after start worked for that request, new join rejected. Both seats took legal guard/end turns. Out-of-turn commands and invalid bearer rejected. Concurrent same-version actions returned one 200 and one 409. Non-host narration rejected. |
+| Presentation/persistence | Both browser seats opened the same game, switched Paint/Pixel and 2D/2.5D, used light/dark settings, reloaded and opened replay. Server game and identity unchanged; reconstructed replay exactly matched game. |
+| Fixture fallback | With paid flags disabled, campaign/narration stayed fixture-sourced and playable. Shared audio remained readable. Ledger unchanged throughout fixture multiplayer/browser run. |
+| Cancellation/provider failure | Automated fake-transport coverage: timeout, abort, late socket closure, stream caps, transcript rejection, provider categories, cache/dedup and budget exhaustion. Prior browser delayed-response cancellation test remains applicable. No new paid cancellation/failure experiment was needed. |
+
+The first two-seat script incorrectly requested a suggestion for the host when the guest owned the turn; HTTP 400 correctly prevented spending. That harness had not saved its new session credentials before failing. A second, recorded two-seat experiment saved sessions first and used the actual active seat. The first campaign/narration receipts remain retained. No failed receipt was cleared or retried to force generation. No browser backend recovery/fallback was required.
+
+### Accounting
+
+Official [Luna pricing](https://developers.openai.com/api/docs/models/gpt-6-luna) and [Realtime Mini pricing](https://developers.openai.com/api/docs/models/gpt-realtime-2.1-mini) were rechecked before calls: Luna $0.125/M cache-write input and $0.50/M output; Realtime $0.60/M text input and $20/M audio output. Existing reservations use byte/framing bounds and 2x margin; speech charges all 1,800 output tokens at the audio rate before opening its connection, with the existing 15-second deadline and 30-second audio cap. No unbounded retries, tools, microphone, Terra inference or billing changes.
+
+| Actual new inference | Retained microdollars | Reported input / output tokens |
+| --- | ---: | ---: |
+| First plan | 2,737 | 493 / 174 |
+| First narration | 1,587 | 464 / 27 |
+| Second plan | 2,737 | 503 / 184 |
+| Second narration | 1,587 | 474 / 25 |
+| Active-seat suggestion | 1,896 | 1,063 / 15 |
+| Fresh route speech | 79,373 | 73 / 94 |
+| **Phase total (six calls)** | **89,917 ($0.089917)** | |
+
+Prior retained $0.408577 + this phase $0.089917 = **$0.498494 cumulative**, below the user's $5 total and this phase's $1.50 additional allowance. The operational monthly ceiling was only $0.508577, admitting at most $0.10 additional against the intact existing ledger. All six new receipts completed; no refund/reset. Text usage estimates $0.0005122 at Standard input rates or $0.000587125 pricing all input as cache writes. Speech modality breakdown was not retained; pricing all 94 output tokens as audio gives a conservative $0.0019238 usage estimate. Neither these estimates nor retained reservations are confirmed billing; historical unknown usage remains unknown. **$4.501506** remains against the total cap for the parent, subject to all later reservations elsewhere.
+
+Durable phase evidence: `C:/Users/mexic/.t3/scratch/painted-realms-qa/release-20261106/record.json`, `browser-results.json`, `multiplayer-results.json`, `route-speech.wav`, screenshots and check logs. Temporary scripts reside in the parent scratch directory; credentials/session records/local DB are not committed or packaged. Earlier evidence/ledger preserved. The denied Temp cleanup folder was untouched.
+
+Final local flags: `AI_MODE=fixture`, `AI_ENABLE_PAID=DISABLED`, `AI_ENABLE_AUDIO=DISABLED`; campaign/day/month ceilings restored to 100000/250000/250000. Key and original D1 retained. Owned server and browser sessions stopped. Final `npm run check`: types, **173 tests**, production build. Secret-content scans of tracked source/build output and `git diff --check` also pass.
+
+Readiness: ready for the parent's existing-Site publication and bounded hosted checks, not a claim of hosted release success. Sites runtime had no configured values (revision 0); see AI-SETUP.md for key names, safe caps, migrations and build requirements. Validate actual hosted secret delivery, routes, persistence and speech before GitHub push. Audible quality, physical devices, Safari, assistive technology and a full campaign playthrough remain outside this evidence. Keep paid defaults off.
