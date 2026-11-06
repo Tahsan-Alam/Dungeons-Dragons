@@ -3,6 +3,9 @@ import type { GameAction, GameOptions, HeroClass, RoomPlayer, RoomView, Session 
 import { applyAction, createGame, runBots } from '../game/engine.ts';
 import {appendReplay,newReplay} from '../game/replay.ts';
 import type { RoomStore, StoredRoom } from './room-store.ts';
+import {cleanPrompt,installCampaign,acceptNarration,narrationFixture} from '../game/campaign.ts';
+import {legalChoices,fixtureChoice} from '../game/legal-actions.ts';
+import type {GameAI} from './ai-service.ts';
 
 export const ROOM_CAPACITY = 10;
 export const ROOM_LIFETIME = 30 * 24 * 60 * 60 * 1000;
@@ -16,7 +19,8 @@ export type RoomCommand =
   | {type:'addBot'; heroClass?:HeroClass}
   | {type:'remove'; playerId:string}
   | {type:'start' | 'leave' | 'skip'}
-  | {type:'action'; action:GameAction};
+  | {type:'action'; action:GameAction}
+  | {type:'narrate'};
 
 export class RoomError extends Error {
   status: number;
@@ -58,7 +62,9 @@ export function validateOptions(input: unknown): GameOptions {
   if (!['simple','classic'].includes(o.rules) || !['warm','dramatic','wry'].includes(o.narrator) || !['woodland','ruins','coast'].includes(o.biome)) return reject('These adventure options are not supported.');
   if (typeof o.seed !== 'string' || !o.seed.trim() || o.seed.length > 64 || /[\u0000-\u001f]/.test(o.seed)) return reject('Use an adventure seed between 1 and 64 characters.');
   if (!Number.isInteger(o.companions) || o.companions < 0 || o.companions > 9) return reject('Choose between 0 and 9 companions.');
-  return {rules:o.rules, narrator:o.narrator, biome:o.biome, seed:o.seed.trim(), companions:o.companions};
+  const prompts:Partial<GameOptions>={};
+  for(const key of ['storyPrompt','narratorPrompt','characterPrompt'] as const){if(o[key]!==undefined){if(typeof o[key]!=='string'||o[key]!.length>400)return reject('Keep each creative prompt within 400 characters.');prompts[key]=cleanPrompt(o[key]);}}
+  return {rules:o.rules, narrator:o.narrator, biome:o.biome, seed:o.seed.trim(), companions:o.companions,...prompts};
 }
 function validateAction(input: unknown): GameAction {
   if (!input || typeof input !== 'object') return reject('Choose a game action.');
@@ -86,7 +92,8 @@ function addBot(room: RoomView, heroClass?: HeroClass) {
 export class RoomService {
   store: RoomStore;
   now: () => number;
-  constructor(store: RoomStore, now: () => number = Date.now) { this.store=store; this.now=now; }
+  ai?:GameAI;
+  constructor(store: RoomStore, now: () => number = Date.now, ai?:GameAI) { this.store=store; this.now=now;this.ai=ai; }
 
   async create(input: {name:unknown;heroClass:unknown;options?:unknown;requestId?:unknown}): Promise<{session:Session;room:RoomView}> {
     const name=nameOf(input.name), heroClass=classOf(input.heroClass);
@@ -178,6 +185,15 @@ export class RoomService {
       const requireHost=()=>{if(room.hostId!==playerId) reject('Only the host can do that.',403,'HOST_ONLY');};
       const requireLobby=()=>{if(room.game) reject('That setting is locked once the adventure starts.',409,'ALREADY_STARTED');};
       switch(command.type) {
+        case 'narrate': {
+          requireHost();
+          if(!room.game?.story)return reject('Start a new adventure to use the storyteller.');
+          if(room.game.story.narrations.length>=100)return reject('This adventure has reached its narration limit.');
+          const narration=this.ai?await this.ai.narrate(code,room.game):narrationFixture(room.game);
+          if(!room.game.story.narrations.some(n=>n.eventId===narration.eventId)){
+            room.game=acceptNarration(room.game,narration);room.replay=appendReplay(room.replay!,{type:'narration',record:narration});
+          }break;
+        }
         case 'ready':
           requireLobby();
           if(typeof command.ready!=='boolean') return reject('Choose ready or not ready.');
@@ -197,7 +213,9 @@ export class RoomService {
         case 'start':
           requireHost();requireLobby();
           if(room.players.some(p=>!p.ready && !p.bot)) return reject('Wait for everyone to be ready.',409,'NOT_READY');
-          room.game=createGame(room.players,room.options);room.replay=newReplay(room.game);room.game=runBots(room.game);break;
+          room.game=createGame(room.players,room.options);
+          if(this.ai)room.game=installCampaign(room.game,await this.ai.plan(code,room.options,room.players));
+          room.replay=newReplay(room.game);room.game=runBots(room.game);break;
         case 'action':
           if(!room.game) return reject('Start the adventure first.',409,'NOT_STARTED');
           try {const action=validateAction(command.action);room.game=runBots(applyAction(room.game,playerId,action));room.replay=appendReplay(room.replay!,{type:'action',playerId,action});}
@@ -233,6 +251,28 @@ export class RoomService {
       if(await this.store.compareAndSwap(code,record.revision,next)) return command.type==='leave'?{left:true}:{room:publicView(next)};
     }
     return reject('The room is busy. Please try again.',503,'BUSY');
+  }
+
+  async assist(codeInput:unknown,token:string,input:{version:unknown;text?:unknown;audio?:unknown},signal?:AbortSignal){
+    const code=this.code(codeInput),record=await this.load(code),playerId=this.authenticate(record,await hash(token)),room=record.room;
+    if(input.version!==room.version)throw new RoomError('The room changed. Try again.',409,'STALE_VERSION',publicView(record));
+    if(!room.game)return reject('Start the adventure first.');
+    if(input.audio===true){
+      const narration=room.game.story?.narrations.find(n=>n.eventId===room.game!.eventSequence);
+      const audio=narration&&this.ai?await this.ai.speak(code,narration,playerId===room.hostId,signal):null;
+      const latest=await this.load(code);
+      this.authenticate(latest,await hash(token));
+      if(latest.room.version!==room.version)throw new RoomError('The room changed. Request the current caption.',409,'STALE_VERSION',publicView(latest));
+      return {audio,version:room.version};
+    }
+    if(typeof input.text!=='string'||!input.text.trim()||input.text.length>400)return reject('Enter an intention of up to 400 characters.');
+    const choices=legalChoices(room.game,playerId);
+    if(!choices.length)return reject('Wait for your turn.');
+    const choiceId=this.ai?await this.ai.choose(code,room.game,playerId,input.text):fixtureChoice(input.text,choices);
+    const latest=await this.load(code);
+    this.authenticate(latest,await hash(token));
+    if(latest.room.version!==room.version)throw new RoomError('The room changed. Request a new suggestion.',409,'STALE_VERSION',publicView(latest));
+    return {choice:choices.find(c=>c.id===choiceId)??null,version:room.version};
   }
 
   private code(input:unknown) {

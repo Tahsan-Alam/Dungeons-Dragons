@@ -1,5 +1,6 @@
 import type {GameState, ReplayArchive, ReplayCommand} from './types.ts';
 import {applyAction,runBots} from './engine.ts';
+import {acceptNarration} from './campaign.ts';
 export type {ReplayArchive} from './types.ts';
 
 export function newReplay(initial:GameState,complete=true):ReplayArchive {
@@ -13,7 +14,7 @@ export function* iterateReplay(archive:ReplayArchive):Generator<GameState> {
  if(archive.schemaVersion!==1)throw new Error('This replay uses an unsupported version.');
  let last:GameState|undefined;const maps=new Map<number,GameState['tiles']>();
  const normalize=(game:GameState)=>{
-  if(last&&last.eventSequence===game.eventSequence&&last.activeActorId===game.activeActorId&&last.round===game.round&&last.status===game.status&&last.scene===game.scene&&last.actors.every((a,i)=>a.bot===game.actors[i]?.bot))return null;
+  if(last&&last.story?.narrations.length===game.story?.narrations.length&&last.eventSequence===game.eventSequence&&last.activeActorId===game.activeActorId&&last.round===game.round&&last.status===game.status&&last.scene===game.scene&&last.actors.every((a,i)=>a.bot===game.actors[i]?.bot))return null;
   // Maps are immutable within a chapter; sharing them keeps long replays small.
   const tiles=maps.get(game.scene)??game.tiles;maps.set(game.scene,tiles);
   last={...game,tiles};return last;
@@ -23,7 +24,9 @@ export function* iterateReplay(archive:ReplayArchive):Generator<GameState> {
  for(const state of pending){frame=normalize(state);if(frame)yield frame;}
  for(const command of archive.commands){
   pending=[];
-  if(command.type==='action'){
+  if(command.type==='narration'){
+   game=acceptNarration(game,command.record);
+  }else if(command.type==='action'){
    game=applyAction(game,command.playerId,command.action);frame=normalize(game);if(frame)yield frame;
    game=runBots(game,g=>pending.push(g));
   }else{

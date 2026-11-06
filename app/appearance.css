@@ -24,9 +24,9 @@ html[data-color-mode][data-theme] :is(button,a,summary,input,select,textarea,[ro
 html[data-color-mode][data-theme] :is(.button.primary,.binding-key.listening,input[type=checkbox]:checked){--control-focus:var(--accent-ink)}
 html[data-color-mode][data-theme] .button.danger{--control-focus:#fff}
 html[data-color-mode][data-theme] :is(input,select,textarea){accent-color:var(--accent)}
-html[data-color-mode][data-theme] :is(.field input,.field select,.library-search input,.replay-transport select){background:var(--surface-raised);border-color:var(--line);color:var(--ink)}
+html[data-color-mode][data-theme] :is(.field input,.field select,.field textarea,.library-search input,.replay-transport select){background:var(--surface-raised);border-color:var(--line);color:var(--ink)}
 html[data-color-mode][data-theme] :is(input,textarea)::placeholder{color:var(--muted);opacity:.8}
-html[data-color-mode][data-theme] :is(.field input,.field select,.library-search input,.replay-transport select):hover{border-color:var(--line-strong)}
+html[data-color-mode][data-theme] :is(.field input,.field select,.field textarea,.library-search input,.replay-transport select):hover{border-color:var(--line-strong)}
 html[data-color-mode][data-theme] :is(.button,.action-button,.class-option,.binding-slot,.game-options){box-shadow:var(--shadow)}
 html[data-color-mode][data-theme] .button{border-color:var(--line-strong)}
 html[data-color-mode][data-theme] .button.paper{background:var(--surface-raised);color:var(--ink)}

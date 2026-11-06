@@ -15,9 +15,12 @@ Keep this as the short checkpoint overview. Use GitHub issues for individual tas
 
 - [ ] Have every teammate run the project and complete a first small pull request.
 - [ ] Playtest solo and a full multiplayer session; record and fix reproducible bugs.
-- [ ] Add an adventure prompt and saved world/story facts for consistent generation.
-- [ ] Connect and test one affordable story model with spend limits and a scripted fallback.
-- [ ] Add cached narrator audio, then optional generated assets that preserve character identity.
+- [x] Add optional prompts and saved bounded campaign facts/character recipes.
+- [x] Implement server-only model roles, durable spend reservations/cache and fixture fallback; verify with mocks.
+- [x] Verify bounded Luna planning/narration/legal-choice access with budgeted live experiments (small samples; broader quality remains a playtest task).
+- [x] Add bounded cached narrator audio with transcript validation and device fallback; fresh local application-route generation and native Edge playback passed. Hosted operation and audible quality remain unverified.
+- [ ] Publish the reviewed Windows changes to the existing Site and pass hosted runtime/AI checks before GitHub push.
+- [ ] Add optional generated assets that preserve character identity.
 - [ ] Improve encounter variety, onboarding and balancing using playtest feedback.
 
 These are proposed next tasks, not promises that every feature lands in alpha.2. Choose a small scope together for each checkpoint.

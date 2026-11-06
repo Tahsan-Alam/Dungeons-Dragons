@@ -6,6 +6,7 @@ import { createGame, applyAction, runBots } from '../../game/engine';
 import {AdventureStore,soloRecord,roomRecord,updateSoloRecord,sortedLibrary} from '../../game/library';
 import type {AdventureRecord,SavedAdventure} from '../../game/library';
 import {newReplay,appendReplay} from '../../game/replay';
+import {acceptNarration,narrationFixture} from '../../game/campaign';
 
 const SOLO_KEY='painted-realms.solo.v1';
 const SESSION_KEY='painted-realms.room.v1';
@@ -123,7 +124,7 @@ export function useSession(){
   const controller=new AbortController();controllers.current.add(controller);
   const cancel=()=>controller.abort();external?.addEventListener('abort',cancel,{once:true});
   if(external?.aborted)controller.abort();
-  const timeout=setTimeout(()=>controller.abort(),10_000);
+  const timeout=setTimeout(()=>controller.abort(),25_000);
   try{
    const response=await fetch(path,{method:body===undefined?'GET':'POST',headers:{...(body===undefined?{}:{'Content-Type':'application/json'}),...(auth?{Authorization:`Bearer ${auth.token}`}:{})},body:body===undefined?undefined:JSON.stringify(body),cache:'no-store',signal:controller.signal});
    let data:unknown;try{data=await response.json();}catch{throw new ApiError('The game server is unavailable. Please try again.',503,'INVALID_RESPONSE');}
@@ -246,6 +247,15 @@ export function useSession(){
   const record=active.current?records.current.get(active.current):undefined;
   if(record?.game&&record.replay){try{const game=runBots(applyAction(record.game,'you',value)),replay=appendReplay(record.replay,{type:'action',playerId:'you',action:value});setSolo(game);void saveRecord(updateSoloRecord(record,game,replay)).catch(()=>{});setError('');}catch(e){setError(e instanceof Error?e.message:'That action is unavailable.');}}
  }
+ async function narrate(){
+  if(latest.current.room)return command({type:'narrate'});
+  const record=active.current?records.current.get(active.current):undefined;
+  if(!record?.game?.story||!record.replay)return;
+  if(record.game.story.narrations.some(n=>n.eventId===record.game!.eventSequence))return;
+  if(record.game.story.narrations.length>=100){setError('This adventure has reached its narration limit.');return;}
+  const narration=narrationFixture(record.game),game=acceptNarration(record.game,narration),replay=appendReplay(record.replay,{type:'narration',record:narration});
+  setSolo(game);await saveRecord(updateSoloRecord(record,game,replay));
+ }
  // Refresh waiting rooms without heartbeat: being at Games must not claim a player is present at every table.
  useEffect(()=>{
   if(!inLibrary||!libraryReady)return;
@@ -291,5 +301,5 @@ export function useSession(){
   timer=setTimeout(poll,1000);
   return()=>{stopped=true;if(timer)clearTimeout(timer);controller?.abort();};
  },[session]);
- return {game:room?.game||solo,room,session,saved,savedSession,busy,error,setError,connection,startSolo,resumeSolo,createRoom,joinRoom,resumeRoom,command,action,library,libraryReady,activeId,openSaved,backToLibrary,updateSaved,deleteSaved,replayFor};
+ return {game:room?.game||solo,room,session,saved,savedSession,busy,error,setError,connection,startSolo,resumeSolo,createRoom,joinRoom,resumeRoom,command,action,narrate,library,libraryReady,activeId,openSaved,backToLibrary,updateSaved,deleteSaved,replayFor};
 }

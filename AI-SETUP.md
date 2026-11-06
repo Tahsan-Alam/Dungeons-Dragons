@@ -1,0 +1,74 @@
+# Local AI integration
+
+Verified November 6, 2026 with authorized, budgeted live requests. Luna planning, narration and legal suggestions passed. Fresh speech through the built application's HTTP route produced a 3.05-second clip and played in native Edge media, without route interception. Shared cached playback also passed after disabling generation and restarting. Hosted operation and audible fidelity remain unverified. Paid text and audio remain disabled; see AI-VALIDATION.md for coverage and cost uncertainty.
+
+## Play and persistence
+
+All development/tests default to fixtures. A key alone changes nothing. Solo remains offline and fixture-only. For server AI, choose **Gather party**; one human plus companions works for testing alone. Setup offers optional adventure, narrator and character prompts (400 characters each), plus a seed. The campaign keeps fixed three-shard facts and chapter goals. Character recipes select existing classes and palette colors shared by Paint/Pixel and 2D/2.5D. Human names/classes remain fixed. A numerical seed varies local starting material; it does not make model prose deterministic.
+
+During play, open **Settings → AI game master**. **Narrate this moment** saves a caption for committed events. **Suggest a legal action** selects an engine-enumerated choice or asks for clarification; confirm through existing controls, including the attack-roll dialog. Bots remain scripted. The host generates narration/audio; everyone can reuse cached audio. **Read caption** falls back to device speech. Stop and captions remain available; playback stops after 45 seconds or when leaving/changing the moment.
+
+Accepted campaigns, identities and narration persist in the game/replay. Resume, replay, rendering and style/view changes never generate. Old saves remain intact; new campaign metadata requires a new adventure. Narration is bounded flavor, not a semantic guarantee against hallucination. Models never replace executable outcomes or fixed facts. Saved prompts are visible to room members: do not enter secrets.
+
+## Secure setup
+
+One server-side project credential can serve all roles if endpoint/model permissions permit. Separate dev/prod projects and keys isolate usage; a key per model is unnecessary. See [authentication](https://developers.openai.com/api/reference/overview#authentication) and [permissions](https://developers.openai.com/api/docs/guides/rbac).
+
+The existing service-account key is installed in ignored workspace `.dev.vars` and was reused with explicit authorization. Do not create or request another key for this checkout. Store `OPENAI_API_KEY` only in a server secret binding/ignored `.dev.vars`, never browser storage, a public environment variable, Git or logs. No account billing or limits were changed.
+
+`npm start -- --port 5347` now explicitly loads the root `.dev.vars` through `scripts/start-local.mjs`. Wrangler otherwise searches beside the generated `dist/server/wrangler.json` and silently misses the root file. The wrapper passes an absolute path without copying the key into build output. Without a `.dev.vars`, it still starts in fixture mode. Stop the built preview before rebuilding on Windows to avoid a locked `dist` directory.
+
+Initialize a fresh local DB once, after `npm ci` and `npm run build` (Node 26):
+
+```powershell
+node --import ./scripts/sites-env.mjs ./node_modules/wrangler/bin/wrangler.js d1 execute DB --local --config dist/server/wrangler.json --persist-to .wrangler/state --file drizzle/0000_wealthy_ben_grimm.sql
+node --import ./scripts/sites-env.mjs ./node_modules/wrangler/bin/wrangler.js d1 execute DB --local --config dist/server/wrangler.json --persist-to .wrangler/state --file drizzle/0001_ai_ledger.sql
+```
+
+Both are already applied locally on the handoff laptop. Do not reapply the initial migration to an existing DB. No remote migration/deployment was performed.
+
+After secure provisioning, add these **nonsecret** settings to `.dev.vars` and restart the local server for a small text-only experiment:
+
+```dotenv
+AI_MODE=openai
+AI_ENABLE_PAID=I_ACCEPT_SMALL_API_CHARGES
+AI_CAMPAIGN_MICRO_USD=50000
+AI_DAY_MICRO_USD=100000
+AI_MONTH_MICRO_USD=250000
+```
+
+These select $0.05/campaign, $0.10/day and $0.25/month reservation ceilings. Leave audio off. Start a Gather party adventure and request one narration. `AI_MODE=fixture` disables new paid work after restart, retaining history. `AI_PLANNER_MODEL=gpt-6.1-terra` optionally selects the costlier planner; otherwise all text roles use Luna. Unknown model values cannot select arbitrary providers. Keep this test server local.
+
+Optional paid speech additionally requires `AI_ENABLE_AUDIO=I_ACCEPT_PAID_AUDIO`. It now uses `gpt-realtime-2.1-mini`, voice `marin`, through a server-owned Realtime WebSocket upgrade. No browser credential, microphone, tools, ongoing conversation or paid retry. Device speech needs no key. For a single small audio experiment, the $0.05 text-only campaign cap above intentionally blocks audio: explicitly use `AI_CAMPAIGN_MICRO_USD=100000`, keeping the $0.10/day and $0.25/month experiment caps. One audio attempt reserves $0.079373, including failures; prior text calls also count. These are suggested settings only, not enabled by this change.
+
+## Spending safeguards
+
+Defaults: $0.10/campaign (the persisted session), $0.25/UTC day, $1/UTC month, two global outstanding calls. Configuration can only lower ceilings; invalid/zero caps disable live requests. D1 compare-and-swap reserves allowance **before** outbound traffic across concurrent workers/users. Reconnect does not reset spending. Missing persistence fails closed.
+
+Text requests are bounded to 16,000 UTF-8 bytes, 1,600 output tokens for planning or 500 for narration/intent. No tools, automatic paid retries, streaming or background requests. Reservations use byte-based input bounds plus 2,048 framing tokens, cache-write rates and a 2× margin. This is conservative accounting, **not exact provider billing**. Failed calls retain reservations; reported usage is saved without automatic refunds. At maximum input size Luna planning reserves ~$0.006112 and narration ~$0.005012; Terra planning reserves ~$0.06112 (too large for the suggested $0.05 experiment). Typical inputs are smaller. Provider price changes, taxes and external charges are separate; recheck rates before enabling.
+
+Audio accepts at most 600 characters and a 4,096-byte request, allows 1,800 output tokens, and reserves 79,373 microdollars before even connecting. The calculation is 2 * ((4,096 + 2,048 framing tokens) * $0.60/M + 1,800 * $20/M). Charging every output token at the audio rate conservatively includes text and reasoning output; cached input is charged at full input rate, with a 2x margin. No input audio, images, transcription or tool fees can be incurred by this path. Each attempt allows one response, 15 seconds wall time including connection, 30 seconds decoded audio (240,000 mu-law bytes), 1 MB wire events, 350 KB per event and 2,000 events. Text also times out after 15 seconds.
+
+Audio is buffered until completed, then the streamed transcript (when supplied), completed audio transcript and final message transcript must agree with the approved caption. Normalization permits whitespace and one balanced enclosing double-quote pair (straight or curly), as observed in live output. Interior punctuation, case, numbers, words and word order remain exact; missing/added words or changed stories are rejected. Deviations, missing transcripts and truncation fall back to device speech. This checks reported transcripts, not audible verbatim fidelity. The request uses explicit no-context reading instructions with the caption quoted as data. The clip is stored compactly as mu-law and served as mono PCM WAV. Stop, leaving the dialog, changing the moment and HTTP request abort cancel pending work; an independent deadline closes it even if the runtime cannot propagate client disconnect. No partial audio plays. Voice volume/speed apply to paid and device playback; zero volume makes no audio request. Refused, malformed, stale or failed output falls back without changing rules. Intent is deduplicated per room/player/event even if the text changes. Narration is once per event, maximum 100 saved captions per campaign.
+
+The durable ledger stores receipts/cache and usage, not credentials or input prompt transcripts. It stops at 2,000 receipts or 600,000 UTF-8 serialized bytes. Reservations account for pending results before connecting: 321,000 bytes for audio or 32,000 for text, plus receipt overhead. Oversized results cannot be committed. This deliberately small shared ledger may fit only one maximum-length clip; storage exhaustion falls back without paid regeneration. Successful clips are keyed by room, approved text, model, voice and adapter version, shared by all players and repeated identical captions, and remain readable after paid generation is disabled. Failed attempts are also deduplicated. A crash may leave a pending receipt occupying a concurrency slot. Do not reset/delete it to retry uncertain paid work: reconcile provider usage first. Manual ledger maintenance is deliberately outside gameplay; this is a small local prototype, not an indefinite billing database.
+
+OpenAI documents both alerts and enforced hard limits; alerts alone do not stop calls, and hard limits may slightly overshoot while usage propagates. This task changes neither. [Spend limits documentation](https://developers.openai.com/api/docs/guides/spend-limits). App reservations cover only this app's requests.
+
+## Validation
+
+### Hosted handoff (November 6)
+
+No publication or GitHub push was performed in the Windows release phase. Sites runtime configuration was read without printing values: revision 0 had no entries. The parent must configure the existing Site through Sites runtime tools before deployment; local `.dev.vars` is never packaged. Keep `OPENAI_API_KEY` secret. The server reads Cloudflare Worker `env` bindings; a native Workers integration test exercises the application routes with a fake secret binding, real D1 migrations, and a bounded mock-provider quota error. Actual hosted binding delivery still requires the parent's live check.
+
+For one bounded hosted experiment, use `AI_MODE=openai`, `AI_ENABLE_PAID=I_ACCEPT_SMALL_API_CHARGES`, `AI_ENABLE_AUDIO=I_ACCEPT_PAID_AUDIO`, `AI_PLANNER_MODEL=gpt-6-luna`, `AI_CAMPAIGN_MICRO_USD=100000`, `AI_DAY_MICRO_USD=100000`, and `AI_MONTH_MICRO_USD=100000`. Inspect the hosted ledger first: these are absolute ceilings, not fresh allowances. A separate hosted D1 ledger does not know the Windows spending; retain the cross-machine phase record when enforcing the user's $5 total. Do not clear old receipts. The remaining total authorization after Windows is $4.501506, but this suggested hosted experiment permits only $0.10 in its own ledger. Restore paid flags to disabled after validation unless continued operation is explicitly intended.
+
+Preserve `.openai/hosting.json` Site identity, audience, `DB` binding and `sites()` build integration. The build produces `dist/server/index.js` plus client assets. Existing rooms need the additive `drizzle/0001_ai_ledger.sql`; a fresh database needs `0000` then `0001`. Check applied migrations before applying them, and never replay the initial migration on existing tables. Publication and remote migrations remain the parent's work.
+
+Windows added six inference requests reserving $0.089917; cumulative retained reservations are **$0.498494**. No uncertain historical usage was refunded. The local monthly ceiling temporarily became 508577 microdollars, allowing at most $0.10 beyond the original 408577. It was restored to 250000, with `AI_MODE=fixture`, `AI_ENABLE_PAID=DISABLED`, `AI_ENABLE_AUDIO=DISABLED`. Historical sections below describe earlier runs; the November 6 record in AI-VALIDATION.md is the current accounting.
+
+`npm run check` covers types, tests and production build. `server/ai.test.ts` and `server/ai-speech.test.ts` test zero-call fixture/key-only modes, atomic D1 contention, all caps, concurrency/storage exhaustion, duplicate/restart caching, failed requests without retries, malformed/stale results, legal actions without RNG mutation, replay, authenticated rooms and audio gating, bounded Realtime sessions, transcript checks, cancellation and caching. See `AI-VALIDATION.md` for browser results.
+
+Live catalog lookups succeeded for `gpt-6-luna`, `gpt-6.1-terra` and `gpt-realtime-2.1-mini`. Only Luna text and Realtime speech inference were attempted. Safe ledger diagnostics distinguish text authentication, access, quota, rate, invalid-request, transport and invalid-response failures; raw provider messages are never persisted. Speech records upgrade/configuration/transcript failures. Failed reservations remain intact after fixes.
+
+Both validation runs cumulatively retain **408,577 microdollars ($0.408577)** in the existing D1 ledger: the original $0.249831 plus two speech reservations of $0.079373 each. The authorized total was $0.50; $0.091423 remains mathematically, but both authorized follow-up speech requests are exhausted. Actual provider billing is unknown. Do not clear receipts or retry failed cached requests to obtain allowance. Local settings remain `AI_MODE=fixture`, `AI_ENABLE_PAID=DISABLED`, `AI_ENABLE_AUDIO=DISABLED`, with $0.10/campaign, $0.25/day and $0.25/month ceilings. A standalone local validation harness temporarily allowed only the next reservation within the cumulative cap; production/global limits and env flags were unchanged. No task-owned server or speech session remains running. The installed key is preserved. Native playback, cache replay, Stop and volume passed; audible quality/fidelity was not listened to or certified.

@@ -3,7 +3,7 @@ import test from 'node:test';
 import {applyAction,createGame,runBots} from '../../game/engine.ts';
 import {DEFAULT_OPTIONS} from '../../game/types.ts';
 import type {GameEvent,GameState} from '../../game/types';
-import {collectSharedRolls,dismissSharedRoll,startRollFeed} from './roll-feed.ts';
+import {collectSharedRolls,dismissSharedRoll,dismissSharedRollsThrough,startRollFeed} from './roll-feed.ts';
 
 function fixture(){
  const game=createGame([
@@ -96,4 +96,40 @@ test('final attacks remain queued after defeat and historical events without str
  game.events.push({id:++game.eventSequence,kind:'roll',actorId:game.actors[3].id,roll:20,text:'An enemy lands the final blow.'});game.status='defeat';
  const collected=collectSharedRolls(feed,'game-a',game,'you');
  assert.equal(collected.queue.length,1);assert.equal(collected.queue[0].event.roll,20);
+});
+
+test('back to board dismisses the displayed batch without changing game state or replaying it on a poll',()=>{
+ const game=fixture();let feed=startRollFeed('game-a',game);
+ addRoll(game,game.actors[1].id,game.actors[3].id);
+ const last=addRoll(game,game.actors[3].id,game.actors[0].id);
+ feed=collectSharedRolls(feed,'game-a',game,'you');
+ const before=structuredClone(game),original=structuredClone(feed);
+ const dismissed=dismissSharedRollsThrough(feed,'game-a',last.id);
+ assert.equal(dismissed.queue.length,0);
+ assert.equal(dismissed.seen,feed.seen);
+ assert.equal(dismissed.actors,feed.actors);
+ assert.equal(collectSharedRolls(dismissed,'game-a',structuredClone(game),'you'),dismissed);
+ assert.deepEqual(game,before);assert.deepEqual(feed,original);
+});
+
+test('back to board retains later rolls and stale batch callbacks cannot dismiss them',()=>{
+ const game=fixture();let feed=startRollFeed('game-a',game);
+ const first=addRoll(game,game.actors[1].id,game.actors[3].id);
+ const displayedLast=addRoll(game,game.actors[3].id,game.actors[0].id);
+ feed=collectSharedRolls(feed,'game-a',game,'you');
+ // A poll arrives after the button captured the last visible event.
+ const later=addRoll(game,game.actors[2].id,game.actors[3].id);
+ feed=collectSharedRolls(feed,'game-a',game,'you');
+ const dismissed=dismissSharedRollsThrough(feed,'game-a',displayedLast.id);
+ assert.deepEqual(dismissed.queue.map(roll=>roll.event.id),[later.id]);
+ assert.equal(dismissSharedRollsThrough(dismissed,'game-a',displayedLast.id),dismissed);
+ assert.equal(dismissSharedRoll(dismissed,first.id),dismissed);
+ assert.equal(collectSharedRolls(dismissed,'game-a',game,'you'),dismissed);
+});
+
+test('a delayed batch dismissal from a different table cannot erase its rolls',()=>{
+ const game=fixture();let feed=startRollFeed('game-b',game);
+ const event=addRoll(game,game.actors[1].id,game.actors[3].id);
+ feed=collectSharedRolls(feed,'game-b',game,'you');
+ assert.equal(dismissSharedRollsThrough(feed,'game-a',event.id),feed);
 });

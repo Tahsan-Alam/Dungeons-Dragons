@@ -3,10 +3,15 @@ import { D1RoomStore } from './room-store.ts';
 import { RoomError, RoomService } from './rooms.ts';
 import { D1RateLimiter } from './rate-limit.ts';
 import type { RateCategory } from './rate-limit.ts';
+import {GameAI} from './ai-service.ts';
+import {BudgetLedger,D1Ledger,DEFAULT_CAPS} from './ai-ledger.ts';
 
 export function service() {
   if(!env.DB)throw new RoomError('Online rooms are temporarily unavailable. Solo adventures still work.',503,'DATABASE_UNAVAILABLE');
-  return new RoomService(new D1RoomStore(env.DB));
+  const cap=(value:string|undefined,defaultValue:number)=>value===undefined?defaultValue:/^\d+$/.test(value)?Math.min(Number(value),defaultValue):0;
+  const ai=new GameAI({mode:env.AI_MODE,enabled:env.AI_ENABLE_PAID,key:env.OPENAI_API_KEY,audio:env.AI_ENABLE_AUDIO,planner:env.AI_PLANNER_MODEL},new BudgetLedger(new D1Ledger(env.DB),{
+    ...DEFAULT_CAPS,campaign:cap(env.AI_CAMPAIGN_MICRO_USD,DEFAULT_CAPS.campaign),day:cap(env.AI_DAY_MICRO_USD,DEFAULT_CAPS.day),month:cap(env.AI_MONTH_MICRO_USD,DEFAULT_CAPS.month)}));
+  return new RoomService(new D1RoomStore(env.DB),Date.now,ai);
 }
 export async function throttle(request:Request,category:RateCategory,token?:string) {
   if(!env.DB)throw new RoomError('Online rooms are temporarily unavailable. Solo adventures still work.',503,'DATABASE_UNAVAILABLE');
