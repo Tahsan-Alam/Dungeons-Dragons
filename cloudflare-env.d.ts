@@ -1,6 +1,7 @@
 declare namespace Cloudflare {
   interface Env {
     OPENAI_API_KEY?:string;
+    AI_ACCESS_PASSWORD_HASH?:string;
     AI_MODE?:string;
     AI_ENABLE_PAID?:string;
     AI_ENABLE_AUDIO?:string;

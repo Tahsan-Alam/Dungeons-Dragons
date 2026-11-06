@@ -1,5 +1,11 @@
 import { sqliteTable, text, integer, index, check } from 'drizzle-orm/sqlite-core';
 import {sql} from 'drizzle-orm';
+export const aiAccessSessions = sqliteTable('ai_access_sessions', {
+  tokenHash: text('token_hash').primaryKey(),
+  passwordVersion: text('password_version').notNull(),
+  enabled: integer('enabled').notNull().default(1),
+  expiresAt: integer('expires_at').notNull(),
+}, table => [index('ai_access_expiry_idx').on(table.expiresAt)]);
 export const aiLedger = sqliteTable('ai_ledger', {
   id: integer('id').primaryKey(),
   revision: integer('revision').notNull(),

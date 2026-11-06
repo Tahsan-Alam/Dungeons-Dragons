@@ -59,3 +59,7 @@ Keep published tags fixed. If a checkpoint needs a correction, make another comm
 A GitHub push shares code; it does not publish the hosted game. Coordinate publication with the current site maintainer. Keep the existing `.openai/hosting.json` identity and database configuration intact unless intentionally changing hosting.
 
 Do not commit API keys, `.env` files, `.dev.vars` files, local databases, browser saves or generated build output. Use the scripted AI fixtures for ordinary development. Agree on a provider, budget and server-side secret setup before enabling paid model calls.
+
+## Team AI development
+
+The hosted game uses the owner’s server key after **Table settings → AI → Unlock AI**. Your local checkout does not receive that key. For authorized local API experiments, obtain it privately from the owner, keep it in ignored `.dev.vars`, and follow [the team setup](AI-SETUP.md#teammate-development-using-the-owners-account). Each local database has its own spend ledger; coordinate budgets before testing. Fixtures and automated tests remain free.

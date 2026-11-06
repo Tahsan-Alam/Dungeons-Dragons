@@ -4,7 +4,7 @@
 
 [Play the hosted game](https://painted-realms.richie-r9.chatgpt.site/) · [Contribute](CONTRIBUTING.md) · [Roadmap](ROADMAP.md) · [Changelog](CHANGELOG.md)
 
-A playable cooperative browser adventure with Paint and Pixel artwork, each available in 2D and 2.5D. All four presentations render the same game state without restarting the room, turn or character. Changing world view reframes the camera; changing art style preserves it. No paid AI service is connected.
+A playable cooperative browser adventure with Paint and Pixel artwork, each available in 2D and 2.5D. All four presentations render the same game state without restarting the room, turn or character. Changing world view reframes the camera; changing art style preserves it. Optional server AI uses the owner’s API account behind a team-password unlock and spending limits.
 
 ## Play
 
@@ -40,7 +40,7 @@ For a fresh local multiplayer database, build once with `npm run build`, then ru
 node --import ./scripts/sites-env.mjs ./node_modules/wrangler/bin/wrangler.js d1 execute DB --local --config dist/server/wrangler.json --persist-to .wrangler/state --file drizzle/0000_wealthy_ben_grimm.sql
 ```
 
-Run that initial migration only once. The dev and built previews share `.wrangler/state`. `npm start -- --port 5347` runs the production build locally. A local address is only available on this computer; friends elsewhere need the hosted deployment and visitor access.
+Run that initial migration only once. Apply the additional AI ledger/access migrations as described in [AI setup](AI-SETUP.md#secure-setup). The dev and built previews share `.wrangler/state`. `npm start -- --port 5347` runs the production build locally. A local address is only available on this computer; friends elsewhere need the hosted deployment and visitor access.
 
 ## Verify
 
@@ -56,7 +56,7 @@ The pure engine and server tests need Node 22.13+ (Node 26 recommended for `node
 - Streamlined rules and **Classic (SRD subset)**. Classic adds initiative, Armor Class, advantage, critical hits and death saves. It is not full D&D: complete classes, species, spells, progression, reactions, conditions and many other rules remain future work. See [RULES.md](RULES.md).
 - Server-owned dice and game state, optimistic concurrency, ten-seat room cap, readiness, reconnection, host transfer, disconnected-turn recovery, request retry protection and D1 persistence. See [MULTIPLAYER.md](MULTIPLAYER.md).
 - Paint and Pixel SVG sprites, terrain and illustrations, with shared 2D/2.5D identity; projected movement paths and hit areas; board pan/zoom; accessible HTML controls; responsive party/story drawers; reduced-motion support.
-- Table settings groups Appearance, Sound, Controls and Table preferences in one scrolling pane. Sound includes optional Hex Settlers hover/click samples, device narration and synthesized ambient music, each with its own level. Hover/focus feedback can be turned off independently. Levels persist; audio starts only when enabled or explicitly previewed each visit. Browser/device voices vary. These Sound controls use local audio; the Storyteller also offers separately opted-in server speech with device fallback.
+- Table settings groups Appearance, Sound, Controls, Table and AI preferences in one scrolling pane. Sound includes optional Hex Settlers hover/click samples, device narration and synthesized ambient music, each with its own level. Hover/focus feedback can be turned off independently. Levels persist; audio starts only when enabled or explicitly previewed each visit. Browser/device voices vary. These Sound controls use local audio; the Storyteller also offers separately opted-in server speech with device fallback.
 - Saved seeded campaigns, canonical character recipes, optional prompt preferences and a Storyteller with persisted narration and legal-action suggestions. Default fixture mode makes no API calls. See [AI-OPTIONS.md](AI-OPTIONS.md) for verified model options and costs; [AI-SETUP.md](AI-SETUP.md) explains the implemented spending controls and secure local setup.
 
 ## Architecture

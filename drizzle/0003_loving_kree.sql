@@ -1,0 +1,1 @@
+ALTER TABLE `ai_access_sessions` ADD `enabled` integer DEFAULT 1 NOT NULL;

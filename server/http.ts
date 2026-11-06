@@ -4,13 +4,12 @@ import { RoomError, RoomService } from './rooms.ts';
 import { D1RateLimiter } from './rate-limit.ts';
 import type { RateCategory } from './rate-limit.ts';
 import {GameAI} from './ai-service.ts';
-import {BudgetLedger,D1Ledger,DEFAULT_CAPS} from './ai-ledger.ts';
+import {BudgetLedger,D1Ledger} from './ai-ledger.ts';
+import {aiCaps} from './ai-config.ts';
 
-export function service() {
+export function service(allowPaid=false) {
   if(!env.DB)throw new RoomError('Online rooms are temporarily unavailable. Solo adventures still work.',503,'DATABASE_UNAVAILABLE');
-  const cap=(value:string|undefined,defaultValue:number)=>value===undefined?defaultValue:/^\d+$/.test(value)?Math.min(Number(value),defaultValue):0;
-  const ai=new GameAI({mode:env.AI_MODE,enabled:env.AI_ENABLE_PAID,key:env.OPENAI_API_KEY,audio:env.AI_ENABLE_AUDIO,planner:env.AI_PLANNER_MODEL},new BudgetLedger(new D1Ledger(env.DB),{
-    ...DEFAULT_CAPS,campaign:cap(env.AI_CAMPAIGN_MICRO_USD,DEFAULT_CAPS.campaign),day:cap(env.AI_DAY_MICRO_USD,DEFAULT_CAPS.day),month:cap(env.AI_MONTH_MICRO_USD,DEFAULT_CAPS.month)}));
+  const ai=new GameAI({mode:env.AI_MODE,enabled:allowPaid?env.AI_ENABLE_PAID:'DISABLED',key:env.OPENAI_API_KEY,audio:env.AI_ENABLE_AUDIO,planner:env.AI_PLANNER_MODEL},new BudgetLedger(new D1Ledger(env.DB),aiCaps(env)));
   return new RoomService(new D1RoomStore(env.DB),Date.now,ai);
 }
 export async function throttle(request:Request,category:RateCategory,token?:string) {
@@ -20,6 +19,7 @@ export async function throttle(request:Request,category:RateCategory,token?:stri
   // previews share a conservative fallback bucket; no raw address is persisted.
   const identity=request.headers.get('cf-connecting-ip')??'local-preview';
   if(!await limiter.consume(category,identity))throw new RoomError('Too many requests. Please wait a minute and try again.',429,'RATE_LIMITED');
+  if(category==='unlock'&&!await limiter.consume('unlock','all-browsers',Date.now(),30))throw new RoomError('Too many unlock attempts. Please wait a minute and try again.',429,'RATE_LIMITED');
   if(category==='command'&&token&&!await limiter.consume(category,`seat:${token}`,Date.now(),120))throw new RoomError('Please slow down for a moment before trying another action.',429,'RATE_LIMITED');
 }
 export function bearer(request:Request) {

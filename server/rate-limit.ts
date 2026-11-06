@@ -1,5 +1,5 @@
-export type RateCategory='create'|'join'|'read'|'command';
-const LIMITS:Record<RateCategory,number>={create:12,join:40,read:900,command:600};
+export type RateCategory='create'|'join'|'read'|'command'|'unlock';
+const LIMITS:Record<RateCategory,number>={create:12,join:40,read:900,command:600,unlock:5};
 export async function rateLimitKey(category:string,identity:string,window:number) {
   const bytes=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(`${category}:${identity}:${window}`));
   return Array.from(new Uint8Array(bytes),n=>n.toString(16).padStart(2,'0')).join('');
