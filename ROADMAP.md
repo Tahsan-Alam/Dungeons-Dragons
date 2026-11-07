@@ -26,7 +26,7 @@ Keep this as the short checkpoint overview. Use GitHub issues for individual tas
 - [x] Add bounded cached narrator audio with transcript validation and device fallback; fresh local application-route generation and native Edge playback passed. Hosted operation and audible quality remain unverified.
 - [ ] Publish the reviewed Windows changes to the existing Site and pass hosted runtime/AI checks before GitHub push.
 - [x] Verify the new setup, Continue card, Pip, ordinary actions, style identity and resume at desktop/narrow sizes in both Paint and Pixel through the explicitly approved local browser fallback; synthetic microphone capture/transcription/review and stubbed speech animation also passed. Human microphone/audio and physical devices remain unverified.
-- [ ] Complete independent UI/gameplay/AI judging and address supported findings; the requested score target is not established.
+- [x] Complete the three-model UI/gameplay/AI panel and fix supported findings within ten quality rounds; measured mean 90.87/100 before final corrections, below the aspirational95 target.
 - [ ] Add optional novel generated image assets that preserve character identity; current AI art uses paired reusable SVG recipes.
 - [ ] Improve encounter variety and balancing using human playtest feedback; longer adventures currently reuse the validated encounter families.
 

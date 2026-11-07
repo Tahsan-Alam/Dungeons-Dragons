@@ -5,7 +5,9 @@ export async function transcribeQuest(bytes:Uint8Array,key:string,ledger:BudgetL
  const hash=Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',bytes as Uint8Array<ArrayBuffer>))).map(b=>b.toString(16).padStart(2,'0')).join('');
  const receiptKey=`dictation-v1:${hash}`;
  // At most one minute, $0.0045/minute, >4x margin. Shared global caps apply.
- const receipt=await ledger.reserve(receiptKey,'quest-dictation',20_000,16000);
+ // A room does not exist during setup. Bound each recording separately while
+ // retaining global day/month caps; old drafts must not exhaust one lifetime pool.
+ const receipt=await ledger.reserve(receiptKey,`quest-dictation:${hash}`,20_000,16000);
  if(receipt==='blocked')throw new Error('Dictation allowance reached. You can type your quest.');
  if(receipt!=='reserved'){
   if(receipt.status==='done'&&receipt.result)return receipt.result as {transcript:string;text:string};

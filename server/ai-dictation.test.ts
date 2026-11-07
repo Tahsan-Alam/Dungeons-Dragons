@@ -59,3 +59,11 @@ test('different audio receives a separate reservation while identical audio shar
  const first=await transcribeQuest(wav(1),'mock-key',new BudgetLedger(store),transport),second=await transcribeQuest(wav(2),'mock-key',new BudgetLedger(store),transport);
  assert.equal(calls,2);assert.notEqual(first.text,second.text);assert.equal(Object.values((await store.read()).entries).reduce((sum,r)=>sum+r.reserved,0),40_000);
 });
+
+test('pre-quest recordings have independent scopes and still share the enforced global allowance',async()=>{
+ const store=new MemoryLedger(),ledger=new BudgetLedger(store,{...DEFAULT_CAPS,campaign:20_000,day:40_000,month:40_000});let calls=0;
+ const transport:typeof fetch=async()=>{calls++;return Response.json({text:'A lighthouse quest.'});};
+ await transcribeQuest(wav(1),'mock-key',ledger,transport);await transcribeQuest(wav(2),'mock-key',ledger,transport);
+ await assert.rejects(transcribeQuest(wav(3),'mock-key',ledger,transport),/allowance reached/);
+ const receipts=Object.values((await store.read()).entries);assert.equal(calls,2);assert.equal(new Set(receipts.map(receipt=>receipt.campaign)).size,2);assert.equal(receipts.reduce((sum,receipt)=>sum+receipt.reserved,0),40_000);
+});

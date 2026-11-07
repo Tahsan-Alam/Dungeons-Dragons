@@ -200,7 +200,7 @@ Readiness: ready for the parent's existing-Site publication and bounded hosted c
 
 ## Guided adventure validation (November 6, 2026)
 
-Branch: `feature/guided-ai-adventures`. This section supersedes the earlier browser-unavailable status and the previous phase's accounting/shutdown snapshots. Local credentials support API testing, so the user's conditional hosted publication was unnecessary. No hosted runtime or hosted release is certified here. Final independent scoring is pending; local validation and shutdown are complete.
+Branch: `feature/guided-ai-adventures`. This section supersedes the earlier browser-unavailable status and the previous phase's accounting/shutdown snapshots. Local credentials support API testing, so the user's conditional hosted publication was unnecessary. No hosted runtime or hosted release is certified here. The three-judge panel completed on commit `36631e2`; the tenth and final correction round is recorded below. No post-correction rescore is claimed.
 
 ### Player experience and integration
 
@@ -222,7 +222,8 @@ Branch: `feature/guided-ai-adventures`. This section supersedes the earlier brow
 6. Approved browser workflows: desktop/phone Paint/Pixel flows exercised setup, defaults, narration help, reversible endings, game actions, style identity, rename, Continue and resume. Visual review caught and fixed the blank mobile narrator icon.
 7. Live browser and voice behavior: synthetic microphone audio reached GPT Transcribe and editable review. Live planning, help, narration and a legal 12-command UI victory passed; a planned payoff resolves the custom premise only after engine-owned victory. Early endings preserve the shorter conclusion; future payoff text is withheld from model context until committed. Deterministic speech events verified actual UI talking/Stop state and motion preferences, without claiming audible fidelity.
 8. Final art and production regression: sixteen biome/style/view/viewport scenes matched the actual party. A production-build two-human session passed readiness, start, turn transfer, save/reconnect and replay navigation. Final **`npm run check` passed types, 200 tests and production build**; `git diff --check` passed. Focused lint on the new UI files has no errors and two lifecycle-ref warnings; the broad repository lint still has pre-existing debt and is not claimed passing.
-9. Final three-model judging: requested after the above fixes and browser evidence. Findings, scores and any final corrections are recorded below when available. The tenth quality round is reserved for final supported corrections and verification, rather than unbounded score chasing.
+9. Final three-model judging: completed after the above fixes and browser evidence on commit `36631e2`. Scores and findings are below.
+10. Final supported corrections: story timing now changes only for complete explicit commands, with typographic apostrophes normalized. Creative requests such as “Finish the story with a dragon appearing” remain story direction; “Please don’t end the story yet” and “No early ending, please” cannot accidentally shorten the game and can cancel a selected early ending. Pending dictation now guards header navigation, brand, browser Back and unload, in addition to setup controls. Four desktop/phone Paint/Pixel browser regressions preserved transcripts and restored navigation after discard (`round10-results.json`). The human-name finding was not reproducible at the application boundary: `GameAI.plan` already rejects changed human names. A new mocked-provider regression verifies rejected human renaming and accepted companion renaming. Final `npm run check` passed type checking, **204 tests**, and the production build. `git diff --check` passed; the final staged-source/build scan excludes credentials and generated output. The final audit also corrected pre-quest dictation accounting: recordings use independent scopes rather than one lifetime pool, while global day/month ceilings remain enforced. A regression verifies two distinct recordings fit their independent caps and a third is blocked by the shared global ceiling. This is the last quality round; scores are not inflated or resampled beyond the ten-round allowance.
 
 The initial browser attempt used T3 preview, where two snapshots and an evaluation timed out. Its fallback to ChatGPT's built-in browser reported “The browser access host is unavailable.” The user subsequently explicitly approved further browser recovery. Local Playwright with an isolated **Chrome Headless Shell** then succeeded. These are separate browser sessions; no user-owned profile or sign-in was claimed.
 
@@ -241,6 +242,7 @@ URL: `http://127.0.0.1:5347/`. The agent-owned local browser used 1440×900 and 
 | Talking avatar, Stop and reduced motion | `voice-results.json` records talking on the board, modal continuity, Stop resetting the avatar, caption agreement, paired Paint/Pixel animation styles and reduced-motion suppression. Speech events were deterministic stubs. |
 | Biome and party art | `art-results.json` records 16 coast/ruins × Paint/Pixel × 2D/2.5D × desktop/phone scenes, matching landmarks and actual party class/color recipes, without overflow or runtime errors. A blank mobile Pip button was caught visually and fixed; its icon dimensions and visibility were then checked in all four workflows. |
 | Production multiplayer and replay | `party-production-results.json` records a desktop Paint host and phone-sized Pixel guest: join/readiness gates, both seats starting, a turn passing between humans, save/reconnect and replay step navigation. No overflow or console errors. |
+| Final transcript navigation guard | `round10-results.json` records four desktop/phone Paint/Pixel regressions: recording/review lock, brand/Camp/Adventures and browser Back preservation, and navigation restored after discard. No overflow or console errors. |
 
 These checks establish browser capture and recorder lifecycle with a synthetic microphone. They do not establish human microphone quality, acoustic fidelity, or audible avatar synchronization. Physical devices, Safari and assistive-technology sessions remain untested. The successful local fallback resolved the earlier browser blocker; it is not hosted browser or hosted AI evidence.
 
@@ -259,6 +261,16 @@ Rubric: UI 60%, gameplay 25%, AI behavior 15%. The initial reviews identified mi
 | GPT-6.1 Sol, extra-high | 80 | 90 | 84 | 83.1 |
 | GPT-6.1 Terra, extra-high | 78 | 88 | 86 | 81.7 |
 
-The initial two-judge mean was **82.4**, before the supported fixes and approved browser follow-up. It is not the requested three-judge result. GPT-6.1 Astra was absent from the catalog; the user approved **`gpt-6-astra` at high reasoning** as the third judge, with Sol and Terra at extra-high. Final judging follows the remaining art consistency fix. No final average or 95% result is established at this checkpoint.
+The initial two-judge mean was **82.4**, before the supported fixes and approved browser follow-up. GPT-6.1 Astra was absent from the catalog; the user approved **`gpt-6-astra` at high reasoning** as the third judge, with Sol and Terra at extra-high.
+
+| Final panel on `36631e2` | UI | Gameplay | AI behavior | Weighted score |
+|---|---:|---:|---:|---:|
+| GPT-6.1 Sol, extra-high | 93 | 92 | 89 | 92.15 |
+| GPT-6.1 Terra, extra-high | 90 | 91 | 86 | 89.65 |
+| GPT-6 Astra, high | 91 | 92 | 88 | 90.80 |
+
+The three-judge mean is **90.87/100** using unrounded category weights. Terra reported its score rounded to 89.7; averaging that rounded number yields 90.88, as stated in the interim update. **The aspirational 95% target was not achieved.** The final correction round addressed supported findings without inventing a higher score. No new judging round was run beyond the ten-round allowance.
+
+Sol identified typographic negation; Terra identified creative direction being mistaken for an early-ending control; Astra identified “No early ending” and global navigation bypassing transcript protection. These are covered by final-round fixes and regression evidence. Terra's human-name report did not account for the existing `GameAI.plan` human-name check; the new adapter-boundary regression confirms rejection before installation or narration context. This disposition leaves the judges' original scores intact.
 
 The earlier standalone phase report was copied unchanged to `C:/Users/mexic/.t3/scratch/painted-realms-qa/validation.md` as historical working evidence. This existing document is the canonical repository validation record.

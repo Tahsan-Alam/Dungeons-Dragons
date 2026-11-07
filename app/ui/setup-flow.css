@@ -1,4 +1,5 @@
 /* One decision at a time, using the same surfaces and controls as the table. */
+.app-root:has(.guided-setup) .app-header[inert]{opacity:.55}
 .guided-setup{width:100%;max-width:920px;padding:0 clamp(18px,4vw,46px) 40px}
 .guided-setup .setup-content{max-width:690px;margin:34px auto}
 .guided-setup .setup-title{align-items:center;margin-bottom:24px;gap:18px}

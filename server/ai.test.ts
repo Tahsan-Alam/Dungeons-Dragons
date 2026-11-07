@@ -9,7 +9,7 @@ import {MemoryRoomStore} from './room-store.ts';
 import {createGame,applyAction,getReachable,getValidTargets,hasLineOfSight,encounterCleared} from '../game/engine.ts';
 import type {GameAction,GameState} from '../game/types.ts';
 import {DEFAULT_OPTIONS,HERO_COLORS} from '../game/types.ts';
-import {campaignFixture,parseCampaign,narrationFixture,acceptNarration,applyStoryDirection,guidanceFixture,storyGoal} from '../game/campaign.ts';
+import {campaignFixture,installCampaign,parseCampaign,narrationFixture,acceptNarration,applyStoryDirection,guidanceFixture,storyGoal} from '../game/campaign.ts';
 import {legalChoices} from '../game/legal-actions.ts';
 import {newReplay,appendReplay,reconstructReplay} from '../game/replay.ts';
 const players=[{id:'you',name:'Ada',heroClass:'ranger' as const,color:HERO_COLORS[0],bot:false}];
@@ -81,6 +81,14 @@ test('seeded recipes preserve human identity, reject unknown components, and nev
  const state=game(),before=structuredClone(state),choices=legalChoices(state,'you');assert.deepEqual(state,before);assert.ok(choices.length>0);
  for(const c of choices)assert.doesNotThrow(()=>applyAction(state,'you',c.action));assert.deepEqual(legalChoices(state,'stranger'),[]);
 });
+test('planner validation rejects renamed human recipes while allowing generated companion names',async()=>{
+ const party=[...players,{id:'friend',name:'Fern',heroClass:'cleric' as const,color:HERO_COLORS[1],bot:true}],base=campaignFixture(DEFAULT_OPTIONS,party);let calls=0;
+ const ai=new GameAI(config,new BudgetLedger(new MemoryLedger()),async()=>{calls++;return reply({title:'The Beacon',premise:'Friends recover the lantern shards.',resolution:'The beacon welcomes everyone home.',characters:base.characters.map(character=>({...character,name:character.id==='you'&&calls===1?'Changed human':character.id==='friend'?'Clover':character.name}))});});
+ const rejected=await ai.plan('rename-human',DEFAULT_OPTIONS,party);assert.equal(rejected.source,'fixture');assert.equal(rejected.characters[0].name,'Ada');
+ const installed=installCampaign(createGame(party,DEFAULT_OPTIONS),rejected);assert.equal(installed.actors.find(actor=>actor.playerId==='you')!.name,'Ada');assert.equal(installed.story!.campaign.characters[0].name,'Ada');
+ const accepted=await ai.plan('rename-companion',DEFAULT_OPTIONS,party);assert.equal(accepted.source,'openai');assert.equal(accepted.characters[0].name,'Ada');assert.equal(accepted.characters[1].name,'Clover');assert.equal(calls,2);
+});
+
 test('accepted generated plan is cached, retains fixed facts, and oversized inputs never call',async()=>{
  const base=campaignFixture(DEFAULT_OPTIONS,players);let calls=0;
  const ai=new GameAI(config,new BudgetLedger(new MemoryLedger()),async()=>{calls++;return reply({title:'The Courier',premise:'A courier seeks the lantern shards.',characters:base.characters.map(c=>({...c,personality:'Thoughtful and loyal'}))});});

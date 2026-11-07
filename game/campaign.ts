@@ -29,11 +29,16 @@ export function applyStoryDirection(game:GameState,text:string):GameState {
  if(!game.story||game.status!=='playing')throw new Error('Start an active adventure to steer the story.');
  const prompt=cleanPrompt(text);if(!prompt)throw new Error('Describe the direction you would like.');
  const previous=game.story.direction??{prompt:'',pace:'steady' as const,endAfterChapter:false};
- const keepGoing=/\b(keep\s+going|continue\s+(the\s+)?(adventure|quest|story)|cancel\s+(the\s+)?(early\s+)?ending)\b|\b(don't|do not|never|not)\b[^.!?;]{0,45}\b(end|ending|finish|stop|wrap\s+up)\b/i.test(prompt);
- const ending=!keepGoing&&/\b(end|finish|stop)\s+(the\s+|this\s+|our\s+|my\s+)?(adventure|quest|game|story|soon|after|now|early|here)\b|\b(wrap\s+up|early\s+ending)\b/i.test(prompt);
- const steady=/\b(don't|do not|never|not)\s+(?:want\s+to\s+)?(?:hurry|speed\s*up|rush)|\b(slower|slow\s+down|steady\s+pace)\b/i.test(prompt);
- const brisk=!steady&&/\b(faster|hurry|quicker|speed\s*up|brisk|pick\s+up\s+the\s+pace)\b/i.test(prompt);
- const controlOnly=/^(pick up the pace|a little faster|end after this chapter|quicker pace|slow down|keep going)[.!]?$/i.test(prompt);
+ const control=prompt.normalize('NFKC').replace(/[\u2018\u2019\u02bc]/g,"'").replace(/[.,!?;:]/g,' ').replace(/\s+/g,' ').trim().toLowerCase();
+ // Only complete, explicit controls change the chapter boundary. Creative clauses
+ // such as “finish the story with a dragon” remain creative direction.
+ const keepGoing=/^(?:please )?(?:keep (?:going|adventuring)|continue (?:the |this |our )?(?:adventure|quest|story)|cancel (?:the )?(?:early )?ending)(?: please)?$/.test(control)||
+  /^(?:please )?(?:i |we )?(?:don't|do not|never|not)(?: (?:want|wish) to)? (?:end|finish|stop|wrap up)(?: (?:the|this|our|my) (?:adventure|quest|game|story))?(?: (?:yet|now|soon|early|here|after this chapter))?(?: please)?$/.test(control)||
+  /^(?:please )?(?:(?:i |we )?(?:don't|do not|never|not) want (?:an? |the )?|no )(?:early )?ending(?: yet)?(?: please)?$/.test(control);
+ const ending=!keepGoing&&/^(?:(?:please|can we|could we|let's|i want to|we want to|i would like to) )?(?:(?:end|finish|stop)(?: (?:the|this|our|my) (?:adventure|quest|game|story))?(?: (?:now|soon|early|here|after (?:this|the current) chapter))?|wrap(?: it)? up(?: (?:now|soon|after this chapter))?)$/.test(control);
+ const steady=/\b(don't|do not|never|not)\s+(?:want\s+to\s+)?(?:hurry|speed\s*up|rush)|\b(slower|slow\s+down|steady\s+pace)\b/.test(control);
+ const brisk=!steady&&/\b(faster|hurry|quicker|speed\s*up|brisk|pick\s+up\s+the\s+pace)\b/.test(control);
+ const controlOnly=ending||keepGoing||/^(pick up the pace|a little faster|quicker pace|slow down)$/.test(control);
  const direction:StoryDirection={...previous,prompt:controlOnly?previous.prompt:prompt,pace:steady?'steady':brisk||ending?'brisk':previous.pace,endAfterChapter:keepGoing?false:previous.endAfterChapter||ending};
  const eventId=game.eventSequence+1;
  const message=ending?'The party will bring this adventure to a close at this chapter’s gateway. Finish the encounter and collect its shard first.':keepGoing?'The party will continue toward the planned ending. The early ending has been cancelled.':brisk?'The storyteller will keep narration brief and focus on the next objective.':'The storyteller has saved the party’s new creative direction.';
