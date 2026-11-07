@@ -15,7 +15,7 @@ export default function AISettings({onAbout}:{onAbout:()=>void}){
   if(pending.current)return;pending.current=true;setBusy(true);setError('');
   try{
    const response=await fetch('/api/ai/access',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action,...(action==='unlock'?{password}:{})})});
-   const result=await response.json() as Access&{error?:string};if(!response.ok)throw new Error(result.error||'Could not update team access. Try again.');setAccess(result);
+   const result=await response.json() as Access&{error?:string};if(!response.ok)throw new Error(result.error||'Could not update team access. Try again.');setAccess(result);window.dispatchEvent(new Event('painted-realms-ai-access'));
   }catch(error){setError(error instanceof Error?error.message:'Could not update team access. Try again.');}
   finally{setPassword('');pending.current=false;setBusy(false);}
  }

@@ -17,6 +17,7 @@ Keep this as the short checkpoint overview. Use GitHub issues for individual tas
 - [ ] Playtest solo and a full multiplayer session; record and fix reproducible bugs.
 - [x] Add optional prompts and saved bounded campaign facts/character recipes.
 - [x] Implement guided hero/story/review setup, a wrapping Continue adventure card, optional quest ideas, and a Settings default with per-quest AI override.
+- [x] Replace new-adventure setup with a story-first, five-step creator: categorized/custom traits, conversational refinement, three narrator profiles with paired models and fresh auditions, editable story elements, story-linked heroes and settings last. Preserve reviewed choices in play and replay.
 - [x] Add server-backed AI solo with direct start and recoverable camp, plus 1/3/5-chapter adventure lengths.
 - [x] Add Pip's help, saved creative direction, brisk narration, early gateway endings, chapter memories and boundary/ending tellings while preserving legal actions and replay.
 - [x] Add post-recording dictation with a visible 60-second cap, conservative cleanup, editable review and durable spend/cache boundaries; validate the route with synthetic speech.
@@ -26,7 +27,7 @@ Keep this as the short checkpoint overview. Use GitHub issues for individual tas
 - [x] Add bounded cached narrator audio with transcript validation and device fallback; fresh local application-route generation and native Edge playback passed. Earlier hosted generation/playback passed; the guided update is awaiting publication and audible quality remains unverified.
 - [x] Publish the earlier reviewed Windows changes and pass hosted runtime/AI checks.
 - [x] Add server-enforced team-password unlock and local developer setup.
-- [ ] Publish and verify the guided adventure update on the existing Site.
+- [x] Publish the guided adventure update as existing-Site version 9. The subsequent story-first creator is a separate local change awaiting publication authorization.
 - [x] Verify the new setup, Continue card, Pip, ordinary actions, style identity and resume at desktop/narrow sizes in both Paint and Pixel through the explicitly approved local browser fallback; synthetic microphone capture/transcription/review and stubbed speech animation also passed. Human microphone/audio and physical devices remain unverified.
 - [x] Complete the three-model UI/gameplay/AI panel and fix supported findings within ten quality rounds; measured mean 90.87/100 before final corrections, below the aspirational95 target.
 - [ ] Add optional novel generated image assets that preserve character identity; current AI art uses paired reusable SVG recipes.

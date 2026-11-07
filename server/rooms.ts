@@ -1,4 +1,5 @@
 import { DEFAULT_OPTIONS, HERO_COLORS } from '../game/types.ts';
+import {parseBlueprint} from '../game/creation.ts';
 import type { GameAction, GameOptions, HeroClass, RoomPlayer, RoomView, Session } from '../game/types.ts';
 import { applyAction, createGame, runBots } from '../game/engine.ts';
 import {appendReplay,newReplay} from '../game/replay.ts';
@@ -67,6 +68,7 @@ export function validateOptions(input: unknown): GameOptions {
   for(const key of ['storyPrompt','narratorPrompt','characterPrompt'] as const){if(o[key]!==undefined){if(typeof o[key]!=='string'||o[key]!.length>400)return reject('Keep each creative prompt within 400 characters.');prompts[key]=cleanPrompt(o[key]);}}
   if(o.aiEnabled!==undefined){if(typeof o.aiEnabled!=='boolean')return reject('Choose whether to use AI.');prompts.aiEnabled=o.aiEnabled;}
   if(o.duration!==undefined){if(!['short','standard','long'].includes(o.duration))return reject('Choose a supported adventure length.');prompts.duration=o.duration;}
+  if(o.creation!==undefined){const blueprint=parseBlueprint(o.creation);if(!blueprint)return reject('Review the narrator, story and character before starting.');prompts.creation=blueprint;}
   return {rules:o.rules, narrator:o.narrator, biome:o.biome, seed:o.seed.trim(), companions:o.companions,...prompts};
 }
 function validateAction(input: unknown): GameAction {
@@ -114,7 +116,8 @@ export class RoomService {
         }
         continue;
       }
-      const room:RoomView={code,hostId:playerId,version:1,players:[{id:playerId,name,heroClass,color:HERO_COLORS[0],bot:false,ready:true,lastSeen:now}],options,game:null,createdAt:now};
+      if(options.creation&&(options.creation.hero.name!==name||options.creation.hero.heroClass!==heroClass))return reject('The selected character must match your hero.');
+      const room:RoomView={code,hostId:playerId,version:1,players:[{id:playerId,name,heroClass,color:options.creation?.hero.color??HERO_COLORS[0],bot:false,ready:true,lastSeen:now}],options,game:null,createdAt:now};
       for(let j=0;j<options.companions;j++) addBot(room);
       const record:StoredRoom={revision:1,room,tokenHashes:{[playerId]:tokenHash},requests:[],admissions:[{kind:'create',requestHash:receipt.requestHash,payloadHash:receipt.payloadHash,playerId}],expiresAt:now+ROOM_LIFETIME};
       if(await this.store.insert(record)) return {session:{code,playerId,token},room:publicView(record)};
@@ -276,7 +279,7 @@ export class RoomService {
     if(!room.game)return reject('Start the adventure first.');
     if(input.audio===true){
       const narration=room.game.story?.narrations.find(n=>n.eventId===room.game!.eventSequence);
-      const audio=narration&&this.ai?await this.ai.speak(code,narration,playerId===room.hostId&&room.game.options.aiEnabled!==false,signal):null;
+      const audio=narration&&this.ai?await this.ai.speak(code,narration,playerId===room.hostId&&room.game.options.aiEnabled!==false,signal,room.options.creation?JSON.stringify(room.options.creation.narrator):''):null;
       const latest=await this.load(code);
       this.authenticate(latest,await hash(token));
       if(latest.room.version!==room.version)throw new RoomError('The room changed. Request the current caption.',409,'STALE_VERSION',publicView(latest));

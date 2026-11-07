@@ -12,6 +12,7 @@ type Props={game:GameState|null;room:RoomView|null;session:Session|null;narrate:
 type Assistance={reply?:string;source?:'fixture'|'openai';audio?:string|null;version?:number};
 
 export default function Storyteller({game,room,session,narrate,steer,busy,preferences,automaticSpeaking=false}:Props){
+ const narratorName=game?.options.creation?.narrator.name??'Pip';
  const [text,setText]=useState(''),[direction,setDirection]=useState(''),[reply,setReply]=useState(''),[pending,setPending]=useState(false),[cancelable,setCancelable]=useState(false),[talking,setTalking]=useState(false);
  const request=useRef<AbortController|null>(null),audio=useRef<HTMLAudioElement|null>(null),deviceLine=useRef<SpeechSynthesisUtterance|null>(null),timer=useRef<ReturnType<typeof setTimeout>|null>(null),epoch=useRef(0);
  const stopPlayback=useCallback(()=>{
@@ -53,7 +54,7 @@ export default function Storyteller({game,room,session,narrate,steer,busy,prefer
    }
    if(requestEpoch===epoch.current){setReply(answer);setText('');}
   }catch{
-   if(requestEpoch===epoch.current)setReply(`${guidanceFixture(game,prompt,session?.playerId??'you')} Pip is using local guidance for this reply.`);
+   if(requestEpoch===epoch.current)setReply(`${guidanceFixture(game,prompt,session?.playerId??'you')} ${narratorName} is using local guidance for this reply.`);
   }finally{if(requestEpoch===epoch.current){request.current=null;setPending(false);}}
  }
 
@@ -85,7 +86,7 @@ export default function Storyteller({game,room,session,narrate,steer,busy,prefer
 
  async function tellMoment(){
   if(disabled||!host)return;stop();setPending(true);
-  try{await narrate();}catch{setReply('Pip could not refresh the story. The current caption remains above.');}finally{setPending(false);}
+  try{await narrate();}catch{setReply(`${narratorName} could not refresh the story. The current caption remains above.`);}finally{setPending(false);}
  }
 
  async function guide(prompt=direction){
@@ -102,15 +103,15 @@ export default function Storyteller({game,room,session,narrate,steer,busy,prefer
  }
 
  return <div className="pip-panel ai-summary">
-  <div className="pip-heading"><NarratorAvatar talking={talking||automaticSpeaking}/><div><h3>Pip, your lantern guide</h3></div></div>
+  <div className="pip-heading"><NarratorAvatar profile={game?.options.creation?.narrator} talking={talking||automaticSpeaking}/><div><h3>{narratorName}, your guide</h3></div></div>
   {game?<>
    <section className="pip-moment" aria-label="Current narration"><span className="pip-moment-label">{game.story?.campaign.title??'Your adventure'}</span><p>{caption}</p><div className="pip-audio-actions"><button type="button" className="text-button" disabled={pending} onClick={()=>void listen()}><Icon name={talking||automaticSpeaking?'close':'sound'} size={16}/>{talking||automaticSpeaking?'Stop reading':'Listen'}</button>{host?<button type="button" className="text-button" disabled={disabled} onClick={()=>void tellMoment()}>Tell this moment</button>:null}{pending&&cancelable?<button type="button" className="text-button" onClick={stop}>Cancel</button>:null}</div></section>
-   <div className="pip-quick-prompts" role="group" aria-label="Ask Pip for help"><button type="button" disabled={disabled} onClick={()=>void ask('How do I play?')}>How do I play?</button><button type="button" disabled={disabled} onClick={()=>void ask('What should I do next?')}>What next?</button></div>
-   <form className="pip-form" onSubmit={e=>{e.preventDefault();void ask();}}><label className="field">Ask Pip<textarea value={text} onChange={e=>setText(e.target.value)} maxLength={400} rows={2} placeholder="Ask about your hero, an action, or the story…" disabled={pending}/></label><button className="button primary" type="submit" disabled={disabled||!text.trim()}>Ask Pip<Icon name="arrow" size={16}/></button></form>
-   <div role="status" aria-live="polite" aria-atomic="true">{pending?<p className="pip-processing">Pip is thinking…</p>:reply?<p className="pip-reply">{reply}</p>:null}</div>
-   {steer?<details><summary>Guide the story</summary>{host?<><p>Change the tone, pick up the pace, or finish at this chapter’s gateway.</p>{game.story?.direction?.endAfterChapter?<p className="pip-note">This adventure will finish at this chapter’s gateway.</p>:null}<div className="pip-quick-prompts" role="group" aria-label="Story pacing"><button type="button" disabled={disabled} onClick={()=>void guide('Pick up the pace')}>A little faster</button>{game.story?.direction?.endAfterChapter?<button type="button" disabled={disabled} onClick={()=>void guide('Keep going')}>Keep adventuring</button>:<button type="button" disabled={disabled} onClick={()=>void guide('End after this chapter')}>Finish after this chapter</button>}</div><form className="pip-form" onSubmit={e=>{e.preventDefault();void guide();}}><label className="field">Your story direction<textarea value={direction} onChange={e=>setDirection(e.target.value)} maxLength={400} rows={2} placeholder="More mystery, a hopeful tone, a friend to rescue…" disabled={pending}/></label><button type="submit" className="button paper" disabled={disabled||!direction.trim()}>Tell Pip</button></form></>:<p>The host can change the story’s direction and pace. Everyone can ask Pip for help.</p>}</details>:null}
+   <div className="pip-quick-prompts" role="group" aria-label={`Ask ${narratorName} for help`}><button type="button" disabled={disabled} onClick={()=>void ask('How do I play?')}>How do I play?</button><button type="button" disabled={disabled} onClick={()=>void ask('What should I do next?')}>What next?</button></div>
+   <form className="pip-form" onSubmit={e=>{e.preventDefault();void ask();}}><label className="field">Ask {narratorName}<textarea value={text} onChange={e=>setText(e.target.value)} maxLength={400} rows={2} placeholder="Ask about your hero, an action, or the story…" disabled={pending}/></label><button className="button primary" type="submit" disabled={disabled||!text.trim()}>Ask {narratorName}<Icon name="arrow" size={16}/></button></form>
+   <div role="status" aria-live="polite" aria-atomic="true">{pending?<p className="pip-processing">{narratorName} is thinking…</p>:reply?<p className="pip-reply">{reply}</p>:null}</div>
+   {steer?<details><summary>Guide the story</summary>{host?<><p>Change the tone, pick up the pace, or finish at this chapter’s gateway.</p>{game.story?.direction?.endAfterChapter?<p className="pip-note">This adventure will finish at this chapter’s gateway.</p>:null}<div className="pip-quick-prompts" role="group" aria-label="Story pacing"><button type="button" disabled={disabled} onClick={()=>void guide('Pick up the pace')}>A little faster</button>{game.story?.direction?.endAfterChapter?<button type="button" disabled={disabled} onClick={()=>void guide('Keep going')}>Keep adventuring</button>:<button type="button" disabled={disabled} onClick={()=>void guide('End after this chapter')}>Finish after this chapter</button>}</div><form className="pip-form" onSubmit={e=>{e.preventDefault();void guide();}}><label className="field">Your story direction<textarea value={direction} onChange={e=>setDirection(e.target.value)} maxLength={400} rows={2} placeholder="More mystery, a hopeful tone, a friend to rescue…" disabled={pending}/></label><button type="submit" className="button paper" disabled={disabled||!direction.trim()}>Tell {narratorName}</button></form></>:<p>The host can change the story’s direction and pace. Everyone can ask {narratorName} for help.</p>}</details>:null}
    {game.story?<details><summary>Adventure notes</summary><p>{game.story.campaign.premise}</p>{game.story.campaign.characters.map(character=><p key={character.id}><strong>{character.name}</strong> · {character.personality}</p>)}<ul>{game.story.campaign.facts.map(fact=><li key={fact}>{fact}</li>)}</ul></details>:null}
-   <details><summary>About Pip</summary><p>Pip suggests and narrates; you make moves with the game controls. Dice, damage, and legal actions follow the game rules.</p><p className="pip-note">{game.story?.campaign.source==='openai'?'This adventure began with an AI-generated story.':'This adventure began with a local story.'} Live replies and generated voice depend on the server’s AI settings and remaining allowance. If unavailable, Pip uses local guidance and device speech. Generated voices are AI audio.</p></details>
+   <details><summary>About {narratorName}</summary><p>{narratorName} suggests and narrates; you make moves with the game controls. Dice, damage, and legal actions follow the game rules.</p><p className="pip-note">{game.options.creation?'This adventure uses the story you reviewed in setup.':game.story?.campaign.source==='openai'?'This adventure began with an AI-generated story.':'This adventure began with a local story.'} Live replies and generated voice depend on the server’s AI settings and remaining allowance. If unavailable, {narratorName} uses local guidance and device speech. Generated voices are AI audio.</p></details>
   </>:<p>Start an adventure to ask Pip what to do next, hear the story, or guide its direction.</p>}
  </div>;
 }

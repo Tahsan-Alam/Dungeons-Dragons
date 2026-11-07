@@ -11,12 +11,14 @@ const pick=(seed:string,values:readonly string[])=>{let h=2166136261;for(const c
 export function campaignFixture(options:GameOptions,players:PlayerSpec[]):Campaign {
  const motif=pick(options.seed,['a wandering lantern keeper','a missing courier','a patient mapmaker','a stranded musician']);
  const count=options.duration==='short'?1:options.duration==='long'?5:3,shards=count===3?'three':String(count);
- return {title:pick(options.seed+'title',['The Lantern Promise','Letters by Moonlight','The Last Beacon']),
-  premise:`In the ${options.biome}, ${motif} needs the ${shards} lantern shards restored. ${cleanPrompt(options.storyPrompt)}`.trim(),
-  facts:[`The party cooperates to recover ${shards} lantern shards.`,'Each chapter has one chest and one gateway.','Only committed game events establish outcomes.'],
+ const created=options.creation;
+ return {title:created?.story.title??pick(options.seed+'title',['The Lantern Promise','Letters by Moonlight','The Last Beacon']),
+  premise:created?.story.synopsis??`In the ${options.biome}, ${motif} needs the ${shards} lantern shards restored. ${cleanPrompt(options.storyPrompt)}`.trim(),
+  ...(created?{resolution:`The recovered shards light the gateway of ${created.story.world}. ${created.hero.name} and the party have brought the lantern home. ${created.narrator.name} closes this chapter, leaving its next unwritten page to you.`.slice(0,400)}:{}),
+  facts:[`The party cooperates to recover ${shards} lantern shards.`,'Each chapter has one chest and one gateway.','Only committed game events establish outcomes.',...(created?[`World: ${created.story.world}. Timeline: ${created.story.timeline}.`,`Key locations: ${created.story.locations.join(', ')}.`,`Narrator: ${created.narrator.name}, ${created.narrator.persona}`]:[])],
   chapters:Array.from({length:count},(_,i)=>i===count-1?'Restore the lantern with the final shard.':i===0?'Find the first shard.':i===1?'Recover the second shard.':`Recover shard ${i+1}.`),
   characters:players.map(p=>({id:p.id,name:p.bot?pick(options.seed+p.id,['Rowan','Fern','Wren','Clover','Bramble'])+' '+(players.indexOf(p)+1):p.name,heroClass:p.heroClass,color:p.color,
-   personality:cleanPrompt(options.characterPrompt)||pick(options.seed+p.id+'trait',['Curious and careful','Loyal and wry','Quietly courageous'])})),source:'fixture'};
+   personality:!p.bot&&created?`${created.hero.personality.join(', ')}. ${created.hero.background}`.slice(0,160):cleanPrompt(options.characterPrompt)||pick(options.seed+p.id+'trait',['Curious and careful','Loyal and wry','Quietly courageous'])})),source:'fixture'};
 }
 
 /** The ending is an engine-owned chapter boundary, never a model instruction. */
@@ -86,7 +88,8 @@ export function installCampaign(game:GameState,campaign:Campaign):GameState {
  return next;
 }
 export function narrationFixture(game:GameState):StoryRecord {
- return {eventId:game.eventSequence,caption:game.events.slice(game.story?.direction?.pace==='brisk'?-1:-3).map(e=>e.text).join(' ').slice(0,800)||game.objective,source:'fixture'};
+ const opening=game.options.creation&&game.scene===0&&game.events.every(e=>e.kind==='story'||e.kind==='system')?game.options.creation.story.synopsis+' ':'';
+ return {eventId:game.eventSequence,caption:(opening+game.events.slice(game.story?.direction?.pace==='brisk'?-1:-3).map(e=>e.text).join(' ')).slice(0,800)||game.objective,source:'fixture'};
 }
 export function acceptNarration(game:GameState,record:StoryRecord):GameState {
  if(!game.story||record.eventId!==game.eventSequence)throw new Error('The story moved on. Request narration again.');

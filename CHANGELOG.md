@@ -4,6 +4,9 @@ Record user-visible changes at version checkpoints. Git history and pull request
 
 ## Unreleased
 
+- Story-first adventure creation: describe a premise and narrator, select or converse about traits, preview three narrator profiles in Paint and Pixel, shape an editable storyline, choose or customize a story-linked hero, then set the rules and begin. Custom traits receive category-fit feedback and replacement suggestions.
+- Fresh narrator auditions use generated sample text and persona-specific delivery. Live auditions require the existing team unlock, paid-audio opt-in and shared allowance. Selected narrator identity, voice direction, reviewed story, key locations and hero recipe persist through gameplay, saves and replay.
+
 - Team-password AI access in Table settings → AI. Remembered devices default to enabled, retain their on/off choice, and can forget access. Server checks cover every paid route; the API key never reaches visitors.
 - Shared hosted budget controls support $25/month, $2/day and $0.50/campaign, while local defaults stay conservative. Added private developer key/password setup and additive access migrations.
 

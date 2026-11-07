@@ -21,7 +21,7 @@ export default function Landing({onNew,onJoin,onResume,resumeTitle,disabled}:Pro
     <section className="landing-hero" aria-labelledby="landing-title">
       <div className="landing-copy">
         <h1 id="landing-title">A tabletop adventure<br/><span> in your browser.</span></h1>
-        <p>Choose a hero and follow the lanterns. Explore with companions or bring your friends.</p>
+        <p>Start with a story. Find your narrator, create a hero, and follow the lanterns together.</p>
         <div className="landing-actions"><button className="button primary" disabled={disabled} onClick={()=>onNew('solo')}>Solo quest<Icon name="arrow" size={19}/></button><button className="button paper" disabled={disabled} onClick={()=>onNew('online')}><Icon name="people" size={19}/>Gather party</button></div>
         <button className="landing-join text-button" disabled={disabled} onClick={onJoin}>Join party<Icon name="arrow" size={16}/></button>
         <div className="landing-facts"><span>1–10 players</span><span>Turn-based</span></div>

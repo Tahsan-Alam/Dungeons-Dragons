@@ -11,7 +11,7 @@ function tint(hex: string, amount: number) {
 }
 
 /** Authored on a 40×45 grid. All silhouette edges are actual pixel steps. */
-export const PixelHeroArt = memo(function PixelHeroArt({ heroClass = 'knight', color = '#ed9877', enemy = false, large = false }: { heroClass?: HeroClass; color?: string; enemy?: boolean; large?: boolean }) {
+export const PixelHeroArt = memo(function PixelHeroArt({ heroClass = 'knight', color = '#ed9877', enemy = false, large = false, animated = false }: { heroClass?: HeroClass; color?: string; enemy?: boolean; large?: boolean; animated?: boolean }) {
   const {viewMode}=useTheme(),depth=viewMode==='2.5d',coat='M13 21h14v2h3v4h2v7H8v-7h2v-4h3Z';
   const shade = tint(color, -34), light = tint(color, 22);
   return <svg width="80" height="90" viewBox="0 0 40 45" shapeRendering="crispEdges" aria-hidden="true" className={`hero-art pixel-art${large?' large':''}${depth?' depth-art':''}`}>
@@ -32,7 +32,7 @@ export const PixelHeroArt = memo(function PixelHeroArt({ heroClass = 'knight', c
       <path d="M14 9h12v2h2v10h-2v3H14v-3h-2V11h2Z" fill={P.ink}/>
       <path d="M14 12h12v9h-3v2h-6v-2h-3Z" fill={P.skin}/>
       <path d="M14 10h11v2h2v4h-3v-4h-3v2h-5v-1h-2v4h-2v-5h2Z" fill={P.hair}/>
-      <path d="M16 16h2v2h-2Zm7 0h2v2h-2ZM19 21h4v1h-4Z" fill={P.ink}/>
+      <path className={animated?"pip-eyes":undefined} d="M16 16h2v2h-2Zm7 0h2v2h-2Z" fill={P.ink}/><path className={animated?"pip-mouth-closed":undefined} d="M19 21h4v1h-4Z" fill={P.ink}/>{animated?<path className="pip-mouth-open" d="M20 20h2v3h-2Z" fill={P.ink}/>:null}
       <path d="M14 19h2v2h-2Zm11 0h1v2h-1Z" fill={P.skinShade}/>
     </>}
     {heroClass === 'knight' ? <>

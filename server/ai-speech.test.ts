@@ -49,6 +49,24 @@ test('audio reserves before connecting, deduplicates rooms/players/events and su
  assert.equal(await new GameAI({},new BudgetLedger(store),transport).speak('room',record),first);assert.equal(m.calls,1);
  assert.equal(await ai.speak('another-room',record,false),null);assert.equal(m.calls,1);
 });
+test('audition presses each generate fresh audio with character delivery, while a replayed request is deduplicated',async()=>{
+ const store=new MemoryLedger(),ledger=new BudgetLedger(store,{...DEFAULT_CAPS,campaign:500_000}),m=mock();
+ const ai=new GameAI(config,ledger,m.transport),style='Soft-spoken, sarcastic archivist';
+ assert.ok(await ai.speak('creator',record,true,undefined,style,'press-one'));
+ assert.equal(m.calls,1);assert.ok(m.socket.sent.find(e=>e.type==='response.create').response.instructions.includes(style));
+ assert.ok(await ai.speak('creator',record,true,undefined,style,'press-one'));assert.equal(m.calls,1);
+ const second=mock(),other=new GameAI(config,ledger,second.transport);
+ assert.ok(await other.speak('creator',record,true,undefined,style,'press-two'));assert.equal(second.calls,1);
+ assert.equal(Object.keys((await store.read()).entries).length,2);
+});
+test('three short auditions fit alongside cached content and preserve the bounded audio contract',async()=>{
+ const store=new MemoryLedger(),ledger=new BudgetLedger(store,{...DEFAULT_CAPS,campaign:500_000,day:500_000});
+ await ledger.reserve('existing','older',1,581_000);await ledger.finish('existing','x'.repeat(580_000));
+ for(let i=0;i<3;i++){
+  const m=mock(),ai=new GameAI(config,ledger,m.transport);assert.ok(await ai.speak('creator',record,true,undefined,'Soft-spoken','press-'+i,true));assert.equal(m.calls,1);assert.equal(await ai.speak('creator',record,true,undefined,'Soft-spoken','press-'+i,true),null);assert.equal(m.calls,1);
+ }
+ const tooLong=mock();await assert.rejects(realtimeSpeech('mock',caption,tooLong.transport,undefined,15_000,'Soft-spoken',799));assert.ok(tooLong.socket.closed);
+});
 test('no audio opt-in, fixture, key-only, invalid inputs, abort and budget/storage exhaustion never connect',async()=>{
  let calls=0;const transport:typeof fetch=async()=>{calls++;throw new Error();};
  for(const c of [{},{key:'mock'},{...config,mode:'fixture'},{...config,enabled:''},{...config,audio:''}]){

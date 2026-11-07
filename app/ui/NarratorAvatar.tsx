@@ -1,10 +1,13 @@
 'use client';
 import {useTheme} from './Theme';
+import {HeroArt} from './Art';
+import type {NarratorProfile} from '../../game/creation';
 import './narrator.css';
 
 /** Pip's identity and palette stay the same in both art styles. */
-export default function NarratorAvatar({talking=false,size=64}:{talking?:boolean;size?:number}){
+export default function NarratorAvatar({talking=false,size=64,profile}:{talking?:boolean;size?:number;profile?:NarratorProfile}){
  const {theme}=useTheme();
+ if(profile)return <span className={`pip-avatar creator-avatar${talking?' is-talking':''}`} style={{width:size,height:size}} aria-hidden="true"><HeroArt heroClass={profile.model} color={profile.color} animated/></span>;
  return <span className={`pip-avatar${talking?' is-talking':''}`} style={{width:size,height:size}} aria-hidden="true">
   {theme==='pixel'?<svg viewBox="0 0 64 64" fill="none" shapeRendering="crispEdges">
    <path fill="#dbe9e7" d="M8 8h48v48H8z"/><path fill="#345d67" d="M17 42h30v14H17z"/><path fill="#8ab6a3" d="M14 41h36v8H14z"/>

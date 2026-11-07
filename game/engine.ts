@@ -1,5 +1,6 @@
 import type { Actor, GameAction, GameEvent, GameOptions, GameState, HeroClass, PlayerSpec, Tile } from './types';
 import {campaignFixture,installCampaign,rememberChapter,storyGoal} from './campaign.ts';
+import {parseBlueprint} from './creation.ts';
 
 // This module deliberately has no network, clock, browser, or model dependencies.
 // A saved state contains its random generator, so the same action is reproducible.
@@ -135,7 +136,7 @@ function makeMap(game: GameState) {
 
 function setupScene(game: GameState) {
   makeMap(game);
-  game.sceneName = SCENES[game.options.biome][game.scene];
+  game.sceneName = game.options.creation?.story.locations[game.scene % game.options.creation.story.locations.length] ?? SCENES[game.options.biome][game.scene];
   game.objective = 'Defeat the guardians, collect the lantern shard, then reach the gateway.';
   const heroes = game.actors.filter(a => !a.enemy);
   const spawn = [{ x: 3, y: 7 }, { x: 2, y: 6 }, { x: 2, y: 8 }, { x: 3, y: 5 }, { x: 3, y: 9 }, { x: 2, y: 4 }, { x: 2, y: 10 }, { x: 4, y: 6 }, { x: 4, y: 8 }, { x: 4, y: 4 }];
@@ -194,6 +195,7 @@ export function createGame(players: PlayerSpec[], options: GameOptions): GameSta
   if (typeof options.seed !== 'string' || options.seed.length > 120) throw new Error('Use a seed of 120 characters or fewer.');
   if(options.duration!==undefined&&!['short','standard','long'].includes(options.duration))throw new Error('Choose a supported adventure length.');
   if(options.aiEnabled!==undefined&&typeof options.aiEnabled!=='boolean')throw new Error('Choose whether to use AI.');
+  if(options.creation&&(!parseBlueprint(options.creation)||players[0].name!==options.creation.hero.name||players[0].heroClass!==options.creation.hero.heroClass))throw new Error('Review the selected story and character.');
   const game: GameState = { schemaVersion: 1, options: { ...options }, rng: hash(`${options.seed}|${options.biome}`), status: 'playing', width: WIDTH, height: HEIGHT,
     tiles: [], actors: [], activeActorId: '', turnOrder: [], round: 1, scene: 0, sceneName: '', objective: '', relics: 0,
     exit: { x: 18, y: 7 }, chest: { x: 10, y: 7, opened: false }, events: [], eventSequence: 0 };

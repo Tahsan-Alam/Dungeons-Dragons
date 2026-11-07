@@ -191,7 +191,7 @@ export function useSession(){
   }
   try{
    if(!libraryReady)throw new Error('Saved games are still loading. Try again in a moment.');
-   const players:PlayerSpec[]=[{id:'you',name,heroClass,color:HERO_COLORS[0],bot:false}];
+   const players:PlayerSpec[]=[{id:'you',name,heroClass,color:options.creation?.hero.color??HERO_COLORS[0],bot:false}];
    const classes:HeroClass[]=['cleric','ranger','mage','knight'],names=['Juniper','Pip','Orla','Wren','Clover','Bramble','Moss','Cricket','Rue'];
    for(let i=0;i<Math.min(9,Math.max(0,options.companions));i++)players.push({id:`companion-${i}`,name:names[i],heroClass:classes[i%classes.length],color:HERO_COLORS[i+1],bot:true});
    const initial=createGame(players,options),game=runBots(initial),record=soloRecord(game,newReplay(initial),crypto.randomUUID());

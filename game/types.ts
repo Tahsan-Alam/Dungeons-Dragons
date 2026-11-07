@@ -1,9 +1,10 @@
 import type {StoryState,StoryRecord} from './campaign.ts';
+import type {AdventureBlueprint} from './creation.ts';
 export type RulesMode = 'simple' | 'classic';
 export type HeroClass = 'knight' | 'ranger' | 'mage' | 'cleric';
 export type Narrator = 'warm' | 'dramatic' | 'wry';
 export type Biome = 'woodland' | 'ruins' | 'coast';
-export interface GameOptions { rules: RulesMode; seed: string; narrator: Narrator; biome: Biome; companions: number; storyPrompt?:string; narratorPrompt?:string; characterPrompt?:string; aiEnabled?:boolean; duration?:'short'|'standard'|'long'; }
+export interface GameOptions { rules: RulesMode; seed: string; narrator: Narrator; biome: Biome; companions: number; storyPrompt?:string; narratorPrompt?:string; characterPrompt?:string; aiEnabled?:boolean; duration?:'short'|'standard'|'long'; creation?:AdventureBlueprint; }
 export interface PlayerSpec { id: string; name: string; heroClass: HeroClass; color: string; bot: boolean; }
 export interface Tile { x: number; y: number; kind: 'grass' | 'path' | 'water' | 'wall'; decoration?: 'tree' | 'rock' | 'flower' | 'mushroom' | 'ruin'; }
 export interface Actor { id: string; playerId?: string; name: string; heroClass: HeroClass; color: string; enemy: boolean; bot: boolean; x: number; y: number; hp: number; maxHp: number; ac: number; speed: number; movement: number; actionUsed: boolean; guarding: boolean; potions: number; abilityUses: number; initiative: number; deathSuccesses: number; deathFailures: number; defeated: boolean; }
