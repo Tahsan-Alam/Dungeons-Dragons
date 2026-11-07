@@ -7,7 +7,6 @@ import {ART_PALETTE as P,TREE_TONES,worldPigment} from './artPalette';
 import './world-palette.css';
 import './icon-motion.css';
 export function Icon({name,size=20,className}:{name:string;size?:number;className?:string}) {
- const {theme}=useTheme(),pixel=theme==='pixel';
  const paths:Record<string,React.ReactNode>={
  pin:<><path d="M8 3h8m-7 0v6l-3 4v2h12v-2l-3-4V3M12 15v7"/></>,
  dice:<><path d="m12 2 9 5v10l-9 5-9-5V7Z"/><path d="m3 7 9 3 9-3M12 2v8m0 0-5 8h10Zm0 12v-4M3 17l4 1m10 0 4-1"/></>,
@@ -19,8 +18,8 @@ export function Icon({name,size=20,className}:{name:string;size?:number;classNam
  people:<><circle cx="9" cy="7" r="4"/><path d="M2 21v-4a7 7 0 0 1 14 0v4m1-18a4 4 0 0 1 0 8m2 3c4 1 4 4 4 7"/></>, plus:<path d="M12 4v16M4 12h16"/>, minus:<path d="M4 12h16"/>, fit:<path d="M8 3H3v5m13-5h5v5M3 16v5h5m13-5v5h-5"/>,
  check:<path d="m4 12 5 5L21 5"/>, flag:<><path d="M5 22V3c5-4 9 5 15 0v11c-6 5-10-4-15 0"/></>, gear:<><path d="m9 3-1 3-3 1-2 4 2 3v4l4 3 3-1 4 1 3-3v-4l2-3-2-4-3-1-1-3Z"/><circle cx="12" cy="12" r="3"/></>, link:<><path d="m10 7 3-3c6-5 12 1 7 7l-3 3M7 10l-3 3c-5 6 1 12 7 7l3-3m-6-1 8-8"/></>, chest:<><path d="M3 9c0-9 18-9 18 0v12H3Zm0 3h18M9 10v5h6v-5"/></>, leaf:<><path d="M4 20C-1 3 11 2 22 2c0 14-7 21-16 16m-2 2L17 7"/></>, music:<><path d="M9 18V5l12-3v14M9 8l12-3"/><ellipse cx="5" cy="19" rx="4" ry="3"/><ellipse cx="17" cy="17" rx="4" ry="3"/></>, eye:<><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8S1 12 1 12Z"/><circle cx="12" cy="12" r="3"/></>,
  };
- // One outline and one meaning per control; Pixel changes the edge rendering only.
- return <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap={pixel?'square':'round'} strokeLinejoin={pixel?'miter':'round'} shapeRendering={pixel?'crispEdges':undefined} aria-hidden="true" className={`ui-icon${pixel?' pixel-icon':''} icon-${name}${className?` ${className}`:''}`}><g className="ui-icon-body">{paths[name]||paths.spark}</g></svg>;
+ // Interface icons stay identical; art style only changes world illustrations.
+ return <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" className={`ui-icon icon-${name}${className?` ${className}`:''}`}><g className="ui-icon-body">{paths[name]||paths.spark}</g></svg>;
 }
 export const HeroArt=memo(function HeroArt({heroClass='knight',color='#ed9877',enemy=false,large=false,artStyle,animated=false}:{heroClass?:HeroClass;color?:string;enemy?:boolean;large?:boolean;artStyle?:'paint'|'pixel';animated?:boolean}){
  const {theme,viewMode}=useTheme(),depth=viewMode==='2.5d',coat='m27 43-10 24 12 4 24-1 13-5-12-23Z';

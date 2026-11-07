@@ -26,13 +26,12 @@ const pixel=load('./PixelArt.tsx',shared),art=load('./Art.tsx',{...shared,'./Pix
 function render(component:React.ElementType,props:Record<string,unknown>){const html=renderToStaticMarkup(React.createElement(component,props));assert.doesNotMatch(html,/NaN|Infinity|<image|<filter/);return html}
 const player={id:'you',name:'Hero',heroClass:'knight' as const,color:'#ef997c',bot:false};
 
-test('interface icons retain their outlined symbols and dimensions when switching art style',()=>{
- for(const name of ['dice','heart','spark','potion','people','gear','flag','leaf','sound','mute','book','arrow','back','sword','shield']){
+test('interface icons render identically when switching art style',()=>{
+ for(const name of ['pin','dice','arrow','back','close','sword','shield','heart','move','spark','potion','book','sound','mute','people','plus','minus','fit','check','flag','gear','link','chest','leaf','music','eye']){
   presentation={theme:'paint',viewMode:'2d'};const paint=render(art.Icon,{name,size:24});
   presentation={theme:'pixel',viewMode:'2d'};const pixel=render(art.Icon,{name,size:24});
   for(const html of [paint,pixel]){assert.match(html,/width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"/);assert.doesNotMatch(html,/fill="currentColor"/);}
-  assert.deepEqual(pixel.match(/<(?:path|circle|ellipse)\b[^>]+>/g),paint.match(/<(?:path|circle|ellipse)\b[^>]+>/g),`${name} must keep the same symbol`);
-  assert.match(pixel,/shape-rendering="crispEdges"/);
+  assert.equal(pixel,paint,`${name} must keep identical geometry, strokes and styling`);
  }
 });
 
