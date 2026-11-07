@@ -1,4 +1,4 @@
-/* Shared, restrained depth. Art changes the corners, not the controls' geometry. */
+/* Shared, restrained depth and corners in both art styles. */
 /* Icons keep their shape when a label wraps or a control group gets narrower. */
 button>svg{flex-shrink:0}
 .icon-button{flex-shrink:0}
@@ -24,7 +24,6 @@ html:root[data-color-mode='dark'][data-theme]{
  --button-drop:0 1px 2px #0000004d,0 3px 6px #00000033;
  --button-drop-hover:0 2px 3px #00000059,0 5px 9px #00000040;
 }
-html:root[data-color-mode][data-theme='pixel']{--button-radius:6px}
 
 /* Insets form the rim without changing the measured size or covering focus outlines. */
 html:root[data-color-mode][data-theme] body :is(button:not(:where(.living-creator *))[class],button:not(:where(.living-creator *)):not([class]),.game-row-more>summary):not(:where(.drawer-backdrop,.replay-scrim,.panel-edge)){

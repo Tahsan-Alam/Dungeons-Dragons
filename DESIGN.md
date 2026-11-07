@@ -34,7 +34,9 @@ The shared world palette has both light and muted dark variants. Paint and Pixel
 
 Use restrained tabletop terms across the product: Camp, Adventures, Solo quest, Gather party, Join party, Continue quest, Adventurer’s guide, Table settings, and Adventure log. Keep conventional gameplay verbs and operational labels clear. Do not add decorative slogans or explanatory filler.
 
-The final button treatment follows the user's revised direction: modern, subtly raised surfaces with soft 9px Paint / 6px Pixel corners, faint highlights and short shadows. Pixel identity remains in type and world sprites. Focus and selected rings are contained within control bounds so they cannot overlap adjacent stats or actions. Hover/press movement is small and honors the motion preference. Tooltips explain controls and current shortcuts without becoming persistent UI copy.
+Both art styles share modern, subtly raised controls with soft 9px corners, faint highlights and short shadows. Typography, logo framing, panel corners and spacing stay identical when changing styles. Interface icons keep the same outlined symbols, with crisp edges in Pixel. Pixel identity lives in the illustrations and world sprites. Focus and selected rings are contained within control bounds so they cannot overlap adjacent stats or actions. Hover/press movement is small and honors the motion preference. Tooltips explain controls and current shortcuts without becoming persistent UI copy.
+
+The adventure creator inherits Light/Dark/System surfaces and text. Narrator traits supply a dark accent for light surfaces and a lighter accent for dark surfaces; they never override the brightness preference. The unformed creator stays neutral. Dark world palettes cover terrain, portraits, outfits and dice in previews, chapter scenes, play and replay; raster narrator art uses a softer exposure without dimming interface text or game markers.
 
 ## 2D and 2.5D presentation
 

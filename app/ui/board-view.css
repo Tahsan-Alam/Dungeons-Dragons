@@ -13,7 +13,6 @@
 .board-container{container-type:inline-size;container-name:board-surface}
 .board-keyboard-help{display:none;position:absolute;top:10px;left:10px;max-width:calc(100% - 20px);padding:7px 10px;border:1px solid var(--line);border-radius:6px;background:var(--surface);color:var(--ink);font:11px/1.4 var(--mono);pointer-events:none;z-index:2}
 .board-container:has(.tile-hit:focus-visible) .board-keyboard-help{display:block}
-html[data-theme=pixel] .board-keyboard-help{border-radius:0}
 .game-board:focus-visible{outline:2px solid var(--forest);outline-offset:-3px}
 .board-tools button{flex-shrink:0}
 @container board-surface (max-width:340px){

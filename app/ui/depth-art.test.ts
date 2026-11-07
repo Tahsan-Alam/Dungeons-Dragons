@@ -8,7 +8,7 @@ import React from 'react';
 import {renderToStaticMarkup} from 'react-dom/server';
 import {createGame} from '../../game/engine.ts';
 import {createBoardProjection} from './board-projection.ts';
-import {ART_PALETTE,TREE_TONES} from './artPalette.ts';
+import {ART_PALETTE,TREE_TONES,worldPigment} from './artPalette.ts';
 import type {Biome,HeroClass,Tile} from '../../game/types';
 
 // Render the actual TSX in Node without a browser or CSS loader. The theme is the
@@ -21,10 +21,20 @@ function load(file:string,overrides:Record<string,unknown>){
  vm.runInNewContext(code,{exports,require:(name:string)=>name.endsWith('.css')?{}:overrides[name]??require(name)});
  return exports;
 }
-const shared={'./Theme':{useTheme:()=>presentation},'./artPalette':{ART_PALETTE,TREE_TONES}};
+const shared={'./Theme':{useTheme:()=>presentation},'./artPalette':{ART_PALETTE,TREE_TONES,worldPigment}};
 const pixel=load('./PixelArt.tsx',shared),art=load('./Art.tsx',{...shared,'./PixelArt':pixel}),depth=load('./DepthArt.tsx',{...shared,'./Art':art});
 function render(component:React.ElementType,props:Record<string,unknown>){const html=renderToStaticMarkup(React.createElement(component,props));assert.doesNotMatch(html,/NaN|Infinity|<image|<filter/);return html}
 const player={id:'you',name:'Hero',heroClass:'knight' as const,color:'#ef997c',bot:false};
+
+test('interface icons retain their outlined symbols and dimensions when switching art style',()=>{
+ for(const name of ['dice','heart','spark','potion','people','gear','flag','leaf','sound','mute','book','arrow','back','sword','shield']){
+  presentation={theme:'paint',viewMode:'2d'};const paint=render(art.Icon,{name,size:24});
+  presentation={theme:'pixel',viewMode:'2d'};const pixel=render(art.Icon,{name,size:24});
+  for(const html of [paint,pixel]){assert.match(html,/width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"/);assert.doesNotMatch(html,/fill="currentColor"/);}
+  assert.deepEqual(pixel.match(/<(?:path|circle|ellipse)\b[^>]+>/g),paint.match(/<(?:path|circle|ellipse)\b[^>]+>/g),`${name} must keep the same symbol`);
+  assert.match(pixel,/shape-rendering="crispEdges"/);
+ }
+});
 
 test('generated wall decorations retain their identity in both dimensional art styles',()=>{
  for(const theme of ['paint','pixel'])for(const biome of ['woodland','ruins','coast'] as Biome[]){

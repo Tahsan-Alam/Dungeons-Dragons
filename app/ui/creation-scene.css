@@ -6,7 +6,7 @@
 .creation-stars{z-index:1}.creation-motes{z-index:5;}
 .creation-being{position:absolute;z-index:4;width:min(80%,480px);aspect-ratio:1;top:46%;left:50%;transform:translate(-50%,-50%);animation:creation-being-form 1.6s cubic-bezier(.2,.7,.2,1) both;}
 .creation-being .narrator-avatar{--narrator-size:480px;width:100%;height:100%;filter:drop-shadow(0 0 22px color-mix(in srgb,var(--scene-primary) 30%,transparent));}
-.creation-being .narrator-atlas{filter:hue-rotate(var(--scene-hue));transition:filter 1.2s ease;}
+.creation-being .narrator-atlas{filter:hue-rotate(var(--scene-hue)) brightness(var(--art-exposure));transition:filter 1.2s ease;}
 .creation-being .narrator-aura{background:radial-gradient(ellipse,var(--scene-primary),transparent 66%);opacity:.15;}
 .creation-being .narrator-orbit,.creation-being .narrator-particles{display:none;}
 .creation-being .narrator-sprite-frame{inset:5%;animation:creation-portrait-float 6s ease-in-out infinite;}
@@ -14,7 +14,7 @@
 .creation-ether{position:absolute;inset:0;display:block;width:100%;height:100%;isolation:isolate;}
 html:root[data-color-mode][data-theme] body button.creation-ether,html:root[data-color-mode][data-theme] body button.creation-ether:hover,html:root[data-color-mode][data-theme] body button.creation-ether:active{border:0;border-radius:50%;padding:0;background:none;color:inherit;box-shadow:none;transform:none;cursor:pointer;}
 .creation-ether:focus-visible{outline:2px solid var(--scene-secondary)!important;outline-offset:8px;}
-.creation-ether-core{position:absolute;inset:6%;width:88%;height:88%;max-width:none;object-fit:contain;user-select:none;pointer-events:none;animation:creation-ether-turn 54s linear infinite;filter:drop-shadow(0 0 12px #f6f6ff30);}
+.creation-ether-core{position:absolute;inset:6%;width:88%;height:88%;max-width:none;object-fit:contain;user-select:none;pointer-events:none;animation:creation-ether-turn 54s linear infinite;filter:brightness(var(--art-exposure)) drop-shadow(0 0 12px #f6f6ff30);}
 .creation-core-light{position:absolute;inset:11%;border-radius:50%;background:radial-gradient(ellipse,#e7ebff0a 10%,#f0f1ff26 28%,#fff1 45%,transparent 70%);filter:blur(14px);animation:creation-core-breath 5s ease-in-out infinite;}
 .creation-core-ribbon{position:absolute;inset:15%;border:1px solid #f3f4ff35;border-radius:44% 56% 53% 47%;transform:rotateX(62deg) rotate(-28deg);pointer-events:none;}
 .creation-core-ribbon::after{content:'';position:absolute;inset:-3%;border-radius:inherit;border:1px solid #eef0ff20;}
@@ -43,7 +43,7 @@ html:root[data-color-mode][data-theme] body button.creation-ether,html:root[data
 .creation-scene[data-pending=true] .creation-core-light{animation:creation-core-breath 1.8s ease-in-out infinite;}
 .creation-scene[data-speaking=true] .creation-core-light{animation:creation-core-speaking .6s ease-in-out infinite alternate;}
 .creation-scene[data-art=pixel] .creation-ether-core,.creation-scene[data-art=pixel] canvas{image-rendering:pixelated;}
-.creation-scene[data-art=pixel] .creation-ether-core{animation-timing-function:steps(240,end);filter:none;}
+.creation-scene[data-art=pixel] .creation-ether-core{animation-timing-function:steps(240,end);filter:brightness(var(--art-exposure));}
 .creation-scene[data-art=pixel] .creation-distant-planets i{clip-path:polygon(25% 0,75% 0,75% 12%,88% 12%,88% 25%,100% 25%,100% 75%,88% 75%,88% 88%,75% 88%,75% 100%,25% 100%,25% 88%,12% 88%,12% 75%,0 75%,0 25%,12% 25%,12% 12%,25% 12%);border-radius:0;}
 .creation-scene[data-art=pixel] .creation-core-ribbon{border-style:dashed;}
 .creation-scene[data-paused=true] *, .creation-scene[data-paused=true] *::after{animation-play-state:paused!important;}

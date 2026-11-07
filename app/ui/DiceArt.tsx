@@ -2,7 +2,7 @@ import type {ArtTheme} from './appearance';
 
 // Skins only supply presentation colors. The face value always comes from game events.
 export interface DiceSkin {light:string;face:string;shade:string;ink:string;}
-export const INK_DICE:DiceSkin={light:'#cfe5f6',face:'#9dc3e6',shade:'#6f9ec9',ink:'#293c3b'};
+export const INK_DICE:DiceSkin={light:'var(--world-dice-light, #cfe5f6)',face:'var(--world-dice-face, #9dc3e6)',shade:'var(--world-dice-shade, #6f9ec9)',ink:'var(--world-ink, #293c3b)'};
 
 export default function DiceArt({theme,value,rolling=false,skin=INK_DICE}:{theme:ArtTheme;value?:number;rolling?:boolean;skin?:DiceSkin}){
  const pixel=theme==='pixel';

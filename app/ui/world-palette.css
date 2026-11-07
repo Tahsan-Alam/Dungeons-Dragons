@@ -1,5 +1,8 @@
 /* One scene palette per brightness mode, shared by Paint and Pixel. */
 :root{
+ --world-pigment-strength:100%;
+ --art-exposure:1;
+ --world-dice-light:#cfe5f6;--world-dice-face:#9dc3e6;--world-dice-shade:#6f9ec9;
  --world-ink:#293C3B;
  --world-dark:#435652;
  --world-sky:#EAF2FA;
@@ -55,20 +58,23 @@
  --world-enemy-health:#B66E80;
 }
 html[data-color-mode="dark"]{
+ --world-pigment-strength:74%;
+ --art-exposure:.78;
+ --world-dice-light:#8ca7bb;--world-dice-face:#668aa5;--world-dice-shade:#45647d;
  --world-ink:#14221E;
  --world-dark:#34483F;
- --world-sky:#162C39;
+ --world-sky:#132430;
  --world-sun:#7C8CA9;
  --world-mountain:#3D5962;
  --world-mountain-edge:#587782;
  --world-hill:#375D50;
- --world-grass:#253A32;
- --world-ruin-grass:#303B3B;
- --world-coast-grass:#253B3E;
+ --world-grass:#20322B;
+ --world-ruin-grass:#2A3434;
+ --world-coast-grass:#203338;
  --world-grass-detail:#527564;
- --world-road:#48555D;
- --world-road-detail:#607079;
- --world-water:#315468;
+ --world-road:#3B4951;
+ --world-road-detail:#53636C;
+ --world-water:#2B485B;
  --world-water-light:#64869A;
  --world-shore:#496775;
  --world-leaf:#416C59;

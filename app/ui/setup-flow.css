@@ -60,7 +60,6 @@
 .setup-review blockquote{margin:24px 0 0;padding:3px 0 3px 17px;border-left:2px solid var(--accent,var(--forest));font-size:14px;line-height:1.8;overflow-wrap:anywhere}
 .setup-next-note,.setup-join-hero{margin-top:23px;font-size:13px;color:var(--muted)}
 .setup-join-hero strong{color:var(--ink);overflow-wrap:anywhere}
-html[data-theme=pixel] .guided-setup :is(.setup-ai-toggle,.setup-progress button>span){border-radius:0}
 @media(max-width:600px){
  .guided-setup .setup-content{margin-top:25px}
  .guided-setup .setup-title{margin-bottom:18px}

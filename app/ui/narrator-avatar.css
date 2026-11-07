@@ -9,6 +9,7 @@ html:root[data-color-mode][data-theme] body button.narrator-avatar,html:root[dat
 .narrator-atlas{position:absolute;display:block;width:300%!important;height:200%!important;max-width:none!important;object-fit:fill;user-select:none;pointer-events:none;}
 .narrator-ether-art{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;user-select:none;pointer-events:none;animation:narrator-ether-turn 50s linear infinite;}
 .narrator-avatar[data-art='pixel'] .narrator-ether-art{image-rendering:pixelated;animation-timing-function:steps(240,end);}
+.narrator-atlas,.narrator-ether-art{filter:brightness(var(--art-exposure,1))}
 @keyframes narrator-ether-turn{to{transform:rotate(360deg)}}
 .narrator-accessory,.narrator-eyelids{position:absolute;inset:0;width:100%;height:100%;overflow:visible;pointer-events:none;}
 .narrator-accessory{filter:drop-shadow(0 1px 1px #201b3240);}

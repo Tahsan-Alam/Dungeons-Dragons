@@ -2,7 +2,7 @@ import { memo } from 'react';
 import {useTheme} from './Theme';
 import type { GameState, HeroClass } from '../../game/types';
 
-import {ART_PALETTE as P,TREE_TONES} from './artPalette';
+import {ART_PALETTE as P,TREE_TONES,worldPigment} from './artPalette';
 import './world-palette.css';
 
 function tint(hex: string, amount: number) {
@@ -13,7 +13,8 @@ function tint(hex: string, amount: number) {
 /** Authored on a 40×45 grid. All silhouette edges are actual pixel steps. */
 export const PixelHeroArt = memo(function PixelHeroArt({ heroClass = 'knight', color = '#ed9877', enemy = false, large = false, animated = false }: { heroClass?: HeroClass; color?: string; enemy?: boolean; large?: boolean; animated?: boolean }) {
   const {viewMode}=useTheme(),depth=viewMode==='2.5d',coat='M13 21h14v2h3v4h2v7H8v-7h2v-4h3Z';
-  const shade = tint(color, -34), light = tint(color, 22);
+  const shade = worldPigment(tint(color, -34)), light = worldPigment(tint(color, 22));
+  color=worldPigment(color);
   return <svg width="80" height="90" viewBox="0 0 40 45" shapeRendering="crispEdges" aria-hidden="true" className={`hero-art pixel-art${large?' large':''}${depth?' depth-art':''}`}>
     <path d="M9 40h22v2H9Zm-3-1h28v2H6Z" fill={P.ink} opacity={depth?.24:.14}/>{depth?<g className="hero-depth-faces"><path d={coat} transform="translate(2 2)" fill={P.dark}/><path d="M26 10h3v3h1v9h-3v3h-4v-2h3Z" fill={enemy?P.leafDark:P.skinShade}/><path d="M27 36h3v3h2v2h-5Z" fill={P.dark}/></g>:null}
     <path d="M13 32h6v7h-2v2h-6v-3h2Zm9 0h6v6h2v3h-7v-2h-1Z" fill={P.ink}/>
@@ -131,43 +132,4 @@ export function PixelPanorama({ biome = 'woodland', characters }: { biome?: stri
     <path d="M304 108h8v4h8v-4h8v4h-8v4h-8v-4h-8Zm40 20h8v4h8v-4h8v4h-8v4h-8v-4h-8Z" fill={P.grassDetail}/>
     {!coastal?<><path d="M92 382h8v8h-8Zm508-58h8v8h-8ZM244 402h8v8h-8Z" fill={P.flower}/><path d="M94 384h4v4h-4Zm508-58h4v4h-4ZM246 404h4v4h-4Z" fill={P.flowerLight}/></>:null}
   </svg>;
-}
-
-// Each icon is its own authored 10×10 bitmap, emitted as scalable SVG squares.
-const ICONS: Record<string, string[]> = {
-  pin: ['..######..','...####...','...####...','...####...','..######..','.########.','.########.','....##....','....##....','....##....'],
-  dice: ['...####...', '.##....##.', '#..####..#', '#.#.##.#.#', '#..####..#', '#..#..#..#', '#.#....#.#', '#.######.#', '.##....##.', '...####...'],
-  arrow: ['..........', '.....##...', '......##..', '.......##.', '##########', '##########', '.......##.', '......##..', '.....##...', '..........'],
-  close: ['##......##', '.##....##.', '..##..##..', '...####...', '....##....', '...####...', '..##..##..', '.##....##.', '##......##', '..........'],
-  sword: ['.......###', '......####', '.....###..', '....###...', '...###....', '#.###.....', '####......', '.###......', '##.##.....', '#.........'],
-  shield: ['...####...', '###....###', '#........#', '#...##...#', '#...##...#', '#...##...#', '.#..##..#.', '..#....#..', '...#..#...', '....##....'],
-  heart: ['.###..###.', '##########', '##########', '##########', '##########', '.########.', '..######..', '...####...', '....##....', '..........'],
-  move: ['....##....', '...####...', '..######..', '....##....', '##..##..##', '##########', '##..##..##', '....##....', '..######..', '...####...'],
-  spark: ['....##....', '....##....', '...####...', '..######..', '##########', '..######..', '...####...', '....##....', '....##....', '..........'],
-  potion: ['...####...', '...#..#...', '...#..#...', '..#....#..', '.#......#.', '#........#', '#.######.#', '#.######.#', '.########.', '..######..'],
-  book: ['.###..###.', '#...##...#', '#...##...#', '#...##...#', '#...##...#', '#...##...#', '#...##...#', '#...##...#', '.###..###.', '....##....'],
-  sound: ['....##..#.', '...###...#', '######.#.#', '######.#.#', '######.#.#', '######.#.#', '######.#.#', '...###...#', '....##..#.', '..........'],
-  mute: ['....##....', '...###....', '######.#.#', '######..#.', '######.#.#', '######....', '######....', '...###....', '....##....', '..........'],
-  people: ['..###..##.', '.#####.###', '.#####.###', '..###..##.', '..........', '.#####.##.', '##########', '##########', '##...##.##', '##...##.##'],
-  plus: ['....##....', '....##....', '....##....', '....##....', '##########', '##########', '....##....', '....##....', '....##....', '....##....'],
-  minus: ['..........', '..........', '..........', '..........', '##########', '##########', '..........', '..........', '..........', '..........'],
-  fit: ['####..####', '#........#', '#........#', '#........#', '..........', '..........', '#........#', '#........#', '#........#', '####..####'],
-  check: ['..........', '........##', '.......##.', '......##..', '.....##...', '##..##....', '.####.....', '..##......', '..........', '..........'],
-  flag: ['##........', '########..', '##########', '##########', '##########', '##..######', '##........', '##........', '##........', '##........'],
-  gear: ['...####...', '.########.', '##########', '###....###', '###.##.###', '###.##.###', '###....###', '##########', '.########.', '...####...'],
-  link: ['......###.', '.....#...#', '....#..#.#', '...#..#..#', '.....#..#.', '.#..#.....', '#..#..#...', '#.#..#....', '#...#.....', '.###......'],
-  chest: ['..######..', '.########.', '##########', '#..#..#..#', '##########', '#..####..#', '#...##...#', '#........#', '#........#', '##########'],
-  leaf: ['.....#####', '...#######', '..########', '.########.', '.#######..', '######....', '#####.....', '###.......', '##........', '#.........'],
-  music: ['...#######', '...#######', '...#.....#', '...#.....#', '...#.....#', '...#.....#', '.###...###', '####..####', '.##....##.', '..........'],
-  eye: ['..........', '...####...', '.##....##.', '#..####..#', '#..####..#', '#..####..#', '.##....##.', '...####...', '..........', '..........'],
-};
-export function PixelIcon({ name, size = 20, className }: { name: string; size?: number; className?: string }) {
-  const bitmap = name === 'back' ? ICONS.arrow.map(row => [...row].reverse().join('')) : ICONS[name] || ICONS.spark;
-  const pixels = (include: (x:number,y:number)=>boolean = ()=>true) => bitmap.flatMap((row,y) => [...row].map((cell,x) => cell === '#' && include(x,y) ? <rect key={`${x}-${y}`} x={2+x*2} y={2+y*2} width="2" height="2"/> : null));
-  const artwork = name === 'book' ? <>
-    <g className="icon-book-page icon-book-left">{pixels(x=>x<4)}<g className="icon-book-lines"><path d="M5 8h3v2H5Zm0 4h3v2H5Z"/></g></g>
-    <g className="icon-book-page icon-book-right">{pixels(x=>x>5)}<g className="icon-book-lines"><path d="M16 8h3v2h-3Zm0 4h3v2h-3Z"/></g></g>
-    <g className="icon-book-spine">{pixels(x=>x===4||x===5)}</g>
-  </> : name === 'sound' ? <>{pixels(x=>x<7)}<g className="icon-sound-waves">{pixels(x=>x>=7)}</g></> : pixels();
-  return <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" shapeRendering="crispEdges" aria-hidden="true" className={`ui-icon pixel-icon icon-${name}${className?` ${className}`:''}`}><g className="ui-icon-body">{artwork}</g></svg>;
 }
