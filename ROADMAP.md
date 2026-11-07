@@ -23,8 +23,10 @@ Keep this as the short checkpoint overview. Use GitHub issues for individual tas
 - [x] Reuse validated AI character class/palette/personality recipes across the existing Paint/Pixel SVG libraries, retaining hero identities across chapters.
 - [x] Implement server-only model roles, durable spend reservations/cache and fixture fallback; verify with mocks.
 - [x] Verify bounded Luna planning/narration/legal-choice access with budgeted live experiments (small samples; broader quality remains a playtest task).
-- [x] Add bounded cached narrator audio with transcript validation and device fallback; fresh local application-route generation and native Edge playback passed. Hosted operation and audible quality remain unverified.
-- [ ] Publish the reviewed Windows changes to the existing Site and pass hosted runtime/AI checks before GitHub push.
+- [x] Add bounded cached narrator audio with transcript validation and device fallback; fresh local application-route generation and native Edge playback passed. Earlier hosted generation/playback passed; the guided update is awaiting publication and audible quality remains unverified.
+- [x] Publish the earlier reviewed Windows changes and pass hosted runtime/AI checks.
+- [x] Add server-enforced team-password unlock and local developer setup.
+- [ ] Publish and verify the guided adventure update on the existing Site.
 - [x] Verify the new setup, Continue card, Pip, ordinary actions, style identity and resume at desktop/narrow sizes in both Paint and Pixel through the explicitly approved local browser fallback; synthetic microphone capture/transcription/review and stubbed speech animation also passed. Human microphone/audio and physical devices remain unverified.
 - [x] Complete the three-model UI/gameplay/AI panel and fix supported findings within ten quality rounds; measured mean 90.87/100 before final corrections, below the aspirational95 target.
 - [ ] Add optional novel generated image assets that preserve character identity; current AI art uses paired reusable SVG recipes.
@@ -37,4 +39,4 @@ These are proposed next tasks, not promises that every feature lands in alpha.2.
 - [ ] Broader content and rule coverage.
 - [ ] Support for using the AI narrator alongside a physical tabletop game.
 
-The prototype does not implement the full D&D ruleset. Optional server-side paid AI is implemented behind explicit configuration and conservative spending controls; checked-in defaults use fixtures. See [AI-VALIDATION.md](AI-VALIDATION.md) for current evidence and remaining checks. Hosted publication and hosted AI verification remain separate from successful local API tests.
+The prototype does not implement the full D&D ruleset. Optional server-side paid AI is implemented behind explicit configuration, team-password unlock and conservative spending controls; checked-in defaults use fixtures. See [AI-VALIDATION.md](AI-VALIDATION.md) for current evidence and remaining checks. Hosted publication and hosted AI verification remain separate from successful local API tests.

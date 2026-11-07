@@ -71,6 +71,13 @@ html[data-theme=pixel] .settings-leave{border-radius:0}
 .seed-setting{display:flex;align-items:center;gap:15px;padding:12px 0}.seed-setting>div{flex:1;min-width:0}.seed-setting span{font-size:11px;color:var(--muted);display:block;margin-bottom:5px}.seed-setting code{font:12px/1.6 var(--mono);overflow-wrap:anywhere;user-select:all}
 .settings-navigation>button:disabled,.settings-link:disabled{opacity:.45;cursor:wait}.settings-navigation>button:disabled:hover,.settings-link:disabled:hover{background:transparent;color:var(--muted)}.setting-confirm>.settings-leave-error{color:var(--danger);margin:4px 0 0}
 html[data-theme=pixel] .accent-swatch{border-radius:0}
+.ai-access-badge{padding:6px 12px;border:1px solid var(--line);border-radius:var(--button-radius);background:var(--surface);font-size:12px;font-weight:600;color:var(--muted)}
+.ai-access-badge[data-active=true]{background:var(--accent-soft);border-color:var(--accent);color:var(--accent)}
+.ai-unlock-form{padding:18px 0;border-bottom:1px solid var(--line)}.ai-unlock-form>label{display:block;font-size:13px;font-weight:600;margin-bottom:8px}
+.ai-unlock-fields{display:flex;gap:10px;flex-wrap:wrap}.ai-unlock-fields input{flex:1 1 160px;min-width:0;width:100%;min-height:44px;padding:10px 12px;border:1px solid var(--line);border-radius:var(--button-radius);background:var(--surface-raised);color:var(--ink);font-size:16px}.ai-unlock-fields input:hover:not(:disabled){border-color:var(--line-strong)}
+.ai-unlock-fields button,.ai-unlocked button{min-height:44px}.ai-unlocked{padding:12px 0 18px;border-bottom:1px solid var(--line)}.ai-unlocked button{margin-top:12px}
+.ai-device-actions{display:flex;align-items:center;gap:8px 18px;flex-wrap:wrap}.ai-device-actions>.text-button{font-size:12px}
+.ai-play-guide{padding-top:20px}.ai-play-guide h4{font-size:13px;margin-bottom:8px}.ai-play-guide ol{padding-left:20px;font-size:12px;line-height:1.65}.ai-play-guide li{padding:3px 0}.ai-play-guide>.settings-description{margin-top:12px}.ai-setup-note{padding-top:12px}
 @media(max-width:650px){
  .modal:has(.settings-shell){width:calc(100vw - 24px);max-height:calc(100dvh - 24px)}
  .modal:has(.settings-shell) .modal-head{padding:14px 18px}

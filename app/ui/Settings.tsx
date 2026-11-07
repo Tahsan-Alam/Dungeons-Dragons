@@ -8,14 +8,15 @@ import type {useAudio} from './useAudio';
 import {ACCENT_NAMES,ACCENT_PALETTES} from './appearance';
 import ControlsSettings from './ControlsSettings';
 import {useAIPreference} from './ai-preferences';
+import AISettings from './AISettings';
 import './settings.css';
-export type SettingsSection='appearance'|'audio'|'controls'|'game';
+export type SettingsSection='appearance'|'audio'|'controls'|'game'|'ai';
 export interface SettingsProps{
  onClose:()=>void;onAI:()=>void;initialSection?:SettingsSection;
  audio:ReturnType<typeof useAudio>;
  game?:{kind:'solo'|'online';roomCode?:string;seed?:string;onGames:()=>void;onLeave?:()=>Promise<boolean>;busy?:boolean};
 }
-const SECTIONS=[['appearance','Appearance'],['audio','Sound'],['controls','Controls'],['game','Table']] as const;
+const SECTIONS=[['appearance','Appearance'],['audio','Sound'],['controls','Controls'],['game','Table'],['ai','AI']] as const;
 export default function Settings({onClose,onAI,audio,game,initialSection='appearance'}:SettingsProps){
  const[aiEnabled,setAIEnabled]=useAIPreference();
  const[section,setSection]=useState<SettingsSection>(initialSection),[leave,setLeave]=useState(false),[leaving,setLeaving]=useState(false),[leaveError,setLeaveError]=useState(''),[copied,setCopied]=useState(false),[copyMessage,setCopyMessage]=useState('');
@@ -32,7 +33,8 @@ export default function Settings({onClose,onAI,audio,game,initialSection='appear
  async function copySeed(){if(!game?.seed)return;try{await navigator.clipboard.writeText(game.seed);setCopied(true);setCopyMessage('');if(copyTimer.current)clearTimeout(copyTimer.current);copyTimer.current=setTimeout(()=>setCopied(false),2000)}catch{setCopyMessage('Copy unavailable. Select the seed text to copy it.')}}
  return <Modal title="Table settings" onClose={onClose} wide dismissible={!leaving}><div className="settings-shell"><nav className="settings-navigation" role="tablist" aria-label="Settings sections">{SECTIONS.map(([key,label],index)=><button key={key} ref={el=>{tabs.current[index]=el}} id={`${id}-${key}-tab`} role="tab" disabled={leaving} aria-selected={section===key} aria-controls={`${id}-${key}-panel`} tabIndex={section===key?0:-1} onClick={()=>setSection(key)} onKeyDown={event=>{let next:number|undefined;if(['ArrowDown','ArrowRight'].includes(event.key))next=(index+1)%SECTIONS.length;if(['ArrowUp','ArrowLeft'].includes(event.key))next=(index+SECTIONS.length-1)%SECTIONS.length;if(event.key==='Home')next=0;if(event.key==='End')next=SECTIONS.length-1;if(next!==undefined){event.preventDefault();select(next)}}}>{label}</button>)}<span className="settings-saved-note">Saved on this device. Changes apply instantly.</span></nav>
  <section key={section} ref={panel} className="settings-content" id={`${id}-${section}-panel`} role="tabpanel" aria-labelledby={`${id}-${section}-tab`} tabIndex={0}>
- <h3>{section==='audio'?'Sound & voice':section==='controls'?'Key bindings':section==='game'?'At the table':'Appearance'}</h3>
+ <h3>{section==='audio'?'Sound & voice':section==='controls'?'Key bindings':section==='game'?'At the table':section==='ai'?'AI storyteller':'Appearance'}</h3>
+ {section==='ai'?<AISettings onAbout={onAI}/>:null}
  {section==='appearance'?<>
  <p className="settings-description section-intro">Make this table your own. Your adventure stays the same.</p>
  <div className="settings-row"><div><strong>Art style</strong><p>Painted characters or crisp pixel art.</p></div><ThemeToggle/></div>

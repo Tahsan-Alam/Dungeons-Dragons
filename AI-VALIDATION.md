@@ -1,6 +1,6 @@
-# Windows AI integration validation
+# AI integration validation
 
-Latest results: see **Guided adventure validation (November 6, 2026)** at the end of this document. Earlier sections preserve their own historical authorizations, accounting and readiness statements.
+Latest results: see the hosted/team-access, guided adventure and publication checkpoints below. Earlier sections preserve their own authorizations, accounting and readiness statements.
 
 November 5, 2026. Feature branch based on exact transferred commit `d009c4769858f34e26135bfa5c6c2ad188909273`. Bundle was 31,752 bytes, SHA-256 `81de940b664f4c1f3264ff706c46afc0f0dee01b653bedc872ec3d7899a4272f`; `git bundle verify` succeeded before import. No incoming working-tree changes were present. Only the temporary bundle was deleted.
 
@@ -198,6 +198,21 @@ Final local flags: `AI_MODE=fixture`, `AI_ENABLE_PAID=DISABLED`, `AI_ENABLE_AUDI
 
 Readiness: ready for the parent's existing-Site publication and bounded hosted checks, not a claim of hosted release success. Sites runtime had no configured values (revision 0); see AI-SETUP.md for key names, safe caps, migrations and build requirements. Validate actual hosted secret delivery, routes, persistence and speech before GitHub push. Audible quality, physical devices, Safari, assistive technology and a full campaign playthrough remain outside this evidence. Keep paid defaults off.
 
+
+## Hosted release checkpoint (November 6, 2026)
+
+The reviewed release was deployed as Site version 7 and PR #3 merged to main (`d064da0`, same source tree as `2696d91`). Hosted Luna campaign/character planning, persisted narration and legal suggestions passed. A fresh hosted 3.3-second WAV played in native Chrome, with Stop, volume and rate controls; cached playback still worked after paid flags were disabled in environment revision 4. Desktop/mobile Paint and Pixel passed without overflow or browser errors. No acoustic-fidelity claim. Conservative cross-machine test accounting was at most $0.598494 ($0.498494 retained Windows reservations plus the entire $0.10 hosted allowance), not confirmed provider billing.
+
+## Team access checkpoint (November 6, 2026)
+
+Added a password verifier, opaque remembered-device cookie and D1 authorization check before all paid-capable application routes. A device defaults to enabled after the first password entry and retains the on/off choice across visits; enabling again needs no password. Forgetting the device removes access. Cookie expiry is one year, and replacing the verifier revokes previous grants. Additive migrations `0002` and `0003` preserve existing rooms and spend history. Credentials/passwords are absent from source and fixtures; the password helper emits only a salted verifier.
+
+`npm run check` passes 176 tests, types and production build. Added native Workers/D1 route coverage with fake credentials and external networking disabled: missing/forged/incorrect/expired/revoked access, disabled-device memory/re-enable, no-provider locked start/narration/assist, existing seat authentication, password attempt limits, origin rejection, cookie flags, session storage bounds and configured cap bounds. No paid inference is needed for these tests.
+
+Regular installed Chrome via Playwright was used because the Browser plugin is unavailable. Local desktop 1440×900 and mobile 390×844 in Paint and Pixel passed the settings flow: incorrect password, unlock, reload, disable, reload still disabled, enable without password, forget, and keyboard tab navigation. No horizontal document/dialog/content overflow or unexpected console/page errors. Screenshots/results are outside Git in `/Users/richie/.t3/scratch/painted-realms-team-ai-20261106/`. The isolated local server used a fake provider key and a separate temporary D1 database; the browser made no generation requests.
+
+The owner authorized a public game with password-gated paid AI and $25/month shared reservations, with $2/day and $0.50/campaign safeguards. Publication and hosted team-access checks are recorded in the PR after deployment; these local checks alone do not verify hosted configuration. Actual OpenAI billing remains unconfirmed. Local developer ledgers are independent of the hosted allowance.
+
 ## Guided adventure validation (November 6, 2026)
 
 Branch: `feature/guided-ai-adventures`. This section supersedes the earlier browser-unavailable status and the previous phase's accounting/shutdown snapshots. Local credentials support API testing, so the user's conditional hosted publication was unnecessary. No hosted runtime or hosted release is certified here. The three-judge panel completed on commit `36631e2`; the tenth and final correction round is recorded below. No post-correction rescore is claimed.
@@ -274,3 +289,9 @@ The three-judge mean is **90.87/100** using unrounded category weights. Terra re
 Sol identified typographic negation; Terra identified creative direction being mistaken for an early-ending control; Astra identified “No early ending” and global navigation bypassing transcript protection. These are covered by final-round fixes and regression evidence. Terra's human-name report did not account for the existing `GameAI.plan` human-name check; the new adapter-boundary regression confirms rejection before installation or narration context. This disposition leaves the judges' original scores intact.
 
 The earlier standalone phase report was copied unchanged to `C:/Users/mexic/.t3/scratch/painted-realms-qa/validation.md` as historical working evidence. This existing document is the canonical repository validation record.
+
+## Guided adventure publication reconciliation (November 6, 2026)
+
+The existing Site source had advanced to `ce6cb14` with remembered team AI access and shared budget configuration. The guided adventure release merges that history without changing the existing public audience, project identity, password verifier, provider key or runtime limits. Dictation now requires the same remembered/enabled access as campaign generation and uses the shared `aiCaps` configuration. Native Workers tests cover absent, forged and disabled cookies without provider calls, plus successful unlock, transcription and cache reuse.
+
+`npm run check` passed type checking, all 207 tests and the production build after reconciliation. Previously recorded desktop/narrow Paint/Pixel evidence remains applicable to the guided flow; publication reconciliation did not repeat human microphone or audible-quality checks. Deployment outcome is reported separately after Sites returns its result.

@@ -4,7 +4,7 @@
 
 [Play the hosted game](https://painted-realms.richie-r9.chatgpt.site/) · [Contribute](CONTRIBUTING.md) · [Roadmap](ROADMAP.md) · [Changelog](CHANGELOG.md)
 
-A playable cooperative browser adventure with Paint and Pixel artwork, each available in 2D and 2.5D. All four presentations render the same game state without restarting the room, turn or character. Changing world view reframes the camera; changing art style preserves it. Local stories work without credentials; optional server-side AI adds quest planning, companion identities, narration, guidance and dictation.
+A playable cooperative browser adventure with Paint and Pixel artwork, each available in 2D and 2.5D. All four presentations render the same game state without restarting the room, turn or character. Changing world view reframes the camera; changing art style preserves it. Local stories work without credentials; optional server-side AI adds quest planning, companion identities, narration, guidance and dictation. Paid AI also requires the team password in Table settings > AI and remaining shared allowance.
 
 ## Play
 
@@ -43,7 +43,7 @@ node --import ./scripts/sites-env.mjs ./node_modules/wrangler/bin/wrangler.js d1
 node --import ./scripts/sites-env.mjs ./node_modules/wrangler/bin/wrangler.js d1 execute DB --local --config dist/server/wrangler.json --persist-to .wrangler/state --file drizzle/0001_ai_ledger.sql
 ```
 
-Apply each migration only once; check existing tables before initializing an existing database. The dev and built previews share `.wrangler/state`. `npm start -- --port 5347` runs the production build locally and loads the ignored root `.dev.vars` when present. A local address is only available on this computer; friends elsewhere need the hosted deployment and visitor access.
+Apply each migration only once; check existing tables before initializing an existing database. The dev and built previews share `.wrangler/state`. `npm start -- --port 5347` runs the production build locally and loads the ignored root `.dev.vars` when present. A local address is only available on this computer; friends elsewhere need the hosted deployment and visitor access. Apply outstanding AI access migrations as described in [AI setup](AI-SETUP.md#secure-setup).
 
 ## Verify
 
@@ -59,7 +59,7 @@ The pure engine and server tests need Node 22.13+ (Node 26 recommended for `node
 - Streamlined rules and **Classic (SRD subset)**. Classic adds initiative, Armor Class, advantage, critical hits and death saves. It is not full D&D: complete classes, species, spells, progression, reactions, conditions and many other rules remain future work. See [RULES.md](RULES.md).
 - Server-owned dice and game state, optimistic concurrency, ten-seat room cap, readiness, reconnection, host transfer, disconnected-turn recovery, request retry protection and D1 persistence. See [MULTIPLAYER.md](MULTIPLAYER.md).
 - Paint and Pixel SVG sprites, terrain and illustrations, with shared 2D/2.5D identity; projected movement paths and hit areas; board pan/zoom; accessible HTML controls; responsive party/story drawers; reduced-motion support.
-- Table settings groups Appearance, Sound, Controls and Table preferences in one scrolling pane. Sound includes optional Hex Settlers hover/click samples, device narration and synthesized ambient music, each with its own level. Hover/focus feedback can be turned off independently. Levels persist; audio starts only when enabled or explicitly previewed each visit. Browser/device voices vary. These Sound controls use local audio; the Storyteller also offers separately opted-in server speech with device fallback.
+- Table settings groups Appearance, Sound, Controls, Table and AI preferences in one scrolling pane. Sound includes optional Hex Settlers hover/click samples, device narration and synthesized ambient music, each with its own level. Hover/focus feedback can be turned off independently. Levels persist; audio starts only when enabled or explicitly previewed each visit. Browser/device voices vary. These Sound controls use local audio; the Storyteller also offers separately opted-in server speech with device fallback.
 - Saved seeded campaigns, validated companion class/palette/personality recipes, chapter memories, creative direction and Pip's persisted narration and guidance. Existing Paint/Pixel SVG libraries render both versions of each recipe, and common scenery is reused. Default fixture mode makes no API calls. See [AI-SETUP.md](AI-SETUP.md) for spending controls and secure local setup, and [AI-VALIDATION.md](AI-VALIDATION.md) for current tests and evidence limits. [AI-OPTIONS.md](AI-OPTIONS.md) records the earlier model evaluation.
 
 ## Architecture
