@@ -5,6 +5,8 @@
 .play-refined .scene-heading h1{font-size:24px!important;line-height:1.15;margin:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .play-refined .scene-title>span{white-space:nowrap;font-size:11px;color:var(--muted)}
 .play-refined .scene-controls{display:flex;align-items:center;gap:8px;flex:none}
+.play-refined .ask-pip-trigger{min-height:40px;gap:6px;padding:5px 9px}
+@media(max-width:600px){.play-refined .ask-pip-trigger{min-width:40px;padding:5px}.play-refined .ask-pip-trigger>span:not(.pip-avatar){position:absolute;width:1px;height:1px;padding:0;overflow:hidden;clip-path:inset(50%);white-space:nowrap}}
 .play-refined .rules-label{font-size:11px;color:var(--muted)}
 .play-refined .panel-toggle{display:none;align-items:center;justify-content:center;gap:5px;min-width:40px;min-height:40px;padding:6px;border:1px solid var(--line);border-radius:6px;transition:background 140ms,border-color 140ms}
 .play-refined .panel-toggle:hover{background:var(--accent-soft);border-color:var(--accent)}

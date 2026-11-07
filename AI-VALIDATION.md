@@ -1,6 +1,6 @@
 # Windows AI integration validation
 
-Latest results: see **Windows release validation (November 6, 2026)** at the end of this document; earlier sections are historical evidence.
+Latest results: see **Guided adventure validation (November 6, 2026)** at the end of this document. Earlier sections preserve their own historical authorizations, accounting and readiness statements.
 
 November 5, 2026. Feature branch based on exact transferred commit `d009c4769858f34e26135bfa5c6c2ad188909273`. Bundle was 31,752 bytes, SHA-256 `81de940b664f4c1f3264ff706c46afc0f0dee01b653bedc872ec3d7899a4272f`; `git bundle verify` succeeded before import. No incoming working-tree changes were present. Only the temporary bundle was deleted.
 
@@ -197,3 +197,68 @@ Durable phase evidence: `C:/Users/mexic/.t3/scratch/painted-realms-qa/release-20
 Final local flags: `AI_MODE=fixture`, `AI_ENABLE_PAID=DISABLED`, `AI_ENABLE_AUDIO=DISABLED`; campaign/day/month ceilings restored to 100000/250000/250000. Key and original D1 retained. Owned server and browser sessions stopped. Final `npm run check`: types, **173 tests**, production build. Secret-content scans of tracked source/build output and `git diff --check` also pass.
 
 Readiness: ready for the parent's existing-Site publication and bounded hosted checks, not a claim of hosted release success. Sites runtime had no configured values (revision 0); see AI-SETUP.md for key names, safe caps, migrations and build requirements. Validate actual hosted secret delivery, routes, persistence and speech before GitHub push. Audible quality, physical devices, Safari, assistive technology and a full campaign playthrough remain outside this evidence. Keep paid defaults off.
+
+## Guided adventure validation (November 6, 2026)
+
+Branch: `feature/guided-ai-adventures`. This section supersedes the earlier browser-unavailable status and the previous phase's accounting/shutdown snapshots. Local credentials support API testing, so the user's conditional hosted publication was unnecessary. No hosted runtime or hosted release is certified here. Final independent scoring is pending; local validation and shutdown are complete.
+
+### Player experience and integration
+
+- Home's Continue adventure card wraps at narrow widths. Setup presents hero, story, then review; joining uses hero and invite steps. Rules, seed and other fine-tuning stay optional.
+- Settings → Table → AI adventures selects the default for new quests; setup overrides it for one quest. AI solo creates a saved server room and starts directly; a failed start retains recoverable party camp. Local solo remains playable without credentials.
+- Quest suggestions are optional. Dictation records visibly for at most 60 seconds, sends verified mono 16 kHz PCM only after stopping, and offers editable transcript review before insertion. Cleanup preserves exclusions, names and deliberate repetition; pending permission, capture and transcription can be cancelled. Unapplied transcripts require use or discard before leaving the step.
+- Short, standard and long select 1, 3 and 5 playable chapters, not guaranteed minutes. Explicit host controls save creative direction, request shorter narration, or end at the current chapter's gateway after its encounter and shard objective. Keep going cancels an early ending. Ordinary turns, combat and movement remain engine-owned.
+- Pip is available from the board. The Paint and Pixel avatars blink and animate during speech, respect reduced motion, and stop with playback. Guidance makes no moves; story changes are explicit, persisted and replayed.
+- AI plans the custom premise and companion recipes. Saved identities, chapter memories, creative direction and legal choices inform later narration. AI quests save tellings at chapter boundaries and the ending; polling, replay and presentation changes do not generate. A planned story resolution becomes a committed story event only at legal victory, when it can close the custom premise.
+- Character art derives from validated class/color recipes shared by the paired SVG libraries. Trees, paths and common scenery reuse existing artwork. This phase adds no novel raster-image generation or unconstrained map generation. Existing movement, attack and dice animations remain in use.
+
+### Implementation and review rounds
+
+1. Implementation: types and 180 tests passed, including legal full playthroughs, 1/3/5-chapter endings, authorization and exact replay.
+2. Integration: 190 tests and a production build passed. Mock transcription covered WAV duration/format, response byte limits, reservation before transmission, duplicate caching, retained failures and no paid retries. Real local application routes accepted planning, guidance and narration; instructions were repaired when the initial plan underused the custom premise.
+3. Live quality: the corrected planner preserved the missing lighthouse keeper and coastal mystery, and accepted three character recipes. The HTTP short quest reached victory through 12 legal commands and companion turns and reconstructed exactly from replay. Synthetic speech transcription retained “no spiders.” A response-wrapping defect was fixed; duplicate transcription then reused its durable cache.
+4. Initial independent review: Sol and Terra inspected implementation and sanitized runtime evidence at extra-high reasoning. They found the ending-dialog handoff, unsuccessful steering shown as success, early-ending reversal, per-quest preferences leaking into defaults, and dictation permission/review lifecycle problems.
+5. Regression: those supported findings were addressed. The victory dialog displays the accepted farewell; failed steering retains input; Keep going reverses an early ending; setup has a local override; dictation blocks navigation during unapplied review and stops late microphone streams. At that checkpoint `npm run check` passed type checking, 197 tests and a production build; `git diff --check` passed.
+6. Approved browser workflows: desktop/phone Paint/Pixel flows exercised setup, defaults, narration help, reversible endings, game actions, style identity, rename, Continue and resume. Visual review caught and fixed the blank mobile narrator icon.
+7. Live browser and voice behavior: synthetic microphone audio reached GPT Transcribe and editable review. Live planning, help, narration and a legal 12-command UI victory passed; a planned payoff resolves the custom premise only after engine-owned victory. Early endings preserve the shorter conclusion; future payoff text is withheld from model context until committed. Deterministic speech events verified actual UI talking/Stop state and motion preferences, without claiming audible fidelity.
+8. Final art and production regression: sixteen biome/style/view/viewport scenes matched the actual party. A production-build two-human session passed readiness, start, turn transfer, save/reconnect and replay navigation. Final **`npm run check` passed types, 200 tests and production build**; `git diff --check` passed. Focused lint on the new UI files has no errors and two lifecycle-ref warnings; the broad repository lint still has pre-existing debt and is not claimed passing.
+9. Final three-model judging: requested after the above fixes and browser evidence. Findings, scores and any final corrections are recorded below when available. The tenth quality round is reserved for final supported corrections and verification, rather than unbounded score chasing.
+
+The initial browser attempt used T3 preview, where two snapshots and an evaluation timed out. Its fallback to ChatGPT's built-in browser reported “The browser access host is unavailable.” The user subsequently explicitly approved further browser recovery. Local Playwright with an isolated **Chrome Headless Shell** then succeeded. These are separate browser sessions; no user-owned profile or sign-in was claimed.
+
+### Approved browser follow-up
+
+URL: `http://127.0.0.1:5347/`. The agent-owned local browser used 1440×900 and 390×844 viewports, both Paint and Pixel. The current evidence files are outside Git at `C:/Users/mexic/.t3/scratch/painted-realms-qa/`.
+
+| Check | Evidence / result |
+| --- | --- |
+| Responsive setup and Continue card | All four viewport/style workflows passed; screenshots cover home, Continue, hero, story and table screens. |
+| Horizontal overflow and console errors | `browser-results.json` records no horizontal overflow and zero console errors in all four cases. |
+| Help, ending reversal, ordinary action, style identity, resume | Passed in all four workflows in `browser-results.json`. |
+| Dictation lifecycle | Desktop Paint exercised pending cancellation, late stream cleanup, fake-device recording cancellation and mocked transcript review. These lifecycle cases were not repeated in every viewport/style. |
+| Real synthetic microphone → server → GPT Transcribe → review | Passed. `live-dictation-review.png` and `live-browser-results.json` show editable transcription retaining “no spiders.” The looping fake microphone repeated the prompt and ended with a partial sentence; the user can edit the review. |
+| Real AI quest through visible controls | `live-browser-results.json` records accepted OpenAI plan/guidance/ending, 12 legal UI commands to victory, visible farewell, preserved failed-steering input and no unexpected console errors. Intentional 503 fault injection is excluded from unexpected errors. The victory resolution brings the missing keeper and friends home. |
+| Talking avatar, Stop and reduced motion | `voice-results.json` records talking on the board, modal continuity, Stop resetting the avatar, caption agreement, paired Paint/Pixel animation styles and reduced-motion suppression. Speech events were deterministic stubs. |
+| Biome and party art | `art-results.json` records 16 coast/ruins × Paint/Pixel × 2D/2.5D × desktop/phone scenes, matching landmarks and actual party class/color recipes, without overflow or runtime errors. A blank mobile Pip button was caught visually and fixed; its icon dimensions and visibility were then checked in all four workflows. |
+| Production multiplayer and replay | `party-production-results.json` records a desktop Paint host and phone-sized Pixel guest: join/readiness gates, both seats starting, a turn passing between humans, save/reconnect and replay step navigation. No overflow or console errors. |
+
+These checks establish browser capture and recorder lifecycle with a synthetic microphone. They do not establish human microphone quality, acoustic fidelity, or audible avatar synchronization. Physical devices, Safari and assistive-technology sessions remain untested. The successful local fallback resolved the earlier browser blocker; it is not hosted browser or hosted AI evidence.
+
+### Spending and temporary configuration
+
+The existing local ledger retained **$0.498494** before this run. Its final local total is **$0.599941**, an increase of **$0.101447 in conservative app reservations**. Receipts were retained, including failures; no historical receipt was deleted or refunded. Actual provider billing is unknown. Judge/orchestration costs are outside this app ledger and cannot be certified as a dollar total from these tools.
+
+The installed secret remains server-side. Paid text and dictation were temporarily enabled for the authorized local checks, within the app's $0.10/campaign, $0.25/day and $1/month default ceilings. The original local flags are now restored, the test server stopped, all owned browser contexts closed, and the temporary credential backup removed. Paid voice generation stayed off. No provider account billing limit was changed, and checked-in defaults remain fixture-only.
+
+### Independent judging checkpoint
+
+Rubric: UI 60%, gameplay 25%, AI behavior 15%. The initial reviews identified missing browser evidence instead of assuming those checks passed.
+
+| Initial judge | UI | Gameplay | AI behavior | Weighted score |
+| --- | ---: | ---: | ---: | ---: |
+| GPT-6.1 Sol, extra-high | 80 | 90 | 84 | 83.1 |
+| GPT-6.1 Terra, extra-high | 78 | 88 | 86 | 81.7 |
+
+The initial two-judge mean was **82.4**, before the supported fixes and approved browser follow-up. It is not the requested three-judge result. GPT-6.1 Astra was absent from the catalog; the user approved **`gpt-6-astra` at high reasoning** as the third judge, with Sol and Terra at extra-high. Final judging follows the remaining art consistency fix. No final average or 95% result is established at this checkpoint.
+
+The earlier standalone phase report was copied unchanged to `C:/Users/mexic/.t3/scratch/painted-realms-qa/validation.md` as historical working evidence. This existing document is the canonical repository validation record.

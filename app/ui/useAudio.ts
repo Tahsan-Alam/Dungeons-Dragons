@@ -5,14 +5,19 @@ import {useInterfaceAudio} from './useInterfaceAudio';
 
 /** Device speech and synthesized music. Levels persist; enabling audio always requires a gesture. */
 export function useAudio(){
- const[voice,setVoice]=useState(false),[music,setMusic]=useState(false),[available,setAvailable]=useState(false),[preferences,setPreferences]=useState<AudioPreferences>(DEFAULT_AUDIO_PREFERENCES);
+ const[voice,setVoice]=useState(false),[speaking,setSpeaking]=useState(false),[music,setMusic]=useState(false),[available,setAvailable]=useState(false),[preferences,setPreferences]=useState<AudioPreferences>(DEFAULT_AUDIO_PREFERENCES);
  const interfaceAudio=useInterfaceAudio(preferences.interfaceVolume,preferences.hoverSounds);
  const voiceEnabled=useRef(false),musicEnabled=useRef(false),lastCaption=useRef(''),currentLine=useRef<SpeechSynthesisUtterance|null>(null),context=useRef<AudioContext|null>(null),masterGain=useRef<GainNode|null>(null),timer=useRef<ReturnType<typeof setInterval>|null>(null),tones=useRef(new Set<OscillatorNode>()),musicRun=useRef(0),mounted=useRef(true),levels=useRef(DEFAULT_AUDIO_PREFERENCES);
+ const stopSpeech=useCallback(()=>{
+  const line=currentLine.current;currentLine.current=null;
+  if(line){line.onstart=null;line.onend=null;line.onerror=null;if('speechSynthesis'in window)window.speechSynthesis.cancel();}
+  if(mounted.current)setSpeaking(false);
+ },[]);
  const applyMusicVolume=useCallback(()=>{
   const audio=context.current,gain=masterGain.current;if(!audio||!gain||audio.state==='closed')return;
   gain.gain.cancelScheduledValues(audio.currentTime);gain.gain.setTargetAtTime(document.hidden?0:levels.current.musicVolume,audio.currentTime,.04);
  },[]);
- const applyPreferences=useCallback((next:AudioPreferences)=>{levels.current=next;setPreferences(next);applyMusicVolume()},[applyMusicVolume]);
+ const applyPreferences=useCallback((next:AudioPreferences)=>{levels.current=next;setPreferences(next);applyMusicVolume();if(next.voiceVolume===0)stopSpeech()},[applyMusicVolume,stopSpeech]);
  const updatePreferences=useCallback((patch:Partial<AudioPreferences>)=>{const next=normalizeAudioPreferences({...levels.current,...patch});applyPreferences(next);try{localStorage.setItem(AUDIO_PREFERENCES_KEY,JSON.stringify(next))}catch{/* Levels remain usable without storage. */}},[applyPreferences]);
  const stopMusic=useCallback(()=>{
   musicRun.current++;musicEnabled.current=false;if(timer.current)clearInterval(timer.current);timer.current=null;
@@ -24,24 +29,26 @@ export function useAudio(){
   try{applyPreferences(normalizeAudioPreferences(JSON.parse(localStorage.getItem(AUDIO_PREFERENCES_KEY)||'null')))}catch{applyPreferences(DEFAULT_AUDIO_PREFERENCES)}
   const storage=(event:StorageEvent)=>{if(event.key!==AUDIO_PREFERENCES_KEY&&event.key!==null)return;try{applyPreferences(normalizeAudioPreferences(JSON.parse(event.newValue||'null')))}catch{applyPreferences(DEFAULT_AUDIO_PREFERENCES)}};
   window.addEventListener('storage',storage);document.addEventListener('visibilitychange',applyMusicVolume);
-  return()=>{mounted.current=false;currentLine.current=null;if('speechSynthesis'in window)window.speechSynthesis.cancel();stopMusic();window.removeEventListener('storage',storage);document.removeEventListener('visibilitychange',applyMusicVolume);const old=context.current;context.current=null;masterGain.current=null;if(old&&old.state!=='closed')void old.close().catch(()=>{})};
- },[stopMusic,applyPreferences,applyMusicVolume]);
+  return()=>{mounted.current=false;stopSpeech();stopMusic();window.removeEventListener('storage',storage);document.removeEventListener('visibilitychange',applyMusicVolume);const old=context.current;context.current=null;masterGain.current=null;if(old&&old.state!=='closed')void old.close().catch(()=>{})};
+ },[stopMusic,stopSpeech,applyPreferences,applyMusicVolume]);
  const readCaption=useCallback((text:string)=>{
-  if(!text||!('speechSynthesis'in window)||typeof window.SpeechSynthesisUtterance!=='function')return;
+  stopSpeech();
+  if(!text||levels.current.voiceVolume===0||!('speechSynthesis'in window)||typeof window.SpeechSynthesisUtterance!=='function')return;
   try{
    window.speechSynthesis.cancel();const line=new SpeechSynthesisUtterance(text);currentLine.current=line;
    line.rate=levels.current.speechRate;line.pitch=.92;line.volume=levels.current.voiceVolume;
-   line.onend=()=>{if(currentLine.current===line)currentLine.current=null};
-   line.onerror=event=>{if(currentLine.current!==line||event.error==='canceled'||event.error==='interrupted')return;currentLine.current=null;voiceEnabled.current=false;if(mounted.current)setVoice(false)};
+   line.onstart=()=>{if(currentLine.current===line&&mounted.current)setSpeaking(true)};
+   line.onend=()=>{if(currentLine.current!==line)return;currentLine.current=null;if(mounted.current)setSpeaking(false)};
+   line.onerror=event=>{if(currentLine.current!==line)return;currentLine.current=null;if(mounted.current)setSpeaking(false);if(event.error==='canceled'||event.error==='interrupted')return;voiceEnabled.current=false;if(mounted.current)setVoice(false)};
    window.speechSynthesis.speak(line);
-  }catch{voiceEnabled.current=false;if(mounted.current)setVoice(false)}
- },[]);
+  }catch{stopSpeech();voiceEnabled.current=false;if(mounted.current)setVoice(false)}
+ },[stopSpeech]);
  const speak=useCallback((text:string)=>{lastCaption.current=text;if(voiceEnabled.current)readCaption(text)},[readCaption]);
  const toggleVoice=useCallback(()=>{
   if(!('speechSynthesis'in window)||typeof window.SpeechSynthesisUtterance!=='function')return;
   const enabled=!voiceEnabled.current;voiceEnabled.current=enabled;setVoice(enabled);
-  if(enabled)readCaption(lastCaption.current);else{currentLine.current=null;window.speechSynthesis.cancel()}
- },[readCaption]);
+  if(enabled)readCaption(lastCaption.current);else stopSpeech();
+ },[readCaption,stopSpeech]);
  const previewVoice=useCallback(()=>readCaption('Your party is ready. Choose your next move.'),[readCaption]);
  const toggleMusic=useCallback(()=>{
   if(musicEnabled.current){stopMusic();setMusic(false);return}
@@ -66,5 +73,5 @@ export function useAudio(){
  const setMusicVolume=useCallback((value:number)=>updatePreferences({musicVolume:value}),[updatePreferences]);
  const setInterfaceVolume=useCallback((value:number)=>updatePreferences({interfaceVolume:value}),[updatePreferences]);
  const setHoverSounds=useCallback((value:boolean)=>updatePreferences({hoverSounds:value}),[updatePreferences]);
- return{voice,music,available,speak,toggleVoice,toggleMusic,preferences,setVoiceVolume,setSpeechRate,setMusicVolume,previewVoice,...interfaceAudio,setInterfaceVolume,setHoverSounds};
+ return{voice,speaking,music,available,speak,toggleVoice,toggleMusic,preferences,setVoiceVolume,setSpeechRate,setMusicVolume,previewVoice,...interfaceAudio,setInterfaceVolume,setHoverSounds};
 }

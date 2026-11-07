@@ -65,3 +65,22 @@ test('portraits and chapter art gain side faces while keeping sizes, colors and 
   assert.notEqual(flat,dimensional);assert.ok(dimensional.includes('depth-art'));assert.ok(dimensional.includes('viewBox="0 0 800 480"'));
  }
 });
+
+test('chapter panoramas match the biome and actual party in either style and view',()=>{
+ const characters=[{heroClass:'ranger' as const,color:'#ef997c'},{heroClass:'cleric' as const,color:'#87bdcf'},{heroClass:'mage' as const,color:'#edcf75'}];
+ const original=JSON.stringify(characters);
+ for(const theme of ['paint','pixel'])for(const viewMode of ['2d','2.5d'])for(const biome of ['woodland','ruins','coast']){
+  presentation={theme,viewMode};
+  const html=render(art.Panorama,{biome,characters});
+  assert.match(html,new RegExp(biome==='coast'?'coast with an ocean and a lighthouse':biome==='ruins'?'ancient ruins with broken columns':'woodland with winding paths'));
+  assert.match(html,new RegExp(`data-landmark="${biome==='coast'?'lighthouse':biome==='ruins'?'ruined-gateway':'woodland-tower'}"`));
+  assert.equal((html.match(/data-panorama-hero=/g)??[]).length,characters.length);
+  for(const hero of characters){assert.ok(html.includes(`data-panorama-hero="${hero.heroClass}"`));assert.ok(html.includes(hero.color));}
+  assert.doesNotMatch(html,/data-panorama-hero="knight"/,'a generic knight must not replace the selected party');
+  assert.equal(html.includes('depth-art'),viewMode==='2.5d');
+  if(biome!=='woodland')assert.doesNotMatch(html,/woodland-tower/,'other biomes must not reuse the woodland landmark');
+  assert.equal((render(art.Panorama,{biome,characters:[]}).match(/data-panorama-hero=/g)??[]).length,0);
+  assert.equal((render(art.Panorama,{biome,characters:[...characters,...characters]}).match(/data-panorama-hero=/g)??[]).length,4);
+ }
+ assert.equal(JSON.stringify(characters),original,'rendering must not mutate party identities');
+});

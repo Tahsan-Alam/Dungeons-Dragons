@@ -6,9 +6,10 @@ import {BudgetLedger,MemoryLedger,D1Ledger,DEFAULT_CAPS} from './ai-ledger.ts';
 import {GameAI} from './ai-service.ts';
 import {RoomService} from './rooms.ts';
 import {MemoryRoomStore} from './room-store.ts';
-import {createGame,applyAction} from '../game/engine.ts';
+import {createGame,applyAction,getReachable,getValidTargets,hasLineOfSight,encounterCleared} from '../game/engine.ts';
+import type {GameAction,GameState} from '../game/types.ts';
 import {DEFAULT_OPTIONS,HERO_COLORS} from '../game/types.ts';
-import {campaignFixture,parseCampaign,narrationFixture,acceptNarration} from '../game/campaign.ts';
+import {campaignFixture,parseCampaign,narrationFixture,acceptNarration,applyStoryDirection,guidanceFixture,storyGoal} from '../game/campaign.ts';
 import {legalChoices} from '../game/legal-actions.ts';
 import {newReplay,appendReplay,reconstructReplay} from '../game/replay.ts';
 const players=[{id:'you',name:'Ada',heroClass:'ranger' as const,color:HERO_COLORS[0],bot:false}];
@@ -149,4 +150,91 @@ test('revoked seats cannot receive in-flight suggestions or speech, even without
   await started;const record=(await store.read(room.code))!;delete record.tokenHashes[session.playerId];const previous=record.revision;record.revision++;assert.ok(await store.compareAndSwap(room.code,previous,record));
   release();await assert.rejects(pending,(e:any)=>e.code==='UNAUTHORIZED');
  }
+});
+
+test('explicit player opt-out prevents planning, narration, action interpretation and guidance spending',async()=>{
+ const store=new MemoryLedger(),ai=new GameAI(config,new BudgetLedger(store),async()=>{throw new Error('No paid request should run');});
+ const options={...DEFAULT_OPTIONS,aiEnabled:false},state=createGame(players,options);
+ assert.equal((await ai.plan('opt-out',options,players)).source,'fixture');
+ assert.equal((await ai.narrate('opt-out',state)).source,'fixture');
+ await ai.choose('opt-out',state,'you','guard');assert.equal((await ai.guide('opt-out',state,'you','How do I play?')).source,'fixture');
+ assert.deepEqual((await store.read()).entries,{});
+});
+
+test('AI guidance carries story memory and direction, caches identical questions and never mutates the game',async()=>{
+ const state=applyStoryDirection(game(),'Make the woods hopeful and full of curious foxes.');
+ state.story!.memories=[{chapter:1,title:'Earlier crossing',summary:'Ada protected a courier.'}];
+ const before=structuredClone(state);let calls=0,payload:any;
+ const ai=new GameAI(config,new BudgetLedger(new MemoryLedger()),async(_url,init)=>{calls++;payload=JSON.parse(String(init?.body));return reply({reply:'Move toward the guardians, then choose a reachable target.'});});
+ const result=await ai.guide('guide',state,'you','What next?');assert.equal(result.source,'openai');
+ assert.deepEqual(await ai.guide('guide',state,'you','What next?'),result);assert.equal(calls,1);
+ const context=JSON.parse(payload.input);assert.match(context.memories[0].summary,/courier/);assert.match(context.direction.prompt,/foxes/);assert.equal(context.totalChapters,3);
+ assert.deepEqual(state,before);assert.ok(!('tools' in payload));
+});
+
+test('guidance and narration do not receive the future payoff before it becomes a committed event',async()=>{
+ const state=game(),payoff='The secret beacon brings the missing keeper home.';state.story!.campaign.resolution=payoff;
+ const inputs:string[]=[];
+ const ai=new GameAI(config,new BudgetLedger(new MemoryLedger()),async(_url,init)=>{const body=JSON.parse(String(init?.body));inputs.push(body.input);const input=JSON.parse(body.input);return reply(body.text.format.name==='guide'?{reply:'Follow the highlighted path.'}:{eventId:input.eventId,caption:'Your party follows the lantern light.'});});
+ await ai.guide('no-spoilers',state,'you','What next?');await ai.narrate('no-spoilers',state);assert.equal(inputs.length,2);assert.ok(inputs.every(input=>!input.includes(payoff)));assert.equal(state.story!.campaign.resolution,payoff);
+ state.status='victory';state.eventSequence++;state.events.push({id:state.eventSequence,kind:'story',text:payoff});await ai.narrate('no-spoilers',state);assert.ok(inputs.at(-1)!.includes(payoff));assert.equal(JSON.parse(inputs.at(-1)!).campaign.resolution,undefined);
+});
+
+test('invalid guidance retains its reservation and falls back to grounded next-step instructions',async()=>{
+ const store=new MemoryLedger();let calls=0;
+ const ai=new GameAI(config,new BudgetLedger(store),async()=>{calls++;return reply({reply:'<script>teleport</script>',hp:100});});
+ const first=await ai.guide('invalid-guide',game(),'you','What next?');assert.equal(first.source,'fixture');assert.equal(first.reply,guidanceFixture(game(),'What next?','you'));
+ await ai.guide('invalid-guide',game(),'you','What next?');assert.equal(calls,1);assert.ok(Object.values((await store.read()).entries)[0].reserved>0);
+});
+
+test('only host steering changes the ending; guidance works outside a turn and steering survives service restart/replay',async()=>{
+ const store=new MemoryRoomStore(),service=new RoomService(store);
+ const host=await service.create({name:'Ada',heroClass:'ranger',options:{...DEFAULT_OPTIONS,companions:0,duration:'long',aiEnabled:false}});
+ const guest=await service.join({code:host.room.code,name:'Fern',heroClass:'mage'});
+ const ready=await service.command(guest.room.code,guest.session.token,{version:guest.room.version,requestId:'guest-ready-story',command:{type:'ready',ready:true}});assert.ok('room'in ready);
+ const started=await service.command(host.room.code,host.session.token,{version:ready.room.version,requestId:'host-begin-story',command:{type:'start'}});assert.ok('room'in started);
+ const idlePlayer=started.room.game!.actors.find(a=>!a.bot&&!a.enemy&&a.id!==started.room.game!.activeActorId)!;
+ const seat=idlePlayer.playerId===host.session.playerId?host.session:guest.session;
+ const help=await service.assist(host.room.code,seat.token,{version:started.room.version,guidance:true,text:'What do I do next?'});
+ assert.ok('reply'in help);assert.match(help.reply!,/turn/);
+ await assert.rejects(service.command(host.room.code,guest.session.token,{version:started.room.version,requestId:'guest-steer-story',command:{type:'steer',text:'End after this chapter.'}}),(e:any)=>e.code==='HOST_ONLY');
+ const directed=await service.command(host.room.code,host.session.token,{version:started.room.version,requestId:'host-steer-story',command:{type:'steer',text:'End after this chapter.'}});assert.ok('room'in directed);
+ assert.equal(storyGoal(directed.room.game!),1);assert.equal(directed.room.game!.status,'playing');assert.equal(directed.room.game!.relics,0);
+ const resumed=await new RoomService(store).get(host.room.code,host.session.token);assert.ok('room'in resumed);assert.equal(storyGoal(resumed.room.game!),1);
+ assert.deepEqual(reconstructReplay(directed.room.replay!).at(-1),directed.room.game);
+ const unchanged=structuredClone(directed.room.game);await service.assist(host.room.code,host.session.token,{version:directed.room.version,guidance:true,text:'How can we end soon?'});
+ const latest=await service.get(host.room.code,host.session.token);assert.ok('room'in latest);assert.deepEqual(latest.room.game,unchanged);
+});
+
+test('AI-enabled room saves exactly one automatic telling on start and chapter advance, with exact replay',async()=>{
+ let tellings=0;
+ const ai={async plan(_scope:string,options:typeof DEFAULT_OPTIONS,heroes:typeof players){return campaignFixture(options,heroes);},async narrate(_scope:string,state:GameState){tellings++;return narrationFixture(state);}} as unknown as GameAI;
+ const service=new RoomService(new MemoryRoomStore(),Date.now,ai),created=await service.create({name:'Ada',heroClass:'ranger',options:{...DEFAULT_OPTIONS,seed:'automatic-chapter-story',companions:3,aiEnabled:true,duration:'standard'}});
+ const started=await service.command(created.room.code,created.session.token,{requestId:'automatic-story-start',version:created.room.version,command:{type:'start'}});assert.ok('room'in started);
+ let room=started.room,steps=0;assert.equal(tellings,1);assert.equal(room.game!.story!.narrations.length,1);assert.deepEqual(reconstructReplay(room.replay!).at(-1),room.game);
+ const distance=(a:{x:number;y:number},b:{x:number;y:number})=>Math.abs(a.x-b.x)+Math.abs(a.y-b.y);
+ while(room.game!.scene===0&&room.game!.status==='playing'&&steps++<350){
+  const state=room.game!,actor=state.actors.find(a=>a.id===state.activeActorId)!;
+  let action:GameAction={type:'end'};
+  const enemies=state.actors.filter(a=>a.enemy&&a.hp>0&&!a.defeated);
+  if(encounterCleared(state)){
+   const goal=state.chest.opened?state.exit:state.chest;
+   if(distance(actor,goal)<=1)action={type:state.chest.opened?'advance':'interact'};
+   else{const move=getReachable(state,actor).sort((a,b)=>distance(a,goal)-distance(b,goal))[0];if(move&&distance(move,goal)<distance(actor,goal))action={type:'move',...move};}
+  }else if(!actor.actionUsed){
+   const abilities=getValidTargets(state,actor,true).sort((a,b)=>a.hp-b.hp),targets=getValidTargets(state,actor).sort((a,b)=>a.hp-b.hp);
+   if(actor.hp<actor.maxHp*.4&&actor.potions>0)action={type:'potion'};
+   else if(abilities.length)action={type:'ability',targetId:abilities[0].id};
+   else if(targets.length)action={type:'attack',targetId:targets[0].id};
+   else{
+    const enemy=enemies.sort((a,b)=>distance(actor,a)-distance(actor,b))[0];
+    const score=(p:{x:number;y:number})=>Math.max(0,distance(p,enemy)-5)*100+(hasLineOfSight(state,p,enemy)?0:20)+distance(actor,p);
+    const move=enemy&&getReachable(state,actor).sort((a,b)=>score(a)-score(b))[0];action=move&&score(move)<score(actor)?{type:'move',...move}:{type:'guard'};
+   }
+  }
+  const result=await service.command(room.code,created.session.token,{requestId:`automatic-story-step-${steps}`,version:room.version,command:{type:'action',action}});assert.ok('room'in result);room=result.room;
+ }
+ assert.equal(room.game!.scene,1);assert.equal(tellings,2);assert.equal(room.game!.story!.narrations.length,2);assert.equal(room.game!.story!.memories!.length,1);
+ assert.deepEqual(reconstructReplay(room.replay!).at(-1),room.game);
+ await service.get(room.code,created.session.token);await service.get(room.code,created.session.token);assert.equal(tellings,2,'Polling cannot generate another telling');
 });

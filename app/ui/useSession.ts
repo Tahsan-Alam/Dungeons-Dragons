@@ -6,7 +6,7 @@ import { createGame, applyAction, runBots } from '../../game/engine';
 import {AdventureStore,soloRecord,roomRecord,updateSoloRecord,sortedLibrary} from '../../game/library';
 import type {AdventureRecord,SavedAdventure} from '../../game/library';
 import {newReplay,appendReplay} from '../../game/replay';
-import {acceptNarration,narrationFixture} from '../../game/campaign';
+import {acceptNarration,narrationFixture,applyStoryDirection} from '../../game/campaign';
 
 const SOLO_KEY='painted-realms.solo.v1';
 const SESSION_KEY='painted-realms.room.v1';
@@ -183,7 +183,12 @@ export function useSession(){
   });
  }
  async function resumeRoom(){const entry=[...records.current.values()].find(r=>r.session?.token===savedSession?.token);return entry?openSaved(entry.meta.id):false;}
- function startSolo(name:string,heroClass:HeroClass,options:GameOptions){
+ async function startSolo(name:string,heroClass:HeroClass,options:GameOptions){
+  if(options.aiEnabled){
+   const created=await createRoom(name,heroClass,options);if(!created)return false;
+   // A failed start keeps a recoverable lobby instead of creating another quest.
+   await command({type:'start'});return true;
+  }
   try{
    if(!libraryReady)throw new Error('Saved games are still loading. Try again in a moment.');
    const players:PlayerSpec[]=[{id:'you',name,heroClass,color:HERO_COLORS[0],bot:false}];
@@ -256,6 +261,13 @@ export function useSession(){
   const narration=narrationFixture(record.game),game=acceptNarration(record.game,narration),replay=appendReplay(record.replay,{type:'narration',record:narration});
   setSolo(game);await saveRecord(updateSoloRecord(record,game,replay));
  }
+ async function steer(text:string){
+  if(latest.current.room)return command({type:'steer',text});
+  const record=active.current?records.current.get(active.current):undefined;
+  if(!record?.game||!record.replay)return false;
+  try{const game=applyStoryDirection(record.game,text),replay=appendReplay(record.replay,{type:'steer',text});setSolo(game);await saveRecord(updateSoloRecord(record,game,replay));setError('');return true;}
+  catch(error){setError(error instanceof Error?error.message:'Could not save story direction.');return false;}
+ }
  // Refresh waiting rooms without heartbeat: being at Games must not claim a player is present at every table.
  useEffect(()=>{
   if(!inLibrary||!libraryReady)return;
@@ -301,5 +313,5 @@ export function useSession(){
   timer=setTimeout(poll,1000);
   return()=>{stopped=true;if(timer)clearTimeout(timer);controller?.abort();};
  },[session]);
- return {game:room?.game||solo,room,session,saved,savedSession,busy,error,setError,connection,startSolo,resumeSolo,createRoom,joinRoom,resumeRoom,command,action,narrate,library,libraryReady,activeId,openSaved,backToLibrary,updateSaved,deleteSaved,replayFor};
+ return {game:room?.game||solo,room,session,saved,savedSession,busy,error,setError,connection,startSolo,resumeSolo,createRoom,joinRoom,resumeRoom,command,action,narrate,steer,library,libraryReady,activeId,openSaved,backToLibrary,updateSaved,deleteSaved,replayFor};
 }

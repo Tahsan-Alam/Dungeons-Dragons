@@ -40,15 +40,42 @@ export const Tree=memo(function Tree({x,y,size=1,tone=0}:{x:number;y:number;size
  if(theme==='pixel')return <PixelTree x={x} y={y} size={size} tone={tone}/>;
  return <g transform={`translate(${x} ${y}) scale(${size})`} stroke={P.leafDark} strokeWidth="1.8" strokeLinejoin="round"><ellipse cx={depth?4:0} cy="24" rx={depth?26:23} ry="7" fill={P.leafDark} opacity={depth?.22:.13} stroke="none"/>{depth?<><path d={canopy} transform="translate(4 3)" fill={P.leafDark}/><path d="M5-5h5v28H5Z" fill={P.dark}/></>:null}<path d="m-4 23 1-30h7l1 30" fill={P.bark}/><path d={canopy} fill={TREE_TONES[((tone%3)+3)%3]}/>{depth?<path d="M0-55 15-31l-9-3L23-12l-10-2L27 4 9 1l3 10L0 9Z" fill={P.leafDark} opacity=".25" stroke="none"/>:null}<path d="M0-36v38m0-18-8-5M0-7l10-8" stroke={P.leafDark} opacity=".5"/></g>
 });
-export function Panorama({biome='woodland'}:{biome?:string}){const{theme,viewMode}=useTheme(),depth=viewMode==='2.5d',road='M382 480q-71-83 73-125t-14-80';if(theme==='pixel')return <PixelPanorama biome={biome}/>;return <svg viewBox="0 0 800 480" className={`panorama${depth?' depth-art':''}`} role="img" aria-label="A hand-drawn woodland with winding paths, a ruined tower and an adventuring party">
+export function Panorama({biome='woodland',characters}:{biome?:string;characters?:readonly {heroClass:HeroClass;color:string}[]}){
+ const{theme,viewMode}=useTheme(),depth=viewMode==='2.5d',coastal=biome==='coast',ruins=biome==='ruins';
+ const party=(characters??[{heroClass:'knight' as const,color:'#ed9877'},{heroClass:'mage' as const,color:'#b4a6cf'}]).slice(0,4);
+ const road=coastal?'M356 480Q325 423 411 379T506 320q34-15 48-36':'M382 480q-71-83 73-125t-14-80';
+ const trees=coastal?[{x:48,y:437,size:1.1},{x:145,y:401,size:.8}]:ruins?[{x:56,y:400,size:1.4},{x:725,y:371,size:1.3},{x:658,y:420,size:1.2}]:[{x:74,y:329,size:2.2},{x:134,y:303,size:1.6},{x:666,y:320,size:1.8},{x:732,y:368,size:2.5},{x:43,y:450,size:2.8},{x:170,y:410,size:2},{x:604,y:397,size:2.4}];
+ const setting=coastal?'coast with an ocean and a lighthouse':ruins?'ancient ruins with broken columns and a stone gateway':'woodland with winding paths and a ruined tower';
+ if(theme==='pixel')return <PixelPanorama biome={biome} characters={characters}/>;
+ return <svg viewBox="0 0 800 480" className={`panorama${depth?' depth-art':''}`} role="img" aria-label={`A hand-drawn ${setting}${party.length?', with an adventuring party':''}`}>
  <rect width="800" height="480" fill={P.sky}/><circle cx="580" cy="100" r="43" fill={P.sun}/>
- <path d="M0 234 87 117l68 55L265 54l116 140L472 97l108 125L706 87l94 116v277H0Z" fill={P.mountain} stroke={P.mountainEdge} strokeWidth="2"/>
- <path d="M0 284q130-131 266-3T543 272q136-111 257-24v232H0Z" fill={P.hill}/>
- <path d="M0 371Q160 242 390 300t410 34v146H0Z" fill={biome==='coast'?P.coastGrass:P.grass}/>
- {depth?<><path d="M0 445q200-40 384 2t416-5v38H0Z" fill={P.leafDark} opacity=".2"/><path d={road} transform="translate(5 7)" fill="none" stroke={P.stoneDark} strokeWidth="52" opacity=".45"/><ellipse cx="552" cy="286" rx="64" ry="16" fill={P.ink} opacity=".15"/><path d="m563 152 22-13v128l-22 12Z" fill={P.stoneDark} stroke={P.stoneDeep} strokeWidth="2"/><path d="m571 124 16-9v23l-24 14v-15Z" fill={P.stone}/></>:null}<path d={road} fill="none" stroke={P.road} strokeWidth="49"/>
- <g stroke={P.stoneDark} strokeWidth="2" fill={P.stoneLight}><path d="M499 279V152l-8-3v-25h17v14h14v-14h18v14h14v-14h17v25l-8 4v126Z"/><path d="m521 279 0-34q11-18 23 0v34" fill={P.stoneDeep}/><path d="M523 195v-20q10-14 17 0v20Z" fill={P.stoneDark}/><path d="m502 209 18 0m19 11h21m-55 22h14"/></g>
- {[{x:74,y:329,size:2.2},{x:134,y:303,size:1.6},{x:666,y:320,size:1.8},{x:732,y:368,size:2.5},{x:43,y:450,size:2.8},{x:170,y:410,size:2},{x:604,y:397,size:2.4}].map((t,i)=><Tree key={i} {...t} tone={i}/>)}
- <g transform="translate(304 328) scale(.9)"><HeroArt heroClass="knight"/></g><g transform="translate(374 346) scale(.85)"><HeroArt heroClass="mage" color="#b4a6cf"/></g>
- <g stroke={P.grassDetail} strokeWidth="2" fill="none"><path d="m233 347-5-10m5 10 4-8M570 435l-4-11m4 11 5-8M208 456l-5-9m5 9 7-9"/><path d="m305 109 9 4 8-4m28 17 8 4 7-4"/></g>
- <g fill={P.flower}><circle cx="97" cy="387" r="4"/><circle cx="603" cy="329" r="4"/><circle cx="248" cy="408" r="4"/></g>
- </svg>}
+ {coastal?<>
+  <path d="M0 232 70 190l61 30 80-45 78 59Z" fill={P.mountain}/>
+  <path d="M0 233q190-10 400 0t400 0v247H0Z" fill={P.water}/>
+  <g fill="none" stroke={P.waterLight} strokeWidth="4" strokeLinecap="round"><path d="M32 272h90m51-18h67m99 25h95m179-25h118M77 317h92m75-15h58m326-10h113M39 360h60m599-26h68"/></g>
+  <path d="M0 365Q135 320 269 355T470 318q48-47 122-36l39 35q70 7 169 86v77H0Z" fill={P.coastGrass} stroke={P.shore} strokeWidth="9"/>
+ </>:<><path d="M0 234 87 117l68 55L265 54l116 140L472 97l108 125L706 87l94 116v277H0Z" fill={P.mountain} stroke={P.mountainEdge} strokeWidth="2"/><path d="M0 284q130-131 266-3T543 272q136-111 257-24v232H0Z" fill={P.hill}/><path d="M0 371Q160 242 390 300t410 34v146H0Z" fill={ruins?P.ruinGrass:P.grass}/></>}
+ {depth?<><path d="M0 445q200-40 384 2t416-5v38H0Z" fill={P.leafDark} opacity=".2"/><path d={road} transform="translate(5 7)" fill="none" stroke={P.stoneDark} strokeWidth="52" opacity=".45"/><ellipse cx="552" cy="286" rx="64" ry="16" fill={P.ink} opacity=".15"/></>:null}<path d={road} fill="none" stroke={P.road} strokeWidth="49"/>
+ {coastal?<g data-landmark="lighthouse" stroke={P.stoneDark} strokeWidth="2" strokeLinejoin="round">
+  <path d="m554 157 216-64 28 89Z" fill={P.sun} opacity=".32" stroke="none"/>
+  {depth?<path d="m579 181 18-9 11 109-24 6Z" fill={P.stoneDark}/>:null}
+  <path d="m537 178-17 106h66l-15-106Z" fill={P.stoneLight}/><path d="m532 210-5 23h52l-4-23Z" fill={P.accent}/>
+  <path d="M528 143h50v36h-50Z" fill={P.accentLight}/><path d="M538 143v36m30-36v36"/>
+  <path d="m519 143 35-25 34 25Z" fill={P.accentDark}/><path d="M520 181h66" strokeWidth="5"/>
+  <path d="M546 284v-25q8-14 16 0v25Z" fill={P.stoneDeep}/><path d="M548 196h10v11h-10Z" fill={P.stoneDark}/>
+  <g fill={P.stone}><path d="m615 361 17-14 24 7 9 17-40 5Z"/><path d="m680 411 24-18 31 12 8 18-57 1Z"/><path d="m182 408 13-13 21 7 5 14-35 2Z"/></g>
+ </g>:ruins?<g data-landmark="ruined-gateway" stroke={P.stoneDark} strokeWidth="2" fill={P.stoneLight} strokeLinejoin="round">
+  {depth?<><path d="m558 151 19-11v133l-19 8Z" fill={P.stoneDark}/><path d="m206 224 15-9v106l-15 8Z" fill={P.stoneDark}/></>:null}
+  <path d="M490 280V161h-8v-24h39v-13h18v17h32v24h-13v115h-20V166h-28v114Z"/>
+  <path d="M171 327V222h16v16h20v-15h15v104Z"/><path d="m174 267 44 0m-24-29v29m-20 28h44M491 205h19m29-12h19m-67 48h19m29 9h19" fill="none"/>
+  <path d="m244 342 27-10 31 7-5 14h-49Zm360-14 20-12 28 8 8 16-48 2Z" fill={P.stone}/>
+ </g>:<g data-landmark="woodland-tower" stroke={P.stoneDark} strokeWidth="2" fill={P.stoneLight}>
+  {depth?<><path d="m563 152 22-13v128l-22 12Z" fill={P.stoneDark} stroke={P.stoneDeep}/><path d="m571 124 16-9v23l-24 14v-15Z" fill={P.stone}/></>:null}
+  <path d="M499 279V152l-8-3v-25h17v14h14v-14h18v14h14v-14h17v25l-8 4v126Z"/><path d="m521 279 0-34q11-18 23 0v34" fill={P.stoneDeep}/><path d="M523 195v-20q10-14 17 0v20Z" fill={P.stoneDark}/><path d="m502 209 18 0m19 11h21m-55 22h14"/>
+ </g>}
+ {trees.map((tree,index)=><Tree key={index} {...tree} tone={index}/>)}
+ {party.map((hero,index)=><g key={index} data-panorama-hero={hero.heroClass} transform={`translate(${364-(party.length-1)*37+index*74} ${330+index%2*12}) scale(.9)`}><HeroArt heroClass={hero.heroClass} color={hero.color}/></g>)}
+ <g stroke={P.grassDetail} strokeWidth="2" fill="none"><path d="m233 447-5-10m5 10 4-8M570 435l-4-11m4 11 5-8M208 456l-5-9m5 9 7-9"/><path d="m305 109 9 4 8-4m28 17 8 4 7-4"/></g>
+ {!coastal?<g fill={P.flower}><circle cx="97" cy="387" r="4"/><circle cx="603" cy="329" r="4"/><circle cx="248" cy="408" r="4"/></g>:null}
+ </svg>;
+}

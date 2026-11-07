@@ -1,6 +1,6 @@
 import type {GameState, ReplayArchive, ReplayCommand} from './types.ts';
 import {applyAction,runBots} from './engine.ts';
-import {acceptNarration} from './campaign.ts';
+import {acceptNarration,applyStoryDirection} from './campaign.ts';
 export type {ReplayArchive} from './types.ts';
 
 export function newReplay(initial:GameState,complete=true):ReplayArchive {
@@ -26,6 +26,8 @@ export function* iterateReplay(archive:ReplayArchive):Generator<GameState> {
   pending=[];
   if(command.type==='narration'){
    game=acceptNarration(game,command.record);
+  }else if(command.type==='steer'){
+   game=applyStoryDirection(game,command.text);
   }else if(command.type==='action'){
    game=applyAction(game,command.playerId,command.action);frame=normalize(game);if(frame)yield frame;
    game=runBots(game,g=>pending.push(g));
