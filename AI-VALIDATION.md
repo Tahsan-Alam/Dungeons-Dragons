@@ -1,5 +1,55 @@
 # AI integration validation
 
+## Living narrator creator — November 7, 2026
+
+Implemented on feature/living-narrator from the locally published story-first
+creator baseline. This update has not been deployed.
+
+- npm run check passed: TypeScript, 236 tests, production build. Removed the
+  dictation UI, HTTP route, implementation and their obsolete tests.
+- Four browser flows reached play: built-in options and customized narrator,
+  story and hero, at 1440px and 390px in Paint and Pixel. Confirmed identity,
+  class, voice, world/location, duration and companion settings survived start.
+- Additional 320px/768px, dark/light and reduced-motion checks showed no
+  document overflow. Correct paired atlases loaded. Draft, stage and settings
+  restored after reload; a successful game start cleared the completed draft.
+- Delayed-response checks preserved newer typed prompts/messages, rejected stale
+  suggestions, regenerated unselected heroes after story edits and kept the
+  confirmed speaking identity separate from editable narrator traits.
+- Real local production Worker WebSocket upgrades passed. GPT-Live Vesper audio
+  reached browser PCM playback and drove the speaking animation. A synthetic
+  microphone request generated Nyx as a sarcastic cat with glasses, selected the
+  matching controls, and required explicit confirmation. Independent mic mute
+  and automatic idle closure were observed. A separate confirmed Nyx played
+  Willow without microphone capture. These used real provider calls, not mocks.
+- A live AI story plus three generated hero options reached the server-backed
+  game. No approved story was regenerated at start.
+- First voice smoke found a dropped follow-up while a guide request was pending;
+  a bounded latest-request queue and a longer quiet boundary fixed it. The guide
+  now proposes concrete requested traits directly instead of asking redundant
+  confirmation questions. Regression coverage includes this handoff.
+- T3 preview opened but two screenshot attempts timed out. The previously
+  authorized isolated Playwright Chrome Headless Shell fallback completed the
+  visual/interaction checks. No browser profiles or sign-ins were reset.
+
+The local ledger increased from $1.305679 to $1.907635: **$0.601956 in additional
+conservative app reservations**. This is not verified billing and excludes host
+agent/image-generation costs. Temporary paid flags and test password settings
+were restored; the local default is again fixture-only. No paid retries happen
+automatically in the application.
+
+Independent source and screenshot critiques led to larger narrator artwork,
+flatter controls, an adjacent AI enable action, a mobile appearance preview,
+clearer confirmation, and stale-state fixes. Human microphone quality, perceived
+accent/expressiveness, Safari/physical-device behavior and hosted operation of
+this update remain unverified. Six reusable forms and overlays deliver instant
+visual changes; arbitrary per-prompt bitmap generation is not implemented.
+
+Evidence lives outside Git in the living QA folder: flows.json, edges.json,
+final-layouts.json, live-round1.json, live-results.json, live-custom.json,
+live-flow.json, final-check.log and named final screenshots.
+
+
 Latest results: see the hosted/team-access, guided adventure and publication checkpoints below. Earlier sections preserve their own authorizations, accounting and readiness statements.
 
 November 5, 2026. Feature branch based on exact transferred commit `d009c4769858f34e26135bfa5c6c2ad188909273`. Bundle was 31,752 bytes, SHA-256 `81de940b664f4c1f3264ff706c46afc0f0dee01b653bedc872ec3d7899a4272f`; `git bundle verify` succeeded before import. No incoming working-tree changes were present. Only the temporary bundle was deleted.

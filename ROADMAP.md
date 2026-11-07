@@ -13,6 +13,8 @@ Keep this as the short checkpoint overview. Use GitHub issues for individual tas
 
 ## Next alpha checkpoints
 
+- [x] Replace the five-step creator with a story-or-narrator-first workspace, animated Aether, confirmed synchronized chat/trait proposals, bounded GPT-Live conversation and independent audio controls. Remove the dictation interface and endpoint. Reuse six generated Paint/Pixel narrator forms; arbitrary per-prompt image generation remains future work.
+
 - [ ] Have every teammate run the project and complete a first small pull request.
 - [ ] Playtest solo and a full multiplayer session; record and fix reproducible bugs.
 - [x] Add optional prompts and saved bounded campaign facts/character recipes.

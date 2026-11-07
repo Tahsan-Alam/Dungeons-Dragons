@@ -3,7 +3,7 @@ import {useCallback,useEffect,useRef,useState} from 'react';
 import {creationFixture,parseCreationResult} from '../../game/creation';
 import type {CreationRequest,CreationResult} from '../../game/creation';
 
-export function useCreation(){
+export function useCreation(sharedScope?:string){
  const [pending,setPending]=useState(false),[error,setError]=useState('');
  const controller=useRef<AbortController|null>(null),epoch=useRef(0),scope=useRef('');
  const cancel=useCallback(()=>{epoch.current++;controller.current?.abort();controller.current=null;setPending(false);},[]);
@@ -11,7 +11,7 @@ export function useCreation(){
  async function run(input:Omit<CreationRequest,'scope'|'requestId'>):Promise<CreationResult|null>{
   if(controller.current)return null;
   if(!scope.current)scope.current=crypto.randomUUID();
-  const request={...input,scope:scope.current,requestId:crypto.randomUUID()},active=++epoch.current,abort=new AbortController();
+  const request={...input,scope:sharedScope||scope.current,requestId:crypto.randomUUID()},active=++epoch.current,abort=new AbortController();
   // Ordinary solo setup works without credentials, a database or a provider request.
   if(!request.enabled){setError('');return creationFixture(request);}
   controller.current=abort;setPending(true);setError('');

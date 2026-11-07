@@ -1,131 +1,217 @@
 'use client';
-import {useCallback,useEffect,useRef,useState} from 'react';
+import {useEffect,useRef,useState} from 'react';
+import {ArrowLeft,ArrowRight,Check,ChevronDown,Mic,MicOff,PhoneOff,Send,Sparkles,Undo2,Volume2,VolumeX} from 'lucide-react';
 import {CLASS_INFO,DEFAULT_OPTIONS,HERO_COLORS} from '../../game/types';
 import type {GameOptions,HeroClass} from '../../game/types';
-import {narratorTone,parseBlueprint,parseHero,parseStory} from '../../game/creation';
-import type {CreationAction,CreationResult,HeroProfile,NarratorProfile,StoryBlueprint,TraitCategory,TraitSelection} from '../../game/creation';
-import {Icon,HeroArt} from './Art';
+import {AETHER,NARRATOR_FORMS,NARRATOR_ACCESSORIES,NARRATOR_VOICES,narratorTone,parseBlueprint,parseHero,parseNarrator,parseStory} from '../../game/creation';
+import type {CreationAction,CreatorFocus,CreatorProposal,HeroProfile,NarratorProfile,StoryBlueprint,TraitCategory,TraitSelection} from '../../game/creation';
+import {applyCreatorProposal,editCreatorDraft,emptyCreatorDraft} from '../../game/creator-state';
+import type {CreatorDraft} from '../../game/creator-state';
+import {HeroArt} from './Art';
 import {useAIPreference} from './ai-preferences';
 import {useCreation} from './useCreation';
-import {CreatorConversation,PairedModel,TraitPicker} from './CreatorControls';
+import {useLiveNarrator} from './useLiveNarrator';
+import {TraitPicker} from './CreatorControls';
 import type {ConversationLine} from './CreatorControls';
-import QuestDictation from './QuestDictation';
+import NarratorAvatar from './NarratorAvatar';
 import './adventure-creator.css';
 
 type Props={mode:'solo'|'online';onBack:()=>void;onStart:(name:string,cls:HeroClass,options:GameOptions,code:string)=>void;busy:boolean;onNavigationBlockChange?:(blocked:boolean)=>void;onAISettings?:()=>void};
-const STEPS=['Your idea','Narrator','Story','Character','Play'];
 type Access={available:boolean;unlocked:boolean;audioAvailable:boolean};
+const INITIAL_MESSAGE='A world begins with a possibility. Shall we shape your story, or the voice that tells it?';
+const VOICE_NAMES:Record<string,string>={vesper:'Vesper · British',willow:'Willow · Irish',stone:'Stone · Irish',marin:'Marin',cedar:'Cedar',gleam:'Gleam',meridian:'Meridian'};
+const newDraft=():CreatorDraft=>({...emptyCreatorDraft(),narrator:structuredClone(AETHER)});
+const heroSeed=(world:string):HeroProfile=>({name:'Wren',heroClass:'ranger',color:HERO_COLORS[4],personality:['Curious'],background:'A wanderer from '+world+', following an impossible promise.'});
+const cap=(s:string)=>s.charAt(0).toUpperCase()+s.slice(1);
+
 export default function AdventureCreator({mode,onBack,onStart,busy,onNavigationBlockChange,onAISettings}:Props){
- const [step,setStep]=useState(0),[prompt,setPrompt]=useState(''),[narratorIntent,setNarratorIntent]=useState('');
- const [traits,setTraits]=useState<TraitSelection>({}),[heroTraits,setHeroTraits]=useState<TraitSelection>({});
- const [narrators,setNarrators]=useState<NarratorProfile[]>([]),[narrator,setNarrator]=useState<NarratorProfile|null>(null),[story,setStory]=useState<StoryBlueprint|null>(null),[heroes,setHeroes]=useState<HeroProfile[]>([]),[hero,setHero]=useState<HeroProfile|null>(null),[customHero,setCustomHero]=useState(false);
+ const [stage,setStage]=useState(0),[focus,setFocus]=useState<CreatorFocus>('story');
+ const [draft,setDraft]=useState<CreatorDraft>(newDraft),draftRef=useRef(draft);
+ const [confirmed,setConfirmed]=useState<NarratorProfile>(structuredClone(AETHER)),[speaker,setSpeaker]=useState<'guide'|'narrator'>('guide');
+ const [proposal,setProposal]=useState<CreatorProposal|null>(null),[undo,setUndo]=useState<{draft:CreatorDraft;confirmed:NarratorProfile;speaker:'guide'|'narrator'}|null>(null);
+ const [prompt,setPrompt]=useState(''),[message,setMessage]=useState(''),[lines,setLines]=useState<(ConversationLine&{name?:string})[]>([]);
+ const [asideText,setAsideText]=useState(INITIAL_MESSAGE),[heroes,setHeroes]=useState<HeroProfile[]>([]);
  const [options,setOptions]=useState<GameOptions>(()=>({...DEFAULT_OPTIONS,duration:'standard',seed:'quest-'+crypto.randomUUID().slice(0,8)}));
  const [savedAI]=useAIPreference(),[overrideAI,setOverrideAI]=useState<boolean|null>(null),[access,setAccess]=useState<Access|null>(null);
- const [conversations,setConversations]=useState<Record<string,ConversationLine[]>>({}),[notice,setNotice]=useState(''),[source,setSource]=useState<'fixture'|'openai'>('fixture'),[dictating,setDictating]=useState(false);
- const [sample,setSample]=useState<{index:number;text:string;audio:string|null}|null>(null),[talking,setTalking]=useState(false);
- const audio=useRef<HTMLAudioElement|null>(null),heading=useRef<HTMLHeadingElement>(null),firstStep=useRef(true);
- const auditions=useRef<Record<string,ConversationLine[]>>({});
- const creation=useCreation(),enabled=overrideAI??savedAI,blocked=busy||creation.pending||dictating;
- const stopAudio=useCallback(()=>{audio.current?.pause();setTalking(false);},[]);
- const dictationBusy=useCallback((value:boolean)=>setDictating(value),[]);
- useEffect(()=>{onNavigationBlockChange?.(creation.pending||dictating);return()=>onNavigationBlockChange?.(false);},[creation.pending,dictating,onNavigationBlockChange]);
- useEffect(()=>{if(firstStep.current)firstStep.current=false;else heading.current?.focus();stopAudio();},[step,stopAudio]);
- useEffect(()=>()=>{audio.current?.pause();},[]);
+ const [source,setSource]=useState<'fixture'|'openai'>('fixture'),[ready,setReady]=useState(false),[scope,setScope]=useState(()=>crypto.randomUUID());
+ const [restored,setRestored]=useState(false),[chatOpen,setChatOpen]=useState(false),[stored,setStored]=useState(false);
+ const messageInput=useRef<HTMLTextAreaElement>(null),heading=useRef<HTMLHeadingElement>(null),requestRef=useRef<(text:string)=>Promise<{reply:string}|null>>(async()=>null);
+ const creation=useCreation(scope),enabled=overrideAI??savedAI,storageKey='painted-realms-creator-v2-'+mode;
+ const currentNarrator=draft.narrator??AETHER,narrator=proposal?.narrator??currentNarrator,story=proposal?.story??draft.story,hero=proposal?.hero??draft.hero;
+ const activeNarrator=speaker==='guide'?AETHER:confirmed;
+ const context=JSON.stringify({focus:stage===1?'hero':focus,version:draft.version,narrator:{name:currentNarrator.name,traits:currentNarrator.personality,style:currentNarrator.speakingStyle,form:currentNarrator.avatar?.form},story:draft.story?{title:draft.story.title,synopsis:draft.story.synopsis.slice(0,500),world:draft.story.world}:null,hero:draft.hero?{name:draft.hero.name,class:draft.hero.heroClass,background:draft.hero.background}:null,confirmed:confirmed.name,recent:lines.slice(-2).map(l=>({role:l.role,text:l.text.slice(0,120)}))});
+ const live=useLiveNarrator({enabled:enabled&&!!access?.unlocked&&!!access.audioAvailable,scope,narrator:activeNarrator,context,onRequest:text=>requestRef.current(text)});
+ const narratorDirty=JSON.stringify(currentNarrator)!==JSON.stringify(confirmed);
+ const pending=busy||creation.pending;
+ const voiceAvailable=enabled&&!!access?.unlocked&&!!access.audioAvailable;
+
+ function install(next:CreatorDraft){draftRef.current=next;setDraft(next);}
+ function remember(){setUndo({draft:structuredClone(draftRef.current),confirmed:structuredClone(confirmed),speaker});}
+ function edit(changes:Partial<Omit<CreatorDraft,'version'>>){
+  const next=editCreatorDraft(draftRef.current,changes);if(!next)return;
+  creation.cancel();setProposal(null);install(next);
+ }
+ function editNarrator(patch:Partial<NarratorProfile>){edit({narrator:{...narrator,...patch}});}
+ function editStory(patch:Partial<StoryBlueprint>){if(story){setHeroes([]);edit({story:{...story,...patch}});}}
+ function editHero(patch:Partial<HeroProfile>){if(hero)edit({hero:{...hero,...patch}});}
+ function say(text:string,aloud=false){setAsideText(text);if(aloud&&!live.speakerMuted)void live.speak(text);}
+
+ useEffect(()=>{
+  try{
+   const raw=JSON.parse(localStorage.getItem(storageKey)??'null');
+   if(raw?.v===2&&raw.draft&&Number.isSafeInteger(raw.draft.version)&&raw.draft.version>=0&&raw.draft.version<1_000_000){
+    const restoredDraft=editCreatorDraft({...emptyCreatorDraft(),version:raw.draft.version},{narrator:raw.draft.narrator,story:raw.draft.story,hero:raw.draft.hero});
+    if(restoredDraft){
+     install(restoredDraft);const chosen=parseNarrator(raw.confirmed);if(chosen)setConfirmed(chosen);
+     setSpeaker(raw.speaker==='narrator'?'narrator':'guide');setFocus(raw.focus==='narrator'?'narrator':'story');
+     setPrompt(typeof raw.prompt==='string'?raw.prompt.slice(0,400):'');setMessage(typeof raw.message==='string'?raw.message.slice(0,400):'');
+     if(typeof raw.scope==='string'&&/^[-a-zA-Z0-9]{1,64}$/.test(raw.scope))setScope(raw.scope);
+     if(typeof raw.overrideAI==='boolean')setOverrideAI(raw.overrideAI);
+     if(Array.isArray(raw.heroes)){const valid=raw.heroes.slice(0,3).map((h:unknown)=>parseHero(h)).filter(Boolean);setHeroes(valid);}
+     if(Array.isArray(raw.lines))setLines(raw.lines.filter((l:ConversationLine)=>l&&(l.role==='player'||l.role==='narrator')&&typeof l.text==='string'&&l.text.length<=400).slice(-12));
+     if(parseStory(restoredDraft.story)&&(raw.stage===1||raw.stage===2))setStage(raw.stage===2&&parseHero(restoredDraft.hero)?2:1);
+     if(raw.options&&typeof raw.options==='object'){
+      const saved=raw.options;setOptions(current=>({...current,...(['short','standard','long'].includes(saved.duration)?{duration:saved.duration}:{}),...(['simple','classic'].includes(saved.rules)?{rules:saved.rules}:{}),...(Number.isInteger(saved.companions)&&saved.companions>=0&&saved.companions<=3?{companions:saved.companions}:{}),...(typeof saved.seed==='string'&&saved.seed.length<=64?{seed:saved.seed}:{})}));
+     }
+     setRestored(true);setAsideText('Your world is still here. We can pick up wherever you like.');
+    }
+   }
+  }catch{/* Creation works when storage is unavailable. */}
+  setReady(true);
+ },[storageKey]);
+ useEffect(()=>{
+  if(!ready)return;
+  try{localStorage.setItem(storageKey,JSON.stringify({v:2,draft,confirmed,speaker,focus,prompt,message,scope,stage,heroes,options,overrideAI,lines}));setStored(true);}catch{setStored(false);}
+ },[ready,storageKey,draft,confirmed,speaker,focus,prompt,message,scope,stage,heroes,options,overrideAI,lines]);
+ useEffect(()=>{onNavigationBlockChange?.(creation.pending);return()=>onNavigationBlockChange?.(false);},[creation.pending,onNavigationBlockChange]);
  useEffect(()=>{
   const controller=new AbortController();
-  async function refresh(){try{const response=await fetch('/api/ai/access',{cache:'no-store',signal:controller.signal});if(response.ok)setAccess(await response.json());}catch{/* Built-in creation stays available. */}}
+  async function refresh(){try{const response=await fetch('/api/ai/access',{cache:'no-store',signal:controller.signal});if(response.ok)setAccess(await response.json());}catch{/* Local drafts remain usable. */}}
   void refresh();window.addEventListener('focus',refresh);window.addEventListener('painted-realms-ai-access',refresh);
   return()=>{controller.abort();window.removeEventListener('focus',refresh);window.removeEventListener('painted-realms-ai-access',refresh);};
  },[]);
- const name=narrator?.name??'your guide';
- function updateNarratorTraits(category:TraitCategory,values:string[]){setTraits(current=>({...current,[category]:values}));setNarrators([]);}
- function request(action:CreationAction,message='',extra:Record<string,unknown>={}){
-  return creation.run({action,enabled,prompt,message,narratorBrief:narratorIntent,...(action==='narrators'&&narrators.length===3?{candidates:narrators}:{}),traits:step===3?heroTraits:traits,...(narrator?{narrator}:{}),...(story?{story}:{}),...(hero?{hero}:{}),history:[...(step<2&&narratorIntent?[{role:'player' as const,text:narratorIntent}]:[]),...(conversations[step]??[])].slice(-6),...extra});
+ useEffect(()=>{if(stage)heading.current?.focus();},[stage]);
+ useEffect(()=>{if(!enabled)live.disconnect();},[enabled]); // A disabled per-quest AI setting also closes its live call.
+
+ async function request(action:CreationAction,text='',extra:Record<string,unknown>={}){
+  const current=draftRef.current;
+  const traits:TraitSelection=stage===1?{personality:current.hero?.personality??[]}:{personality:current.narrator?.personality??[],speakingStyle:current.narrator?.speakingStyle??[],appearance:current.narrator?.appearance??[]};
+  return creation.run({action,enabled,prompt,message:text,traits,focus:stage===1?'hero':focus,draftVersion:current.version,narrator:current.narrator??AETHER,guideNarrator:activeNarrator,...(current.story?{story:current.story}:{}),...(current.hero?{hero:current.hero}:{}),history:lines.slice(-6).map(({role,text})=>({role,text})),...extra});
  }
- function accept(result:CreationResult){
-  setNotice(result.reply);setSource(result.source);
-  if(result.narrators){setNarrators(result.narrators);setNarrator(null);setSample(null);setStory(null);setHeroes([]);}
-  if(result.story){setStory(result.story);setHeroes([]);}
-  if(result.heroes){setHeroes(result.heroes);setCustomHero(!!hero);}
-  if(result.hero){setHero(result.hero);setCustomHero(true);}
+ async function converse(text:string,fromVoice=false){
+  if(pending||!text.trim())return null;
+  const version=draftRef.current.version,result=await request('guide',text.trim().slice(0,400));if(!result||draftRef.current.version!==version)return null;
+  setSource(result.source);setLines(current=>[...current,{role:'player' as const,text:text.slice(0,400)},{role:'narrator' as const,text:result.reply,name:activeNarrator.name}].slice(-12));
+  setProposal(result.guide?.proposal??null);say(result.reply,!fromVoice);
+  if(result.guide?.proposal?.narrator)setFocus('narrator');else if(result.guide?.proposal?.story)setFocus('story');
+  return {reply:result.reply};
  }
- async function validate(category:TraitCategory,value:string){const result=await request('trait','',{category,value});if(result)setSource(result.source);return result;}
- async function converse(message:string){
-  const action=step<2?'narrators':step===2?'story':'hero';
-  const result=await request(action,message);
-  if(!result)return false;accept(result);setConversations(current=>({...current,[step]:[...(current[step]??[]),{role:'player' as const,text:message},{role:'narrator' as const,text:result.reply}].slice(-6)}));return true;
+ requestRef.current=text=>converse(text,true);
+ async function send(){const sent=message;if(await converse(sent)){setMessage(current=>current===sent?'':current);setChatOpen(true);}}
+ async function submitIdea(text=prompt){setPrompt(text);await converse(text||'Surprise me with an imaginative D&D-style adventure.');}
+ function updatePrompt(text:string){setPrompt(text);creation.cancel();setProposal(null);install({...draftRef.current,version:draftRef.current.version+1});}
+ async function validate(category:TraitCategory,value:string){return request('trait','',{category,value});}
+
+ function confirmProposal(){
+  if(!proposal)return;const next=applyCreatorProposal(draftRef.current,proposal);
+  if(!next){setProposal(null);creation.setError('That suggestion belongs to an earlier draft. Ask again with your current choices.');return;}
+  remember();install(next);
+  if(proposal.narrator){setConfirmed(proposal.narrator);setSpeaker('narrator');}
+  if(proposal.story)setHeroes([]);
+  setProposal(null);say(proposal.narrator?'Meet '+proposal.narrator.name+'. Your narrator is ready.':'That is part of your story now. We can keep shaping it.',!proposal.narrator);
  }
- async function preview(profile:NarratorProfile,index:number){
-  if(blocked)return;stopAudio();setSample(null);
-  const result=await request('sample','',{narrator:profile,history:auditions.current[profile.name]??[]});if(!result)return;
-  if(result.sample)auditions.current[profile.name]=[...(auditions.current[profile.name]??[]),{role:'narrator' as const,text:result.sample.slice(0,400)}].slice(-6);
-  setSource(result.source);setNotice(result.reply);setSample({index,text:result.sample??'',audio:result.audio??null});
+ function confirmNarrator(){
+  const chosen=parseNarrator(currentNarrator);if(!chosen){creation.setError('Add a name, persona, and at least one trait in each category.');return;}
+  remember();edit({narrator:chosen});setConfirmed(chosen);setSpeaker('narrator');say('Meet '+chosen.name+'. Your narrator is ready.',false);
  }
- async function next(){
-  if(blocked)return;stopAudio();creation.setError('');setNotice('');
-  if(step===0){
-   if(!narrators.length){const result=await request('narrators',narratorIntent);if(!result)return;accept(result);}
-   setStep(1);return;
-  }
-  if(step===1){if(!narrator)return;if(!story){const result=await request('story');if(!result)return;accept(result);}setStep(2);return;}
-  if(step===2){if(!parseStory(story)){creation.setError('Give your story a title, synopsis, timeline, world and at least one location.');return;}if(!heroes.length){const result=await request('heroes');if(!result)return;accept(result);}setStep(3);return;}
-  if(step===3){if(!parseHero(hero)){creation.setError('Give your hero a name, background and personality before continuing.');return;}setStep(4);return;}
-  const blueprint=parseBlueprint({narrator,story,hero});if(!blueprint){creation.setError('Review your narrator, story and hero before starting.');return;}
-  if(!options.seed.trim()){creation.setError('Give your world a seed before starting.');return;}
-  onStart(blueprint.hero.name,blueprint.hero.heroClass,{...options,aiEnabled:enabled,narrator:narratorTone(blueprint.narrator),biome:blueprint.story.biome,storyPrompt:prompt,narratorPrompt:[blueprint.narrator.persona,...blueprint.narrator.speakingStyle].join('. ').slice(0,400),characterPrompt:blueprint.hero.background,creation:blueprint},'');
+ function restoreUndo(){
+  if(!undo)return;creation.cancel();install({...undo.draft,version:draftRef.current.version+1});setConfirmed(undo.confirmed);setSpeaker(undo.speaker);setProposal(null);setUndo(null);say('Back to the previous version.');
  }
- function goBack(){if(blocked)return;stopAudio();creation.setError('');setNotice('');if(step)setStep(step-1);else onBack();}
- function editStory(patch:Partial<StoryBlueprint>){setStory(current=>current?{...current,...patch}:current);setHeroes([]);}
- function editHero(patch:Partial<HeroProfile>){setHero(current=>current?{...current,...patch}:current);}
- function newHero(){setCustomHero(true);setHero({name:'Adventurer',heroClass:'ranger',color:HERO_COLORS[4],background:`A wanderer from ${story?.world??'a faraway realm'}, ready to follow the light.`,personality:['Curious']});}
- const canContinue=step!==1&&step!==3||step===1&&!!narrator||step===3&&!!hero;
- return <main className="setup-screen guided-setup adventure-creator"><div className="setup-content">
-  <div className="setup-title"><h1>{mode==='online'?'Gather a party':'Your next adventure'}</h1><span className="setup-count">{step+1} / 5</span></div>
-  <ol className="setup-progress" aria-label="Adventure setup">{STEPS.map((label,i)=><li key={label} aria-current={step===i?'step':undefined}><button type="button" disabled={blocked||i>step} onClick={()=>{stopAudio();creation.setError('');setNotice('');setStep(i);}}><span>{i<step?<Icon name="check" size={12}/>:i+1}</span>{label}</button></li>)}</ol>
-  <section className="setup-step" aria-labelledby="creator-step-title"><h2 id="creator-step-title" className="setup-step-title" tabIndex={-1} ref={heading}>{['Every adventure starts with an idea.','Who should tell your story?','Let’s find the story.','Who belongs in this adventure?','Ready when you are.'][step]}</h2>
-   <fieldset className="creator-fields" disabled={busy||creation.pending}>
-   {step===0?<>
-    <label className="field">What kind of story would you like?<textarea aria-label="What kind of story would you like?" maxLength={400} rows={3} value={prompt} onChange={e=>{setPrompt(e.target.value);setNarrators([]);}} placeholder="A floating city, a missing dragon, and a mystery nobody wants solved…"/></label>
-    <div className="quest-prompt-tools"><QuestDictation value={prompt} onChange={value=>{setPrompt(value);setNarrators([]);}} disabled={busy||creation.pending} onBusyChange={dictationBusy}/><span>Or leave it to your narrator.</span></div>
-    <label className="field creator-narrator-prompt">Who should narrate it?<textarea rows={2} maxLength={400} value={narratorIntent} onChange={e=>{setNarratorIntent(e.target.value);setNarrators([]);}} placeholder="A sarcastic old wizard? A bubbly star explorer?"/></label>
-    <details className="creator-details"><summary>Choose narrator traits</summary>{(['personality','speakingStyle','appearance'] as const).map(category=><TraitPicker key={category} category={category} label={category==='speakingStyle'?'Speaking style':category==='personality'?'Personality':'Appearance'} values={traits[category]??[]} onChange={values=>updateNarratorTraits(category,values)} validate={validate} disabled={blocked}/>)}</details>
-    <details className="creator-details"><summary>Talk through your narrator</summary><CreatorConversation name="your guide" lines={conversations[step]??[]} onSend={converse} disabled={blocked} placeholder="I want someone warm, but with a wicked sense of humor…"/></details>
-    <div className="creator-ai"><div><strong>AI storyteller</strong><p>{enabled?(access?.unlocked?'Live drafts, conversation and character voices.':'Unlock team AI for live generation. Built-in drafts remain available.'):'Built-in drafts. Turn on AI for live generation.'}</p></div><button type="button" className="button paper compact" aria-label="AI storyteller" aria-pressed={enabled} onClick={()=>setOverrideAI(!enabled)}>{enabled?'On':'Off'}</button>{enabled&&!access?.unlocked&&onAISettings?<button className="text-button" type="button" onClick={onAISettings}>Team AI settings</button>:null}</div>
-   </>:step===1?<>
-    <p className="creator-intro">Three different voices for the same beginning. Choose your guide.</p>
-    <div className="creator-cards">{narrators.map((profile,index)=><article className="creator-card" data-selected={narrator===profile} key={profile.name}>
-     <PairedModel model={profile.model} color={profile.color} name={profile.name}/><h3>{profile.name}</h3><p className="creator-persona">{profile.persona}</p>
-     <dl><dt>Personality</dt><dd>{profile.personality.join(' · ')}</dd><dt>Speaking style</dt><dd>{profile.speakingStyle.join(' · ')}</dd><dt>Appearance</dt><dd>{profile.appearance.join(' · ')}</dd></dl>
-     <button className="text-button creator-play" type="button" onClick={()=>void preview(profile,index)}><Icon name="sound" size={15}/>{talking&&sample?.index===index?'Playing…':'Play'}<span className="sr-only"> a fresh voice sample for {profile.name}</span></button>
-     {sample?.index===index?<div className="creator-sample" role="status"><p>{sample.text}</p>{sample.audio?<audio ref={audio} autoPlay controls src={sample.audio} aria-label={`${profile.name} fresh voice sample`} onPlay={()=>setTalking(true)} onPause={()=>setTalking(false)} onEnded={()=>setTalking(false)}/>:<small>Live voice needs unlocked team AI, paid audio and remaining allowance.</small>}</div>:null}
-     <button className={`button ${narrator===profile?'primary':'paper'}`} type="button" aria-pressed={narrator===profile} onClick={()=>setNarrator(profile)}>{narrator===profile?'Selected':`Choose ${profile.name}`}{narrator===profile?<Icon name="check" size={15}/>:null}</button>
-    </article>)}</div>
-    <CreatorConversation name={name} lines={conversations[step]??[]} onSend={converse} disabled={blocked} placeholder="Make the narrator more theatrical, with a little dry wit…"/>
-   </>:step===2&&story?<>
-    <div className="creator-narrator-note"><HeroArt heroClass={narrator!.model} color={narrator!.color}/><p><strong>{name}’s story</strong>Keep it, change a detail, or take it somewhere stranger.</p></div>
-    <label className="field">Story title<input aria-label="Story title" maxLength={80} value={story.title} onChange={e=>editStory({title:e.target.value})}/></label>
-    <label className="field">Synopsis<textarea aria-label="Synopsis" rows={5} maxLength={700} value={story.synopsis} onChange={e=>editStory({synopsis:e.target.value})}/></label>
-    <div className="two-fields"><label className="field">Timeline<input aria-label="Timeline" list="creator-timelines" maxLength={80} value={story.timeline} onChange={e=>editStory({timeline:e.target.value})}/><datalist id="creator-timelines">{['An age of wandering magic','The last days of an empire','After the stars fell','A distant magical future'].map(x=><option key={x} value={x}/>)}</datalist></label><label className="field">World or planet<input aria-label="World or planet" list="creator-worlds" maxLength={80} value={story.world} onChange={e=>editStory({world:e.target.value})}/><datalist id="creator-worlds">{['Asterfall','A moon of floating islands','The realm beneath the sea','A living clockwork world'].map(x=><option key={x} value={x}/>)}</datalist></label></div>
-    <fieldset className="creator-locations"><legend>Key locations</legend>{story.locations.map((location,i)=><div key={i}><input aria-label={`Location ${i+1}`} maxLength={60} value={location} onChange={e=>editStory({locations:story.locations.map((old,j)=>i===j?e.target.value:old)})}/>{story.locations.length>1?<button type="button" className="icon-button" aria-label={`Remove location ${i+1}`} onClick={()=>editStory({locations:story.locations.filter((_,j)=>i!==j)})}><Icon name="close" size={15}/></button>:null}</div>)}{story.locations.length<4?<button type="button" className="text-button" onClick={()=>editStory({locations:[...story.locations,'New location']})}><Icon name="plus" size={14}/>Add a location</button>:null}</fieldset>
-    <details className="creator-details"><summary>Landscape</summary><label className="field">Terrain<select aria-label="Terrain" value={story.biome} onChange={e=>editStory({biome:e.target.value as StoryBlueprint['biome']})}><option value="woodland">Woodland</option><option value="ruins">Ruins</option><option value="coast">Coast</option></select></label></details>
-    <CreatorConversation name={name} lines={conversations[step]??[]} onSend={converse} disabled={blocked} placeholder="Set it after the moon cracked, and make the observatory a moving island…"/>
-   </>:step===3?<>
-    <p className="creator-intro">A few heroes with a reason to be in {story?.world}. Pick one, or make your own.</p>
-    <div className="creator-cards">{heroes.map(profile=><article className="creator-card" data-selected={!customHero&&hero===profile} key={profile.name}><PairedModel model={profile.heroClass} color={profile.color} name={profile.name}/><h3>{profile.name}</h3><span className="creator-class">{CLASS_INFO[profile.heroClass].name}</span><p className="creator-persona">{profile.background}</p><p className="creator-trait-line">{profile.personality.join(' · ')}</p><button className={`button ${!customHero&&hero===profile?'primary':'paper'}`} type="button" aria-pressed={!customHero&&hero===profile} onClick={()=>{setHero(profile);setCustomHero(false);}}>{!customHero&&hero===profile?'Selected':`Choose ${profile.name}`}</button></article>)}</div>
-    {!customHero?<button className="button paper creator-custom-button" type="button" onClick={()=>{if(hero)setCustomHero(true);else newHero();}}><Icon name="plus" size={15}/>{hero?'Customize your character':'Create my own character'}</button>:null}
-    {customHero&&hero?<section className="creator-custom-hero"><h3>Your character</h3><div className="two-fields"><label className="field">Hero name<input aria-label="Hero name" maxLength={24} value={hero.name} onChange={e=>editHero({name:e.target.value})}/></label><label className="field">Class<select aria-label="Class" value={hero.heroClass} onChange={e=>editHero({heroClass:e.target.value as HeroClass})}>{Object.entries(CLASS_INFO).map(([key,value])=><option key={key} value={key}>{value.name}</option>)}</select></label></div><p className="creator-intro">{CLASS_INFO[hero.heroClass].description} · {CLASS_INFO[hero.heroClass].ability}</p><label className="field">Background<textarea aria-label="Background" rows={3} maxLength={240} value={hero.background} onChange={e=>editHero({background:e.target.value})}/></label><label className="field">Palette<select aria-label="Palette" value={hero.color} onChange={e=>editHero({color:e.target.value})}>{HERO_COLORS.map((color,i)=><option key={color} value={color}>{['Coral','Sky','Gold','Lilac','Sage','Rose','Teal','Sand','Lime','Slate'][i]}</option>)}</select></label><TraitPicker category="personality" label="Personality" values={hero.personality} onChange={values=>{setHeroTraits(current=>({...current,personality:values}));editHero({personality:values});}} validate={validate} disabled={blocked}/><TraitPicker category="background" label="Background" values={heroTraits.background??[]} onChange={values=>{setHeroTraits(current=>({...current,background:values}));if(values.length)editHero({background:`A ${values.join(', ').toLowerCase()} from ${story?.world}.`});}} validate={validate} disabled={blocked}/></section>:null}
-    <CreatorConversation name={name} lines={conversations[step]??[]} onSend={converse} disabled={blocked} placeholder="Create a soft-hearted knight who used to repair the city’s clocks…"/>
-   </>:step===4&&hero&&story&&narrator?<>
-    <div className="creator-ready"><HeroArt heroClass={hero.heroClass} color={hero.color}/><div><h3>{story.title}</h3><p>{hero.name}, {CLASS_INFO[hero.heroClass].name.toLowerCase()} · Narrated by {narrator.name}</p></div></div><p className="creator-synopsis">{story.synopsis}</p>
-    <div className="two-fields"><label className="field">Adventure length<select aria-label="Adventure length" value={options.duration} onChange={e=>setOptions({...options,duration:e.target.value as GameOptions['duration']})}><option value="short">Short · 1 chapter</option><option value="standard">Standard · 3 chapters</option><option value="long">Long · 5 chapters</option></select></label><label className="field">Companions<select aria-label="Companions" value={options.companions} onChange={e=>setOptions({...options,companions:Number(e.target.value)})}><option value={0}>Just me</option><option value={1}>1 companion</option><option value={2}>2 companions</option><option value={3}>3 companions</option></select></label></div>
-    <label className="field">Rules<select aria-label="Rules" value={options.rules} onChange={e=>setOptions({...options,rules:e.target.value as GameOptions['rules']})}><option value="simple">Streamlined · recommended</option><option value="classic">Classic · SRD subset</option></select></label><p className="creator-intro">{options.rules==='simple'?'Forgiving recovery and straightforward actions.':'Initiative, armor checks and death saves. A D&D-style subset.'}</p>
-    <details className="creator-details"><summary>World seed</summary><label className="field">Seed<input aria-label="Seed" value={options.seed} maxLength={64} onChange={e=>setOptions({...options,seed:e.target.value})}/></label></details><p className="setup-next-note">{mode==='online'?'Next, invite your party and begin together.':'Move, take an action, then end your turn. Your narrator can help along the way.'}</p>
-   </>:null}
-   </fieldset>
-  </section>
-  <div aria-live="polite" role="status" className="creator-status">{creation.pending?<p><Icon name="spark" size={16}/>Creating your next page… <button type="button" className="text-button" onClick={creation.cancel}>Cancel</button></p>:notice?<p>{notice}<small>{source==='openai'?'AI generated':'Built-in draft'}</small></p>:null}</div>
-  {creation.error?<div className="creator-error" role="alert"><p>{creation.error}</p>{enabled?<button type="button" className="text-button" onClick={()=>{setOverrideAI(false);creation.setError('');setNotice('Built-in drafts are on. Your choices are still here.');setSource('fixture');}}>Use built-in drafts</button>:null}</div>:null}
-  {dictating?<p className="setting-note" role="status">Finish or discard your recording before continuing.</p>:null}
-  <div className="setup-footer"><button className="button paper" type="button" disabled={blocked} onClick={goBack}><Icon name="back" size={17}/>Back</button><button className="button primary" type="button" disabled={blocked||!canContinue} onClick={()=>void next()}>{busy?'Preparing…':step===0?'Meet your narrators':step===4?mode==='online'?'Create party':'Start adventure':'Continue'}<Icon name="arrow" size={17}/></button></div>
- </div></main>;
+ function keepAether(){remember();edit({narrator:structuredClone(AETHER)});setConfirmed(structuredClone(AETHER));setSpeaker('guide');say('I will be here, from the first spark to the last page.');}
+ async function continueToHero(){
+  creation.setError('');
+  if(proposal){creation.setError('Confirm or dismiss the suggestion before continuing.');return;}
+  if(narratorDirty){setFocus('narrator');creation.setError('Confirm your narrator before continuing.');return;}
+  if(!parseStory(draft.story)){setFocus('story');creation.setError('Create a story first, or ask your guide to surprise you.');return;}
+  if(!heroes.length){const result=await request('heroes');if(!result)return;setHeroes(result.heroes??[]);setSource(result.source);say(result.reply);}
+  setStage(1);
+ }
+ function toBegin(){if(proposal){creation.setError('Confirm or dismiss the suggestion first.');return;}if(!parseHero(draft.hero)){creation.setError('Choose a hero, or finish their name, background and personality.');return;}setStage(2);creation.setError('');}
+ function start(){
+  const blueprint=parseBlueprint({narrator:confirmed,story:draft.story,hero:draft.hero});if(!blueprint||narratorDirty||proposal){creation.setError('Finish your narrator, story and hero before beginning.');return;}
+  if(!options.seed.trim()){creation.setError('Give your world a seed.');return;}
+  live.disconnect();
+  onStart(blueprint.hero.name,blueprint.hero.heroClass,{...options,aiEnabled:enabled,narrator:narratorTone(confirmed),biome:blueprint.story.biome,storyPrompt:prompt,narratorPrompt:[confirmed.persona,...confirmed.speakingStyle].join('. ').slice(0,400),characterPrompt:blueprint.hero.background,creation:blueprint},'');
+ }
+ function chooseFocus(next:CreatorFocus){creation.cancel();setFocus(next);setStage(0);creation.setError('');}
+ function openChat(){setChatOpen(true);messageInput.current?.focus();}
+ function enableVoice(){live.setSpeakerMuted(!live.speakerMuted);if(live.speakerMuted)void live.speak(asideText);}
+ const shownAvatar=proposal?.narrator??(focus==='narrator'&&stage===0?currentNarrator:activeNarrator);
+ const liveActive=live.status==='connecting'||live.status==='listening'||live.status==='speaking';
+
+ return <main className="living-creator" aria-label="Create an adventure">
+  <header className="creator-heading"><button type="button" className="creator-back" aria-label="Back to adventures" disabled={pending} onClick={()=>{live.disconnect();onBack();}}><ArrowLeft size={20}/></button><h1>Create an adventure</h1>{restored?<span className="creator-saved">Draft restored</span>:null}</header>
+  <nav className="creator-steps" aria-label="Adventure setup">
+   {['Imagine','Your hero','Begin'].map((label,i)=><button key={label} type="button" aria-current={stage===i?'step':undefined} disabled={pending||i>stage} onClick={()=>{setStage(i);creation.setError('');}}>{i<stage?<Check size={14}/>:null}{label}</button>)}
+  </nav>
+  <div className="creator-workspace">
+   <section className="creator-editor" aria-label={stage===0?'Story and narrator':stage===1?'Your hero':'Game settings'}>
+    {stage===0?<><div className="creator-focus" role="tablist" aria-label="Shape your adventure">{(['story','narrator'] as const).map(tab=><button role="tab" type="button" id={'creator-tab-'+tab} aria-controls={'creator-panel-'+tab} aria-selected={focus===tab} tabIndex={focus===tab?0:-1} key={tab} onClick={()=>chooseFocus(tab)} onKeyDown={e=>{if(e.key==='ArrowLeft'||e.key==='ArrowRight'){e.preventDefault();const next=tab==='story'?'narrator':'story';chooseFocus(next);document.getElementById('creator-tab-'+next)?.focus();}}}>{cap(tab)}</button>)}</div>
+    <div role="tabpanel" id={'creator-panel-'+focus} aria-labelledby={'creator-tab-'+focus}>
+    {focus==='story'?<>
+     <h2 ref={heading} tabIndex={-1}>Where shall we begin?</h2>
+     <form className="creator-idea" onSubmit={e=>{e.preventDefault();void submitIdea();}}><label className="sr-only" htmlFor="story-idea">Your story idea</label><textarea id="story-idea" rows={3} maxLength={400} value={prompt} onChange={e=>updatePrompt(e.target.value)} placeholder="A floating city. A missing dragon. A secret worth keeping."/><button className="creator-send" type="submit" disabled={pending} aria-label="Shape this story"><ArrowRight size={20}/></button></form>
+     <div className="creator-suggestions"><button disabled={pending} onClick={()=>{setPrompt('A city above the clouds, where a dragon has vanished.');void submitIdea('A city above the clouds, where a dragon has vanished.');}}>A city above the clouds</button><button disabled={pending} onClick={()=>{setPrompt('A forest that remembers every traveler, and has forgotten my name.');void submitIdea('A forest that remembers every traveler, and has forgotten my name.');}}>A forest that remembers</button><button disabled={pending} onClick={()=>void submitIdea('Surprise me with an imaginative D&D-style adventure.')}><Sparkles size={14}/>Surprise me</button></div>
+     {story?<div className="creator-story-draft"><div className="creator-section-heading"><h3>Your story</h3>{proposal?.story?<span>Suggested draft</span>:<span>Editable</span>}</div>
+      <label className="creator-field">Title<input aria-label="Story title" maxLength={80} value={story.title} onChange={e=>editStory({title:e.target.value})}/></label>
+      <label className="creator-field">Synopsis<textarea aria-label="Synopsis" rows={3} maxLength={700} value={story.synopsis} onChange={e=>editStory({synopsis:e.target.value})}/></label>
+      <div className="creator-detail-grid"><label className="creator-field">World<input aria-label="World or planet" maxLength={80} value={story.world} onChange={e=>editStory({world:e.target.value})}/></label><label className="creator-field">Era<input aria-label="Timeline" maxLength={80} value={story.timeline} onChange={e=>editStory({timeline:e.target.value})}/></label></div>
+      <label className="creator-field">Places<input aria-label="Key locations" maxLength={240} value={story.locations.join(', ')} onChange={e=>editStory({locations:e.target.value.split(',').slice(0,4).map(s=>s.trimStart().slice(0,60))})}/></label>
+     </div>:<div className="creator-empty"><span className="creator-empty-line"/><p>Start with a place, a mystery, or a feeling.</p><p>Your guide can help with the rest.</p></div>}
+    </>:<>
+     <div className="creator-narrator-title"><h2 ref={heading} tabIndex={-1}>Give your guide a character.</h2><button className="creator-link" onClick={keepAether} disabled={pending}>Reset to Aether</button></div>
+     <div className="creator-narrator-fields"><div className="creator-detail-grid"><label className="creator-field">Name<input aria-label="Narrator name" maxLength={28} value={narrator.name} onChange={e=>editNarrator({name:e.target.value})}/></label><label className="creator-field">Voice<select aria-label="Narrator voice" value={narrator.voice??'vesper'} onChange={e=>editNarrator({voice:e.target.value as NarratorProfile['voice']})}>{NARRATOR_VOICES.map(v=><option key={v} value={v}>{VOICE_NAMES[v]}</option>)}</select></label></div>
+      <label className="creator-field">Persona<textarea aria-label="Narrator persona" rows={2} maxLength={240} value={narrator.persona} onChange={e=>editNarrator({persona:e.target.value})}/></label>
+      <TraitPicker category="personality" label="Personality" values={narrator.personality} onChange={values=>{editNarrator({personality:values});say(values.includes('Sarcastic')?'A little wit, with the kindness left in.':values.includes('Gentle')?'Gentle it is. There is room for quiet courage.':'Those traits will shape how your narrator sees the world.',true);}} validate={validate} disabled={pending}/>
+      <TraitPicker category="speakingStyle" label="Speaking style" values={narrator.speakingStyle} onChange={values=>{editNarrator({speakingStyle:values});say('The delivery changes when you confirm. The story stays yours.',true);}} validate={validate} disabled={pending}/>
+      <div className="creator-mobile-preview"><NarratorAvatar profile={narrator} compact speaking={live.speaking}/><p>Changes appear here.<br/>Confirm to make them yours.</p></div><fieldset className="creator-choice"><legend>Form</legend><div>{NARRATOR_FORMS.map(form=><button type="button" key={form} aria-pressed={(narrator.avatar?.form??'spirit')===form} onClick={()=>editNarrator({avatar:{form,accessory:narrator.avatar?.accessory??'none'}})}>{cap(form)}</button>)}</div></fieldset>
+      <div className="creator-detail-grid"><label className="creator-field">Accessory<select aria-label="Narrator accessory" value={narrator.avatar?.accessory??'hood'} onChange={e=>editNarrator({avatar:{form:narrator.avatar?.form??'spirit',accessory:e.target.value as 'none'|'glasses'|'crown'|'hood'}})}>{NARRATOR_ACCESSORIES.map(a=><option key={a} value={a}>{cap(a)}</option>)}</select></label><label className="creator-field">Aura<select aria-label="Narrator aura" value={narrator.color} onChange={e=>editNarrator({color:e.target.value})}>{HERO_COLORS.map((color,i)=><option key={color} value={color}>{['Coral','Sky','Gold','Lilac','Sage','Rose','Teal','Sand','Lime','Slate'][i]}</option>)}</select></label></div>
+      <details className="creator-details"><summary>More appearance traits<ChevronDown size={14}/></summary><TraitPicker category="appearance" label="Appearance" values={narrator.appearance} onChange={values=>editNarrator({appearance:values})} validate={validate} disabled={pending}/></details>
+     </div>
+     {!proposal&&narratorDirty?<div className="creator-confirm"><div><strong>Ready to become {narrator.name||'your narrator'}?</strong><p>{narrator.personality.join(' · ')} · {narrator.speakingStyle.join(' · ')}</p></div><button className="creator-primary" disabled={pending} onClick={confirmNarrator}>Confirm narrator<Check size={16}/></button></div>:null}
+
+    </>}
+    </div></>:stage===1?<>
+     <h2 ref={heading} tabIndex={-1}>Someone with a story to tell.</h2><p className="creator-intro">Choose a hero, or make one your own.</p>
+     <div className="creator-heroes">{heroes.map((profile,i)=><button key={i} className="creator-hero-option" aria-pressed={hero?.name===profile.name&&hero?.heroClass===profile.heroClass} onClick={()=>edit({hero:profile})}><HeroArt heroClass={profile.heroClass} color={profile.color}/><strong>{profile.name}</strong><span>{CLASS_INFO[profile.heroClass].name}</span><p>{profile.background}</p>{hero?.name===profile.name?<Check size={16} className="creator-hero-check"/>:null}</button>)}</div>
+     {!hero?<button className="creator-link" onClick={()=>edit({hero:heroSeed(story?.world??'Asterfall')})}>Create my own hero<ArrowRight size={15}/></button>:<div className="creator-hero-editor"><div className="creator-detail-grid"><label className="creator-field">Hero name<input aria-label="Hero name" maxLength={24} value={hero.name} onChange={e=>editHero({name:e.target.value})}/></label><label className="creator-field">Class<select aria-label="Class" value={hero.heroClass} onChange={e=>editHero({heroClass:e.target.value as HeroClass})}>{Object.entries(CLASS_INFO).map(([key,value])=><option key={key} value={key}>{value.name}</option>)}</select></label></div><p className="creator-class-description">{CLASS_INFO[hero.heroClass].description} · {CLASS_INFO[hero.heroClass].ability}</p><label className="creator-field">Background<textarea aria-label="Background" rows={3} maxLength={240} value={hero.background} onChange={e=>editHero({background:e.target.value})}/></label><TraitPicker category="personality" label="Personality" values={hero.personality} onChange={values=>editHero({personality:values})} validate={validate} disabled={pending}/><label className="creator-field">Palette<select aria-label="Hero palette" value={hero.color} onChange={e=>editHero({color:e.target.value})}>{HERO_COLORS.map((c,i)=><option value={c} key={c}>{['Coral','Sky','Gold','Lilac','Sage','Rose','Teal','Sand','Lime','Slate'][i]}</option>)}</select></label></div>}
+    </>:<>
+     <h2 ref={heading} tabIndex={-1}>The first page is yours.</h2>
+     <div className="creator-review"><HeroArt heroClass={hero?.heroClass} color={hero?.color}/><div><h3>{story?.title}</h3><p>{hero?.name} · Narrated by {confirmed.name}</p></div></div><p className="creator-review-synopsis">{story?.synopsis}</p>
+     <div className="creator-detail-grid"><label className="creator-field">Adventure length<select aria-label="Adventure length" value={options.duration} onChange={e=>setOptions({...options,duration:e.target.value as GameOptions['duration']})}><option value="short">Short · 1 chapter</option><option value="standard">Standard · 3 chapters</option><option value="long">Long · 5 chapters</option></select></label><label className="creator-field">Companions<select aria-label="Companions" value={options.companions} onChange={e=>setOptions({...options,companions:Number(e.target.value)})}>{[0,1,2,3].map(n=><option key={n} value={n}>{n?n+' companion'+(n===1?'':'s'):'Just me'}</option>)}</select></label></div>
+     <label className="creator-field">Rules<select aria-label="Rules" value={options.rules} onChange={e=>setOptions({...options,rules:e.target.value as GameOptions['rules']})}><option value="simple">Streamlined · recommended</option><option value="classic">Classic · SRD subset</option></select></label>
+     <details className="creator-details"><summary>World settings<ChevronDown size={14}/></summary><label className="creator-field">Terrain<select aria-label="Terrain" value={story?.biome} onChange={e=>editStory({biome:e.target.value as StoryBlueprint['biome']})}><option value="woodland">Woodland</option><option value="ruins">Ruins</option><option value="coast">Coast</option></select></label><label className="creator-field">World seed<input aria-label="Seed" maxLength={64} value={options.seed} onChange={e=>setOptions({...options,seed:e.target.value})}/></label></details>
+     <p className="creator-intro">{mode==='online'?'Invite your party at camp, then begin together.':'Move, take an action, then end your turn. Your narrator will help along the way.'}</p>
+    </>}
+    {proposal?<section className="creator-confirm" aria-label="Suggested changes"><div><strong>{proposal.narrator?'Ready to become '+proposal.narrator.name+'?':proposal.hero?'Meet '+proposal.hero.name+'.':'Shall we tell this story?'}</strong><p>{proposal.narrator?proposal.narrator.personality.join(' · ')+' · '+proposal.narrator.speakingStyle.join(' · '):proposal.hero?proposal.hero.background:proposal.story?.title}</p></div><div className="creator-proposal-details">{proposal.narrator?<p><strong>Narrator · {proposal.narrator.name}</strong>{proposal.narrator.persona}</p>:null}{proposal.story?<p><strong>Story · {proposal.story.title}</strong>{proposal.story.synopsis}<br/>{proposal.story.world} · {proposal.story.timeline} · {proposal.story.locations.join(", ")}</p>:null}{proposal.hero?<p><strong>Hero · {proposal.hero.name}</strong>{CLASS_INFO[proposal.hero.heroClass].name} · {proposal.hero.background}</p>:null}</div><div className="creator-confirm-actions"><button className="creator-primary" disabled={pending} onClick={confirmProposal}>{[proposal.narrator,proposal.story,proposal.hero].filter(Boolean).length>1?'Apply these changes':proposal.narrator?'Confirm narrator':proposal.hero?'Choose this hero':'Use this story'}<Check size={16}/></button><button className="creator-link" onClick={()=>setProposal(null)}>Keep exploring</button></div></section>:null}
+    {creation.pending?<p className="creator-progress" role="status"><span/>Shaping your next page…<button className="creator-link" onClick={creation.cancel}>Cancel</button></p>:null}
+    {creation.error?<div className="creator-error" role="alert"><p>{creation.error}</p>{enabled?<button className="creator-link" onClick={()=>{setOverrideAI(false);creation.setError('');say('Built-in drafts are on. Your choices are still here.');}}>Use built-in drafts</button>:null}</div>:null}
+    <footer className="creator-editor-footer">{undo?<button className="creator-link" onClick={restoreUndo}><Undo2 size={14}/>Undo</button>:<span/>}<button className="creator-primary" disabled={pending} onClick={()=>stage===0?void continueToHero():stage===1?toBegin():start()}>{busy?'Preparing…':stage===0?'Continue to your hero':stage===1?'Choose game settings':mode==='online'?'Create party':'Begin adventure'}<ArrowRight size={17}/></button></footer>
+   </section>
+   <aside className={'creator-companion'+(chatOpen?' is-open':'')} aria-label="Narrator companion">
+    <div className="creator-companion-portrait"><NarratorAvatar profile={shownAvatar} speaking={live.speaking} pending={creation.pending} onClick={openChat}/><div className="creator-companion-identity"><h2>{activeNarrator.name}</h2><button className="creator-link creator-chat-launch" onClick={openChat}>Message</button><p>{shownAvatar!==activeNarrator&&shownAvatar.name!==activeNarrator.name?'Previewing '+shownAvatar.name:speaker==='guide'?'Your guide':'Your narrator'}</p></div></div>
+    <div className="creator-speech" aria-live="polite"><p>{asideText}</p></div>
+    <div className="creator-audio"><button className="creator-audio-button" type="button" onClick={enableVoice} aria-label={live.speakerMuted?'Unmute narrator':'Mute narrator'} aria-pressed={!live.speakerMuted} disabled={!voiceAvailable}>{live.speakerMuted?<VolumeX size={20}/>:<Volume2 size={20}/>}<span>{live.speakerMuted?'Voice off':'Voice on'}</span></button><button className="creator-audio-button" type="button" onClick={()=>live.setMicMuted(!live.micMuted)} aria-label={live.micMuted?'Unmute microphone':'Mute microphone'} aria-pressed={!live.micMuted} disabled={!voiceAvailable}>{live.micMuted?<MicOff size={20}/>:<Mic size={20}/>}<span>{live.micMuted?'Mic off':'Mic on'}</span></button><div className="creator-call-status">{liveActive?<button className="creator-link" onClick={live.disconnect}><PhoneOff size={14}/>End call</button>:<button className="creator-link" disabled={!voiceAvailable} onClick={()=>{live.setSpeakerMuted(false);live.setMicMuted(false);}}>Speak with {activeNarrator.name}</button>}<small>{liveActive?live.status==='connecting'?'Connecting…':live.micMuted?'Listening to your narrator':'Live conversation':live.status==='paused'?'Paused to save your allowance':'Connects only when needed'}</small></div></div>
+    {live.error?<p className="creator-voice-error" role="status">{live.error}</p>:null}
+    {!voiceAvailable?<div className="creator-voice-note"><span>Voice needs team AI.</span>{onAISettings?<button className="creator-link" onClick={()=>{setOverrideAI(true);onAISettings();}}>{enabled?'Open AI settings':'Enable AI'}</button>:null}</div>:null}
+    {JSON.stringify(confirmed)!==JSON.stringify(AETHER)?<div className="creator-speaker-choice" aria-label="Conversation partner"><button aria-pressed={speaker==='narrator'} onClick={()=>setSpeaker('narrator')}>{confirmed.name}</button><button aria-pressed={speaker==='guide'} onClick={()=>setSpeaker('guide')}>Aether</button></div>:null}
+    <div className="creator-chat">
+     {lines.length?<details className="creator-history"><summary>Conversation<ChevronDown size={14}/></summary><div role="log">{lines.slice(-6).map((line,i)=><p key={i} data-speaker={line.role}><strong>{line.role==='player'?'You':line.name??activeNarrator.name}</strong>{line.text}</p>)}</div></details>:null}
+     {live.transcript?<p className="creator-live-transcript">{typeof live.transcript==='string'?live.transcript:''}</p>:null}
+     <form className="creator-composer" onSubmit={e=>{e.preventDefault();void send();}}><label htmlFor="narrator-message" className="sr-only">Message your narrator</label><textarea ref={messageInput} id="narrator-message" rows={2} maxLength={400} value={message} onChange={e=>setMessage(e.target.value)} placeholder={'Ask '+activeNarrator.name+'…'} onKeyDown={e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();void send();}}}/><button type="submit" className="creator-send" disabled={pending||!message.trim()} aria-label="Send message"><Send size={18}/></button></form>
+    </div>
+   </aside>
+  </div>
+  <footer className="creator-access"><label><input type="checkbox" checked={enabled} onChange={e=>setOverrideAI(e.target.checked)}/><span>AI storyteller</span></label><span>{enabled?access?.unlocked?'Connected':'Built-in drafts until unlocked':'Built-in drafts'}{source==='openai'?' · AI generated':''}</span>{enabled&&!access?.unlocked&&onAISettings?<button className="creator-link" onClick={onAISettings}>Unlock team AI<ArrowRight size={13}/></button>:null}<small>{stored?"Draft saved on this device":"Draft stays open while you create"}</small></footer>
+ </main>;
 }

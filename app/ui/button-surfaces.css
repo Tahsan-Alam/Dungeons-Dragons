@@ -27,7 +27,7 @@ html:root[data-color-mode='dark'][data-theme]{
 html:root[data-color-mode][data-theme='pixel']{--button-radius:6px}
 
 /* Insets form the rim without changing the measured size or covering focus outlines. */
-html:root[data-color-mode][data-theme] body :is(button[class],button:not([class]),.game-row-more>summary):not(:where(.drawer-backdrop,.replay-scrim,.panel-edge)){
+html:root[data-color-mode][data-theme] body :is(button:not(:where(.living-creator *))[class],button:not(:where(.living-creator *)):not([class]),.game-row-more>summary):not(:where(.drawer-backdrop,.replay-scrim,.panel-edge)){
  --button-fill:var(--surface-raised);
  --button-rim:var(--line);
  --button-highlight:var(--button-top);
@@ -42,7 +42,7 @@ html:root[data-color-mode][data-theme] body :is(button[class],button:not([class]
 }
 
 /* Quiet actions retain their hierarchy; their surface appears on interaction. */
-html:root[data-color-mode][data-theme] body :is(button.text-button,button.brand,button.leave-button,button.settings-link,button.hero-inspect,.game-options button,.library-tabs button,.settings-navigation>button,.app-main-nav button,button.header-tool,.menu-links button,.binding-footer button){
+html:root[data-color-mode][data-theme] body :is(button:not(:where(.living-creator *)).text-button,button:not(:where(.living-creator *)).brand,button:not(:where(.living-creator *)).leave-button,button:not(:where(.living-creator *)).settings-link,button:not(:where(.living-creator *)).hero-inspect,.game-options button:not(:where(.living-creator *)),.library-tabs button:not(:where(.living-creator *)),.settings-navigation>button:not(:where(.living-creator *)),.app-main-nav button:not(:where(.living-creator *)),button:not(:where(.living-creator *)).header-tool,.menu-links button:not(:where(.living-creator *)),.binding-footer button:not(:where(.living-creator *))){
  --button-fill:transparent;
  --button-highlight:transparent;
  --button-rim:transparent;
@@ -50,14 +50,14 @@ html:root[data-color-mode][data-theme] body :is(button.text-button,button.brand,
  box-shadow:inset 0 0 0 1px transparent;
 }
 
-html:root[data-color-mode][data-theme] body button.button.primary{
+html:root[data-color-mode][data-theme] body button:not(:where(.living-creator *)).button:not(:where(.living-creator *)).primary{
  --button-fill:var(--accent);
  --button-rim:color-mix(in srgb,var(--accent) 85%,#000);
  --button-highlight:#ffffff08;
  color:var(--accent-ink);
  box-shadow:inset 0 1px 0 #ffffff38,inset 0 0 0 1px var(--button-rim),var(--button-drop);
 }
-html:root[data-color-mode][data-theme] body button.button.danger{
+html:root[data-color-mode][data-theme] body button:not(:where(.living-creator *)).button:not(:where(.living-creator *)).danger{
  --button-fill:var(--danger-fill);
  --button-rim:color-mix(in srgb,var(--danger-fill) 85%,#000);
  --button-highlight:#ffffff08;
@@ -65,14 +65,14 @@ html:root[data-color-mode][data-theme] body button.button.danger{
 }
 
 /* A nearby objective remains noticeable without competing with the primary turn action. */
-html:root[data-color-mode][data-theme] body button.action-button.quest-action{
+html:root[data-color-mode][data-theme] body button:not(:where(.living-creator *)).action-button.quest-action{
  --button-fill:var(--accent-soft);
  --button-rim:color-mix(in srgb,var(--accent) 70%,var(--line));
  color:var(--ink);
 }
 
 /* Selected states remain inside their hit boxes, including tightly packed choices. */
-html:root[data-color-mode][data-theme] body :is(button[aria-pressed='true'],button[aria-selected='true'],button.chosen,button.class-option.selected,button.party-member.active,button.library-pin.is-pinned,.app-main-nav button.active){
+html:root[data-color-mode][data-theme] body :is(button:not(:where(.living-creator *))[aria-pressed='true'],button:not(:where(.living-creator *))[aria-selected='true'],button:not(:where(.living-creator *)).chosen,button:not(:where(.living-creator *)).class-option.selected,button:not(:where(.living-creator *)).party-member.active,button:not(:where(.living-creator *)).library-pin.is-pinned,.app-main-nav button:not(:where(.living-creator *)).active){
  --button-fill:var(--accent-soft);
  --button-rim:color-mix(in srgb,var(--accent) 70%,var(--line));
  --button-highlight:var(--button-top);
@@ -91,7 +91,7 @@ html:root[data-color-mode][data-theme] body :is(.theme-toggle,.color-mode-toggle
  background-image:none;
  box-shadow:inset 0 0 0 1px transparent;
 }
-html:root[data-color-mode][data-theme] body :is(.theme-toggle,.color-mode-toggle,.segmented) :is(button[aria-pressed='true'],button.active){
+html:root[data-color-mode][data-theme] body :is(.theme-toggle,.color-mode-toggle,.segmented) :is(button:not(:where(.living-creator *))[aria-pressed='true'],button:not(:where(.living-creator *)).active){
  --button-fill:var(--surface-raised);
  --button-rim:var(--line);
  background-color:var(--button-fill);
@@ -99,12 +99,12 @@ html:root[data-color-mode][data-theme] body :is(.theme-toggle,.color-mode-toggle
  box-shadow:inset 0 1px 0 var(--button-edge),inset 0 0 0 1px var(--button-rim);
  color:var(--ink);
 }
-html:root[data-color-mode][data-theme] body .binding-slot button.binding-key{border-radius:calc(var(--button-radius) + 1px) 0 0 calc(var(--button-radius) + 1px);box-shadow:inset 0 1px 0 var(--button-edge)}
-html:root[data-color-mode][data-theme] body .binding-slot button.binding-clear{border-radius:0 calc(var(--button-radius) + 1px) calc(var(--button-radius) + 1px) 0;box-shadow:inset 0 1px 0 var(--button-edge),inset 1px 0 0 var(--line)}
-html:root[data-color-mode][data-theme] body button.binding-key.listening{--button-fill:var(--accent);--button-highlight:#ffffff08;color:var(--accent-ink)}
+html:root[data-color-mode][data-theme] body .binding-slot button:not(:where(.living-creator *)).binding-key{border-radius:calc(var(--button-radius) + 1px) 0 0 calc(var(--button-radius) + 1px);box-shadow:inset 0 1px 0 var(--button-edge)}
+html:root[data-color-mode][data-theme] body .binding-slot button:not(:where(.living-creator *)).binding-clear{border-radius:0 calc(var(--button-radius) + 1px) calc(var(--button-radius) + 1px) 0;box-shadow:inset 0 1px 0 var(--button-edge),inset 1px 0 0 var(--line)}
+html:root[data-color-mode][data-theme] body button:not(:where(.living-creator *)).binding-key.listening{--button-fill:var(--accent);--button-highlight:#ffffff08;color:var(--accent-ink)}
 
 @media(hover:hover){
- html:root[data-color-mode][data-theme] body :is(button[class],button:not([class]),.game-row-more>summary):not(:where(.drawer-backdrop,.replay-scrim,.panel-edge)):hover:not(:disabled){
+ html:root[data-color-mode][data-theme] body :is(button:not(:where(.living-creator *))[class],button:not(:where(.living-creator *)):not([class]),.game-row-more>summary):not(:where(.drawer-backdrop,.replay-scrim,.panel-edge)):hover:not(:disabled){
   --button-fill:var(--surface-raised);
   --button-rim:var(--line-strong);
   background-color:var(--button-fill);
@@ -113,20 +113,20 @@ html:root[data-color-mode][data-theme] body button.binding-key.listening{--butto
   transform:translateY(-1px);
   filter:none;
  }
- html:root[data-color-mode][data-theme] body button.action-button.quest-action:hover:not(:disabled){--button-fill:color-mix(in srgb,var(--accent-soft) 88%,var(--accent));--button-rim:var(--accent)}
- html:root[data-color-mode][data-theme] body button.button.primary:hover:not(:disabled){--button-fill:var(--accent-hover);--button-rim:color-mix(in srgb,var(--accent-hover) 85%,#000);color:var(--accent-ink)}
- html:root[data-color-mode][data-theme] body button.button.danger:hover:not(:disabled){--button-fill:color-mix(in srgb,var(--danger-fill) 94%,#000);--button-rim:var(--danger-fill);color:#fff}
- html:root[data-color-mode][data-theme] body :is(button[aria-pressed='true'],button[aria-selected='true'],button.chosen,button.class-option.selected,button.party-member.active,button.library-pin.is-pinned,.app-main-nav button.active):hover:not(:disabled){--button-fill:var(--accent-soft);--button-rim:var(--accent);box-shadow:inset 0 1px 0 var(--button-edge),inset 0 0 0 1px var(--button-rim)}
- html:root[data-color-mode][data-theme] body :is(.theme-toggle,.color-mode-toggle,.segmented) button:hover:not(:disabled){--button-fill:var(--surface-raised);--button-rim:var(--line);box-shadow:inset 0 1px 0 var(--button-edge),inset 0 0 0 1px var(--button-rim)}
- html:root[data-color-mode][data-theme] body .binding-slot button:hover:not(:disabled){transform:none}
- html:root[data-color-mode][data-theme] body .binding-slot button.binding-key.listening:hover:not(:disabled){--button-fill:var(--accent);--button-rim:var(--accent);--button-highlight:#ffffff08;color:var(--accent-ink)}
+ html:root[data-color-mode][data-theme] body button:not(:where(.living-creator *)).action-button.quest-action:hover:not(:disabled){--button-fill:color-mix(in srgb,var(--accent-soft) 88%,var(--accent));--button-rim:var(--accent)}
+ html:root[data-color-mode][data-theme] body button:not(:where(.living-creator *)).button:not(:where(.living-creator *)).primary:hover:not(:disabled){--button-fill:var(--accent-hover);--button-rim:color-mix(in srgb,var(--accent-hover) 85%,#000);color:var(--accent-ink)}
+ html:root[data-color-mode][data-theme] body button:not(:where(.living-creator *)).button:not(:where(.living-creator *)).danger:hover:not(:disabled){--button-fill:color-mix(in srgb,var(--danger-fill) 94%,#000);--button-rim:var(--danger-fill);color:#fff}
+ html:root[data-color-mode][data-theme] body :is(button:not(:where(.living-creator *))[aria-pressed='true'],button:not(:where(.living-creator *))[aria-selected='true'],button:not(:where(.living-creator *)).chosen,button:not(:where(.living-creator *)).class-option.selected,button:not(:where(.living-creator *)).party-member.active,button:not(:where(.living-creator *)).library-pin.is-pinned,.app-main-nav button:not(:where(.living-creator *)).active):hover:not(:disabled){--button-fill:var(--accent-soft);--button-rim:var(--accent);box-shadow:inset 0 1px 0 var(--button-edge),inset 0 0 0 1px var(--button-rim)}
+ html:root[data-color-mode][data-theme] body :is(.theme-toggle,.color-mode-toggle,.segmented) button:not(:where(.living-creator *)):hover:not(:disabled){--button-fill:var(--surface-raised);--button-rim:var(--line);box-shadow:inset 0 1px 0 var(--button-edge),inset 0 0 0 1px var(--button-rim)}
+ html:root[data-color-mode][data-theme] body .binding-slot button:not(:where(.living-creator *)):hover:not(:disabled){transform:none}
+ html:root[data-color-mode][data-theme] body .binding-slot button:not(:where(.living-creator *)).binding-key.listening:hover:not(:disabled){--button-fill:var(--accent);--button-rim:var(--accent);--button-highlight:#ffffff08;color:var(--accent-ink)}
 }
-html:root[data-color-mode][data-theme] body :is(button[class],button:not([class]),.game-row-more>summary):not(:where(.drawer-backdrop,.replay-scrim,.panel-edge)):active:not(:disabled){
+html:root[data-color-mode][data-theme] body :is(button:not(:where(.living-creator *))[class],button:not(:where(.living-creator *)):not([class]),.game-row-more>summary):not(:where(.drawer-backdrop,.replay-scrim,.panel-edge)):active:not(:disabled){
  transform:translateY(0);
  box-shadow:inset 0 1px 2px #00000018,inset 0 0 0 1px var(--button-rim);
  transition-duration:80ms;
 }
-html:root[data-color-mode][data-theme] body button:disabled{
+html:root[data-color-mode][data-theme] body button:not(:where(.living-creator *)):disabled{
  transform:none;
  box-shadow:inset 0 0 0 1px var(--line);
 }
@@ -140,7 +140,7 @@ html:root[data-color-mode][data-theme] body .accent-options button{box-shadow:in
 }
 
 /* No hover displacement when motion is reduced; explicit Full still wins over the OS. */
-html[data-motion='reduced'][data-color-mode][data-theme] body :is(button,.game-row-more>summary){transform:none!important;transition:none!important}
+html[data-motion='reduced'][data-color-mode][data-theme] body :is(button:not(:where(.living-creator *)),.game-row-more>summary){transform:none!important;transition:none!important}
 @media(prefers-reduced-motion:reduce){
- html:not([data-motion='full'])[data-color-mode][data-theme] body :is(button,.game-row-more>summary){transform:none!important;transition:none!important}
+ html:not([data-motion='full'])[data-color-mode][data-theme] body :is(button:not(:where(.living-creator *)),.game-row-more>summary){transform:none!important;transition:none!important}
 }

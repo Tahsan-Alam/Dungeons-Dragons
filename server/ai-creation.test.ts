@@ -2,7 +2,7 @@ import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {GameAI} from './ai-service.ts';
 import {BudgetLedger,MemoryLedger} from './ai-ledger.ts';
-import {creationFixture} from '../game/creation.ts';
+import {AETHER,creationFixture} from '../game/creation.ts';
 import type {CreationRequest} from '../game/creation.ts';
 import {DEFAULT_OPTIONS} from '../game/types.ts';
 
@@ -39,4 +39,34 @@ test('Responses commentary is separate from the validated final draft; missing o
  for(const outputs of [[message('commentary',text)],[message('final_answer',text),message('final_answer',text)]]){
   const unsafe=new GameAI(config,new BudgetLedger(new MemoryLedger()),async()=>response(outputs));assert.equal((await unsafe.createDraft(input)).source,'fixture');
  }
+});
+
+test('guide adapter supplies draft context and only returns a version-matched proposal',async()=>{
+ const guide:CreationRequest={...input,action:'guide',focus:'narrator',draftVersion:7,narrator:AETHER,message:'Make a sarcastic celestial cat with glasses.'};
+ const store=new MemoryLedger();let calls=0;
+ const ai=new GameAI(config,new BudgetLedger(store),async(_url,options)=>{
+  calls++;const payload=JSON.parse(String(options?.body)),context=JSON.parse(payload.input);
+  assert.equal(context.draftVersion,7);assert.equal(context.narrator.name,'Aether');assert.match(context.task,/explicit confirmation/);
+  assert.deepEqual(payload.text.format.schema.properties.guide.properties.proposal.anyOf[0].properties.baseVersion.enum,[7]);
+  return envelope({reply:'A dry wit, a celestial coat, and spectacles. Shall we keep this?',guide:{proposal:{baseVersion:7,narrator:{...AETHER,name:'Nyx',personality:['Sarcastic'],avatar:{form:'cat',accessory:'glasses'},voice:'willow'},story:null,hero:null}}});
+ });
+ const result=await ai.createDraft(guide);assert.equal(result.source,'openai');assert.equal(result.guide!.proposal!.narrator!.avatar!.form,'cat');assert.equal(guide.narrator!.name,'Aether');
+ assert.deepEqual(await ai.createDraft(guide),result);assert.equal(calls,1);
+ const bad=new GameAI(config,new BudgetLedger(new MemoryLedger()),async()=>envelope({reply:'Already applied.',guide:{proposal:{baseVersion:6,narrator:AETHER,story:null,hero:null}}}));
+ assert.equal((await bad.createDraft(guide)).source,'fixture');
+});
+
+test('guide replies use the selected confirmed speaker while proposed edits target the separate draft',async()=>{
+ const target={...AETHER,name:'Nyx',personality:['Sarcastic'],avatar:{form:'cat' as const,accessory:'glasses' as const},voice:'willow' as const};
+ const guide:CreationRequest={...input,action:'guide',focus:'narrator',draftVersion:8,narrator:target,guideNarrator:AETHER,message:'Keep the cat and make it curious.'};
+ const received:string[]=[];
+ const ai=new GameAI(config,new BudgetLedger(new MemoryLedger()),async(_url,options)=>{
+  const payload=JSON.parse(String(options?.body)),context=JSON.parse(payload.input);received.push(context.speaker.name);
+  assert.equal(context.narrator.name,'Nyx');assert.equal(context.narrator.avatar.form,'cat');assert.match(payload.instructions,/editable narrator profile may be unconfirmed/);assert.match(context.task,/not your speaking identity/);
+  return envelope({reply:'Here is a curious variation. Shall we keep it?',guide:{proposal:{baseVersion:8,narrator:{...target,personality:['Curious']},story:null,hero:null}}});
+ });
+ const withGuide=await ai.createDraft(guide);assert.equal(withGuide.source,'openai');assert.equal(withGuide.guide!.proposal!.narrator!.name,'Nyx');assert.equal(withGuide.guide!.proposal!.narrator!.voice,'willow');
+ await ai.createDraft({...guide,requestId:'selected-narrator',guideNarrator:target});
+ await ai.createDraft({...guide,requestId:'legacy-guide',guideNarrator:undefined});
+ assert.deepEqual(received,['Aether','Nyx','Aether']);assert.equal(guide.narrator!.personality[0],'Sarcastic');
 });
