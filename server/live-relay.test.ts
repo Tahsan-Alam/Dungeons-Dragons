@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {BudgetLedger,MemoryLedger} from './ai-ledger.ts';
 import {attachLiveRelay} from './live-relay.ts';
 import type {LiveClock,LiveSocket} from './live-relay.ts';
-import {LIVE_LIMITS,LIVE_RESERVATION,liveSession,parseLiveClient,parseLiveStart} from './live-protocol.ts';
+import {LIVE_CALL_WINDOWS,LIVE_LIMITS,LIVE_RESERVATION,liveSession,parseLiveClient,parseLiveStart} from './live-protocol.ts';
 import type {LiveStart} from './live-protocol.ts';
 
 const input:LiveStart={type:'start',scope:'test-creator',requestId:'session-1',mode:'call',voice:'vesper',name:'Aether',persona:'',context:'The player is shaping a narrator.',opening:'What kind of guide shall I become?'};
@@ -55,6 +55,18 @@ test('live reserves before outbound connection and never sends credentials to br
 });
 test('reached shared cap opens no provider socket',async()=>{
  const f=await fixture({caps:{campaign:1,day:1,month:1,concurrency:2}});assert.equal(f.calls(),0);assert.equal(f.client.closed,true);assert.match(f.client.sent[0].message,/allowance/);
+});
+
+test('a default allowance funds a shorter call without raising caps or opening extra sockets',async()=>{
+ const f=await fixture({caps:{campaign:100_000,day:250_000,month:1_000_000,concurrency:2}});assert.equal(f.calls(),1);f.ready();
+ assert.equal(f.client.sent.find(e=>e.type==='ready').expiresIn,30_000);
+ const receipts=Object.values((await f.store.read()).entries);assert.equal(receipts.length,1);assert.equal(receipts[0].reserved,75_000);
+ f.advance(20_000);f.upstream.emit({type:'session.input_transcript.delta',delta:'Keep talking.'});f.advance(10_000);
+ assert.equal(f.upstream.sent.at(-1).type,'session.close');f.advance(LIVE_LIMITS.grace);await flush();assert.equal(f.client.sent.find(e=>e.type==='closed').reason,'time_limit');
+});
+
+test('every funded call reserve covers the complete bounded lifetime at twice the published rate',()=>{
+ for(const window of LIVE_CALL_WINDOWS){const maximumSeconds=(window.duration+LIVE_LIMITS.start+LIVE_LIMITS.grace)/1000;assert.ok(window.reservation>=Math.ceil(maximumSeconds*50_000/60*2));}
 });
 test('server closes idle calls even when the browser sends nothing',async()=>{
  const f=await fixture();f.ready();f.advance(LIVE_LIMITS.idle);assert.equal(f.upstream.sent.at(-1).type,'session.close');f.advance(LIVE_LIMITS.grace);await flush();assert.equal(f.upstream.closed,true);assert.equal(f.client.closed,true);assert.equal(Object.values((await f.store.read()).entries)[0].status,'done');

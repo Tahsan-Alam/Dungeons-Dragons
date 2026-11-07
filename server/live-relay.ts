@@ -1,10 +1,12 @@
 import {BudgetLedger} from './ai-ledger.ts';
-import {LIVE_LIMITS,LIVE_RATE,LIVE_RESERVATION,liveSession,parseLiveClient} from './live-protocol.ts';
+import {LIVE_CALL_WINDOWS,LIVE_LIMITS,LIVE_RATE,LIVE_RESERVATION,liveSession,parseLiveClient} from './live-protocol.ts';
 import type {LiveServerEvent,LiveStart} from './live-protocol.ts';
 
 export interface LiveSocket {accept():void;send(data:string):void;close(code?:number,reason?:string):void;addEventListener(type:string,listener:(event:any)=>void):void;removeEventListener(type:string,listener:(event:any)=>void):void;}
 export interface LiveClock {now:()=>number;setInterval:(callback:()=>void,ms:number)=>ReturnType<typeof setInterval>;clearInterval:(timer:ReturnType<typeof setInterval>)=>void;}
-const clock:LiveClock={now:Date.now,setInterval,clearInterval};
+// Worker timers require their global receiver; calling a copied host function
+// as clock.setInterval() throws before the WebSocket can be upgraded.
+const clock:LiveClock={now:Date.now,setInterval:(callback,ms)=>setInterval(callback,ms),clearInterval:timer=>clearInterval(timer)};
 const digest=async(value:string)=>Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(value))),b=>b.toString(16).padStart(2,'0')).join('');
 const silence=btoa('\0'.repeat(LIVE_RATE/10*2));
 
@@ -14,6 +16,7 @@ export function attachLiveRelay(client:LiveSocket,options:{key:string;ledger:Bud
  const timerClock=options.clock??clock,transport=options.transport??fetch;
  let upstream:LiveSocket|undefined,start:LiveStart|null=null,receipt='',ready=false,closing=false,done=false,reserving=false;
  let connectedAt=timerClock.now(),startedAt=0,lastUserAt=connectedAt,lastInputAt=connectedAt,lastOutputAt=0;
+ let fundedDuration:number=LIVE_LIMITS.call;
  let bytesIn=0,bytesOut=0,events=0,clientControls=0,wireBytes=0,micMuted=true,heardOutput=false;
  let closeAt=0,reason='ended',userText='',delegationSnapshot='',sentContextAt=0,pendingDelegation='',delegatedAt=0,lastTranscriptAt=0,reportedSeconds=0;
  const knownDelegations=new Set<string>();
@@ -35,7 +38,7 @@ export function attachLiveRelay(client:LiveSocket,options:{key:string;ledger:Bud
   if(done)return;const now=timerClock.now();
   if(closing){if(now-closeAt>=LIVE_LIMITS.grace)void finish();return;}
   if(!ready){if(now-connectedAt>=LIVE_LIMITS.start)close('connection_timeout');return;}
-  if(now-startedAt>=LIVE_LIMITS[start!.mode]){close('time_limit');return;}
+  if(now-startedAt>=fundedDuration){close('time_limit');return;}
   if(start!.mode==='call'&&now-lastUserAt>=LIVE_LIMITS.idle){close('idle');return;}
   if(start!.mode==='listen'&&heardOutput&&now-lastOutputAt>1800){close('comment_finished');return;}
   // Transcripts can arrive after the delegation marker and in fragments. Wait
@@ -50,7 +53,14 @@ export function attachLiveRelay(client:LiveSocket,options:{key:string;ledger:Bud
  },100);
  async function open(input:LiveStart){
   start=input;reserving=true;receipt=await digest('live-v1:'+input.scope+':'+input.requestId);
-  let reserved;try{reserved=await options.ledger.reserve(receipt,'creator:'+input.scope,LIVE_RESERVATION[input.mode],512);}catch{reserved='blocked';}
+  let reserved:Awaited<ReturnType<BudgetLedger['reserve']>>='blocked';
+  const windows=input.mode==='call'?LIVE_CALL_WINDOWS:[{duration:LIVE_LIMITS.listen,reservation:LIVE_RESERVATION.listen}];
+  try{
+   for(const window of windows){
+    reserved=await options.ledger.reserve(receipt,'creator:'+input.scope,window.reservation,512);
+    if(reserved!=='blocked'){fundedDuration=window.duration;break;}
+   }
+  }catch{reserved='blocked';}
   reserving=false;
   if(reserved!=='reserved'){receipt='';send({type:'error',message:'Voice allowance is reached. You can keep creating with text.'});close('allowance');return;}
   if(done||closing){await options.ledger.finish(receipt,{closed:true,finalUsage:false},{input:0,output:0},{outcome:'cancelled_before_connection'});return;}
@@ -80,12 +90,12 @@ export function attachLiveRelay(client:LiveSocket,options:{key:string;ledger:Bud
    if(e.type==='session.started'){
     if(ready||!start||e.session?.model!=='gpt-live-1')throw new Error();
     ready=true;startedAt=timerClock.now();lastUserAt=startedAt;lastInputAt=0;micMuted=start.mode==='listen';
-    send({type:'ready',mode:start.mode,expiresIn:LIVE_LIMITS[start.mode]});
+    send({type:'ready',mode:start.mode,expiresIn:fundedDuration});
     if(start.opening)provider({type:'session.commentary.append',event_id:'opening',delegation_id:null,content:start.opening});
    }else if(e.type==='session.output_audio.delta'){
     if(!ready||typeof e.delta!=='string'||e.delta.length>130_000||!/^[A-Za-z0-9+/]*={0,2}$/.test(e.delta))throw new Error();
     const raw=atob(e.delta);if(raw.length%2)throw new Error();bytesOut+=raw.length;
-    if(bytesOut>LIVE_RATE*2*(LIVE_LIMITS[start!.mode]/1000+3))throw new Error();
+    if(bytesOut>LIVE_RATE*2*(fundedDuration/1000+3))throw new Error();
     heardOutput=true;lastOutputAt=timerClock.now();send({type:'audio',audio:e.delta});
    }else if(e.type==='session.input_transcript.delta'||e.type==='session.output_transcript.delta'){
     if(typeof e.delta!=='string'||e.delta.length>2000)throw new Error();

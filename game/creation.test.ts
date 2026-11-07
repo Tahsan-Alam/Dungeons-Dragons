@@ -74,6 +74,15 @@ test('guide can start with the story, asks focused questions and never applies i
  assert.equal(creationFixture({...start,focus:'hero',message:'A gentle healer'}).guide!.proposal,null);
 });
 
+test('greetings and setup questions do not create or overwrite any draft in any focus',()=>{
+ const current=blueprint();
+ for(const focus of ['story','narrator','hero'] as const)for(const message of ['hi','Hello!','Hey Aether','Thank you','How does this work?','What should I do next?']){
+  const input:CreationRequest={...request,...current,action:'guide',focus,draftVersion:4,prompt:'A floating city',message};
+  const before=structuredClone(input),result=creationFixture(input);
+  assert.equal(result.guide!.proposal,null,`${focus}: ${message}`);assert.deepEqual(input,before);
+ }
+});
+
 test('new narrator form and voice are bounded metadata, while legacy profiles still parse',()=>{
  assert.ok(parseNarrator(blueprint().narrator));assert.deepEqual(parseNarrator(AETHER),AETHER);
  for(const extra of [{avatar:{form:'arbitrary-model',accessory:'none'}},{avatar:{form:'cat',accessory:'glasses',url:'https://evil.test'}},{voice:'voice-arbitrary-id'},{hp:999}])assert.equal(parseNarrator({...AETHER,...extra}),null);

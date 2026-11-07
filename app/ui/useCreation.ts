@@ -18,9 +18,10 @@ export function useCreation(sharedScope?:string){
   try{
    const response=await fetch('/api/quest/create',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(request),signal:AbortSignal.any([abort.signal,AbortSignal.timeout(40_000)])});
    const data=await response.json() as Record<string,unknown>;if(!data||typeof data!=='object')throw new Error('The draft response could not be read.');if(!response.ok)throw new Error(typeof data.error==='string'?data.error:'Could not create that draft. Try again.');
+   if(data.source!=='openai')throw new Error('AI did not generate a response. Your message and draft are unchanged. Check AI settings and try again.');
    const key=request.action==='narrators'?'narrators':request.action==='heroes'?'heroes':request.action==='sample'?'sample':request.action;
    const result=parseCreationResult({reply:data.reply,[key]:data[key]},request);
-   if(!result||(data.source!=='fixture'&&data.source!=='openai'))throw new Error('The draft was incomplete. Your current choices are still here.');
+   if(!result)throw new Error('The draft was incomplete. Your current choices are still here.');
    if(active!==epoch.current)return null;
    return {...result,source:data.source,...(key==='sample'?{audio:typeof data.audio==='string'&&data.audio.startsWith('data:audio/wav;base64,')&&data.audio.length<650_000?data.audio:null}:{})};
   }catch(e){if(active===epoch.current&&!abort.signal.aborted)setError(e instanceof Error?e.message:'Could not reach the storyteller. Try again.');return null;}

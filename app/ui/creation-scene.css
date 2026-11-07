@@ -1,0 +1,65 @@
+.creation-scene{position:relative;width:100%;height:100%;min-height:0;overflow:hidden;isolation:isolate;--scene-primary:#dce0e8;--scene-secondary:#f2f3f6;--scene-hue:0deg;background:transparent;contain:layout paint;}
+.creation-cosmos{position:absolute;inset:0;background:radial-gradient(ellipse at 50% 42%,#1c1d24 0%,#111219 38%,#050609 80%);mask-image:radial-gradient(ellipse 67% 63% at 53% 43%,#000 35%,#000e 60%,transparent 100%);}
+.creation-cosmos::after{content:'';position:absolute;inset:5%;background:radial-gradient(ellipse at 50% 48%,color-mix(in srgb,var(--scene-primary) 24%,transparent),transparent 60%);opacity:.65;transition:background 1.2s ease,opacity 1.2s ease;}
+.creation-scene[data-neutral=true] .creation-cosmos::after{opacity:.1;}
+.creation-stars,.creation-motes{position:absolute;inset:0;display:block;width:100%;height:100%;pointer-events:none;mask-image:radial-gradient(ellipse 67% 63% at 53% 43%,#000 32%,#000b 61%,transparent 100%);}
+.creation-stars{z-index:1}.creation-motes{z-index:5;}
+.creation-being{position:absolute;z-index:4;width:min(80%,480px);aspect-ratio:1;top:46%;left:50%;transform:translate(-50%,-50%);animation:creation-being-form 1.6s cubic-bezier(.2,.7,.2,1) both;}
+.creation-being .narrator-avatar{--narrator-size:480px;width:100%;height:100%;filter:drop-shadow(0 0 22px color-mix(in srgb,var(--scene-primary) 30%,transparent));}
+.creation-being .narrator-atlas{filter:hue-rotate(var(--scene-hue));transition:filter 1.2s ease;}
+.creation-being .narrator-aura{background:radial-gradient(ellipse,var(--scene-primary),transparent 66%);opacity:.15;}
+.creation-being .narrator-orbit,.creation-being .narrator-particles{display:none;}
+.creation-being .narrator-sprite-frame{inset:5%;animation:creation-portrait-float 6s ease-in-out infinite;}
+.creation-being .narrator-sprite{mask-image:linear-gradient(#000 83%,transparent 100%);}
+.creation-ether{position:absolute;inset:0;display:block;width:100%;height:100%;isolation:isolate;}
+html:root[data-color-mode][data-theme] body button.creation-ether,html:root[data-color-mode][data-theme] body button.creation-ether:hover,html:root[data-color-mode][data-theme] body button.creation-ether:active{border:0;border-radius:50%;padding:0;background:none;color:inherit;box-shadow:none;transform:none;cursor:pointer;}
+.creation-ether:focus-visible{outline:2px solid var(--scene-secondary)!important;outline-offset:8px;}
+.creation-ether-core{position:absolute;inset:6%;width:88%;height:88%;max-width:none;object-fit:contain;user-select:none;pointer-events:none;animation:creation-ether-turn 54s linear infinite;filter:drop-shadow(0 0 12px #f6f6ff30);}
+.creation-core-light{position:absolute;inset:11%;border-radius:50%;background:radial-gradient(ellipse,#e7ebff0a 10%,#f0f1ff26 28%,#fff1 45%,transparent 70%);filter:blur(14px);animation:creation-core-breath 5s ease-in-out infinite;}
+.creation-core-ribbon{position:absolute;inset:15%;border:1px solid #f3f4ff35;border-radius:44% 56% 53% 47%;transform:rotateX(62deg) rotate(-28deg);pointer-events:none;}
+.creation-core-ribbon::after{content:'';position:absolute;inset:-3%;border-radius:inherit;border:1px solid #eef0ff20;}
+.creation-core-ribbon-one{animation:creation-ribbon-one 14s linear infinite;}
+.creation-core-ribbon-two{inset:2%;opacity:.6;animation:creation-ribbon-two 19s linear infinite;}
+.creation-distant-planets{position:absolute;inset:0;z-index:2;pointer-events:none;mask-image:radial-gradient(ellipse 67% 65% at 53% 43%,#000 40%,transparent 100%);}
+.creation-distant-planets i{position:absolute;width:39px;height:39px;border-radius:50%;background:radial-gradient(circle at 29% 24%,#f2f3f6 0%,#a8acb8 16%,#5e616d 38%,#171a25 70%);box-shadow:inset -5px -4px 9px #030409,0 0 13px #dbdeed20;animation:creation-planet-drift 18s ease-in-out infinite;}
+.creation-distant-planets i:nth-child(1){left:18%;top:18%;width:48px;height:48px;}
+.creation-distant-planets i:nth-child(2){right:13%;top:66%;width:35px;height:35px;animation-delay:-5s;animation-duration:23s;}
+.creation-distant-planets i:nth-child(2)::after{content:'';position:absolute;inset:12px -20px;border:3px solid #cdd2e560;border-radius:50%;transform:rotate(-31deg);box-shadow:0 0 2px #fff4;}
+.creation-distant-planets i:nth-child(3){right:22%;top:22%;width:11px;height:11px;animation-duration:15s;animation-delay:-10s;}
+.creation-scene[data-landscape]:not([data-landscape=space]) .creation-distant-planets{opacity:.3;transition:opacity 2s ease;}
+.creation-world{position:absolute;inset:0;z-index:2;pointer-events:none;mask-image:radial-gradient(ellipse 74% 71% at 53% 45%,#000 40%,#000b 64%,transparent 100%);}
+.creation-world>svg{display:block;width:100%;height:100%;overflow:visible;}
+.creation-world-far{animation:creation-landscape-emerge 2.4s .1s both;}
+.creation-world-mid{animation:creation-landscape-emerge 2s .35s both;}
+.creation-landmark{animation:creation-build-up 2s .5s both;transform-box:fill-box;transform-origin:bottom;}
+.creation-trees>g>path{animation:creation-grow 1.8s calc(.55s + var(--tree-delay)) both;transform-box:fill-box;transform-origin:bottom;}
+.creation-island>g{animation:creation-island-float 9s ease-in-out infinite;}
+.creation-island:nth-child(2)>g{animation-delay:-3s;animation-duration:12s;}.creation-island:nth-child(3)>g{animation-delay:-6s;}
+.creation-clouds{animation:creation-cloud-drift 25s ease-in-out infinite;}
+.creation-sea-lines{animation:creation-sea-shimmer 7s ease-in-out infinite;}
+.creation-ground-mist{animation:creation-cloud-drift 18s ease-in-out infinite;}
+.creation-scene-edge{position:absolute;z-index:6;inset:0;pointer-events:none;box-shadow:inset 0 -32px 42px -30px var(--paper,#fff);}
+.creation-scene[data-pending=true] .creation-ether-core{animation-duration:19s;}
+.creation-scene[data-pending=true] .creation-core-light{animation:creation-core-breath 1.8s ease-in-out infinite;}
+.creation-scene[data-speaking=true] .creation-core-light{animation:creation-core-speaking .6s ease-in-out infinite alternate;}
+.creation-scene[data-art=pixel] .creation-ether-core,.creation-scene[data-art=pixel] canvas{image-rendering:pixelated;}
+.creation-scene[data-art=pixel] .creation-ether-core{animation-timing-function:steps(240,end);filter:none;}
+.creation-scene[data-art=pixel] .creation-distant-planets i{clip-path:polygon(25% 0,75% 0,75% 12%,88% 12%,88% 25%,100% 25%,100% 75%,88% 75%,88% 88%,75% 88%,75% 100%,25% 100%,25% 88%,12% 88%,12% 75%,0 75%,0 25%,12% 25%,12% 12%,25% 12%);border-radius:0;}
+.creation-scene[data-art=pixel] .creation-core-ribbon{border-style:dashed;}
+.creation-scene[data-paused=true] *, .creation-scene[data-paused=true] *::after{animation-play-state:paused!important;}
+.creation-scene[data-reduced=true] *, .creation-scene[data-reduced=true] *::after{animation:none!important;transition:none!important;}
+@media(prefers-reduced-motion:reduce){html:not([data-motion=full]) .creation-scene *,html:not([data-motion=full]) .creation-scene *::after{animation:none!important;transition:none!important;}}
+@keyframes creation-ether-turn{from{transform:rotate(-12deg)}to{transform:rotate(348deg)}}
+@keyframes creation-ribbon-one{0%{transform:rotate(-20deg) rotateX(67deg) rotateZ(0)}100%{transform:rotate(-20deg) rotateX(67deg) rotateZ(360deg)}}
+@keyframes creation-ribbon-two{0%{transform:rotate(34deg) rotateX(74deg) rotateZ(360deg)}100%{transform:rotate(34deg) rotateX(74deg) rotateZ(0)}}
+@keyframes creation-core-breath{0%,100%{scale:.94;opacity:.45}50%{scale:1.12;opacity:1}}
+@keyframes creation-core-speaking{from{scale:.97;opacity:.5}to{scale:1.12;opacity:1}}
+@keyframes creation-planet-drift{0%,100%{transform:translate(0,0) rotate(-8deg)}50%{transform:translate(16px,-22px) rotate(8deg)}}
+@keyframes creation-being-form{0%{opacity:0;filter:blur(18px);scale:.78}50%{opacity:.7;filter:blur(5px)}100%{opacity:1;filter:blur(0);scale:1}}
+@keyframes creation-portrait-float{0%,100%{transform:translateY(0) rotate(-1deg)}50%{transform:translateY(-11px) rotate(1deg)}}
+@keyframes creation-landscape-emerge{from{opacity:0;transform:translateY(45px);filter:blur(9px)}to{opacity:1;transform:translateY(0);filter:blur(0)}}
+@keyframes creation-build-up{from{opacity:0;clip-path:inset(100% 0 0)}to{opacity:1;clip-path:inset(0)}}
+@keyframes creation-grow{from{opacity:0;scale:1 .1}to{opacity:1;scale:1 1}}
+@keyframes creation-island-float{0%,100%{transform:translateY(0)}50%{transform:translateY(-13px)}}
+@keyframes creation-cloud-drift{0%,100%{transform:translateX(-10px);opacity:.6}50%{transform:translateX(18px);opacity:1}}
+@keyframes creation-sea-shimmer{0%,100%{transform:translateX(-9px);opacity:.3}50%{transform:translateX(12px);opacity:.5}}

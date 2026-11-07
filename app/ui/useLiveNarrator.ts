@@ -11,6 +11,7 @@ export interface LiveNarratorOptions {enabled:boolean;scope:string;narrator:Narr
 type Session={socket:WebSocket;audio:AudioContext;gain:GainNode;sources:Set<AudioBufferSourceNode>;stream:MediaStream|null;worklet:AudioWorkletNode|null;input:MediaStreamAudioSourceNode|null;nextAt:number;epoch:number;ready:boolean;mode:'listen'|'call';frame:number;startup:ReturnType<typeof setTimeout>|null;};
 const base64=(bytes:Uint8Array)=>{let s='';for(const b of bytes)s+=String.fromCharCode(b);return btoa(s);};
 const workletSource=`class NarratorCapture extends AudioWorkletProcessor { constructor(){super();this.samples=[];} process(inputs){const input=inputs[0]?.[0];if(input){for(const v of input)this.samples.push(v);if(this.samples.length>=2048){this.port.postMessage(new Float32Array(this.samples));this.samples=[];}}return true;}}registerProcessor('narrator-capture',NarratorCapture);`;
+class VoicePreflightError extends Error {}
 
 export function useLiveNarrator(options:LiveNarratorOptions){
  const [status,setStatus]=useState<LiveStatus>('idle'),[micMuted,setMicState]=useState(true),[speakerMuted,setSpeakerState]=useState(true),[speaking,setSpeaking]=useState(false),[error,setError]=useState(''),[transcript,setTranscript]=useState('');
@@ -51,6 +52,9 @@ export function useLiveNarrator(options:LiveNarratorOptions){
   try{
    const audio=new AudioContext({sampleRate:LIVE_RATE});pendingAudio=audio;await audio.resume();
    if(epoch!==serial.current){await audio.close();return;}
+   const preflight=await fetch('/api/quest/live',{cache:'no-store',signal:AbortSignal.timeout(10_000)});
+   if(!preflight.ok){const result=await preflight.json().catch(()=>null) as {error?:unknown}|null;throw new VoicePreflightError(typeof result?.error==='string'&&result.error.length<300?result.error:'Could not check voice access. Try again in a moment.');}
+   if(epoch!==serial.current){await audio.close();return;}
    const gain=audio.createGain(),analyser=audio.createAnalyser();analyser.fftSize=256;gain.gain.value=speaker.current?0:1;gain.connect(analyser);analyser.connect(audio.destination);
    // Microphone permission is resolved before opening a paid session.
    let permitted:MediaStream|null=null;if(mode==='call'){permitted=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true,noiseSuppression:true,autoGainControl:true,channelCount:1},video:false});pendingStream=permitted;}
@@ -58,6 +62,7 @@ export function useLiveNarrator(options:LiveNarratorOptions){
    const socket=new WebSocket(`${location.protocol==='https:'?'wss:':'ws:'}//${location.host}/api/quest/live`);
    const s:Session={socket,audio,gain,sources:new Set(),stream:permitted,worklet:null,input:null,nextAt:0,epoch,ready:false,mode,frame:0,startup:null};active.current=s;pendingAudio=null;pendingStream=null;
    s.startup=setTimeout(()=>{if(active.current===s&&!s.ready){setError('Voice took too long to connect. You can keep typing.');stop('error');}},15_000);
+   let sessionSeconds=90;
    const levels=new Uint8Array(analyser.fftSize);
    const meter=()=>{if(active.current!==s)return;analyser.getByteTimeDomainData(levels);const audible=!speaker.current&&levels.some(v=>Math.abs(v-128)>3);setSpeaking(audible);if(s.ready)setStatus(audible?'speaking':'listening');s.frame=requestAnimationFrame(meter);};s.frame=requestAnimationFrame(meter);
    microphone.current=mode!=='call';setMicState(microphone.current);
@@ -71,6 +76,7 @@ export function useLiveNarrator(options:LiveNarratorOptions){
     if(active.current!==s||typeof event.data!=='string')return;
     let e:LiveServerEvent;try{e=JSON.parse(event.data);}catch{return;}
     if(e.type==='ready'){
+     if(Number.isFinite(e.expiresIn)&&e.expiresIn>0)sessionSeconds=Math.round(e.expiresIn/1000);
      if(s.startup)clearTimeout(s.startup);s.startup=null;
      s.ready=true;setStatus('listening');emit({type:'mic',muted:microphone.current});
      if(mode==='call'){
@@ -97,14 +103,14 @@ export function useLiveNarrator(options:LiveNarratorOptions){
     else if(e.type==='closed'){
      // Let already received short audio finish, then release the audio graph.
      if(s.sources.size&&e.reason==='comment_finished'){setTimeout(()=>{if(active.current===s)stop();},Math.max(0,(s.nextAt-audio.currentTime)*1000+50));}
-     else {stop(e.reason==='idle'||e.reason==='time_limit'?'paused':'idle');if(e.reason==='idle')setError('Voice rested while you were thinking. Unmute your mic to continue.');if(e.reason==='time_limit')setError('Voice paused after 90 seconds. Unmute your mic to continue.');}
+     else {stop(e.reason==='idle'||e.reason==='time_limit'?'paused':'idle');if(e.reason==='idle')setError('Voice rested while you were thinking. Start a call to continue.');if(e.reason==='time_limit')setError(`Voice paused after ${sessionSeconds} seconds to stay within the shared allowance. You can continue in text or start another call if allowance remains.`);}
     }
    });
    socket.addEventListener('error',()=>{if(active.current===s){setError('Live voice is unavailable. You can keep creating with text.');stop('error');}});
    socket.addEventListener('close',()=>{if(active.current===s&&s.ready){if(s.sources.size&&mode==='listen')setTimeout(()=>{if(active.current===s)stop();},Math.max(0,(s.nextAt-audio.currentTime)*1000+50));else stop('paused');}else if(active.current===s){setError('Could not connect live voice. Check that team AI is unlocked.');stop('error');}});
-  }catch(e){pendingStream?.getTracks().forEach(t=>t.stop());if(pendingAudio)void pendingAudio.close().catch(()=>{});if(epoch!==serial.current)return;stop('error');setError(e instanceof DOMException&&e.name==='NotAllowedError'?'Microphone permission was declined. You can keep typing.':'Could not start live voice. You can keep typing.');}
+  }catch(e){pendingStream?.getTracks().forEach(t=>t.stop());if(pendingAudio)void pendingAudio.close().catch(()=>{});if(epoch!==serial.current)return;stop('error');setError(e instanceof VoicePreflightError?e.message:e instanceof DOMException&&e.name==='NotAllowedError'?'Microphone permission was declined. Allow microphone access in your browser, then start the call again.':e instanceof DOMException&&e.name==='NotFoundError'?'No microphone was found. Connect one, then start the call again.':'Could not start live voice. You can keep typing.');}
  }
- const connect=()=>start('call');
+ const connect=()=>{setSpeakerMuted(false);return start('call');};
  async function setMicMuted(muted:boolean){
   const s=active.current;if(!muted&&(!s||s.mode!=='call')){await start('call');return;}
   // A mute while browser permission is still pending cancels that startup.

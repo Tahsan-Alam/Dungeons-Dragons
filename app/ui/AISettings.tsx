@@ -1,5 +1,6 @@
 'use client';
 import {useEffect,useId,useRef,useState} from 'react';
+import {setAIPreference} from './ai-preferences';
 type Access={available:boolean;remembered:boolean;enabled:boolean;unlocked:boolean;audioAvailable:boolean;limits:{campaign:number;day:number;month:number}};
 const dollars=(micro:number)=>new Intl.NumberFormat('en-US',{style:'currency',currency:'USD',maximumFractionDigits:2}).format(micro/1_000_000);
 export default function AISettings({onAbout}:{onAbout:()=>void}){
@@ -15,7 +16,7 @@ export default function AISettings({onAbout}:{onAbout:()=>void}){
   if(pending.current)return;pending.current=true;setBusy(true);setError('');
   try{
    const response=await fetch('/api/ai/access',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action,...(action==='unlock'?{password}:{})})});
-   const result=await response.json() as Access&{error?:string};if(!response.ok)throw new Error(result.error||'Could not update team access. Try again.');setAccess(result);window.dispatchEvent(new Event('painted-realms-ai-access'));
+   const result=await response.json() as Access&{error?:string};if(!response.ok)throw new Error(result.error||'Could not update team access. Try again.');setAccess(result);setAIPreference(result.unlocked);window.dispatchEvent(new Event('painted-realms-ai-access'));
   }catch(error){setError(error instanceof Error?error.message:'Could not update team access. Try again.');}
   finally{setPassword('');pending.current=false;setBusy(false);}
  }
@@ -27,7 +28,7 @@ export default function AISettings({onAbout}:{onAbout:()=>void}){
   </form>:access?<p className="settings-description ai-setup-note">The site owner still needs to enable team AI. You can keep playing with the built-in storyteller.</p>:null}
   {error?<p className="settings-audio-error" role="alert">{error}</p>:null}
   {access?<p className="settings-description ai-budget-note">Shared limits: {dollars(access.limits.month)} / month · {dollars(access.limits.day)} / day · {dollars(access.limits.campaign)} / campaign. The game reserves a conservative allowance before each request; this is not a bill.</p>:null}
-  <div className="ai-play-guide"><h4>Play with AI</h4><ol><li>Unlock once here, before starting a new adventure.</li><li>Choose <strong>Solo quest</strong> or <strong>Gather party</strong> and turn on the AI storyteller during setup.</li><li>Ask <strong>Pip</strong> for narration, help or a change in direction.</li></ol><p className="settings-description">AI follows the same game rules. Shared spending limits apply; the built-in storyteller takes over when a limit is reached.</p><p className="settings-description">{access?.audioAvailable?'AI voice is available in Pip’s panel.':'AI voice is currently off; device narration is still available in Sound.'} Saved stories and cached audio remain available with AI off.</p></div>
+  <div className="ai-play-guide"><h4>Play with AI</h4><ol><li>Unlock once here, before starting a new adventure.</li><li>Choose <strong>Solo quest</strong> or <strong>Gather party</strong>. AI will be on in the creator.</li><li>Message your narrator, or use <strong>Start voice</strong> for a conversation.</li></ol><p className="settings-description">AI follows the same game rules and shared spending limits. Creation keeps your draft when AI is unavailable; offline mode is your choice.</p><p className="settings-description">{access?.audioAvailable?'AI voice is available in the creator and narrator panel.':'AI voice is currently off; device narration is still available in Sound.'} Saved stories and cached audio remain available with AI off.</p></div>
   <button className="settings-link" onClick={onAbout}>About the AI game master <span aria-hidden="true">→</span></button>
  </div>;
 }

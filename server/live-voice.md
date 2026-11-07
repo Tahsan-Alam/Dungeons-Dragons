@@ -2,7 +2,9 @@
 
 `/api/quest/live` is a same-origin WebSocket endpoint. It requires the existing
 team AI session cookie, configured paid AI, configured paid audio, D1, and the
-creator rate limit. Keys and provider sockets remain in the Worker. There is no
+creator rate limit. A non-upgrade GET performs a free access preflight before
+microphone permission, so disabled audio or a missing unlock produces a readable
+error instead of an opaque WebSocket failure. Keys and provider sockets remain in the Worker. There is no
 browser ephemeral token with a session lifetime the browser could extend.
 
 The server upgrades a primary connection to
@@ -31,7 +33,10 @@ dictation-to-text-box feature.
 ## Bounds and accounting
 
 - Short comment: at most 18 seconds after startup, reserved **$0.06**.
-- Conversation: at most 90 seconds after startup, reserved **$0.20**.
+- Conversation: at most 90 seconds after startup, reserved **$0.20**. If that
+  reservation does not fit, try a 60-second window for **$0.125**, then a
+  30-second window for **$0.075**. Each smaller window retains a 2x margin over
+  its full startup, conversation and closure lifetime. No spending cap changes.
 - No user activity for 30 seconds: close the conversation.
 - Startup: 10 seconds; graceful provider close: 3 seconds, then force close.
 - Browser startup also times out after 15 seconds. No automatic reconnect.
@@ -49,8 +54,9 @@ The published model rate reviewed on 2026-11-07 is $0.05 per active minute,
 billed by the second. These reservations include startup/closure and a safety
 margin. The relay does not enable hosted Responses delegation or provider tools.
 The app's `guide` request is separately reserved through its existing text AI
-path. No account flags or spend limits are changed by this feature. A configured
-campaign allowance smaller than the reservation intentionally blocks a call.
+path. No account flags or spend limits are changed by this feature. A remaining
+allowance below the smallest reservation blocks a call. The default $0.10
+campaign allowance can fund a short call instead of rejecting every call.
 
 ## Changes and confirmation
 
@@ -81,6 +87,10 @@ provider failure and unconfirmed disconnect usage. These fixture tests make no
 paid calls. Actual WebSocket upgrade through the app runtime, Live account
 availability, human microphone quality, audible accent and lip synchronization
 must be checked separately; tests alone do not establish them.
+
+`server/live-route-worker.test.ts` also exercises the real Worker timer receiver,
+access preflight and WebSocket upgrade. This catches Worker-only startup errors
+that injected-clock unit tests cannot detect.
 
 Official references:
 

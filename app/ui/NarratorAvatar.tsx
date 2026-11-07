@@ -61,7 +61,7 @@ function LivingNarratorAvatar({profile,speaking=false,talking=false,pending=fals
 function Portrait({appearance,theme,leaving=false}:{appearance:Appearance;theme:'paint'|'pixel';leaving?:boolean}){
  const [column,row]=CELLS[appearance.form],eyes=appearance.form==='spirit'?null:EYES[appearance.form];
  return <span className={`narrator-sprite${leaving?' narrator-sprite-leaving':''}`} data-form={appearance.form}>
-  <img className="narrator-atlas" src={`/art/narrators/${theme}-atlas.webp`} width={1536} height={1024} alt="" draggable={false} style={{left:`${-column*100}%`,top:`${-row*100}%`}}/>
+  {appearance.form==='spirit'?<img className="narrator-ether-art" src={`/art/narrators/ether-${theme}.png`} width={1280} height={1280} alt="" draggable={false}/>:<img className="narrator-atlas" src={`/art/narrators/${theme}-atlas.webp`} width={1536} height={1024} alt="" draggable={false} style={{left:`${-column*100}%`,top:`${-row*100}%`}}/>}
   {appearance.form==='spirit'?<span className="narrator-heartlight"/>:null}
   {eyes?<svg className="narrator-eyelids" viewBox="0 0 512 512" fill="none" aria-hidden="true">{eyes.points.map(([x,y,r],i)=><g key={i}><ellipse cx={x} cy={y} rx={r+2} ry={10} fill={eyes.color}/><path d={`M${x-r} ${y} Q${x} ${y+7} ${x+r} ${y-1}`} stroke="#312437" strokeWidth="3" strokeLinecap="round"/></g>)}</svg>:null}
   <Accessory form={appearance.form} accessory={appearance.accessory} pixel={theme==='pixel'}/>

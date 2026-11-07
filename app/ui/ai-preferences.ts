@@ -2,8 +2,10 @@
 import {useSyncExternalStore} from 'react';
 
 export const AI_PREFERENCE_KEY='painted-realms.ai-enabled.v1';
+const AI_PREFERENCE_REVISION_KEY='painted-realms.ai-preference-revision';
 const CHANGE_EVENT='painted-realms-ai-preference';
 let memoryPreference=false;
+let memoryRevision=false;
 
 export function readAIPreference():boolean {
  if(typeof window==='undefined')return false;
@@ -11,8 +13,15 @@ export function readAIPreference():boolean {
 }
 export function setAIPreference(enabled:boolean) {
  memoryPreference=enabled;
- try{localStorage.setItem(AI_PREFERENCE_KEY,String(enabled))}catch{/* The preference still works for this visit. */}
+ memoryRevision=true;
+ try{localStorage.setItem(AI_PREFERENCE_KEY,String(enabled));localStorage.setItem(AI_PREFERENCE_REVISION_KEY,'2')}catch{/* The preference still works for this visit. */}
  if(typeof window!=='undefined')window.dispatchEvent(new Event(CHANGE_EVENT));
+}
+/** Repair the old Settings/creator split once, without overriding later opt-outs. */
+export function adoptLegacyAIUnlock(unlocked:boolean){
+ if(!unlocked)return;
+ try{if(localStorage.getItem(AI_PREFERENCE_REVISION_KEY)==='2')return;}catch{if(memoryRevision)return;}
+ setAIPreference(true);
 }
 function subscribe(listener:()=>void) {
  const storage=(event:StorageEvent)=>{if(event.key===AI_PREFERENCE_KEY||event.key===null)listener()};

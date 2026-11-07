@@ -133,17 +133,21 @@ function guideFixture(r:CreationRequest):CreationResult {
  const baseVersion=r.draftVersion??0,narrator=r.narrator??AETHER;
  const question=(reply:string):CreationResult=>({source:'fixture',reply,guide:{proposal:null}});
  const proposal=(reply:string,changes:Partial<Omit<CreatorProposal,'baseVersion'>>):CreationResult=>({source:'fixture',reply,guide:{proposal:{baseVersion,narrator:null,story:null,hero:null,...structuredClone(changes)}}});
+ const conversational=r.message.trim().toLowerCase().replace(/[.!?,]+$/g,'').trim();
+ if(/^(?:hi|hello|hey|hiya|greetings|good (?:morning|afternoon|evening))(?: there| aether)?$/.test(conversational))return question('Hello, traveler. Would you like to begin with your world, or the narrator who brings it to life?');
+ if(/^(?:thanks|thank you|okay|ok|great|cool|yes|no)$/.test(conversational))return question('Take your time. Describe a change, or use the choices in the editor when you are ready.');
+ if(/^(?:how (?:does|do|can)|what (?:should|can|do)|help(?: me)?(?: understand)?\b)/.test(conversational))return question('Describe the world or narrator you imagine, then review the proposed changes before keeping them. You can also edit the choices directly.');
  if(r.focus==='story'){
   if(!r.prompt.trim()&&!r.message.trim()&&!r.story)return question('Shall we begin with a place, a mystery, or someone who needs your help? You can also choose a story idea.');
   const draft=creationFixture({...r,action:'story',narrator,prompt:r.prompt||r.message,message:r.story?r.message:''}).story!;
   draft.title=draft.title.trim()||'The Star Beneath the City';draft.timeline=draft.timeline.trim()||'An age of wandering magic';draft.world=draft.world.trim()||'Asterfall';draft.locations=draft.locations.filter(value=>value.trim());if(!draft.locations.length)draft.locations=['The lantern gate'];
-  return proposal('Here is a built-in story draft. Review the details or edit them before keeping it.',{story:draft});
+  return proposal('A starting point for your adventure. What would you change?',{story:draft});
  }
  if(r.focus==='hero'){
   if(!r.story)return question('Let us give the story a home first. Then we can find a hero with a reason to enter it.');
   const draft=creationFixture({...r,action:'hero',narrator}).hero!;
   draft.name=draft.name.trim()||'Wren';if(!draft.personality.length)draft.personality=['Curious'];
-  return proposal('Here is a built-in hero draft for your story. You can change their details before keeping it.',{hero:draft});
+  return proposal('A traveler with a reason to enter your story. Make them your own.',{hero:draft});
  }
  const message=r.message.toLowerCase().replace(/[’‘]/g,"'"),withoutGlasses=/\b(remove|lose|without|no)\s+(?:the\s+)?(?:glasses|spectacles)\b/.test(message);
  // A fixture is intentionally not an open-ended language interpreter. For
@@ -167,6 +171,6 @@ function guideFixture(r:CreationRequest):CreationResult {
  if(accessory==='glasses'&&!appearance.some(value=>/glasses|spectacles/i.test(value)))appearance.unshift('Round glasses');
  const draft:NarratorProfile={...narrator,name,personality:personality.length?personality:narrator.personality.length?narrator.personality:AETHER.personality,speakingStyle:speakingStyle.length?speakingStyle:narrator.speakingStyle.length?narrator.speakingStyle:AETHER.speakingStyle,appearance:appearance.length?appearance.slice(0,3):['Ethereal'],avatar:{form,accessory},voice:narrator.voice??'vesper'};
  draft.persona=`A ${draft.personality.join(', ').toLowerCase()} ${form} who guides travelers through strange worlds, with ${draft.speakingStyle.join(', ').toLowerCase()} storytelling.`.slice(0,240);
- return proposal('I can offer this built-in narrator from those choices. Keep it, or adjust a detail first.',{narrator:draft});
+ return proposal('Here is a face for that voice. Keep it, or shape it a little further.',{narrator:draft});
 }
 export function narratorTone(profile:NarratorProfile):'warm'|'wry'|'dramatic'{return profile.personality.includes('Sarcastic')?'wry':profile.personality.includes('Dramatic')?'dramatic':'warm';}

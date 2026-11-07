@@ -8,6 +8,13 @@ export const LIVE_LIMITS={listen:18_000,call:90_000,idle:30_000,start:10_000,gra
 // $0.05/min duration, 2x margin, including startup/closure. No hosted backend,
 // tools, automatic reconnection, or refund of uncertain usage is permitted.
 export const LIVE_RESERVATION={listen:60_000,call:200_000};
+// Smaller sessions fit existing allowances; they never raise a spending cap.
+// Each reserve covers two times $0.05/min, including 10s startup + 3s close.
+export const LIVE_CALL_WINDOWS=[
+ {duration:LIVE_LIMITS.call,reservation:LIVE_RESERVATION.call},
+ {duration:60_000,reservation:125_000},
+ {duration:30_000,reservation:75_000},
+] as const;
 export interface LiveStart {type:'start';scope:string;requestId:string;mode:'listen'|'call';voice:LiveVoice;name:string;persona:string;context:string;opening:string;guide?:boolean;}
 export type LiveClientEvent=LiveStart|{type:'audio';audio:string}|{type:'mic';muted:boolean}|{type:'context';text:string}|{type:'reply';text:string;delegationId?:string}|{type:'close'};
 export type LiveServerEvent={type:'ready';mode:'listen'|'call';expiresIn:number}|{type:'audio';audio:string}|{type:'transcript';role:'user'|'assistant';text:string}|{type:'delegate';id:string;text:string}|{type:'closed';reason:string}|{type:'error';message:string};
