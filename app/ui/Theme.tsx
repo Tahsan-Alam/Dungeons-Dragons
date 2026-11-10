@@ -56,7 +56,7 @@ export function ThemeToggle(){
  const{theme,setTheme}=useTheme();
  return <div className="theme-toggle" role="group" aria-label="Art style">
   <button type="button" className={theme==='paint'?'selected':''} aria-pressed={theme==='paint'} onClick={()=>setTheme('paint')} title="Paint art style"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="m6 10 5-7 2-1 1 2-6 7M6 10c-3-2-4 1-4 4 3 0 6-1 4-4Z" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/></svg><span>Paint</span></button>
-  <button type="button" className={theme==='pixel'?'selected':''} aria-pressed={theme==='pixel'} onClick={()=>setTheme('pixel')} title="Pixel art style"><svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" shapeRendering="crispEdges" aria-hidden="true"><path d="M2 2h5v5H2Zm7 0h5v5H9ZM2 9h5v5H2Zm7 0h5v5H9Z"/></svg><span>Pixel</span></button>
+  <button type="button" className={theme==='pixel'?'selected':''} aria-pressed={theme==='pixel'} onClick={()=>setTheme('pixel')} title="Pixel art style"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4" aria-hidden="true"><path d="M2 2h5v5H2Zm7 0h5v5H9ZM2 9h5v5H2Zm7 0h5v5H9Z"/></svg><span>Pixel</span></button>
  </div>;
 }
 

@@ -40,3 +40,28 @@ Visual dimensions: palette, hierarchy, spacing, component consistency, play read
 ## Remaining coverage limits
 
 No blocking issue remained in the panels' final reviews. Physical iOS/Safari, multitouch hardware and screen-reader announcements were not exercised. A future optional follow-character camera could make mobile replays easier to watch. The existing rules/save schema, deterministic replay and multiplayer protocol were not changed.
+
+
+## Living narrator design review — November 7, 2026
+
+Desktop and mobile Image Gen concepts guided the implemented creator. Final
+screenshots were compared against both concepts with these five anchors:
+
+1. One bordered editing surface with Story/Narrator tabs; a separate right-side
+   guide on desktop. Mobile moves the guide above the form and opens chat on tap.
+2. Restrained ink/lavender palette, serif headings and legible sans-serif inputs.
+   The real application retains its existing navigation and explicit art switch.
+3. Transparent painted/pixel spirit art with local particles and emergence.
+   The final desktop stage was enlarged after critique to make Aether prominent.
+4. Compact trait chips with visible selection and custom values. A second small
+   preview sits beside mobile appearance controls so changes stay observable.
+5. One confirmation boundary for proposed changes, then hero selection and game
+   settings. Full controls wrap at 320px; reduced motion removes decorative motion.
+
+Intentional differences: stage navigation uses understated text/underlines;
+confirmation and honest AI access state occupy space the concept did not model;
+more trait choices are available; mobile chat/history collapse; and native CSS
+handles the single sprite stage without adding a canvas engine dependency.
+The real snapshots were checked in both art styles and light/dark appearances.
+Six reusable forms are generated artwork; accessories/motion are local. Exact
+phoneme lip sync and arbitrary new bitmap generation are not claimed.

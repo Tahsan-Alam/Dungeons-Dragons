@@ -1,17 +1,6 @@
-@font-face{font-family:'Pixelify Sans';src:url('/fonts/pixelify-sans.ttf') format('truetype');font-style:normal;font-weight:400 700;font-display:swap}
-
-/* Art style changes shapes, typography and SVG artwork. Color lives in appearance.css. */
+/* Art style belongs to illustrations. UI geometry and typography stay shared. */
 .rail-heading h2,.scene-heading h1,.party-objective h3,.modal-head h2,.setup-title h1,.lobby-heading h1,.section-heading h2,.adventure-settings h2,.lobby-adventure h2,.help-grid h3,.character-detail h3,.integration-list h3{line-height:1.2}
-html[data-theme='pixel']{--heading:'Pixelify Sans',Georgia,serif}
-html[data-theme='pixel'] :is(.button,.icon-button,.brand-die,.class-option,.class-check,.field input,.field select,.segmented,.segmented button,.input-button button,.invite-ticket,.lobby-player,.lobby-portrait,.mini-panorama,.party-member,.party-avatar,.health-track,.turn-marker,.shard-progress>span,.board-container,.board-tools,.board-tools button,.board-note,.action-button,.narrator-portrait,.roll-die,.modal,.rules-note,.budget-banner,.detail-portrait,.toast,.theme-toggle,.theme-toggle button,.color-mode-toggle,.color-mode-toggle button,.leave-confirm,.modal-head,.text-button,button.brand,kbd){border-radius:0}
-html[data-theme='pixel'] :is(.brand-die,.narrator-portrait,.roll-die,.invite-ticket){transform:none}
-html[data-theme='pixel'] .illustration-frame{border-radius:0;transform:none}
-html[data-theme='pixel'] .map-title{border-radius:0;transform:translateX(-50%)}
-html[data-theme='pixel'] .hand-note{font-style:normal;transform:none}
-html[data-theme='pixel'] :is(.live-dot,.menu-footer i){border-radius:0}
-html[data-theme='pixel'] .shard-progress>span{border-style:solid}
 html[data-theme='pixel'] .game-board rect{rx:0;ry:0}
 html[data-theme='pixel'] .pixel-art{image-rendering:pixelated}
-html[data-theme='pixel'] .games-heading h1{font-family:'Pixelify Sans',monospace;letter-spacing:-.02em}
 html[data-theme='pixel'] .chapter-art>.panorama{animation-name:pixel-scene-in}
 @keyframes pixel-scene-in{from{opacity:.6}to{opacity:1}}

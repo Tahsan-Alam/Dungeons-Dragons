@@ -4,7 +4,7 @@ import {CLASS_INFO} from '../../game/types.ts';
 
 /** Presentation copy derives availability from the same rules as the board. */
 export function turnGuidance(game:GameState,actor:Actor|undefined,myTurn:boolean,tool:'move'|'attack'|'ability'):string {
- if(game.status!=='playing')return game.status==='victory'?'Adventure complete. All three shards recovered.':'The party has fallen. Your adventure is saved.';
+ if(game.status!=='playing')return game.status==='victory'?'Adventure complete. The lantern is restored.':'The party has fallen. Your adventure is saved.';
  if(!myTurn||!actor)return `Waiting for ${actor?.name??'the party'}. You can inspect characters or read the log.`;
  const quest=getQuestAction(game,actor);
  if(quest){

@@ -1,9 +1,10 @@
 import { DEFAULT_OPTIONS, HERO_COLORS } from '../game/types.ts';
+import {parseBlueprint} from '../game/creation.ts';
 import type { GameAction, GameOptions, HeroClass, RoomPlayer, RoomView, Session } from '../game/types.ts';
 import { applyAction, createGame, runBots } from '../game/engine.ts';
 import {appendReplay,newReplay} from '../game/replay.ts';
 import type { RoomStore, StoredRoom } from './room-store.ts';
-import {cleanPrompt,installCampaign,acceptNarration,narrationFixture} from '../game/campaign.ts';
+import {cleanPrompt,installCampaign,acceptNarration,narrationFixture,applyStoryDirection,guidanceFixture} from '../game/campaign.ts';
 import {legalChoices,fixtureChoice} from '../game/legal-actions.ts';
 import type {GameAI} from './ai-service.ts';
 
@@ -20,6 +21,7 @@ export type RoomCommand =
   | {type:'remove'; playerId:string}
   | {type:'start' | 'leave' | 'skip'}
   | {type:'action'; action:GameAction}
+  | {type:'steer';text:string}
   | {type:'narrate'};
 
 export class RoomError extends Error {
@@ -64,6 +66,9 @@ export function validateOptions(input: unknown): GameOptions {
   if (!Number.isInteger(o.companions) || o.companions < 0 || o.companions > 9) return reject('Choose between 0 and 9 companions.');
   const prompts:Partial<GameOptions>={};
   for(const key of ['storyPrompt','narratorPrompt','characterPrompt'] as const){if(o[key]!==undefined){if(typeof o[key]!=='string'||o[key]!.length>400)return reject('Keep each creative prompt within 400 characters.');prompts[key]=cleanPrompt(o[key]);}}
+  if(o.aiEnabled!==undefined){if(typeof o.aiEnabled!=='boolean')return reject('Choose whether to use AI.');prompts.aiEnabled=o.aiEnabled;}
+  if(o.duration!==undefined){if(!['short','standard','long'].includes(o.duration))return reject('Choose a supported adventure length.');prompts.duration=o.duration;}
+  if(o.creation!==undefined){const blueprint=parseBlueprint(o.creation);if(!blueprint)return reject('Review the narrator, story and character before starting.');prompts.creation=blueprint;}
   return {rules:o.rules, narrator:o.narrator, biome:o.biome, seed:o.seed.trim(), companions:o.companions,...prompts};
 }
 function validateAction(input: unknown): GameAction {
@@ -111,7 +116,8 @@ export class RoomService {
         }
         continue;
       }
-      const room:RoomView={code,hostId:playerId,version:1,players:[{id:playerId,name,heroClass,color:HERO_COLORS[0],bot:false,ready:true,lastSeen:now}],options,game:null,createdAt:now};
+      if(options.creation&&(options.creation.hero.name!==name||options.creation.hero.heroClass!==heroClass))return reject('The selected character must match your hero.');
+      const room:RoomView={code,hostId:playerId,version:1,players:[{id:playerId,name,heroClass,color:options.creation?.hero.color??HERO_COLORS[0],bot:false,ready:true,lastSeen:now}],options,game:null,createdAt:now};
       for(let j=0;j<options.companions;j++) addBot(room);
       const record:StoredRoom={revision:1,room,tokenHashes:{[playerId]:tokenHash},requests:[],admissions:[{kind:'create',requestHash:receipt.requestHash,payloadHash:receipt.payloadHash,playerId}],expiresAt:now+ROOM_LIFETIME};
       if(await this.store.insert(record)) return {session:{code,playerId,token},room:publicView(record)};
@@ -185,6 +191,12 @@ export class RoomService {
       const requireHost=()=>{if(room.hostId!==playerId) reject('Only the host can do that.',403,'HOST_ONLY');};
       const requireLobby=()=>{if(room.game) reject('That setting is locked once the adventure starts.',409,'ALREADY_STARTED');};
       switch(command.type) {
+        case 'steer': {
+          requireHost();
+          if(!room.game?.story||room.game.status!=='playing')return reject('Start an active adventure to steer the story.');
+          if(typeof command.text!=='string'||!command.text.trim()||command.text.length>400)return reject('Keep story direction within 400 characters.');
+          room.game=applyStoryDirection(room.game,command.text);room.replay=appendReplay(room.replay!,{type:'steer',text:cleanPrompt(command.text)});break;
+        }
         case 'narrate': {
           requireHost();
           if(!room.game?.story)return reject('Start a new adventure to use the storyteller.');
@@ -243,6 +255,14 @@ export class RoomService {
         }
         default:return reject('That room command is not supported.');
       }
+      // One saved telling at chapter boundaries, never on polling or rendering.
+      if(room.game?.options.aiEnabled===true&&room.game.story&&room.game.story.narrations.length<100&&
+        (command.type==='start'||command.type==='action'&&(room.game.scene!==record.room.game?.scene||room.game.status!==record.room.game?.status))){
+        const narration=this.ai?await this.ai.narrate(code,room.game):narrationFixture(room.game);
+        if(!room.game.story.narrations.some(n=>n.eventId===narration.eventId)){
+          room.game=acceptNarration(room.game,narration);room.replay=appendReplay(room.replay!,{type:'narration',record:narration});
+        }
+      }
       next.requests.push({id:input.requestId,playerId:command.type==='leave'?`left:${tokenHash}`:playerId});
       next.requests=next.requests.slice(-128);
       room.version++;
@@ -253,19 +273,25 @@ export class RoomService {
     return reject('The room is busy. Please try again.',503,'BUSY');
   }
 
-  async assist(codeInput:unknown,token:string,input:{version:unknown;text?:unknown;audio?:unknown},signal?:AbortSignal){
+  async assist(codeInput:unknown,token:string,input:{version:unknown;text?:unknown;audio?:unknown;guidance?:unknown},signal?:AbortSignal){
     const code=this.code(codeInput),record=await this.load(code),playerId=this.authenticate(record,await hash(token)),room=record.room;
     if(input.version!==room.version)throw new RoomError('The room changed. Try again.',409,'STALE_VERSION',publicView(record));
     if(!room.game)return reject('Start the adventure first.');
     if(input.audio===true){
       const narration=room.game.story?.narrations.find(n=>n.eventId===room.game!.eventSequence);
-      const audio=narration&&this.ai?await this.ai.speak(code,narration,playerId===room.hostId,signal):null;
+      const audio=narration&&this.ai?await this.ai.speak(code,narration,playerId===room.hostId&&room.game.options.aiEnabled!==false,signal,room.options.creation?JSON.stringify(room.options.creation.narrator):''):null;
       const latest=await this.load(code);
       this.authenticate(latest,await hash(token));
       if(latest.room.version!==room.version)throw new RoomError('The room changed. Request the current caption.',409,'STALE_VERSION',publicView(latest));
       return {audio,version:room.version};
     }
     if(typeof input.text!=='string'||!input.text.trim()||input.text.length>400)return reject('Enter an intention of up to 400 characters.');
+    if(input.guidance===true){
+      const reply=this.ai?await this.ai.guide(code,room.game,playerId,input.text):{reply:guidanceFixture(room.game,input.text,playerId),source:'fixture' as const};
+      const latest=await this.load(code);this.authenticate(latest,await hash(token));
+      if(latest.room.version!==room.version)throw new RoomError('The room changed. Ask about the current moment.',409,'STALE_VERSION',publicView(latest));
+      return {...reply,version:room.version};
+    }
     const choices=legalChoices(room.game,playerId);
     if(!choices.length)return reject('Wait for your turn.');
     const choiceId=this.ai?await this.ai.choose(code,room.game,playerId,input.text):fixtureChoice(input.text,choices);

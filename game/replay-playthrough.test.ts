@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import {applyAction,createGame,encounterCleared,getReachable,getValidTargets,hasLineOfSight,runBots} from './engine.ts';
 import {newReplay,appendReplay,reconstructReplay} from './replay.ts';
+import {applyStoryDirection,storyGoal} from './campaign.ts';
 import type {Actor,GameAction,GameOptions,GameState,PlayerSpec} from './types.ts';
 
 const distance=(a:{x:number;y:number},b:{x:number;y:number})=>Math.abs(a.x-b.x)+Math.abs(a.y-b.y);
@@ -32,6 +33,38 @@ function approach(game:GameState,actor:Actor,target:{x:number;y:number},range:nu
  const move=getReachable(game,actor).sort((a,b)=>score(a)-score(b))[0];
  return move&&score(move)<score(actor)?{type:'move',...move}:null;
 }
+
+for(const duration of ['short','long'] as const)test(`${duration} quest reaches its chosen ending, remembers chapters and preserves hero identities`,()=>{
+ const initial=createGame(players(4),{rules:'simple',biome:'woodland',seed:`duration-${duration}`,narrator:'warm',companions:3,duration});
+ let archive=newReplay(initial),game=runBots(initial),steps=0;
+ const identities=initial.actors.filter(a=>!a.enemy).map(({id,name,heroClass,color})=>({id,name,heroClass,color}));
+ while(game.status==='playing'&&steps++<1000){const playerId=game.actors.find(a=>a.id===game.activeActorId)!.playerId!;const action=chooseAction(game);game=runBots(applyAction(game,playerId,action));archive=appendReplay(archive,{type:'action',playerId,action});}
+ assert.equal(game.status,'victory');assert.equal(game.relics,duration==='short'?1:5);
+ assert.equal(game.story?.memories?.length,duration==='short'?1:5);
+ assert.deepEqual(game.actors.filter(a=>!a.enemy).map(({id,name,heroClass,color})=>({id,name,heroClass,color})),identities);
+ assert.deepEqual(reconstructReplay(archive).at(-1),game);
+});
+
+test('a planned custom story payoff becomes committed only at legal victory and survives replay',()=>{
+ const initial=createGame(players(4),{rules:'simple',biome:'coast',seed:'keeper-resolution',narrator:'warm',companions:3,duration:'short'});
+ const payoff='The restored lighthouse guides the missing keeper home. Friends reunite beneath its warm beam.';
+ initial.story!.campaign.resolution=payoff;let game=runBots(initial),archive=newReplay(initial),steps=0;
+ while(game.status==='playing'&&steps++<400){assert.ok(!game.events.some(event=>event.text===payoff));const playerId=game.actors.find(a=>a.id===game.activeActorId)!.playerId!;const action=chooseAction(game);game=runBots(applyAction(game,playerId,action));archive=appendReplay(archive,{type:'action',playerId,action});}
+ assert.equal(game.status,'victory');assert.equal(game.events.at(-1)!.text,payoff);assert.deepEqual(reconstructReplay(archive).at(-1),game);
+});
+
+test('early ending still completes a legal encounter, collects the shard and replays exactly',()=>{
+ const initial=createGame(players(4),{rules:'simple',biome:'coast',seed:'early-ending',narrator:'warm',companions:3,duration:'long'});
+ initial.story!.campaign.resolution='All five shards restored the lantern and completed the entire journey.';
+ let game=applyStoryDirection(runBots(initial),'Please end after this chapter.'),archive=appendReplay(newReplay(initial),{type:'steer',text:'Please end after this chapter.'}),steps=0;
+ assert.equal(storyGoal(game),1);assert.equal(game.status,'playing');assert.equal(game.relics,0);
+ while(game.status==='playing'&&steps++<400){const playerId=game.actors.find(a=>a.id===game.activeActorId)!.playerId!;const action=chooseAction(game);game=runBots(applyAction(game,playerId,action));archive=appendReplay(archive,{type:'action',playerId,action});}
+ assert.equal(game.status,'victory');assert.equal(game.relics,1);assert.match(game.events.at(-1)!.text,/gathered light home/);
+ assert.match(game.objective,/gathered light is safe/);assert.ok(!game.events.some(event=>event.text===initial.story!.campaign.resolution));
+ assert.deepEqual(reconstructReplay(archive).at(-1),game);
+ const restored=applyStoryDirection(applyStoryDirection(initial,'End after this chapter.'),"I don't want to end the story yet");assert.equal(storyGoal(restored),5);
+ assert.equal(storyGoal(applyStoryDirection(initial,'Let the ending involve a dragon someday.')),5);
+});
 
 for(const rules of ['simple','classic'] as const)for(const biome of ['woodland','ruins','coast'] as const){
  test(`complete ${rules} ${biome} adventure replays every accepted action and companion turn exactly`,()=>{

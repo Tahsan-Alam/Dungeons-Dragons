@@ -5,6 +5,9 @@
 .play-refined .scene-heading h1{font-size:24px!important;line-height:1.15;margin:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .play-refined .scene-title>span{white-space:nowrap;font-size:11px;color:var(--muted)}
 .play-refined .scene-controls{display:flex;align-items:center;gap:8px;flex:none}
+.play-refined .ask-pip-trigger{min-height:40px;gap:6px;padding:5px 9px}
+.play-refined .ask-pip-trigger :is(.pip-avatar,.narrator-avatar){width:26px;height:26px;flex:0 0 26px}
+@media(max-width:600px){.play-refined .ask-pip-trigger{min-width:40px;padding:5px}.play-refined .ask-pip-trigger>span:not(.pip-avatar,.narrator-avatar){position:absolute;width:1px;height:1px;padding:0;overflow:hidden;clip-path:inset(50%);white-space:nowrap}}
 .play-refined .rules-label{font-size:11px;color:var(--muted)}
 .play-refined .panel-toggle{display:none;align-items:center;justify-content:center;gap:5px;min-width:40px;min-height:40px;padding:6px;border:1px solid var(--line);border-radius:6px;transition:background 140ms,border-color 140ms}
 .play-refined .panel-toggle:hover{background:var(--accent-soft);border-color:var(--accent)}
@@ -44,8 +47,6 @@
 .play-refined .action-hint{grid-column:1/-1;margin:0;min-height:16px;font-size:11px;line-height:1.4;color:var(--muted)}
 .play-refined .action-button:active:not(:disabled),.play-refined .end-turn:active:not(:disabled){transform:translateY(1px)}
 .play-refined .game-connection:empty{display:none}.play-refined .game-connection{position:absolute;top:calc(var(--app-header-height) + 7px);left:50%;transform:translateX(-50%);background:var(--surface-raised);color:var(--ink);border:1px solid var(--accent);border-radius:6px;padding:8px 14px;font-size:12px;z-index:20}
-html[data-theme=pixel] .play-refined :is(.board-container,.action-button,.end-turn,.panel-toggle,.hero-inspect,.journal-entry.story){border-radius:0}
-html[data-theme=pixel] .play-refined .scene-heading h1{font-size:21px!important}
 @media(min-width:1001px){.play-refined .panel-resizer{background:var(--paper)}.play-refined .resizable-layout .party-info>strong{font-size:12px}.play-refined .resizable-layout .party-info>small{font-size:10px}}
 @media(max-width:1200px) and (min-width:1001px){.play-refined .hero-inspect strong{display:none}.play-refined .scene-title{display:block}.play-refined .scene-title>span{font-size:10px}.play-refined .scene-heading h1{font-size:22px!important}.play-refined .stat-label{display:none}.play-refined .end-turn{min-width:88px}.play-refined .end-turn svg{display:none}.play-refined .turn-summary>div{gap:8px}}
 @media(max-width:1000px){
@@ -53,7 +54,6 @@ html[data-theme=pixel] .play-refined .scene-heading h1{font-size:21px!important}
 }
 @media(max-width:650px){
  .play-refined .resizable-layout .table-main{padding:0 8px 8px}.play-refined .scene-heading{min-height:50px;height:50px}.play-refined .scene-title{display:block;min-width:0}.play-refined .scene-heading h1{font-size:19px!important;line-height:1.25}.play-refined .scene-title>span{display:block;font-size:10px;margin-top:2px}.play-refined .scene-controls{gap:5px}.play-refined .panel-toggle{min-height:40px;min-width:40px}.play-refined .panel-toggle>span{display:none}
- html[data-theme=pixel] .play-refined .scene-heading h1{font-size:17px!important}
  .play-refined .board-container{min-height:80px!important}.play-refined .board-tools{bottom:7px;right:7px}.play-refined .board-tools button{min-width:36px;min-height:36px}.play-refined .board-tools>span{font-size:10px}
  .play-refined .action-dock{padding-top:6px;column-gap:6px;row-gap:5px}.play-refined .turn-summary{min-height:32px;gap:6px}.play-refined .turn-summary>div{gap:8px}.play-refined .hero-inspect{padding:0;min-height:32px}.play-refined .hero-inspect strong{display:none}.play-refined .hero-inspect svg{width:23px}.play-refined .vital-health{font-size:12px}.play-refined .vital-armor{font-size:11px;gap:2px}.play-refined .turn-label{font-size:11px;max-width:100px}.play-refined .turn-vitals{font-size:12px}.play-refined .stat-label{display:none}.play-refined .turn-vitals>span{gap:3px}
  .play-refined .action-buttons{gap:3px}.play-refined .action-buttons .action-button{height:46px;min-height:46px;padding:5px 2px;gap:4px}.play-refined .action-buttons .action-button>span{font-size:11px}.play-refined .action-buttons .action-button>svg{width:16px;height:16px}.play-refined .action-buttons .action-button>kbd{display:none}.play-refined .action-buttons .action-button>small{font-size:11px;right:3px;top:3px}.play-refined .end-turn{min-width:76px;height:46px;min-height:46px;padding:6px;font-size:11px}.play-refined .end-turn>svg,.play-refined .end-turn>kbd{display:none}.play-refined .action-hint{display:block;font-size:11px;line-height:1.35;overflow-wrap:anywhere}

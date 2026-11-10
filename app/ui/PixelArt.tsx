@@ -2,7 +2,7 @@ import { memo } from 'react';
 import {useTheme} from './Theme';
 import type { GameState, HeroClass } from '../../game/types';
 
-import {ART_PALETTE as P,TREE_TONES} from './artPalette';
+import {ART_PALETTE as P,TREE_TONES,worldPigment} from './artPalette';
 import './world-palette.css';
 
 function tint(hex: string, amount: number) {
@@ -11,9 +11,10 @@ function tint(hex: string, amount: number) {
 }
 
 /** Authored on a 40×45 grid. All silhouette edges are actual pixel steps. */
-export const PixelHeroArt = memo(function PixelHeroArt({ heroClass = 'knight', color = '#ed9877', enemy = false, large = false }: { heroClass?: HeroClass; color?: string; enemy?: boolean; large?: boolean }) {
+export const PixelHeroArt = memo(function PixelHeroArt({ heroClass = 'knight', color = '#ed9877', enemy = false, large = false, animated = false }: { heroClass?: HeroClass; color?: string; enemy?: boolean; large?: boolean; animated?: boolean }) {
   const {viewMode}=useTheme(),depth=viewMode==='2.5d',coat='M13 21h14v2h3v4h2v7H8v-7h2v-4h3Z';
-  const shade = tint(color, -34), light = tint(color, 22);
+  const shade = worldPigment(tint(color, -34)), light = worldPigment(tint(color, 22));
+  color=worldPigment(color);
   return <svg width="80" height="90" viewBox="0 0 40 45" shapeRendering="crispEdges" aria-hidden="true" className={`hero-art pixel-art${large?' large':''}${depth?' depth-art':''}`}>
     <path d="M9 40h22v2H9Zm-3-1h28v2H6Z" fill={P.ink} opacity={depth?.24:.14}/>{depth?<g className="hero-depth-faces"><path d={coat} transform="translate(2 2)" fill={P.dark}/><path d="M26 10h3v3h1v9h-3v3h-4v-2h3Z" fill={enemy?P.leafDark:P.skinShade}/><path d="M27 36h3v3h2v2h-5Z" fill={P.dark}/></g>:null}
     <path d="M13 32h6v7h-2v2h-6v-3h2Zm9 0h6v6h2v3h-7v-2h-1Z" fill={P.ink}/>
@@ -32,7 +33,7 @@ export const PixelHeroArt = memo(function PixelHeroArt({ heroClass = 'knight', c
       <path d="M14 9h12v2h2v10h-2v3H14v-3h-2V11h2Z" fill={P.ink}/>
       <path d="M14 12h12v9h-3v2h-6v-2h-3Z" fill={P.skin}/>
       <path d="M14 10h11v2h2v4h-3v-4h-3v2h-5v-1h-2v4h-2v-5h2Z" fill={P.hair}/>
-      <path d="M16 16h2v2h-2Zm7 0h2v2h-2ZM19 21h4v1h-4Z" fill={P.ink}/>
+      <path className={animated?"pip-eyes":undefined} d="M16 16h2v2h-2Zm7 0h2v2h-2Z" fill={P.ink}/><path className={animated?"pip-mouth-closed":undefined} d="M19 21h4v1h-4Z" fill={P.ink}/>{animated?<path className="pip-mouth-open" d="M20 20h2v3h-2Z" fill={P.ink}/>:null}
       <path d="M14 19h2v2h-2Zm11 0h1v2h-1Z" fill={P.skinShade}/>
     </>}
     {heroClass === 'knight' ? <>
@@ -91,64 +92,44 @@ export const PixelTerrain = memo(function PixelTerrain({ game, grid }: { game: G
 export function PixelChest({ opened }: { opened: boolean }) { return <g shapeRendering="crispEdges"><path d="M0 10h3V4h5V1h15v3h5v6h3v21H0Z" fill={P.ink}/><path d={opened ? 'M3 3h23v5H3Zm0 13h25v15H3Z' : 'M3 11h3V6h18v5h4v17H3Z'} fill={opened ? P.chestOpen : P.chest}/><path d="M3 13h25v3H3ZM7 5h3v23H7Zm15 0h3v28h-3Z" fill={P.chestTrim}/><path d="M12 12h7v9h-7Z" fill={P.ink}/><path d="M14 14h3v4h-3Z" fill={P.accentLight}/>{opened ? <path d="M12 2h7v5h-7Zm2-5h3v4h-3Z" fill={P.accentLight}/> : null}</g>; }
 export function PixelGateway({ active }: { active: boolean }) { return <g shapeRendering="crispEdges"><path d="M-18-10h5v-5h26v5h5v20h-5v5h-26v-5h-5Z" fill={active ? P.gatewayActive : P.gateway}/><path d="M-14-8h4v-4h20v4h4V8h-4v4h-20V8h-4Z" fill={active ? P.gatewayActive : P.gateway}/><path d="M-10-2H4v-4h4v4h4v4H8v4H4V2h-14Z" fill={P.glyph}/>{active ? <path d="M-20-18h4v4h-4Zm34-5h3v3h-3ZM20 12h4v4h-4Z" fill={P.accentLight}/> : null}</g>; }
 
-export function PixelPanorama({ biome = 'woodland' }: { biome?: string }) {
-  const {viewMode}=useTheme(),depth=viewMode==='2.5d',road='M352 480v-32h-16v-32h24v-24h40v-16h48v-16h16v-24h-16v-24h-24v-24h48v16h16v24h16v40h-16v24h-48v16h-40v16h-16v24h16v32Z';
+export function PixelPanorama({ biome = 'woodland', characters }: { biome?: string; characters?:readonly {heroClass:HeroClass;color:string}[] }) {
+  const {viewMode}=useTheme(),depth=viewMode==='2.5d';
   const coastal = biome === 'coast', ruins = biome === 'ruins';
-  return <svg viewBox="0 0 800 480" className={`panorama pixel-art${depth?' depth-art':''}`} shapeRendering="crispEdges" role="img" aria-label="A pixel-art woodland with winding paths, a ruined tower and an adventuring party">
+  const road=coastal?'M332 480v-40h-8v-24h16v-24h32v-16h48v-16h40v-16h32v-24h32v-20h16v-20h28v16h-8v24h-16v20h-32v24h-32v16h-40v16h-48v16h-24v16h8v32Z':'M352 480v-32h-16v-32h24v-24h40v-16h48v-16h16v-24h-16v-24h-24v-24h48v16h16v24h16v40h-16v24h-48v16h-40v16h-16v24h16v32Z';
+  const party=(characters??[{heroClass:'knight' as const,color:'#ed9877'},{heroClass:'mage' as const,color:'#b4a6cf'}]).slice(0,4);
+  const trees=coastal?[{x:48,y:437,size:1.1},{x:145,y:401,size:.8}]:ruins?[{x:56,y:400,size:1.4},{x:725,y:371,size:1.3},{x:658,y:420,size:1.2}]:[{x:74,y:329,size:2.2},{x:134,y:303,size:1.6},{x:666,y:320,size:1.8},{x:732,y:368,size:2.5},{x:43,y:450,size:2.8},{x:170,y:410,size:2},{x:604,y:397,size:2.4}];
+  const setting=coastal?'coast with an ocean and a lighthouse':ruins?'ancient ruins with broken columns and a stone gateway':'woodland with winding paths and a ruined tower';
+  return <svg viewBox="0 0 800 480" className={`panorama pixel-art${depth?' depth-art':''}`} shapeRendering="crispEdges" role="img" aria-label={`A pixel-art ${setting}${party.length?', with an adventuring party':''}`}>
     <rect width="800" height="480" fill={P.sky}/>
     <path d="M552 56h56v8h12v12h8v48h-8v12h-12v8h-56v-8h-12v-12h-8V76h8V64h12Z" fill={P.sun}/>
-    <path d="M0 224h24v-24h24v-32h24v-40h24v16h24v24h32v-16h24v-32h24V96h24V72h24V56h24v24h24v32h24v24h24v32h24v24h24v-16h24v-32h24v-32h24V96h24v32h24v32h24v24h24v32h24v-24h32v-32h24v-32h24V96h24V80h24v32h24v24h24v32h32v24h24v32h32v256H0Z" fill={P.mountain}/>
-    <path d="M0 280h40v-24h40v-16h48v-16h64v16h48v16h48v24h56v16h64v-16h64v-24h48v-16h64v-16h72v16h64v16h80v224H0Z" fill={P.hill}/>
-    <path d="M0 368h40v-24h64v-16h72v-16h96v-24h104v8h64v16h80v16h88v-16h112v16h80v152H0Z" fill={coastal ? P.coastGrass : P.grass}/>
-    {coastal ? <><path d="M0 408h104v-8h96v8h64v16h64v56H0Zm584 16h64v-8h96v8h56v56H584Z" fill={P.water}/><path d="M24 438h64v4H24Zm96-14h40v4h-40Zm496 26h80v4h-80Zm96-18h48v4h-48Z" fill={P.waterLight}/></> : null}
-    {depth?<><path d="M0 444h96v-8h120v8h112v8h152v-8h160v-8h160v44H0Z" fill={P.leafDark} opacity=".24"/><path d={road} transform="translate(6 8)" fill={P.stoneDark}/><path d="M492 276h88v8h12v12H500v-8h-8Z" fill={P.ink} opacity=".16"/><path d="M564 152h8v-8h12v-8h4v128h-8v8h-16Z" fill={P.stoneDark}/><path d="M572 120h8v-8h12v24h-8v8h-12Z" fill={P.stone}/></>:null}<path d={road} fill={P.road}/>
+    {coastal?<>
+      <path d="M0 232v-8h24v-16h24v-16h32v8h24v16h32v-8h24v-16h24v-16h32v16h24v16h24v16h24v8Z" fill={P.mountain}/>
+      <path d="M0 232h184v-8h200v8h208v-8h208v256H0Z" fill={P.water}/>
+      <path d="M32 272h88v4H32Zm144-16h64v4h-64Zm160 24h96v4h-96Zm280-24h112v4H616ZM80 316h88v4H80Zm168-16h56v4h-56Zm384-8h112v4H632ZM40 360h64v4H40Zm656-24h72v4h-72Z" fill={P.waterLight}/>
+      <path d="M0 360h48v-16h144v8h96v16h80v-16h64v-24h40v-24h40v-24h80v16h24v24h56v16h40v24h40v24h48v16h40v80H0Z" fill={P.shore}/>
+      <path d="M0 368h56v-16h128v8h96v16h96v-16h64v-24h40v-24h40v-24h64v16h24v24h56v16h40v24h40v24h48v16h48v72H0Z" fill={P.coastGrass}/>
+    </>:<><path d="M0 224h24v-24h24v-32h24v-40h24v16h24v24h32v-16h24v-32h24V96h24V72h24V56h24v24h24v32h24v24h24v32h24v24h24v-16h24v-32h24v-32h24V96h24v32h24v32h24v24h24v32h24v-24h32v-32h24v-32h24V96h24V80h24v32h24v24h24v32h32v24h24v32h32v256H0Z" fill={P.mountain}/><path d="M0 280h40v-24h40v-16h48v-16h64v16h48v16h48v24h56v16h64v-16h64v-24h48v-16h64v-16h72v16h64v16h80v224H0Z" fill={P.hill}/><path d="M0 368h40v-24h64v-16h72v-16h96v-24h104v8h64v16h80v16h88v-16h112v16h80v152H0Z" fill={ruins?P.ruinGrass:P.grass}/></>}
+    {depth?<><path d="M0 444h96v-8h120v8h112v8h152v-8h160v-8h160v44H0Z" fill={P.leafDark} opacity=".24"/><path d={road} transform="translate(6 8)" fill={P.stoneDark}/><path d="M492 276h88v8h12v12H500v-8h-8Z" fill={P.ink} opacity=".16"/></>:null}<path d={road} fill={P.road}/>
     <path d="M352 438h24v4h-24Zm48-42h16v4h-16Zm44-36h12v4h-12Z" fill={P.roadDetail}/>
-    <g><path d="M496 280V152h-8v-32h20v16h12v-16h20v16h12v-16h20v32h-8v128Z" fill={P.ink}/><path d="M500 276V148h-8v-24h12v16h20v-16h12v16h20v-16h12v24h-8v128Z" fill={P.stoneLight}/><path d="M504 156h52v8h-52Zm32 16h20v4h-20Zm-32 36h20v4h-20Zm28 16h24v4h-24Zm-28 16h16v4h-16Z" fill={P.stoneDark}/><path d="M520 276v-32h4v-8h16v8h4v32Z" fill={P.stoneDeep}/><path d="M524 192v-20h4v-4h8v4h4v20Z" fill={P.stoneDark}/><path d="M552 156h8v120h-8Z" fill={P.stone}/></g>
-    {ruins ? <><path d="M196 322V216h16v20h20v-12h16v98Z" fill={P.stoneDark}/><path d="M200 318v-96h8v18h28v-12h8v90Z" fill={P.stoneLight}/><path d="M204 262h36v4h-36Zm16-22h4v24h-4Zm-16 48h36v4h-36Z" fill={P.stoneDark}/></> : null}
-    {[{ x: 74, y: 329, size: 2.2 }, { x: 134, y: 303, size: 1.6 }, { x: 666, y: 320, size: 1.8 }, { x: 732, y: 368, size: 2.5 }, { x: 43, y: 450, size: 2.8 }, { x: 170, y: 410, size: 2 }, { x: 604, y: 397, size: 2.4 }].map((t, i) => <PixelTree key={i} {...t} tone={i}/>)}
-    <g transform="translate(304 328) scale(.9)"><PixelHeroArt heroClass="knight"/></g><g transform="translate(374 346) scale(.85)"><PixelHeroArt heroClass="mage" color="#b4a6cf"/></g>
-    <path d="M228 338h4v8h4v-4h4v12h-12Zm336 86h4v12h4v-8h4v16h-12ZM202 448h4v8h4v-12h4v20h-12Z" fill={P.grassDetail}/>
+    {coastal?<g data-landmark="lighthouse">
+      <path d="m552 156 216-64 32 88Z" fill={P.sun} opacity=".32"/>
+      {depth?<path d="M576 180h12v-8h12v48h4v40h4v24h-24Z" fill={P.stoneDark}/>:null}
+      <path d="M536 176h40v32h4v32h4v24h4v24h-72v-24h4v-24h4v-32h4v-32Z" fill={P.ink}/><path d="M540 180h32v32h4v32h4v24h4v16h-64v-16h4v-24h4v-32h4v-32Z" fill={P.stoneLight}/>
+      <path d="M532 212h44v20h-48v-12h4Z" fill={P.accent}/><path d="M524 140h60v40h-60Z" fill={P.ink}/><path d="M528 144h52v32h-52Z" fill={P.accentLight}/><path d="M536 144h4v32h-4Zm28 0h4v32h-4Z" fill={P.stoneDark}/>
+      <path d="M516 144v-8h12v-8h12v-8h28v8h12v8h12v8Z" fill={P.accentDark}/><path d="M520 180h68v4h-68Z" fill={P.stoneDark}/>
+      <path d="M544 284v-28h4v-4h12v4h4v28Zm4-88h12v12h-12Z" fill={P.stoneDeep}/>
+      <path d="M616 360h8v-12h16v8h16v8h8v12h-40v-4h-8ZM680 412h12v-16h20v8h16v8h16v16h-56v-4h-8ZM184 408h8v-12h16v8h12v16h-36Z" fill={P.stone}/>
+    </g>:ruins?<g data-landmark="ruined-gateway">
+      {depth?<path d="M560 152h8v-8h12v128h-12v8h-8ZM208 224h8v-8h12v104h-12v8h-8Z" fill={P.stoneDark}/>:null}
+      <path d="M488 280V164h-8v-28h40v-12h20v16h32v28h-12v112h-24V168h-24v112Z" fill={P.ink}/><path d="M492 276V160h-8v-20h40v-12h12v16h32v20h-12v112h-16V164h-32v112Z" fill={P.stoneLight}/>
+      <path d="M168 328V220h20v16h20v-16h16v108Z" fill={P.ink}/><path d="M172 324V224h12v16h28v-16h8v100Z" fill={P.stoneLight}/>
+      <path d="M172 268h48v4h-48Zm20-28h4v28h-4Zm-20 56h48v4h-48ZM492 204h16v4h-16Zm48-12h16v4h-16Zm-48 48h16v4h-16Zm48 12h16v4h-16Z" fill={P.stoneDark}/>
+      <path d="M244 340h16v-8h24v8h16v16h-56ZM604 328h12v-12h20v8h16v8h8v12h-56Z" fill={P.stone}/>
+    </g>:<g data-landmark="woodland-tower">{depth?<><path d="M564 152h8v-8h12v-8h4v128h-8v8h-16Z" fill={P.stoneDark}/><path d="M572 120h8v-8h12v24h-8v8h-12Z" fill={P.stone}/></>:null}<path d="M496 280V152h-8v-32h20v16h12v-16h20v16h12v-16h20v32h-8v128Z" fill={P.ink}/><path d="M500 276V148h-8v-24h12v16h20v-16h12v16h20v-16h12v24h-8v128Z" fill={P.stoneLight}/><path d="M504 156h52v8h-52Zm32 16h20v4h-20Zm-32 36h20v4h-20Zm28 16h24v4h-24Zm-28 16h16v4h-16Z" fill={P.stoneDark}/><path d="M520 276v-32h4v-8h16v8h4v32Z" fill={P.stoneDeep}/><path d="M524 192v-20h4v-4h8v4h4v20Z" fill={P.stoneDark}/><path d="M552 156h8v120h-8Z" fill={P.stone}/></g>}
+    {trees.map((tree,index)=><PixelTree key={index} {...tree} tone={index}/>)}
+    {party.map((hero,index)=><g key={index} data-panorama-hero={hero.heroClass} transform={`translate(${364-(party.length-1)*37+index*74} ${330+index%2*12}) scale(.9)`}><PixelHeroArt heroClass={hero.heroClass} color={hero.color}/></g>)}
+    <path d="M228 438h4v8h4v-4h4v12h-12ZM564 424h4v12h4v-8h4v16h-12ZM202 448h4v8h4v-12h4v20h-12Z" fill={P.grassDetail}/>
     <path d="M304 108h8v4h8v-4h8v4h-8v4h-8v-4h-8Zm40 20h8v4h8v-4h8v4h-8v4h-8v-4h-8Z" fill={P.grassDetail}/>
-    <path d="M92 382h8v8h-8Zm508-58h8v8h-8ZM244 402h8v8h-8Z" fill={P.flower}/>
-    <path d="M94 384h4v4h-4Zm508-58h4v4h-4ZM246 404h4v4h-4Z" fill={P.flowerLight}/>
+    {!coastal?<><path d="M92 382h8v8h-8Zm508-58h8v8h-8ZM244 402h8v8h-8Z" fill={P.flower}/><path d="M94 384h4v4h-4Zm508-58h4v4h-4ZM246 404h4v4h-4Z" fill={P.flowerLight}/></>:null}
   </svg>;
-}
-
-// Each icon is its own authored 10×10 bitmap, emitted as scalable SVG squares.
-const ICONS: Record<string, string[]> = {
-  pin: ['..######..','...####...','...####...','...####...','..######..','.########.','.########.','....##....','....##....','....##....'],
-  dice: ['...####...', '.##....##.', '#..####..#', '#.#.##.#.#', '#..####..#', '#..#..#..#', '#.#....#.#', '#.######.#', '.##....##.', '...####...'],
-  arrow: ['..........', '.....##...', '......##..', '.......##.', '##########', '##########', '.......##.', '......##..', '.....##...', '..........'],
-  close: ['##......##', '.##....##.', '..##..##..', '...####...', '....##....', '...####...', '..##..##..', '.##....##.', '##......##', '..........'],
-  sword: ['.......###', '......####', '.....###..', '....###...', '...###....', '#.###.....', '####......', '.###......', '##.##.....', '#.........'],
-  shield: ['...####...', '###....###', '#........#', '#...##...#', '#...##...#', '#...##...#', '.#..##..#.', '..#....#..', '...#..#...', '....##....'],
-  heart: ['.###..###.', '##########', '##########', '##########', '##########', '.########.', '..######..', '...####...', '....##....', '..........'],
-  move: ['....##....', '...####...', '..######..', '....##....', '##..##..##', '##########', '##..##..##', '....##....', '..######..', '...####...'],
-  spark: ['....##....', '....##....', '...####...', '..######..', '##########', '..######..', '...####...', '....##....', '....##....', '..........'],
-  potion: ['...####...', '...#..#...', '...#..#...', '..#....#..', '.#......#.', '#........#', '#.######.#', '#.######.#', '.########.', '..######..'],
-  book: ['.###..###.', '#...##...#', '#...##...#', '#...##...#', '#...##...#', '#...##...#', '#...##...#', '#...##...#', '.###..###.', '....##....'],
-  sound: ['....##..#.', '...###...#', '######.#.#', '######.#.#', '######.#.#', '######.#.#', '######.#.#', '...###...#', '....##..#.', '..........'],
-  mute: ['....##....', '...###....', '######.#.#', '######..#.', '######.#.#', '######....', '######....', '...###....', '....##....', '..........'],
-  people: ['..###..##.', '.#####.###', '.#####.###', '..###..##.', '..........', '.#####.##.', '##########', '##########', '##...##.##', '##...##.##'],
-  plus: ['....##....', '....##....', '....##....', '....##....', '##########', '##########', '....##....', '....##....', '....##....', '....##....'],
-  minus: ['..........', '..........', '..........', '..........', '##########', '##########', '..........', '..........', '..........', '..........'],
-  fit: ['####..####', '#........#', '#........#', '#........#', '..........', '..........', '#........#', '#........#', '#........#', '####..####'],
-  check: ['..........', '........##', '.......##.', '......##..', '.....##...', '##..##....', '.####.....', '..##......', '..........', '..........'],
-  flag: ['##........', '########..', '##########', '##########', '##########', '##..######', '##........', '##........', '##........', '##........'],
-  gear: ['...####...', '.########.', '##########', '###....###', '###.##.###', '###.##.###', '###....###', '##########', '.########.', '...####...'],
-  link: ['......###.', '.....#...#', '....#..#.#', '...#..#..#', '.....#..#.', '.#..#.....', '#..#..#...', '#.#..#....', '#...#.....', '.###......'],
-  chest: ['..######..', '.########.', '##########', '#..#..#..#', '##########', '#..####..#', '#...##...#', '#........#', '#........#', '##########'],
-  leaf: ['.....#####', '...#######', '..########', '.########.', '.#######..', '######....', '#####.....', '###.......', '##........', '#.........'],
-  music: ['...#######', '...#######', '...#.....#', '...#.....#', '...#.....#', '...#.....#', '.###...###', '####..####', '.##....##.', '..........'],
-  eye: ['..........', '...####...', '.##....##.', '#..####..#', '#..####..#', '#..####..#', '.##....##.', '...####...', '..........', '..........'],
-};
-export function PixelIcon({ name, size = 20, className }: { name: string; size?: number; className?: string }) {
-  const bitmap = name === 'back' ? ICONS.arrow.map(row => [...row].reverse().join('')) : ICONS[name] || ICONS.spark;
-  const pixels = (include: (x:number,y:number)=>boolean = ()=>true) => bitmap.flatMap((row,y) => [...row].map((cell,x) => cell === '#' && include(x,y) ? <rect key={`${x}-${y}`} x={2+x*2} y={2+y*2} width="2" height="2"/> : null));
-  const artwork = name === 'book' ? <>
-    <g className="icon-book-page icon-book-left">{pixels(x=>x<4)}<g className="icon-book-lines"><path d="M5 8h3v2H5Zm0 4h3v2H5Z"/></g></g>
-    <g className="icon-book-page icon-book-right">{pixels(x=>x>5)}<g className="icon-book-lines"><path d="M16 8h3v2h-3Zm0 4h3v2h-3Z"/></g></g>
-    <g className="icon-book-spine">{pixels(x=>x===4||x===5)}</g>
-  </> : name === 'sound' ? <>{pixels(x=>x<7)}<g className="icon-sound-waves">{pixels(x=>x>=7)}</g></> : pixels();
-  return <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" shapeRendering="crispEdges" aria-hidden="true" className={`ui-icon pixel-icon icon-${name}${className?` ${className}`:''}`}><g className="ui-icon-body">{artwork}</g></svg>;
 }

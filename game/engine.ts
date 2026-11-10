@@ -1,5 +1,6 @@
 import type { Actor, GameAction, GameEvent, GameOptions, GameState, HeroClass, PlayerSpec, Tile } from './types';
-import {campaignFixture,installCampaign} from './campaign.ts';
+import {campaignFixture,installCampaign,rememberChapter,storyGoal} from './campaign.ts';
+import {parseBlueprint} from './creation.ts';
 
 // This module deliberately has no network, clock, browser, or model dependencies.
 // A saved state contains its random generator, so the same action is reproducible.
@@ -13,9 +14,9 @@ const CLASS = {
   cleric: { hp: 25, ac: 15, bonus: 4, die: 6, range: 1, speed: 6 },
 } as const;
 const SCENES = {
-  woodland: ['The Lanternwood', 'Bramble Crossing', 'The Moonwell'],
-  ruins: ['The Fallen Courtyard', 'The Sunken Archive', 'The Star Chamber'],
-  coast: ['Saltwind Landing', 'The Tideglass Steps', 'The Beacon Isle'],
+  woodland: ['The Lanternwood', 'Bramble Crossing', 'The Moonwell', 'Foxglove Hollow', 'The Dawn Tree'],
+  ruins: ['The Fallen Courtyard', 'The Sunken Archive', 'The Star Chamber', 'The Painted Vault', 'The First Observatory'],
+  coast: ['Saltwind Landing', 'The Tideglass Steps', 'The Beacon Isle', 'The Mistwater Cove', 'The Sunrise Lighthouse'],
 };
 const ENEMIES = {
   woodland: ['Bramble imp', 'Moss goblin', 'Thornling', 'Root guardian'],
@@ -135,7 +136,7 @@ function makeMap(game: GameState) {
 
 function setupScene(game: GameState) {
   makeMap(game);
-  game.sceneName = SCENES[game.options.biome][game.scene];
+  game.sceneName = game.options.creation?.story.locations[game.scene % game.options.creation.story.locations.length] ?? SCENES[game.options.biome][game.scene];
   game.objective = 'Defeat the guardians, collect the lantern shard, then reach the gateway.';
   const heroes = game.actors.filter(a => !a.enemy);
   const spawn = [{ x: 3, y: 7 }, { x: 2, y: 6 }, { x: 2, y: 8 }, { x: 3, y: 5 }, { x: 3, y: 9 }, { x: 2, y: 4 }, { x: 2, y: 10 }, { x: 4, y: 6 }, { x: 4, y: 8 }, { x: 4, y: 4 }];
@@ -146,10 +147,11 @@ function setupScene(game: GameState) {
     a.potions = Math.max(2, a.potions); a.abilityUses = 2;
   });
   game.actors = heroes;
-  const count = Math.min(8, Math.max(2, Math.ceil(heroes.length * 0.75) + (game.scene === 2 ? 1 : 0)));
+  const final=game.scene>=storyGoal(game)-1;
+  const count = Math.min(8, Math.max(2, Math.ceil(heroes.length * 0.75) + (final ? 1 : 0)));
   const enemySpawn = [{ x: 14, y: 7 }, { x: 15, y: 5 }, { x: 15, y: 9 }, { x: 17, y: 6 }, { x: 17, y: 8 }, { x: 14, y: 4 }, { x: 14, y: 10 }, { x: 16, y: 11 }];
   for (let i = 0; i < count; i++) {
-    const boss = game.scene === 2 && i === count - 1;
+    const boss = final && i === count - 1;
     const hp = (game.options.rules === 'simple' ? 9 : 12) + game.scene * 3 + (boss ? 8 : 0);
     const heroClass: HeroClass = i % 3 === 1 ? 'ranger' : 'knight';
     game.actors.push({ id: `enemy-${game.scene}-${i}`, name: boss ? 'The Hollow Keeper' : `${ENEMIES[game.options.biome][i % 4]} ${i + 1}`,
@@ -180,7 +182,9 @@ function setupScene(game: GameState) {
       `The last shard is in ${game.sceneName}. The Hollow Keeper has prepared a speech. You needn't let it finish.`,
     ],
   };
-  event(game, 'story', openings[game.options.narrator][game.scene]);
+  const standard=!game.options.duration||game.options.duration==='standard';
+  const opening=standard?openings[game.options.narrator][game.scene]:`${game.sceneName}. ${game.relics} of ${storyGoal(game)} lantern shards recovered. ${final?'The final shard is here. Face the Hollow Keeper and bring the lantern home.':'Defeat the guardians, recover this shard, and follow its light onward.'}`;
+  event(game, 'story', opening);
   if (game.options.rules === 'classic') event(game, 'system', 'Initiative rolled. Each turn: move up to your speed, take one action, then end your turn.');
 }
 
@@ -189,6 +193,9 @@ export function createGame(players: PlayerSpec[], options: GameOptions): GameSta
   if (new Set(players.map(p => p.id)).size !== players.length) throw new Error('Each hero needs a unique player ID.');
   if (!['simple', 'classic'].includes(options.rules) || !['woodland', 'ruins', 'coast'].includes(options.biome) || !['warm', 'dramatic', 'wry'].includes(options.narrator)) throw new Error('Choose valid adventure settings.');
   if (typeof options.seed !== 'string' || options.seed.length > 120) throw new Error('Use a seed of 120 characters or fewer.');
+  if(options.duration!==undefined&&!['short','standard','long'].includes(options.duration))throw new Error('Choose a supported adventure length.');
+  if(options.aiEnabled!==undefined&&typeof options.aiEnabled!=='boolean')throw new Error('Choose whether to use AI.');
+  if(options.creation&&(!parseBlueprint(options.creation)||players[0].name!==options.creation.hero.name||players[0].heroClass!==options.creation.hero.heroClass))throw new Error('Review the selected story and character.');
   const game: GameState = { schemaVersion: 1, options: { ...options }, rng: hash(`${options.seed}|${options.biome}`), status: 'playing', width: WIDTH, height: HEIGHT,
     tiles: [], actors: [], activeActorId: '', turnOrder: [], round: 1, scene: 0, sceneName: '', objective: '', relics: 0,
     exit: { x: 18, y: 7 }, chest: { x: 10, y: 7, opened: false }, events: [], eventSequence: 0 };
@@ -216,7 +223,7 @@ export interface QuestAction {
 /** Quest interactions cost no action or movement, but require the active hero nearby. */
 export function getQuestAction(game: GameState, actor?: Actor | null): QuestAction | null {
   if (!actor || game.status !== 'playing' || !isEncounterClear(game)) return null;
-  const advancing = game.chest.opened, final = game.scene === 2;
+  const advancing = game.chest.opened, final = game.scene >= storyGoal(game)-1;
   const destination = advancing ? game.exit : game.chest;
   const nearby = manhattan(actor, destination) <= 1;
   const available = actor.id === game.activeActorId && actor.hp > 0 && !actor.defeated && nearby;
@@ -339,15 +346,20 @@ function perform(game: GameState, actor: Actor, action: GameAction) {
     if (!getQuestAction(game, actor)?.available) throw new Error('Move next to the chest first.');
     game.chest.opened = true; game.relics++;
     for (const a of game.actors.filter(a => !a.enemy)) a.potions = Math.min(3, a.potions + 1);
-    event(game, 'story', `${actor.name} lifts a lantern shard from the chest. ${game.relics} of 3 recovered! The gateway flickers awake, and everyone finds a fresh potion.`, actor.id);
+    event(game, 'story', `${actor.name} lifts a lantern shard from the chest. ${game.relics} of ${storyGoal(game)} recovered! The gateway flickers awake, and everyone finds a fresh potion.`, actor.id);
     game.objective = 'Bring the lantern shard to the glowing gateway.';
   } else if (action.type === 'advance') {
     if (!isEncounterClear(game) || !game.chest.opened) throw new Error('Collect the lantern shard before leaving.');
     if (!getQuestAction(game, actor)?.available) throw new Error('Move next to the glowing gateway first.');
-    if (game.scene === 2) {
+    rememberChapter(game);
+    if (game.scene >= storyGoal(game)-1) {
       game.status = 'victory';
-      game.objective = 'The lantern is whole. Adventure complete!';
-      event(game, 'story', 'Three shards become one warm light. The Hollow Keeper fades, the paths bloom again, and your party carries a new story home. Adventure complete!');
+      const plannedChapters=game.options.duration==='short'?1:game.options.duration==='long'?5:3;
+      const endingEarly=!!game.story?.direction?.endAfterChapter&&game.relics<plannedChapters;
+      game.objective = endingEarly?'The gathered light is safe. Adventure complete!':'The lantern is whole. Adventure complete!';
+      event(game, 'story', game.story?.direction?.endAfterChapter?'Your party brings the gathered light home. The remaining paths can wait: tonight, the friends you protected have a beacon again. Adventure complete!':storyGoal(game)===3?'Three shards become one warm light. The Hollow Keeper fades, the paths bloom again, and your party carries a new story home. Adventure complete!':`${game.relics===1?'One recovered shard shines':`${game.relics} shards shine`} with warm light. The Hollow Keeper fades, the paths bloom again, and your party carries a new story home. Adventure complete!`);
+      // A planned story payoff becomes an outcome only after legal victory.
+      if(!endingEarly&&game.story?.campaign.resolution)event(game,'story',game.story.campaign.resolution);
     } else {
       game.scene++;
       event(game, 'system', 'The party takes a breather: some health restored, powers refreshed, and at least two potions each.');

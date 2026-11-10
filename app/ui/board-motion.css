@@ -9,7 +9,6 @@
 .board-route-line{stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:1 0}
 .board-route-destination{stroke-width:2.5}
 .board-route-cost{position:absolute;left:12px;bottom:13px;z-index:2;pointer-events:none;padding:7px 10px;border:1px solid var(--line);border-radius:6px;background:var(--surface);color:var(--ink);font:11px var(--mono);box-shadow:0 2px 8px #0000000c;animation:route-cost-in 120ms ease-out}
-html[data-theme='pixel'] .board-route-cost{border-radius:0;box-shadow:2px 2px 0 var(--line)}
 html[data-theme='pixel'] .board-route-line{stroke-linecap:square;stroke-linejoin:miter}
 html[data-motion='reduced'] .board-camera.camera-smooth{transition:none}
 html[data-motion='reduced'] .board-route-cost{animation:none}

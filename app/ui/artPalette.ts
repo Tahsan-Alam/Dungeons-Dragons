@@ -19,3 +19,5 @@ const LIGHT_WORLD={
 } as const;
 export const ART_PALETTE=Object.fromEntries(Object.entries(LIGHT_WORLD).map(([name,color])=>[name,`var(--world-${name.replace(/[A-Z]/g,letter=>`-${letter.toLowerCase()}`)}, ${color})`])) as {readonly [K in keyof typeof LIGHT_WORLD]:string};
 export const TREE_TONES=[ART_PALETTE.leaf,ART_PALETTE.leafAlternate,ART_PALETTE.leafThird] as const;
+/** Preserve the saved outfit hue while reducing its light output in night scenes. */
+export const worldPigment=(color:string)=>`color-mix(in srgb, ${color} var(--world-pigment-strength, 100%), #20242a)`;
