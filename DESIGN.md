@@ -45,3 +45,7 @@ World view is a personal Appearance setting, independent of Paint/Pixel, brightn
 Projection operates only in rendering. Game coordinates, legal movement, dice, room commands and saved/replayed events do not change. Projected route previews and hit regions use the same transform as the floor; actor motion uses projected waypoints. Camera framing uses projected bounds. View changes safely finish presentation motion and reframe without resetting a game.
 
 Efficiency rule: reuse asset components, palettes and seed data across every view. Construct depth with bounded SVG faces and layers, avoid per-sprite filters or a second generated image set, and never connect a paid provider just to change presentation. The canonical recipe contract and future caching strategy are documented in AI-OPTIONS.md.
+
+## Readability and consistency
+
+Interface text is never smaller than 11px. Health bars turn to the warning colour at half health and the danger colour at a quarter, always beside the number; a fallen hero is also labelled in the party list. Messages clear themselves after six to twelve seconds depending on length, and stay while pointed at or focused. Dialogs carry only a close button: art style is changed from the header or Table settings.

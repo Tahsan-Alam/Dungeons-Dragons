@@ -20,7 +20,7 @@
 .play-refined .party-avatar{height:37px;width:32px;background:transparent!important}
 .play-refined .party-avatar .hero-art{width:32px;height:37px}
 .play-refined .party-info>strong{font-size:12px;line-height:1.35}
-.play-refined .party-info>small{font-size:10px;line-height:1.4}
+.play-refined .party-info>small{font-size:11px;line-height:1.4}
 .play-refined .party-objective{margin-top:auto!important;padding-top:16px!important;border-top:1px solid var(--line)}
 .play-refined .party-objective h3{font:600 12px/1.3 system-ui;margin:0 0 7px}
 .play-refined .party-objective p{font-size:12px;line-height:1.5;margin:0}
@@ -32,7 +32,7 @@
 .play-refined .turn-summary{grid-column:1/-1;display:flex;align-items:center;justify-content:space-between;min-height:32px;margin:0;gap:10px}
 .play-refined .turn-summary>div{display:flex;align-items:center;gap:12px;flex-wrap:nowrap;min-width:0}
 .play-refined .player-vitals{flex:1}.play-refined .hero-inspect{display:flex;align-items:center;gap:7px;min-height:32px;padding:0 6px 0 0;border-radius:5px;min-width:0;max-width:180px}.play-refined .hero-inspect:hover{background:var(--sage)}.play-refined .hero-inspect svg{width:26px;height:32px;flex:none}.play-refined .hero-inspect strong{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px}
-.play-refined .vital-health{display:flex;align-items:center;gap:2px;position:relative;padding-bottom:5px;font:12px/1 system-ui;white-space:nowrap}.play-refined .vital-label{font-size:10px;color:var(--muted);margin-right:4px}.play-refined .vital-health>span:not(.vital-label){color:var(--muted)}.play-refined .vital-health>i{height:3px;background:var(--line);position:absolute;left:0;right:0;bottom:0;border-radius:3px;overflow:hidden}.play-refined .vital-health>i>span{display:block;height:100%;background:var(--success);transition:width 200ms}
+.play-refined .vital-health{display:flex;align-items:center;gap:2px;position:relative;padding-bottom:5px;font:12px/1 system-ui;white-space:nowrap}.play-refined .vital-label{font-size:11px;color:var(--muted);margin-right:4px}.play-refined .vital-health>span:not(.vital-label){color:var(--muted)}.play-refined .vital-health>i{height:3px;background:var(--line);position:absolute;left:0;right:0;bottom:0;border-radius:3px;overflow:hidden}.play-refined .vital-health>i>span{display:block;height:100%;background:var(--success);transition:width 200ms}
 .play-refined .vital-armor{display:flex;align-items:center;gap:4px;font-size:12px;color:var(--muted);white-space:nowrap}
 .play-refined .turn-vitals{font-size:12px;white-space:nowrap;justify-content:flex-end}.play-refined .turn-vitals>span{display:flex;align-items:center;gap:4px}.play-refined .turn-vitals svg{color:var(--muted)}.play-refined .turn-vitals .spent{color:var(--muted)}.play-refined .turn-label{display:flex;align-items:center;gap:6px;font-size:11px;max-width:180px;overflow:hidden;text-overflow:ellipsis}.play-refined .stat-label{color:var(--muted)}
 .play-refined .action-buttons{display:grid;grid-template-columns:repeat(5,minmax(44px,1fr));gap:6px;min-width:0}
@@ -42,26 +42,26 @@
 .play-refined .action-buttons .action-button>span{font:12px/1.1 system-ui}
 .play-refined .action-buttons .action-button>svg{width:18px;height:18px}
 .play-refined .action-buttons .action-button>small{font:11px/1 system-ui;top:4px;right:6px}
-.play-refined .action-buttons .action-button>kbd{font-size:8px;max-width:calc(100% - 26px);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.play-refined .action-buttons .action-button>kbd{font-size:11px;max-width:calc(100% - 26px);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .play-refined .end-turn{min-width:110px;min-height:48px;height:48px;margin:0;padding:8px 12px;font-size:12px;gap:8px;align-self:stretch;border-radius:6px}
 .play-refined .action-hint{grid-column:1/-1;margin:0;min-height:16px;font-size:11px;line-height:1.4;color:var(--muted)}
 .play-refined .action-button:active:not(:disabled),.play-refined .end-turn:active:not(:disabled){transform:translateY(1px)}
 .play-refined .game-connection:empty{display:none}.play-refined .game-connection{position:absolute;top:calc(var(--app-header-height) + 7px);left:50%;transform:translateX(-50%);background:var(--surface-raised);color:var(--ink);border:1px solid var(--accent);border-radius:6px;padding:8px 14px;font-size:12px;z-index:20}
-@media(min-width:1001px){.play-refined .panel-resizer{background:var(--paper)}.play-refined .resizable-layout .party-info>strong{font-size:12px}.play-refined .resizable-layout .party-info>small{font-size:10px}}
-@media(max-width:1200px) and (min-width:1001px){.play-refined .hero-inspect strong{display:none}.play-refined .scene-title{display:block}.play-refined .scene-title>span{font-size:10px}.play-refined .scene-heading h1{font-size:22px!important}.play-refined .stat-label{display:none}.play-refined .end-turn{min-width:88px}.play-refined .end-turn svg{display:none}.play-refined .turn-summary>div{gap:8px}}
+@media(min-width:1001px){.play-refined .panel-resizer{background:var(--paper)}.play-refined .resizable-layout .party-info>strong{font-size:12px}.play-refined .resizable-layout .party-info>small{font-size:11px}}
+@media(max-width:1200px) and (min-width:1001px){.play-refined .hero-inspect strong{display:none}.play-refined .scene-title{display:block}.play-refined .scene-title>span{font-size:11px}.play-refined .scene-heading h1{font-size:22px!important}.play-refined .stat-label{display:none}.play-refined .end-turn{min-width:88px}.play-refined .end-turn svg{display:none}.play-refined .turn-summary>div{gap:8px}}
 @media(max-width:1000px){
  .play-refined .resizable-layout .table-main{padding:0 10px 8px}.play-refined .panel-toggle{display:flex}.play-refined .rules-label{display:none}.play-refined .scene-heading{min-height:52px;height:52px}.play-refined .scene-heading h1{font-size:23px!important}.play-refined .party-rail.drawer-open,.play-refined .story-rail.drawer-open{bottom:0!important}.play-refined .party-objective{margin-top:16px!important}.play-refined .resizable-layout .party-member{min-height:66px}.play-refined .action-hint{font-size:11px}
 }
 @media(max-width:650px){
- .play-refined .resizable-layout .table-main{padding:0 8px 8px}.play-refined .scene-heading{min-height:50px;height:50px}.play-refined .scene-title{display:block;min-width:0}.play-refined .scene-heading h1{font-size:19px!important;line-height:1.25}.play-refined .scene-title>span{display:block;font-size:10px;margin-top:2px}.play-refined .scene-controls{gap:5px}.play-refined .panel-toggle{min-height:40px;min-width:40px}.play-refined .panel-toggle>span{display:none}
- .play-refined .board-container{min-height:80px!important}.play-refined .board-tools{bottom:7px;right:7px}.play-refined .board-tools button{min-width:36px;min-height:36px}.play-refined .board-tools>span{font-size:10px}
+ .play-refined .resizable-layout .table-main{padding:0 8px 8px}.play-refined .scene-heading{min-height:50px;height:50px}.play-refined .scene-title{display:block;min-width:0}.play-refined .scene-heading h1{font-size:19px!important;line-height:1.25}.play-refined .scene-title>span{display:block;font-size:11px;margin-top:2px}.play-refined .scene-controls{gap:5px}.play-refined .panel-toggle{min-height:40px;min-width:40px}.play-refined .panel-toggle>span{display:none}
+ .play-refined .board-container{min-height:80px!important}.play-refined .board-tools{bottom:7px;right:7px}.play-refined .board-tools button{min-width:36px;min-height:36px}.play-refined .board-tools>span{font-size:11px}
  .play-refined .action-dock{padding-top:6px;column-gap:6px;row-gap:5px}.play-refined .turn-summary{min-height:32px;gap:6px}.play-refined .turn-summary>div{gap:8px}.play-refined .hero-inspect{padding:0;min-height:32px}.play-refined .hero-inspect strong{display:none}.play-refined .hero-inspect svg{width:23px}.play-refined .vital-health{font-size:12px}.play-refined .vital-armor{font-size:11px;gap:2px}.play-refined .turn-label{font-size:11px;max-width:100px}.play-refined .turn-vitals{font-size:12px}.play-refined .stat-label{display:none}.play-refined .turn-vitals>span{gap:3px}
  .play-refined .action-buttons{gap:3px}.play-refined .action-buttons .action-button{height:46px;min-height:46px;padding:5px 2px;gap:4px}.play-refined .action-buttons .action-button>span{font-size:11px}.play-refined .action-buttons .action-button>svg{width:16px;height:16px}.play-refined .action-buttons .action-button>kbd{display:none}.play-refined .action-buttons .action-button>small{font-size:11px;right:3px;top:3px}.play-refined .end-turn{min-width:76px;height:46px;min-height:46px;padding:6px;font-size:11px}.play-refined .end-turn>svg,.play-refined .end-turn>kbd{display:none}.play-refined .action-hint{display:block;font-size:11px;line-height:1.35;overflow-wrap:anywhere}
  .play-refined .action-buttons:has(.quest-action){grid-template-columns:repeat(5,minmax(44px,1fr))}.play-refined .action-buttons .quest-action{grid-column:1/-1;height:44px;min-height:44px;flex-direction:row}.play-refined .action-dock:has(.quest-action) .end-turn{height:auto}
 }
 @media(max-width:360px){.play-refined .resizable-layout .table-main{padding-left:6px;padding-right:6px}.play-refined .action-dock{column-gap:4px}.play-refined .action-buttons{gap:2px}.play-refined .end-turn{min-width:72px;font-size:11px}.play-refined .turn-summary>div{gap:5px}.play-refined .vital-armor{display:none}.play-refined .hero-inspect svg{width:20px}.play-refined .scene-heading h1{font-size:18px!important}.play-refined .turn-vitals{gap:6px!important}}
 @media(max-height:600px) and (orientation:landscape){
- .play-refined .scene-heading{height:40px;min-height:40px}.play-refined .scene-title{display:flex;align-items:baseline;gap:10px}.play-refined .scene-heading h1{font-size:20px!important}.play-refined .scene-title>span{font-size:10px}.play-refined .panel-toggle{min-height:34px;height:34px}.play-refined .panel-toggle>span{display:none}.play-refined .action-dock{padding-top:4px;gap:4px}.play-refined .turn-summary{min-height:26px}.play-refined .hero-inspect{min-height:26px}.play-refined .hero-inspect svg{height:26px}.play-refined .action-buttons .action-button,.play-refined .end-turn{height:44px;min-height:44px}.play-refined .action-hint{display:block;font-size:11px;line-height:1.35;overflow-wrap:anywhere}.play-refined .resizable-layout .table-main{padding-bottom:5px}.play-refined .board-container{min-height:60px!important}
+ .play-refined .scene-heading{height:40px;min-height:40px}.play-refined .scene-title{display:flex;align-items:baseline;gap:10px}.play-refined .scene-heading h1{font-size:20px!important}.play-refined .scene-title>span{font-size:11px}.play-refined .panel-toggle{min-height:34px;height:34px}.play-refined .panel-toggle>span{display:none}.play-refined .action-dock{padding-top:4px;gap:4px}.play-refined .turn-summary{min-height:26px}.play-refined .hero-inspect{min-height:26px}.play-refined .hero-inspect svg{height:26px}.play-refined .action-buttons .action-button,.play-refined .end-turn{height:44px;min-height:44px}.play-refined .action-hint{display:block;font-size:11px;line-height:1.35;overflow-wrap:anywhere}.play-refined .resizable-layout .table-main{padding-bottom:5px}.play-refined .board-container{min-height:60px!important}
 }
 
 .play-refined .end-turn kbd{color:inherit;background:transparent;border-color:currentColor;opacity:.75}
@@ -78,7 +78,7 @@
  .play-refined .action-dock:has(.quest-action) .end-turn{height:auto}
  .play-refined .hero-inspect strong,.play-refined .stat-label{display:none}
  .play-refined .scene-title{display:block}
- .play-refined .scene-title>span{font-size:10px}
+ .play-refined .scene-title>span{font-size:11px}
  .play-refined .scene-heading h1{font-size:21px!important}
 }
 
@@ -112,3 +112,7 @@ html[data-color-mode][data-theme] .play-refined .party-member.foe .health-track>
 .play-refined .journal-entry.story small{font-size:11px;color:var(--muted)}
 .play-refined .entry-result{flex:none;align-self:flex-start;padding:0 6px;border:1px solid var(--line);border-radius:5px;font:600 11px/1.7 var(--mono);color:var(--muted);white-space:nowrap}
 .play-refined .entry-result:is(.damage,.critical){color:var(--danger);border-color:var(--danger)}
+
+/* Health reads at a glance: the bar changes colour at half and at a quarter, beside the number. */
+html[data-color-mode][data-theme] .health-track.health-low>span,.play-refined .vital-health.health-low>i>span{background:var(--warning)}
+html[data-color-mode][data-theme] .health-track:is(.health-critical,.health-down)>span,.play-refined .vital-health:is(.health-critical,.health-down)>i>span{background:var(--danger)}

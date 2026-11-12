@@ -1,7 +1,7 @@
 'use client';
 import {useCallback,useLayoutEffect,useId,useRef,useState,type ReactNode,type RefObject} from 'react';
 import {Icon} from './Art';
-import {ThemeToggle,useTheme} from './Theme';
+import {useTheme} from './Theme';
 
 /** A supplied action runs after dismissal; useful for leaving a multi-step dialog. */
 export type ModalDismiss=(afterClose?:()=>void)=>void;
@@ -28,6 +28,6 @@ export default function Modal({title,onClose,children,wide=false,dismissible=tru
   return()=>{if(timer.current)clearTimeout(timer.current);el?.removeEventListener('cancel',handler);el?.close()};
  },[requestClose]);
  return <dialog ref={dialog} inert={closing} aria-labelledby={titleId} className={`modal ${wide?'wide':''} ${closing?'is-closing':''}`} onClick={e=>{if(e.target===dialog.current){const rect=dialog.current.getBoundingClientRect();if(e.clientX<rect.left||e.clientX>rect.right||e.clientY<rect.top||e.clientY>rect.bottom)requestClose()}}}>
-  <div className="modal-head"><h2 id={titleId}>{title}</h2><div className="modal-tools"><ThemeToggle/><button className="icon-button" aria-label="Close dialog" title="Close (Esc)" disabled={!dismissible||closing} onClick={()=>requestClose()}><Icon name="close"/></button></div></div>{typeof children==='function'?children(requestClose):children}
+  <div className="modal-head"><h2 id={titleId}>{title}</h2><div className="modal-tools"><button className="icon-button" aria-label="Close dialog" title="Close (Esc)" disabled={!dismissible||closing} onClick={()=>requestClose()}><Icon name="close"/></button></div></div>{typeof children==='function'?children(requestClose):children}
  </dialog>;
 }

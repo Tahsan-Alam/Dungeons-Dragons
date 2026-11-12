@@ -20,4 +20,4 @@
  .board-tools>i{margin:0 1px}
  .board-tools>span{min-width:30px;padding:0 2px}
 }
-@container board-surface (max-width:600px){.board-route-cost{bottom:66px;left:8px;font-size:10px;padding:6px 8px}}
+@container board-surface (max-width:600px){.board-route-cost{bottom:66px;left:8px;font-size:11px;padding:6px 8px}}

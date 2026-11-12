@@ -86,4 +86,4 @@
  .setup-footer>.primary{flex:1;max-width:230px}
  .setup-review dl>div{font-size:12px;gap:12px}
 }
-@media(max-width:360px){.setup-progress button{font-size:10px;gap:4px}.guided-setup .two-fields{grid-template-columns:1fr;gap:0}.setup-ai-toggle{padding:13px}.guided-setup .class-option{padding-inline:10px}}
+@media(max-width:360px){.setup-progress button{font-size:11px;gap:4px}.guided-setup .two-fields{grid-template-columns:1fr;gap:0}.setup-ai-toggle{padding:13px}.guided-setup .class-option{padding-inline:10px}}
