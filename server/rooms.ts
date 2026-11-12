@@ -1,3 +1,4 @@
+import {NARRATION_LIMIT} from '../game/campaign.ts';
 import { DEFAULT_OPTIONS, HERO_COLORS } from '../game/types.ts';
 import {parseBlueprint} from '../game/creation.ts';
 import type { GameAction, GameOptions, HeroClass, RoomPlayer, RoomView, Session } from '../game/types.ts';
@@ -200,7 +201,7 @@ export class RoomService {
         case 'narrate': {
           requireHost();
           if(!room.game?.story)return reject('Start a new adventure to use the storyteller.');
-          if(room.game.story.narrations.length>=100)return reject('This adventure has reached its narration limit.');
+          if(room.game.story.narrations.length>=NARRATION_LIMIT)return reject('This adventure has reached its narration limit.');
           const narration=this.ai?await this.ai.narrate(code,room.game):narrationFixture(room.game);
           if(!room.game.story.narrations.some(n=>n.eventId===narration.eventId)){
             room.game=acceptNarration(room.game,narration);room.replay=appendReplay(room.replay!,{type:'narration',record:narration});
@@ -256,7 +257,7 @@ export class RoomService {
         default:return reject('That room command is not supported.');
       }
       // One saved telling at chapter boundaries, never on polling or rendering.
-      if(room.game?.options.aiEnabled===true&&room.game.story&&room.game.story.narrations.length<100&&
+      if(room.game?.options.aiEnabled===true&&room.game.story&&room.game.story.narrations.length<NARRATION_LIMIT&&
         (command.type==='start'||command.type==='action'&&(room.game.scene!==record.room.game?.scene||room.game.status!==record.room.game?.status))){
         const narration=this.ai?await this.ai.narrate(code,room.game):narrationFixture(room.game);
         if(!room.game.story.narrations.some(n=>n.eventId===narration.eventId)){

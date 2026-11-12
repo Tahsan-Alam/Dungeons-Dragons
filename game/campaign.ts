@@ -1,5 +1,6 @@
 import type {GameOptions, GameState, PlayerSpec, HeroClass} from './types.ts';
 import {HERO_COLORS} from './types.ts';
+export const NARRATION_LIMIT=400;
 export interface CharacterRecipe {id:string; name:string; heroClass:HeroClass; color:string; personality:string;}
 export interface Campaign {title:string; premise:string; resolution?:string; facts:string[]; chapters:string[]; characters:CharacterRecipe[]; source:'fixture'|'openai';}
 export interface StoryRecord {eventId:number; caption:string; source:'fixture'|'openai';}

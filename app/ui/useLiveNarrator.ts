@@ -2,7 +2,7 @@
 import {useCallback,useEffect,useRef,useState} from 'react';
 import type {NarratorProfile} from '../../game/creation';
 import {AETHER} from '../../game/creation';
-import {LIVE_RATE,LIVE_VOICES} from '../../server/live-protocol';
+import {LIVE_LIMITS,LIVE_RATE,LIVE_VOICES} from '../../server/live-protocol';
 import type {LiveServerEvent,LiveVoice} from '../../server/live-protocol';
 import {createLiveDelegationQueue} from './live-delegation';
 
@@ -62,7 +62,7 @@ export function useLiveNarrator(options:LiveNarratorOptions){
    const socket=new WebSocket(`${location.protocol==='https:'?'wss:':'ws:'}//${location.host}/api/quest/live`);
    const s:Session={socket,audio,gain,sources:new Set(),stream:permitted,worklet:null,input:null,nextAt:0,epoch,ready:false,mode,frame:0,startup:null};active.current=s;pendingAudio=null;pendingStream=null;
    s.startup=setTimeout(()=>{if(active.current===s&&!s.ready){setError('Voice took too long to connect. You can keep typing.');stop('error');}},15_000);
-   let sessionSeconds=90;
+   let sessionSeconds=LIVE_LIMITS.call/1000;
    const levels=new Uint8Array(analyser.fftSize);
    const meter=()=>{if(active.current!==s)return;analyser.getByteTimeDomainData(levels);const audible=!speaker.current&&levels.some(v=>Math.abs(v-128)>3);setSpeaking(audible);if(s.ready)setStatus(audible?'speaking':'listening');s.frame=requestAnimationFrame(meter);};s.frame=requestAnimationFrame(meter);
    microphone.current=mode!=='call';setMicState(microphone.current);

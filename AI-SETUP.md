@@ -1,5 +1,7 @@
 # AI setup and team access
 
+**Current limits:** see [AI usage limits](AI-USAGE-LIMITS.md) for the November 11 increases and the retained $25/month hosted cap. Numeric limits in the historical implementation/validation sections below describe those earlier runs.
+
 Current behavior on `feature/guided-ai-adventures`, November 6, 2026. Bounded local checks passed for live planning, guidance, narration, a complete short adventure through browser controls, and post-recording transcription. Desktop and narrow Paint/Pixel workflows passed using explicitly approved, isolated Playwright Chrome Headless Shell. The latest evidence, spending record and remaining human microphone/audio checks are in [AI-VALIDATION.md](AI-VALIDATION.md). Default checked-in behavior is fixture-only; ignored local flags can temporarily enable an authorized test. Paid voice is a separate opt-in. The historical validation records below describe earlier phases and their budgets, not the current run's allowance.
 
 Text generation and paid narrator playback have passed both local and hosted checks. API keys stay on the server. Development defaults to fixtures; paid generation requires server opt-in, spending allowance **and a valid browser unlock**. See [AI-VALIDATION.md](AI-VALIDATION.md) for evidence and billing uncertainty.

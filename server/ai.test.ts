@@ -71,7 +71,7 @@ test('request schema, model roles, output bounds and no provider tools are expli
  const ai=new GameAI({...config,planner:'gpt-6.1-terra'},new BudgetLedger(new MemoryLedger()),async(_url,init)=>{bodies.push(JSON.parse(String(init?.body)));return new Response('',{status:500});});
  await ai.plan('a',DEFAULT_OPTIONS,players);await ai.narrate('a',game());
  assert.equal(bodies[0].model,'gpt-6.1-terra');assert.equal(bodies[1].model,'gpt-6-luna');
- for(const b of bodies){assert.equal(b.store,false);assert.equal(b.service_tier,'default');assert.ok(!('tools'in b));assert.ok(Number(b.max_output_tokens)<=1600);}
+ for(const b of bodies){assert.equal(b.store,false);assert.equal(b.service_tier,'default');assert.ok(!('tools'in b));assert.ok(Number(b.max_output_tokens)<=6400);}
 });
 test('seeded recipes preserve human identity, reject unknown components, and never change RNG',()=>{
  const base=campaignFixture(DEFAULT_OPTIONS,players);assert.deepEqual(base,campaignFixture(DEFAULT_OPTIONS,players));
@@ -245,4 +245,11 @@ test('AI-enabled room saves exactly one automatic telling on start and chapter a
  assert.equal(room.game!.scene,1);assert.equal(tellings,2);assert.equal(room.game!.story!.narrations.length,2);assert.equal(room.game!.story!.memories!.length,1);
  assert.deepEqual(reconstructReplay(room.replay!).at(-1),room.game);
  await service.get(room.code,created.session.token);await service.get(room.code,created.session.token);assert.equal(tellings,2,'Polling cannot generate another telling');
+});
+
+test('default shared concurrency admits eight independent reservations and denies the ninth',async()=>{
+ const ledger=new BudgetLedger(new MemoryLedger());
+ const results=await Promise.all(Array.from({length:9},(_,i)=>ledger.reserve('parallel-'+i,'scope',1)));
+ assert.equal(results.filter(value=>value==='reserved').length,8);assert.equal(results[8],'blocked');
+ await ledger.finish('parallel-0',{});assert.equal(await ledger.reserve('replacement','scope',1),'reserved');
 });

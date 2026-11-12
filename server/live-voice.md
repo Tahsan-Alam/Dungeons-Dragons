@@ -32,15 +32,15 @@ dictation-to-text-box feature.
 
 ## Bounds and accounting
 
-- Short comment: at most 18 seconds after startup, reserved **$0.06**.
-- Conversation: at most 90 seconds after startup, reserved **$0.20**. If that
-  reservation does not fit, try a 60-second window for **$0.125**, then a
-  30-second window for **$0.075**. Each smaller window retains a 2x margin over
-  its full startup, conversation and closure lifetime. No spending cap changes.
-- No user activity for 30 seconds: close the conversation.
+- Short comment: at most 72 seconds after startup, reserved **$0.24**.
+- Conversation: at most 360 seconds after startup, reserved **$0.80**. If that
+  reservation does not fit, try a 240-second window for **$0.50**, then a
+  120-second window for **$0.30**. Each smaller window retains a 2x margin over
+  its full startup, conversation and closure lifetime. See [current AI usage limits](../AI-USAGE-LIMITS.md).
+- No user activity for 120 seconds: close the conversation.
 - Startup: 10 seconds; graceful provider close: 3 seconds, then force close.
 - Browser startup also times out after 15 seconds. No automatic reconnect.
-- At most 8 delegated proposals, 60 non-audio controls, and bounded PCM,
+- At most 32 delegated proposals, 240 non-audio controls, and bounded PCM,
   transcript, event, wire and context sizes per connection.
 - The existing durable D1 ledger reserves before contacting OpenAI and shares
   creator, daily, monthly and concurrent-request limits with text generation.
@@ -54,8 +54,8 @@ The published model rate reviewed on 2026-11-07 is $0.05 per active minute,
 billed by the second. These reservations include startup/closure and a safety
 margin. The relay does not enable hosted Responses delegation or provider tools.
 The app's `guide` request is separately reserved through its existing text AI
-path. No account flags or spend limits are changed by this feature. A remaining
-allowance below the smallest reservation blocks a call. The default $0.10
+path. Account billing and provider controls are independent of these app limits. A remaining
+allowance below the smallest reservation blocks a call. The default $0.40
 campaign allowance can fund a short call instead of rejecting every call.
 
 ## Changes and confirmation

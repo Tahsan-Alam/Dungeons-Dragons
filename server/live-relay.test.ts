@@ -58,10 +58,10 @@ test('reached shared cap opens no provider socket',async()=>{
 });
 
 test('a default allowance funds a shorter call without raising caps or opening extra sockets',async()=>{
- const f=await fixture({caps:{campaign:100_000,day:250_000,month:1_000_000,concurrency:2}});assert.equal(f.calls(),1);f.ready();
- assert.equal(f.client.sent.find(e=>e.type==='ready').expiresIn,30_000);
- const receipts=Object.values((await f.store.read()).entries);assert.equal(receipts.length,1);assert.equal(receipts[0].reserved,75_000);
- f.advance(20_000);f.upstream.emit({type:'session.input_transcript.delta',delta:'Keep talking.'});f.advance(10_000);
+ const f=await fixture({caps:{campaign:400_000,day:1_000_000,month:4_000_000,concurrency:8}});assert.equal(f.calls(),1);f.ready();
+ assert.equal(f.client.sent.find(e=>e.type==='ready').expiresIn,120_000);
+ const receipts=Object.values((await f.store.read()).entries);assert.equal(receipts.length,1);assert.equal(receipts[0].reserved,300_000);
+ f.advance(80_000);f.upstream.emit({type:'session.input_transcript.delta',delta:'Keep talking.'});f.advance(40_000);
  assert.equal(f.upstream.sent.at(-1).type,'session.close');f.advance(LIVE_LIMITS.grace);await flush();assert.equal(f.client.sent.find(e=>e.type==='closed').reason,'time_limit');
 });
 
@@ -72,7 +72,7 @@ test('server closes idle calls even when the browser sends nothing',async()=>{
  const f=await fixture();f.ready();f.advance(LIVE_LIMITS.idle);assert.equal(f.upstream.sent.at(-1).type,'session.close');f.advance(LIVE_LIMITS.grace);await flush();assert.equal(f.upstream.closed,true);assert.equal(f.client.closed,true);assert.equal(Object.values((await f.store.read()).entries)[0].status,'done');
 });
 test('continuous user activity cannot exceed server hard deadline',async()=>{
- const f=await fixture();f.ready();for(let i=0;i<4;i++){f.upstream.emit({type:'session.input_transcript.delta',delta:'More ideas. '});f.advance(20_000);}f.upstream.emit({type:'session.input_transcript.delta',delta:'Still here.'});f.advance(10_000);assert.equal(f.upstream.sent.at(-1).type,'session.close');f.advance(LIVE_LIMITS.grace);await flush();assert.equal(f.client.sent.find(e=>e.type==='closed')?.reason,'time_limit');
+ const f=await fixture();f.ready();for(let i=0;i<4;i++){f.upstream.emit({type:'session.input_transcript.delta',delta:'More ideas. '});f.advance(80_000);}f.upstream.emit({type:'session.input_transcript.delta',delta:'Still here.'});f.advance(40_000);assert.equal(f.upstream.sent.at(-1).type,'session.close');f.advance(LIVE_LIMITS.grace);await flush();assert.equal(f.client.sent.find(e=>e.type==='closed')?.reason,'time_limit');
 });
 test('muted input does not relay microphone bytes; unmute restores it',async()=>{
  const f=await fixture();f.ready();f.client.emit({type:'mic',muted:true});const audio=btoa('\0\0'.repeat(120));f.client.emit({type:'audio',audio});assert.equal(f.upstream.sent.filter(e=>e.type==='session.input_audio.append').length,0);f.client.emit({type:'mic',muted:false});f.client.emit({type:'audio',audio});assert.equal(f.upstream.sent.at(-1).audio,audio);f.relay.close();f.advance(LIVE_LIMITS.grace);await flush();
@@ -101,4 +101,10 @@ test('failed upgrades retain the reservation without raw provider data',async()=
 });
 test('client disconnect closes the upstream and keeps unconfirmed usage charged',async()=>{
  const f=await fixture();f.ready();f.client.disconnect();assert.equal(f.upstream.sent.at(-1).type,'session.close');f.advance(LIVE_LIMITS.grace);await flush();const receipt=Object.values((await f.store.read()).entries)[0];assert.equal(receipt.reserved,LIVE_RESERVATION.call);assert.equal(receipt.diagnostic?.outcome,'live_usage_unconfirmed');
+});
+
+test('a full extended call accepts final usage beyond the old 240-second validation ceiling',async()=>{
+ const f=await fixture();f.ready();f.upstream.emit({type:'session.closed',usage:{seconds:360}});await flush();
+ assert.equal(f.client.closed,true);const receipt=Object.values((await f.store.read()).entries)[0];
+ assert.equal(receipt.diagnostic?.outcome,'live_closed');assert.equal((receipt.result as {liveSeconds:number}).liveSeconds,360);
 });

@@ -1,4 +1,5 @@
 'use client';
+import {NARRATION_LIMIT} from '../../game/campaign';
 import { useEffect, useRef, useState } from 'react';
 import type { GameState, GameOptions, HeroClass, RoomView, RoomPlayer, Session, GameAction, PlayerSpec } from '../../game/types';
 import { HERO_COLORS } from '../../game/types';
@@ -257,7 +258,7 @@ export function useSession(){
   const record=active.current?records.current.get(active.current):undefined;
   if(!record?.game?.story||!record.replay)return;
   if(record.game.story.narrations.some(n=>n.eventId===record.game!.eventSequence))return;
-  if(record.game.story.narrations.length>=100){setError('This adventure has reached its narration limit.');return;}
+  if(record.game.story.narrations.length>=NARRATION_LIMIT){setError('This adventure has reached its narration limit.');return;}
   const narration=narrationFixture(record.game),game=acceptNarration(record.game,narration),replay=appendReplay(record.replay,{type:'narration',record:narration});
   setSolo(game);await saveRecord(updateSoloRecord(record,game,replay));
  }

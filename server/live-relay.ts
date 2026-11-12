@@ -77,10 +77,10 @@ export function attachLiveRelay(client:LiveSocket,options:{key:string;ledger:Bud
   if(done)return;
   try{
    if(typeof event.data!=='string'||event.data.length>150_000)throw new Error();
-   wireBytes+=event.data.length;if(++events>12_000||wireBytes>18_000_000)throw new Error();
+   wireBytes+=event.data.length;if(++events>48_000||wireBytes>72_000_000)throw new Error();
    const e=JSON.parse(event.data);
    if(e.type==='session.closed'||e.type==='session.usage.updated'){
-    const seconds=e.usage?.seconds,valid=typeof seconds==='number'&&Number.isFinite(seconds)&&seconds>=reportedSeconds&&seconds<=240;
+    const seconds=e.usage?.seconds,valid=typeof seconds==='number'&&Number.isFinite(seconds)&&seconds>=reportedSeconds&&seconds<=(fundedDuration+LIVE_LIMITS.start+LIVE_LIMITS.grace)/1000;
     if(valid)reportedSeconds=seconds;
     if(e.type==='session.closed'){void finish(valid);return;}
     if(!valid){close('usage_limit');return;}
@@ -102,7 +102,7 @@ export function attachLiveRelay(client:LiveSocket,options:{key:string;ledger:Bud
     const user=e.type==='session.input_transcript.delta';if(user){lastTranscriptAt=lastUserAt=timerClock.now();userText=(userText+e.delta).slice(-1200);}
     send({type:'transcript',role:user?'user':'assistant',text:e.delta});
    }else if(e.type==='session.delegation.created'){
-    const id=e.delegation?.id;if(!ready||typeof id!=='string'||id.length>128||e.delegation?.target!=='client'||knownDelegations.size>=8)throw new Error();
+    const id=e.delegation?.id;if(!ready||typeof id!=='string'||id.length>128||e.delegation?.target!=='client'||knownDelegations.size>=32)throw new Error();
     if(knownDelegations.has(id))return;knownDelegations.add(id);
     provider({type:'session.thinking.append',event_id:'pending-'+knownDelegations.size,delegation_id:id,content:'The application will prepare a proposal for the player to review. Nothing has been changed yet.'});
     pendingDelegation=id;delegatedAt=timerClock.now();
@@ -123,7 +123,7 @@ export function attachLiveRelay(client:LiveSocket,options:{key:string;ledger:Bud
    if(raw.length&&Math.sqrt(energy/(raw.length/2))>400)lastUserAt=timerClock.now();
    lastInputAt=timerClock.now();provider({type:'session.input_audio.append',audio:e.audio});return;
   }
-  if(++clientControls>60){close('rate_limit');return;}
+  if(++clientControls>240){close('rate_limit');return;}
   if(e.type==='mic'){micMuted=e.muted;provider({type:micMuted?'session.input_audio.mute':'session.input_audio.unmute',event_id:'mic-'+clientControls});return;}
   if(e.type==='context'){
    if(timerClock.now()-sentContextAt<500)return;sentContextAt=timerClock.now();lastUserAt=timerClock.now();

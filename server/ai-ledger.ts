@@ -18,7 +18,7 @@ export class D1Ledger implements LedgerStore {
  }
 }
 export interface Caps {campaign:number;day:number;month:number;concurrency:number;}
-export const DEFAULT_CAPS:Caps={campaign:100_000,day:250_000,month:1_000_000,concurrency:2};
+export const DEFAULT_CAPS:Caps={campaign:400_000,day:1_000_000,month:4_000_000,concurrency:8};
 export const LEDGER_BYTES=600_000;
 export class BudgetLedger {
  private store:LedgerStore;private caps:Caps;private now:()=>number;
@@ -29,7 +29,7 @@ export class BudgetLedger {
   for(let attempt=0;attempt<32;attempt++){
    const state=await this.store.read();if(state.entries[key])return state.entries[key];
    const day=new Date(this.now()).toISOString().slice(0,10),month=day.slice(0,7),entries=Object.values(state.entries);
-   if(entries.length>=2000||new TextEncoder().encode(JSON.stringify(state)).length+entries.reduce((sum,r)=>sum+(r.status==='pending'?(r.cacheBytes??32_000):0),0)+cacheBytes+1024>LEDGER_BYTES||entries.filter(r=>r.status==='pending').length>=this.caps.concurrency)return 'blocked';
+   if(entries.length>=8000||new TextEncoder().encode(JSON.stringify(state)).length+entries.reduce((sum,r)=>sum+(r.status==='pending'?(r.cacheBytes??32_000):0),0)+cacheBytes+1024>LEDGER_BYTES||entries.filter(r=>r.status==='pending').length>=this.caps.concurrency)return 'blocked';
    for(const [scope,limit] of [['campaign',this.caps.campaign],['day',this.caps.day],['month',this.caps.month]] as const){
     const value={campaign,day,month}[scope];if(entries.filter(r=>r[scope]===value).reduce((sum,r)=>sum+r.reserved,0)+reserved>limit)return 'blocked';
    }

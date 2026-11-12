@@ -50,7 +50,7 @@ test('audio reserves before connecting, deduplicates rooms/players/events and su
  assert.equal(await ai.speak('another-room',record,false),null);assert.equal(m.calls,1);
 });
 test('audition presses each generate fresh audio with character delivery, while a replayed request is deduplicated',async()=>{
- const store=new MemoryLedger(),ledger=new BudgetLedger(store,{...DEFAULT_CAPS,campaign:500_000}),m=mock();
+ const store=new MemoryLedger(),ledger=new BudgetLedger(store,{...DEFAULT_CAPS,campaign:2_000_000}),m=mock();
  const ai=new GameAI(config,ledger,m.transport),style='Soft-spoken, sarcastic archivist';
  assert.ok(await ai.speak('creator',record,true,undefined,style,'press-one'));
  assert.equal(m.calls,1);assert.ok(m.socket.sent.find(e=>e.type==='response.create').response.instructions.includes(style));
@@ -60,7 +60,7 @@ test('audition presses each generate fresh audio with character delivery, while 
  assert.equal(Object.keys((await store.read()).entries).length,2);
 });
 test('three short auditions fit alongside cached content and preserve the bounded audio contract',async()=>{
- const store=new MemoryLedger(),ledger=new BudgetLedger(store,{...DEFAULT_CAPS,campaign:500_000,day:500_000});
+ const store=new MemoryLedger(),ledger=new BudgetLedger(store,{...DEFAULT_CAPS,campaign:2_000_000,day:2_000_000});
  await ledger.reserve('existing','older',1,581_000);await ledger.finish('existing','x'.repeat(580_000));
  for(let i=0;i<3;i++){
   const m=mock(),ai=new GameAI(config,ledger,m.transport);assert.ok(await ai.speak('creator',record,true,undefined,'Soft-spoken','press-'+i,true));assert.equal(m.calls,1);assert.equal(await ai.speak('creator',record,true,undefined,'Soft-spoken','press-'+i,true),null);assert.equal(m.calls,1);
@@ -118,7 +118,7 @@ test('invalid session acknowledgement never triggers inference',async()=>{
 });
 test('HTTP refusal, malformed events, transcript overflow and event floods close without retries',async()=>{
  await assert.rejects(realtimeSpeech('mock',caption,async()=>new Response('',{status:429})));
- for(const sequence of [[null],[{type:'response.created',response:{id:'resp'}},{type:'response.output_audio_transcript.delta',...fields,delta:'x'.repeat(1201)}],Array.from({length:2001},()=>({type:'rate_limits.updated'}))]){
+ for(const sequence of [[null],[{type:'response.created',response:{id:'resp'}},{type:'response.output_audio_transcript.delta',...fields,delta:'x'.repeat(1201)}],Array.from({length:8001},()=>({type:'rate_limits.updated'}))]){
   const m=mock(sequence as ReturnType<typeof events>);await assert.rejects(realtimeSpeech('mock',caption,m.transport));assert.ok(m.socket.closed);assert.equal(m.calls,1);
  }
 });
@@ -168,4 +168,15 @@ test('observed live enclosing quotes preserve exact words; interior and unbalanc
  for(const text of ['"'+approved,'""'+approved+'""','A "crooked" path leads toward the first shard.','"A crooked path leads toward the shard."','"A crooked path leads toward the first shard. Continue."','"A crooked path leads away from the first shard."','"A crooked path leads toward the first shard!"']){
   const m=mock(events(text));await assert.rejects(realtimeSpeech('mock',approved,m.transport));assert.ok(m.socket.closed);
  }
+});
+
+test('longer speech is delivered once without exceeding reusable ledger storage or charging a replay',async()=>{
+ const sequence=events();
+ sequence.splice(1,1,...Array.from({length:50},()=>({type:'response.output_audio.delta',...fields,delta:btoa('\xff'.repeat(8000))})) as any);
+ const m=mock(sequence),store=new MemoryLedger(),ledger=new BudgetLedger(store),ai=new GameAI(config,ledger,m.transport);
+ const audio=await ai.speak('room',record);assert.ok(audio);assert.equal(m.calls,1);
+ const wav=Buffer.from(audio!.split(',')[1],'base64');assert.equal(wav.length,800044);
+ const receipt=Object.values((await store.read()).entries)[0];assert.equal(receipt.status,'done');assert.deepEqual(receipt.result,{speechDelivered:true});
+ assert.ok(Buffer.byteLength(JSON.stringify(await store.read()))<LEDGER_BYTES);
+ assert.equal(await ai.speak('room',record),null);assert.equal(m.calls,1);
 });
