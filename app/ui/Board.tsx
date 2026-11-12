@@ -10,6 +10,7 @@ import {findBoardPath,isBoardDiscontinuity,planActorMotions,boardPathKeyframes,s
 import {createBoardProjection,type BoardProjection} from './board-projection';
 import {collectBoardFeedback,type BoardFeedback} from './board-feedback';
 import {DepthTerrain,DepthProp,DepthChest,DepthGateway} from './DepthArt';
+import {healthLevel} from './readability';
 import {sameBoardTerrain,rovingBoardTile,nextBoardTile,resizedBoardPan,revealedBoardPan,type BoardDirection} from './board-interaction';
 import './board-motion.css';
 import './board-view.css';
@@ -169,7 +170,7 @@ export default function Board({game,actor,tool,onTile,onActor,selectedId,myTurn,
  {!a.defeated&&(targeted||attackable)?<ellipse className={`actor-target-ring ${targeted?'pulse':''}`} cy={depth?5:11} rx="27" ry={depth?15:20} stroke={P.target} strokeWidth={targeted?3:2} strokeDasharray={targeted?undefined:'4 4'}/>:null}
  {!a.defeated&&a.id===game.activeActorId?<path d="m-4-43 8 0-4 5Z" fill={P.marker}/>:null}
  <g className={hit?`actor-body ${hit.kind}`:'actor-body'} style={hit?{animationDelay:`${hit.delay}ms`}:undefined}><g transform={a.defeated?'translate(-3 9) rotate(-75) scale(.55)':undefined}><svg x="-25" y="-45" width="50" height="58" viewBox="0 0 80 90"><HeroArt heroClass={a.heroClass} color={a.color} enemy={a.enemy}/></svg></g></g>
- {!a.defeated?<><rect x="-16" y="20" width="32" height="4" rx="2" fill={P.healthTrack} opacity=".2"/><rect x="-16" y="20" width={32*Math.max(0,a.hp/a.maxHp)} height="4" rx="2" fill={a.enemy?P.enemyHealth:P.health}/></>:null}
+ {!a.defeated?<><rect x="-16" y="20" width="32" height="4" rx="2" fill={P.healthTrack} opacity=".2"/><rect x="-16" y="20" width={32*Math.max(0,a.hp/a.maxHp)} height="4" rx="2" fill={a.enemy?P.enemyHealth:{ok:P.health,low:'var(--warning)',critical:'var(--danger)',down:'var(--danger)'}[healthLevel(a.hp,a.maxHp)]}/></>:null}
  {!a.defeated&&a.guarding?<path d="m15-33 10 0v7l-5 4-5-4Z" fill={P.accent} stroke={P.leafDark}/>:null}
  </g>;
  }
