@@ -15,3 +15,21 @@ html[data-motion='reduced'] .board-route-cost{animation:none}
 @keyframes route-cost-in{from{opacity:0;transform:translateY(3px)}to{opacity:1;transform:translateY(0)}}
 @media(max-width:700px){.board-route-cost{bottom:46px;left:8px;font-size:10px;padding:6px 8px}}
 @media(prefers-reduced-motion:reduce){html:not([data-motion='full']) .board-camera.camera-smooth{transition:none}html:not([data-motion='full']) .board-route-cost{animation:none}}
+
+/* Combat feedback and targeting. Presentation only; the global reduced-motion rule leaves these static. */
+.game-board .board-actor.out-of-range{opacity:.45}
+.game-board .board-actor:is(.targeted,.attackable){cursor:crosshair}
+.game-board .actor-target-ring{fill:none;pointer-events:none;transform-box:fill-box;transform-origin:center}
+.game-board .actor-target-ring.pulse{animation:target-pulse 1100ms ease-in-out infinite}
+.game-board .actor-body.hit{animation:actor-hit 360ms ease-out both}
+.game-board .actor-body.healed{animation:actor-healed 520ms ease-out both}
+.board-feedback{pointer-events:none}
+.board-float{font:700 16px/1 system-ui,sans-serif;paint-order:stroke;stroke:#fff;stroke-width:3.5px;stroke-linejoin:round;fill:#3d4a52;transform-box:fill-box;transform-origin:center;animation:board-float 1250ms cubic-bezier(.2,.7,.3,1) both}
+.board-float.damage,.board-float.critical{fill:#a8263b}
+.board-float.critical{font-size:21px}
+.board-float.heal{fill:#1c7550}
+@keyframes target-pulse{0%,100%{transform:scale(1);stroke-opacity:1}50%{transform:scale(1.14);stroke-opacity:.45}}
+@keyframes actor-hit{0%,100%{transform:translateX(0)}20%{transform:translateX(-3px)}45%{transform:translateX(3px)}70%{transform:translateX(-2px)}}
+@keyframes actor-healed{0%,100%{transform:translateY(0)}40%{transform:translateY(-4px)}}
+@keyframes board-float{0%{opacity:0;transform:translateY(8px) scale(.8)}15%{opacity:1;transform:translateY(0) scale(1.08)}70%{opacity:1;transform:translateY(-14px) scale(1)}100%{opacity:0;transform:translateY(-22px) scale(1)}}
+@media(prefers-reduced-motion:reduce){html:not([data-motion='full']) :is(.actor-target-ring.pulse,.actor-body.hit,.actor-body.healed,.board-float){animation:none}}

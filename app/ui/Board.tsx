@@ -1,5 +1,5 @@
 'use client';
-import {memo,useMemo,useRef,useState,useEffect,useLayoutEffect,useImperativeHandle,useCallback,useId,type Ref} from 'react';
+import {memo,useMemo,useRef,useState,useEffect,useLayoutEffect,useImperativeHandle,useCallback,useId,type Ref,type ReactNode} from 'react';
 import type {Actor,GameState} from '../../game/types';
 import {getReachable,getValidTargets} from '../../game/engine';
 import {HeroArt,Icon,Tree} from './Art';
@@ -8,6 +8,7 @@ import {PixelTerrain,PixelChest,PixelGateway} from './PixelArt';
 import {ART_PALETTE as P} from './artPalette';
 import {findBoardPath,isBoardDiscontinuity,planActorMotions,boardPathKeyframes,sampleBoardPath,initialBoardFrame,followBoardTarget,anchoredBoardPan,type BoardPoint} from './board-motion';
 import {createBoardProjection,type BoardProjection} from './board-projection';
+import {collectBoardFeedback,type BoardFeedback} from './board-feedback';
 import {DepthTerrain,DepthProp,DepthChest,DepthGateway} from './DepthArt';
 import {sameBoardTerrain,rovingBoardTile,nextBoardTile,resizedBoardPan,revealedBoardPan,type BoardDirection} from './board-interaction';
 import './board-motion.css';
@@ -61,10 +62,31 @@ function useActorMotion(game:GameState,projection:BoardProjection,focusId:string
  useEffect(()=>()=>{if(depthFrame.current)cancelAnimationFrame(depthFrame.current);for(const id of animations.current.keys())cancel(id);if(movingRef.current){movingRef.current=false;callback.current?.(false)}},[]);
  return {nodes,moving,depthPositions,isMoving:()=>movingRef.current};
 }
-export default function Board({game,actor,tool,onTile,onActor,selectedId,myTurn,controlsRef,focusId,caption,onMotionChange,animateMovement=true,motionResetKey,autoFrame=false}:{game:GameState;actor?:Actor;tool:Tool;onTile:(x:number,y:number)=>void;onActor:(a:Actor)=>void;selectedId:string;myTurn:boolean;controlsRef?:Ref<BoardControls>;focusId?:string;caption?:string;onMotionChange?:(moving:boolean)=>void;animateMovement?:boolean;motionResetKey?:string|number;autoFrame?:boolean}){
+type ShownFeedback=BoardFeedback&{delay:number};
+/** Floating combat results. They read snapshots only and never influence the rules or a replay. */
+function useBoardFeedback(game:GameState,enabled:boolean,resetKey:string|number|undefined,hold:boolean){
+ const previous=useRef<GameState|null>(null),lastReset=useRef(resetKey),waiting=useRef<BoardFeedback[]>([]),timers=useRef(new Set<ReturnType<typeof setTimeout>>());
+ const[shown,setShown]=useState<ShownFeedback[]>([]);
+ useEffect(()=>{
+  const before=previous.current;previous.current=game;const reset=lastReset.current!==resetKey;lastReset.current=resetKey;
+  if(!enabled||reset||(before&&before!==game&&isBoardDiscontinuity(before,game))){waiting.current=[];for(const timer of timers.current)clearTimeout(timer);timers.current.clear();setShown(current=>current.length?[]:current);return}
+  if(before&&before!==game)waiting.current.push(...collectBoardFeedback(before,game));
+  // A roll dialog covers the board, so its results appear once the player can see them.
+  if(hold||!waiting.current.length)return;
+  const ready=waiting.current;waiting.current=[];
+  const step=Math.min(160,Math.round(900/ready.length)),fresh=ready.map((item,index)=>({...item,delay:index*step}));
+  setShown(current=>[...current,...fresh]);
+  const timer=setTimeout(()=>{timers.current.delete(timer);setShown(current=>current.filter(item=>!fresh.includes(item)))},1300+fresh.length*step);timers.current.add(timer);
+ },[game,enabled,resetKey,hold]);
+ useEffect(()=>{const pending=timers.current;return()=>{for(const timer of pending)clearTimeout(timer)}},[]);
+ return shown;
+}
+export default function Board({game,actor,tool,onTile,onActor,selectedId,myTurn,controlsRef,focusId,caption,onMotionChange,animateMovement=true,motionResetKey,autoFrame=false,holdFeedback=false,children}:{game:GameState;actor?:Actor;tool:Tool;onTile:(x:number,y:number)=>void;onActor:(a:Actor)=>void;selectedId:string;myTurn:boolean;controlsRef?:Ref<BoardControls>;focusId?:string;caption?:string;onMotionChange?:(moving:boolean)=>void;animateMovement?:boolean;motionResetKey?:string|number;autoFrame?:boolean;holdFeedback?:boolean;children?:ReactNode}){
  const {theme,reducedMotion,viewMode}=useTheme();
  const projection=useMemo(()=>createBoardProjection(viewMode,game.width,game.height),[viewMode,game.width,game.height]);
  const motion=useActorMotion(game,projection,focusId??actor?.id,animateMovement,motionResetKey,reducedMotion,onMotionChange);
+ const feedback=useBoardFeedback(game,animateMovement,motionResetKey,holdFeedback);
+ const struck=useMemo(()=>{const map=new Map<string,{kind:'hit'|'healed';delay:number}>();for(const item of feedback)if(item.kind!=='miss'&&!map.has(item.actorId))map.set(item.actorId,{kind:item.kind==='heal'?'healed':'hit',delay:item.delay});return map},[feedback]);
  const[previewTile,setPreviewTile]=useState<BoardPoint|null>(null),[smoothCamera,setSmoothCamera]=useState(false),[cameraDuration,setCameraDuration]=useState(200);
  const[focusedTile,setFocusedTile]=useState<BoardPoint|null>(null),keyboardHelpId=useId();
  const [zoom,setZoom]=useState(1),[pan,setPan]=useState({x:0,y:0}),[grid,setGrid]=useState(true),[dragging,setDragging]=useState(false);
@@ -74,6 +96,8 @@ export default function Board({game,actor,tool,onTile,onActor,selectedId,myTurn,
  const reachableKeys=useMemo(()=>new Set(reachable.map(t=>`${t.x},${t.y}`)),[reachable]);
  const keyboardTile=useMemo(()=>rovingBoardTile(reachable,focusedTile,actor),[reachable,focusedTile,actor]);
  const targets=useMemo(()=>new Set(actor&&myTurn&&tool!=='move'?getValidTargets(game,actor,tool==='ability').map(a=>a.id):[]),[game,actor,myTurn,tool]);
+ // In Move, selecting an enemy already in reach attacks it; the board marks those enemies.
+ const quickTargets=useMemo(()=>new Set(actor&&myTurn&&!motion.moving&&tool==='move'?getValidTargets(game,actor).filter(a=>a.enemy).map(a=>a.id):[]),[game,actor,myTurn,tool,motion.moving]);
  const route=useMemo(()=>previewTile&&actor&&!dragging&&reachableKeys.has(`${previewTile.x},${previewTile.y}`)?findBoardPath(game,actor,previewTile):null,[previewTile,actor,dragging,reachableKeys,game]);
  useEffect(()=>{setPreviewTile(null)},[game.eventSequence,tool,motion.moving]);
  useEffect(()=>{
@@ -139,10 +163,12 @@ export default function Board({game,actor,tool,onTile,onActor,selectedId,myTurn,
   return()=>{window.removeEventListener('pointerup',release);window.removeEventListener('pointercancel',release);window.removeEventListener('blur',cancel)};
  },[releasePointer]);
  function renderActor(a:Actor){
-  const point=projection.tileCenter(a.x,a.y);return <g key={a.id} data-x={a.x} data-y={a.y} ref={node=>{if(node)motion.nodes.current.set(a.id,node);else motion.nodes.current.delete(a.id)}} className={`board-actor ${a.hp<=0?'downed':''} ${a.defeated?'defeated':''}`} style={{transform:`translate(${point.x}px, ${point.y}px)`}} pointerEvents={a.defeated?'none':undefined} role={a.defeated?undefined:'button'} aria-label={`${a.name}, ${a.hp} of ${a.maxHp} health${a.enemy?', enemy':''}`} tabIndex={a.defeated?undefined:0} onClick={e=>{e.stopPropagation();if(!motion.isMoving()&&Date.now()>suppressClick.current)onActor(a)}} onKeyDown={e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();e.stopPropagation();if(!motion.isMoving())onActor(a)}}}>
+  const point=projection.tileCenter(a.x,a.y),targeted=targets.has(a.id),attackable=quickTargets.has(a.id),dimmed=targets.size>0&&!targeted&&!a.defeated&&a.id!==actor?.id,hit=struck.get(a.id),depth=viewMode==='2.5d';return <g key={a.id} data-x={a.x} data-y={a.y} ref={node=>{if(node)motion.nodes.current.set(a.id,node);else motion.nodes.current.delete(a.id)}} className={`board-actor ${a.hp<=0?'downed':''} ${a.defeated?'defeated':''} ${targeted?'targeted':''} ${attackable?'attackable':''} ${dimmed?'out-of-range':''}`} style={{transform:`translate(${point.x}px, ${point.y}px)`}} pointerEvents={a.defeated?'none':undefined} role={a.defeated?undefined:'button'} aria-label={`${a.name}, ${a.hp} of ${a.maxHp} health${a.enemy?', enemy':''}${attackable?', select to attack':targeted?', valid target':''}`} tabIndex={a.defeated?undefined:0} onClick={e=>{e.stopPropagation();if(!motion.isMoving()&&Date.now()>suppressClick.current)onActor(a)}} onKeyDown={e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();e.stopPropagation();if(!motion.isMoving())onActor(a)}}}>
+ {attackable?<title>{`Attack ${a.name}`}</title>:null}
  {!a.defeated?<ellipse className="actor-floor-marker" cy={viewMode==='2.5d'?5:11} rx="22" ry={viewMode==='2.5d'?11:15} fill={targets.has(a.id)?P.target:a.id===game.activeActorId?P.active:a.color} stroke={a.id===selectedId?P.marker:a.enemy?P.enemyHealth:P.health} strokeWidth={a.id===selectedId?2.6:1.2} fillOpacity=".65"/>:null}
+ {!a.defeated&&(targeted||attackable)?<ellipse className={`actor-target-ring ${targeted?'pulse':''}`} cy={depth?5:11} rx="27" ry={depth?15:20} stroke={P.target} strokeWidth={targeted?3:2} strokeDasharray={targeted?undefined:'4 4'}/>:null}
  {!a.defeated&&a.id===game.activeActorId?<path d="m-4-43 8 0-4 5Z" fill={P.marker}/>:null}
- <g transform={a.defeated?'translate(-3 9) rotate(-75) scale(.55)':undefined}><svg x="-25" y="-45" width="50" height="58" viewBox="0 0 80 90"><HeroArt heroClass={a.heroClass} color={a.color} enemy={a.enemy}/></svg></g>
+ <g className={hit?`actor-body ${hit.kind}`:'actor-body'} style={hit?{animationDelay:`${hit.delay}ms`}:undefined}><g transform={a.defeated?'translate(-3 9) rotate(-75) scale(.55)':undefined}><svg x="-25" y="-45" width="50" height="58" viewBox="0 0 80 90"><HeroArt heroClass={a.heroClass} color={a.color} enemy={a.enemy}/></svg></g></g>
  {!a.defeated?<><rect x="-16" y="20" width="32" height="4" rx="2" fill={P.healthTrack} opacity=".2"/><rect x="-16" y="20" width={32*Math.max(0,a.hp/a.maxHp)} height="4" rx="2" fill={a.enemy?P.enemyHealth:P.health}/></>:null}
  {!a.defeated&&a.guarding?<path d="m15-33 10 0v7l-5 4-5-4Z" fill={P.accent} stroke={P.leafDark}/>:null}
  </g>;
@@ -177,12 +203,13 @@ export default function Board({game,actor,tool,onTile,onActor,selectedId,myTurn,
  }}/>})}
  </g>
  {viewMode==='2.5d'?depthItems.map(item=><g key={item.key} data-depth={item.depth}>{item.kind==='prop'?<DepthProp tile={item.tile} projection={projection} faded={item.faded}/>:item.kind==='gateway'?<DepthGateway {...game.exit} active={game.chest.opened} projection={projection}/>:item.kind==='chest'?<DepthChest {...game.chest} projection={projection}/>:renderActor(item.actor)}</g>):[...game.actors].sort((a,b)=>a.y-b.y||Number(b.defeated)-Number(a.defeated)).map(renderActor)}
+ {feedback.length?<g className="board-feedback" aria-hidden="true">{feedback.map(item=>{const point=projection.tileCenter(item.x,item.y);return <g key={item.key} transform={`translate(${point.x} ${point.y-36})`}><text className={`board-float ${item.kind}`} textAnchor="middle" style={{animationDelay:`${item.delay}ms`}}>{item.text}</text></g>})}</g>:null}
  </g></svg>
  <span id={keyboardHelpId} className="sr-only">Arrow keys preview a destination. Enter or Space moves. Tab leaves the tiles.</span>
  <div className="board-keyboard-help" aria-hidden="true">Arrows preview · Enter moves · Tab leaves tiles</div>
  {route&&route.length>1?<div className="board-route-cost">{route.length-1} {route.length===2?'tile':'tiles'} · {(route.length-1)*5} ft</div>:null}
  <div className="map-compass" title={viewMode==='2.5d'?'North: upper right':'North'}><span>N</span><svg viewBox="0 0 30 40" style={viewMode==='2.5d'?{transform:'rotate(63.435deg)'}:undefined}><path d="m15 5 8 25-8-6-8 6Z" fill={P.stoneDark}/><path d="m15 5 0 19-8 6Z" fill={P.stoneLight}/></svg></div>
  <div className="board-tools"><button title={grid?'Hide grid':'Show grid'} aria-label="Toggle grid" aria-pressed={grid} onClick={()=>setGrid(!grid)}><Icon name="eye" size={16}/></button><i/><button title="Zoom out" aria-label="Zoom out" onClick={()=>zoomBy(-.15)}><Icon name="minus" size={16}/></button><span>{Math.round(zoom*100)}%</span><button title="Zoom in" aria-label="Zoom in" onClick={()=>zoomBy(.15)}><Icon name="plus" size={16}/></button><i/><button title="Center on your hero" aria-label="Center on your hero" onClick={focusActor}><Icon name="people" size={16}/></button><button title="Fit board" aria-label="Fit board" onClick={reset}><Icon name="fit" size={16}/></button></div>
- 
+ {children}
  </div></div>
 }
