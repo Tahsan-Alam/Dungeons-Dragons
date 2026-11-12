@@ -81,3 +81,34 @@
  .play-refined .scene-title>span{font-size:10px}
  .play-refined .scene-heading h1{font-size:21px!important}
 }
+
+/* Board overlay: turn order and the current guidance stay where the player is looking. */
+.board-hud{position:absolute;top:8px;left:8px;right:8px;z-index:2;display:flex;flex-direction:column;align-items:flex-start;gap:6px;pointer-events:none}
+.turn-order{display:flex;align-items:center;gap:4px;max-width:100%;margin:0;padding:4px;list-style:none;overflow-x:auto;scrollbar-width:none;touch-action:pan-x;pointer-events:auto;border:1px solid var(--line-strong,var(--line));border-radius:9px;background:var(--surface-raised);box-shadow:var(--shadow)}
+.turn-order li{display:flex;align-items:center;gap:4px;flex:none}
+.turn-order-round{margin-left:2px;padding:0 4px 0 7px;border-left:1px solid var(--line);font:11px var(--mono);color:var(--muted)}
+.turn-chip{display:flex;align-items:center;gap:6px;min-width:36px;height:36px;padding:0 4px;border-radius:7px;color:var(--ink);box-shadow:inset 0 -3px 0 var(--success);transition:background 140ms}
+.turn-chip.foe{box-shadow:inset 0 -3px 0 var(--danger)}
+.turn-chip:hover{background:var(--sage)}
+.turn-chip.current{padding-right:10px;background:var(--accent-soft);box-shadow:inset 0 -3px 0 var(--success),inset 0 0 0 1px var(--accent)}
+.turn-chip.current.foe{box-shadow:inset 0 -3px 0 var(--danger),inset 0 0 0 1px var(--accent)}
+.turn-chip-art{display:grid;place-items:center;width:26px;height:30px;flex:none}
+.turn-chip-art svg{width:24px;height:28px}
+.turn-chip strong{font:600 12px/1 system-ui;white-space:nowrap;max-width:120px;overflow:hidden;text-overflow:ellipsis}
+.board-hint{max-width:min(100%,460px);margin:0;padding:6px 10px;border:1px solid var(--line);border-radius:9px;background:var(--surface-raised);color:var(--ink);font:12px/1.4 system-ui;box-shadow:var(--shadow);overflow-wrap:anywhere}
+.board-container:has(.board-hud) .board-keyboard-help{top:auto;bottom:52px}
+@container board-surface (max-width:600px){.board-container:has(.board-hud) .board-keyboard-help{bottom:104px}.board-hud{top:6px;left:6px;right:6px;gap:4px}.turn-chip{min-width:32px;height:32px;padding:0 3px}.turn-chip-art{width:22px;height:26px}.turn-chip-art svg{width:20px;height:24px}.board-hint{padding:5px 8px;font-size:11px}}
+
+/* Enemies share the party rail so their health is readable without opening each token. */
+.play-refined .rail-subheading{display:flex;justify-content:space-between;align-items:center;margin:10px 0 6px;padding-top:10px;border-top:1px solid var(--line);font:600 12px/1.3 system-ui}
+.play-refined .rail-subheading>span{font:11px var(--mono);color:var(--muted)}
+.play-refined .party-member.foe{min-height:52px}
+html[data-color-mode][data-theme] .play-refined .party-member.foe .health-track>span{background:var(--danger)}
+
+/* Log entries carry who acted and what the dice decided. */
+.play-refined .journal-entry>div:nth-child(2){flex:1;min-width:0}
+.play-refined .journal-entry:is(.ally,.foe){padding-left:8px;box-shadow:inset 2px 0 0 var(--success)}
+.play-refined .journal-entry.foe{box-shadow:inset 2px 0 0 var(--danger)}
+.play-refined .journal-entry.story small{font-size:11px;color:var(--muted)}
+.play-refined .entry-result{flex:none;align-self:flex-start;padding:0 6px;border:1px solid var(--line);border-radius:5px;font:600 11px/1.7 var(--mono);color:var(--muted);white-space:nowrap}
+.play-refined .entry-result:is(.damage,.critical){color:var(--danger);border-color:var(--danger)}
