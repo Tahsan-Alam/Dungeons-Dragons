@@ -38,6 +38,14 @@ Both art styles share modern, subtly raised controls with soft 9px corners, fain
 
 The adventure creator inherits Light/Dark/System surfaces and text. Narrator traits supply a dark accent for light surfaces and a lighter accent for dark surfaces; they never override the brightness preference. The unformed creator stays neutral. Dark world palettes cover terrain, portraits, outfits and dice in previews, chapter scenes, play and replay; raster narrator art uses a softer exposure without dimming interface text or game markers.
 
+## Title menu and quick start
+
+Camp is now a game title menu instead of a two-column introduction. The left panel holds the title and a vertical list: Continue quest (when a save exists), New quest, Play with friends, Adventures, Adventurer’s guide and Table settings. New quest and Play with friends open short submenus (Quick start / Create your own; Gather party / Join party) with a one-line description under each choice. Arrow keys, Home and End move through the list and Escape returns to the main menu. The shared panorama fills the rest of the screen and follows Paint/Pixel and 2D/2.5D like any other scene; on phones it becomes a band above the menu. The interactive board preview was removed from Camp.
+
+The shared header stays mounted, but its Camp/Adventures buttons are hidden on Camp because the menu already offers them. They keep their slots, so nothing moves when they return on other screens.
+
+Quick start opens the creator on its review step with one of three ready-made adventures (woodland, ruins or coast), a suggested hero and the default guide. It uses built-in drafts, never calls a provider, and neither reads nor overwrites a saved creator draft. Every earlier step remains reachable from the review, and the review names the terrain.
+
 ## 2D and 2.5D presentation
 
 World view is a personal Appearance setting, independent of Paint/Pixel, brightness, accent and motion. 2D remains the default for existing players. 2.5D uses a dimetric ground plane, dimensional scenery, upright character cutouts and the same canonical palette/identity. Menus and labels retain their geometry and legibility. The preview, live table, chapter illustrations, portraits and replay all consume this preference.

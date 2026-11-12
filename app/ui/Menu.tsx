@@ -21,8 +21,8 @@ export function Menu({onNew,onJoin,onHelp,onSettings,children,disabled=false}:Me
  </div>;
 }
 
-export function Setup(props:Parameters<typeof JoinSetup>[0]&{onAISettings?:()=>void}){
- return props.mode==='join'?<JoinSetup {...props}/>:<AdventureCreator {...props} mode={props.mode}/>;
+export function Setup({quick,...props}:Parameters<typeof JoinSetup>[0]&{onAISettings?:()=>void;quick?:boolean}){
+ return props.mode==='join'?<JoinSetup {...props}/>:<AdventureCreator {...props} mode={props.mode} quick={quick}/>;
 }
 function JoinSetup({onBack,onStart,busy,initialCode=''}:{mode:'solo'|'online'|'join';onBack:()=>void;onStart:(name:string,cls:HeroClass,options:GameOptions,code:string)=>void;busy:boolean;initialCode?:string;onNavigationBlockChange?:(blocked:boolean)=>void}) {
  const [name,setName]=useState(''),[cls,setCls]=useState<HeroClass>('ranger'),[code,setCode]=useState(initialCode),[step,setStep]=useState(0);

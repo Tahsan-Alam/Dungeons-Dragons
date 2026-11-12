@@ -167,3 +167,6 @@ body:has(.living-creator){overflow:hidden;height:100dvh}
 @media(max-height:650px) and (max-width:760px){.creator-companion{height:160px}.creator-voice-note{display:none}.creator-speech{-webkit-line-clamp:1}}
 html[data-motion=reduced] .living-creator *,html[data-motion=reduced] .app-root[data-creating=true]{animation:none!important;transition:none!important;scroll-behavior:auto}
 @media(prefers-reduced-motion:reduce){html:not([data-motion=full]) .living-creator *{animation:none!important;transition:none!important;scroll-behavior:auto}}
+
+/* A quick start reviews a ready-made adventure, so the conversation gives way to the summary. */
+.creator-quick-review :is(.creator-composer,.creator-suggestions,.creator-conversation-log){display:none}

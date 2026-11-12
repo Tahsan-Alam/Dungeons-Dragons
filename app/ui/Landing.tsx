@@ -1,41 +1,56 @@
 'use client';
-import {useMemo,useRef,useState} from 'react';
-import Board,{type BoardControls} from './Board';
-import {HeroArt,Icon} from './Art';
-import {createPreviewFrames} from '../../game/preview';
+import {useEffect,useRef,useState,type KeyboardEvent} from 'react';
+import {Icon,Panorama} from './Art';
 import './landing.css';
 
-type Props={onNew:(mode:'solo'|'online')=>void;onJoin:()=>void;onResume?:()=>void;resumeTitle?:string;disabled:boolean};
-const steps=['The board','Move','Attack'];
-const explanations=[
-  'Explore the map with your party. Drag to pan, or zoom in for a closer look.',
-  'Move into position. Each character has a movement allowance and one action per turn.',
-  'Take your action, then pass the turn. Companions and enemies take their turns automatically.',
-];
+type Props={onNew:(mode:'solo'|'online')=>void;onQuick:()=>void;onJoin:()=>void;onGames:()=>void;onHelp:()=>void;onSettings:()=>void;onResume?:()=>void;resumeTitle?:string;disabled:boolean};
+type View='main'|'quest'|'friends';
+/** `detail` stays visible under the label; `tip` appears in the shared tooltip layer. */
+type Item={id:string;label:string;icon:string;run:()=>void;detail?:string;tip?:string;locked?:boolean;opens?:boolean;back?:boolean};
+const PARTY=[{heroClass:'knight' as const,color:'#ef997c'},{heroClass:'ranger' as const,color:'#8ac4ae'},{heroClass:'mage' as const,color:'#b19bd3'},{heroClass:'cleric' as const,color:'#a3bbf0'}];
+const HEADINGS:Record<View,string>={main:'Main menu',quest:'New quest',friends:'Play with friends'};
 
-export default function Landing({onNew,onJoin,onResume,resumeTitle,disabled}:Props){
-  const frames=useMemo(createPreviewFrames,[]),[step,setStep]=useState(0),[selected,setSelected]=useState('');
-  const board=useRef<BoardControls>(null),game=frames[step],actor=game.actors[0],inspected=game.actors.find(a=>a.id===selected);
-  function selectStep(next:number){setStep(next);setSelected('')}
-  return <main className="landing-main">
-    <section className="landing-hero" aria-labelledby="landing-title">
-      <div className="landing-copy">
-        <h1 id="landing-title">A tabletop adventure<br/><span> in your browser.</span></h1>
-        <p>Start with a story. Find your narrator, create a hero, and follow the lanterns together.</p>
-        <div className="landing-actions"><button className="button primary" disabled={disabled} onClick={()=>onNew('solo')}>Solo quest<Icon name="arrow" size={19}/></button><button className="button paper" disabled={disabled} onClick={()=>onNew('online')}><Icon name="people" size={19}/>Gather party</button></div>
-        <button className="landing-join text-button" disabled={disabled} onClick={onJoin}>Join party<Icon name="arrow" size={16}/></button>
-        <div className="landing-facts"><span>1–10 players</span><span>Turn-based</span></div>
-        {onResume&&resumeTitle?<button className="landing-resume" disabled={disabled} onClick={onResume}><span className="resume-mark" aria-hidden="true"><Icon name="book" size={20}/></span><span className="resume-copy"><small>Continue adventure</small><strong>{resumeTitle}</strong></span><Icon name="arrow" size={19}/></button>:null}
-      </div>
-      <section className="landing-preview" aria-label="Game preview">
-        <div className="preview-heading"><h2>Game preview</h2><span>The Lanternwood</span></div>
-        <div className="preview-board"><Board game={game} actor={actor} tool="move" myTurn={false} selectedId={selected||actor.id} focusId={actor.id} onTile={()=>{}} onActor={a=>setSelected(a.id)} controlsRef={board}/></div>
-        <div className="preview-bottom">
-          <div className="preview-tabs" role="tablist" aria-label="Preview steps">{steps.map((label,index)=><button key={label} role="tab" aria-selected={step===index} tabIndex={step===index?0:-1} onKeyDown={e=>{const next=e.key==='ArrowRight'?(index+1)%3:e.key==='ArrowLeft'?(index+2)%3:e.key==='Home'?0:e.key==='End'?2:null;if(next!==null){e.preventDefault();selectStep(next);(e.currentTarget.parentElement?.children[next] as HTMLButtonElement)?.focus()}}} aria-controls="preview-description" id={`preview-step-${index}`} onClick={()=>selectStep(index)}><span>{index+1}</span>{label}</button>)}</div>
-          <div className="preview-explanation" role="tabpanel" id="preview-description" aria-labelledby={`preview-step-${step}`}><p aria-live="polite">{inspected?`${inspected.name} · ${inspected.hp}/${inspected.maxHp} HP · Armor ${inspected.ac}`:step===2?game.events.at(-1)?.text:explanations[step]}</p><button className="icon-button" aria-label={step===2?'Restart preview':'Next preview step'} title={step===2?'Restart preview':'Next preview step'} onClick={()=>{selectStep((step+1)%3);if(step===2)board.current?.fit()}}><Icon name={step===2?'back':'arrow'} size={20}/></button></div>
-        </div>
-      </section>
-    </section>
-    <section className="landing-overview" aria-label="About the game"><div className="landing-party" aria-hidden="true"><HeroArt heroClass="knight" color="#ef997c"/><HeroArt heroClass="ranger" color="#8ac4ae"/><HeroArt heroClass="mage" color="#b19bd3"/><HeroArt heroClass="cleric" color="#a3bbf0"/></div><div><h2>Find your role</h2><p>Defend, scout, cast, or heal. Your party works together.</p></div><div className="landing-save-note"><Icon name="book" size={22}/><p>Saved quests and replays live in <strong>Adventures.</strong></p></div></section>
-  </main>;
+/** Camp is the game's title menu. Every entry calls an existing action; nothing here writes a save. */
+export default function Landing({onNew,onQuick,onJoin,onGames,onHelp,onSettings,onResume,resumeTitle,disabled}:Props){
+ const[{view,moved},setMenu]=useState<{view:View;moved:boolean}>({view:'main',moved:false});
+ const list=useRef<HTMLUListElement>(null);
+ function open(next:View){setMenu({view:next,moved:true})}
+ const back:Item={id:'back',label:'Back',icon:'back',run:()=>open('main'),tip:'Return to the main menu.',back:true};
+ const menus:Record<View,Item[]>={
+  main:[
+   ...(onResume&&resumeTitle?[{id:'continue',label:'Continue quest',detail:resumeTitle,tip:'Pick up your most recent adventure where you left it.',icon:'book',run:onResume,locked:disabled}]:[]),
+   {id:'quest',label:'New quest',tip:'Start a solo adventure with scripted companions.',icon:'dice',run:()=>open('quest'),opens:true},
+   {id:'friends',label:'Play with friends',tip:'Host a party or join one with a code. Up to ten heroes.',icon:'people',run:()=>open('friends'),opens:true},
+   {id:'adventures',label:'Adventures',tip:'Saved quests and replays.',icon:'flag',run:onGames},
+   {id:'guide',label:'Adventurer’s guide',tip:'Rules, controls and quest objectives.',icon:'book',run:onHelp},
+   {id:'settings',label:'Table settings',tip:'Appearance, sound, key bindings and play preferences.',icon:'gear',run:onSettings},
+  ],
+  quest:[
+   {id:'quick',label:'Quick start',detail:'A ready-made story and hero. Review them, then begin.',icon:'spark',run:onQuick,locked:disabled},
+   {id:'create',label:'Create your own',detail:'Shape the story, narrator and hero with your guide.',icon:'dice',run:()=>onNew('solo'),locked:disabled},
+   back,
+  ],
+  friends:[
+   {id:'host',label:'Gather party',detail:'Create an adventure, then invite friends to your camp.',icon:'people',run:()=>onNew('online'),locked:disabled},
+   {id:'join',label:'Join party',detail:'Enter a six-letter party code.',icon:'link',run:onJoin,locked:disabled},
+   back,
+  ],
+ };
+ const items=menus[view],lead=items[0].id;
+ // Moving between menus is the player's action, so focus follows it; the first visit leaves focus alone.
+ useEffect(()=>{if(moved)list.current?.querySelector<HTMLButtonElement>('button:not(:disabled)')?.focus()},[view,moved]);
+ function keys(event:KeyboardEvent<HTMLUListElement>){
+  if(event.key==='Escape'&&view!=='main'){event.preventDefault();open('main');return}
+  const buttons=[...event.currentTarget.querySelectorAll<HTMLButtonElement>('button:not(:disabled)')];if(!buttons.length)return;
+  let index=buttons.indexOf(document.activeElement as HTMLButtonElement);
+  if(event.key==='ArrowDown')index=(index+1)%buttons.length;else if(event.key==='ArrowUp')index=(index-1+buttons.length)%buttons.length;else if(event.key==='Home')index=0;else if(event.key==='End')index=buttons.length-1;else return;
+  event.preventDefault();buttons[index]?.focus();
+ }
+ return <main className="title-screen">
+  <div className="title-art" aria-hidden="true"><Panorama biome="woodland" characters={PARTY}/></div>
+  <section className="title-panel" aria-labelledby="title-heading">
+   <div className="title-heading"><h1 id="title-heading">Painted<span> Realms</span></h1><p>{view==='main'?'A tabletop adventure in your browser. 1–10 players, turn-based.':HEADINGS[view]}</p></div>
+   <nav aria-label={HEADINGS[view]}><ul className="title-menu" ref={list} onKeyDown={keys}>{items.map(item=><li key={item.id}><button type="button" className={`button ${item.id===lead?'primary':'paper'} title-item ${item.back?'title-back':''}`} disabled={item.locked} data-tooltip={item.tip} aria-describedby={item.detail?`title-detail-${item.id}`:undefined} onClick={item.run}><Icon name={item.icon} size={19}/><span className="title-item-label">{item.label}{item.detail?<small id={`title-detail-${item.id}`} aria-hidden="true">{item.detail}</small>:null}</span>{item.opens?<Icon name="arrow" size={17}/>:null}</button></li>)}</ul></nav>
+  </section>
+ </main>;
 }
