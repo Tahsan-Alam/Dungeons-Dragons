@@ -1,10 +1,11 @@
 'use client';
-import {useCallback,useEffect,useRef,useState} from 'react';
+import {useCallback,useEffect,useReducer,useRef,useState} from 'react';
 import type {NarratorProfile} from '../../game/creation';
 import {AETHER} from '../../game/creation';
 import {LIVE_LIMITS,LIVE_RATE,LIVE_VOICES} from '../../server/live-protocol';
 import type {LiveServerEvent,LiveVoice} from '../../server/live-protocol';
 import {createLiveDelegationQueue} from './live-delegation';
+import {emptyLiveTranscript,liveTranscriptReducer} from './live-transcript';
 
 export type LiveStatus='idle'|'connecting'|'listening'|'speaking'|'paused'|'error';
 export interface LiveNarratorOptions {enabled:boolean;scope:string;narrator:NarratorProfile|null;context:string;onRequest:(text:string)=>Promise<{reply:string}|null>;}
@@ -14,8 +15,9 @@ const workletSource=`class NarratorCapture extends AudioWorkletProcessor { const
 class VoicePreflightError extends Error {}
 
 export function useLiveNarrator(options:LiveNarratorOptions){
- const [status,setStatus]=useState<LiveStatus>('idle'),[micMuted,setMicState]=useState(true),[speakerMuted,setSpeakerState]=useState(true),[speaking,setSpeaking]=useState(false),[error,setError]=useState(''),[transcript,setTranscript]=useState('');
- const current=useRef(options),active=useRef<Session|null>(null),serial=useRef(0),speaker=useRef(true),microphone=useRef(true),lastComment=useRef(0),mounted=useRef(true),lastTranscriptRole=useRef(''),delegations=useRef<ReturnType<typeof createLiveDelegationQueue>|null>(null);
+ const [status,setStatus]=useState<LiveStatus>('idle'),[micMuted,setMicState]=useState(true),[speakerMuted,setSpeakerState]=useState(true),[speaking,setSpeaking]=useState(false),[error,setError]=useState('');
+ const [transcript,dispatchTranscript]=useReducer(liveTranscriptReducer,undefined,emptyLiveTranscript);
+ const current=useRef(options),active=useRef<Session|null>(null),serial=useRef(0),speaker=useRef(true),microphone=useRef(true),lastComment=useRef(0),mounted=useRef(true),delegations=useRef<ReturnType<typeof createLiveDelegationQueue>|null>(null);
  current.current=options;
  const emit=useCallback((value:unknown)=>{const s=active.current;if(s?.ready&&s.socket.readyState===WebSocket.OPEN)s.socket.send(JSON.stringify(value));},[]);
  if(!delegations.current)delegations.current=createLiveDelegationQueue({request:task=>current.current.onRequest(task.text),respond:(task,text)=>emit({type:'reply',delegationId:task.id,text}),isActive:task=>active.current?.epoch===task.session});
@@ -24,7 +26,7 @@ export function useLiveNarrator(options:LiveNarratorOptions){
   if(s){if(s.startup)clearTimeout(s.startup);cancelAnimationFrame(s.frame);s.stream?.getTracks().forEach(t=>t.stop());s.worklet?.disconnect();s.input?.disconnect();for(const source of s.sources){try{source.stop();}catch{}}s.sources.clear();void s.audio.close().catch(()=>{});
    try{if(s.socket.readyState===WebSocket.OPEN)s.socket.send(JSON.stringify({type:'close'}));s.socket.close(1000);}catch{}
   }
-  if(mounted.current){setMicState(true);setSpeaking(false);setStatus(state);}
+  if(mounted.current){dispatchTranscript({type:'finish'});setMicState(true);setSpeaking(false);setStatus(state);}
  },[]);
  const disconnect=useCallback(()=>stop(),[stop]);
  useEffect(()=>{mounted.current=true;return()=>{mounted.current=false;stop();};},[stop]);
@@ -47,7 +49,7 @@ export function useLiveNarrator(options:LiveNarratorOptions){
   if(!current.current.enabled){setError('Unlock team AI to hear or talk with your narrator.');return;}
   if(mode==='listen'&&speaker.current)return;
   if(mode==='call'&&!navigator.mediaDevices?.getUserMedia){setError('Microphone access requires HTTPS and a supported browser. You can still type.');return;}
-  stop();const epoch=serial.current;microphone.current=mode!=='call';setMicState(microphone.current);setError('');setTranscript('');lastTranscriptRole.current='';setStatus('connecting');
+  stop();const epoch=serial.current;microphone.current=mode!=='call';setMicState(microphone.current);setError('');setStatus('connecting');
   let pendingAudio:AudioContext|null=null,pendingStream:MediaStream|null=null;
   try{
    const audio=new AudioContext({sampleRate:LIVE_RATE});pendingAudio=audio;await audio.resume();
@@ -96,7 +98,8 @@ export function useLiveNarrator(options:LiveNarratorOptions){
       source.start(when);
      }catch{stop('error');setError('Could not play the narrator audio.');}
     }else if(e.type==='transcript'){
-     if(typeof e.text==='string'){const prefix=lastTranscriptRole.current===e.role?'':`\n${e.role==='user'?'You':current.current.narrator?.name??'Aether'}: `;lastTranscriptRole.current=e.role;setTranscript(previous=>(previous+prefix+e.text).slice(-1500));}
+     // Captions remain independent of speaker gain and microphone state.
+     if(typeof e.text==='string'&&(e.role==='user'||e.role==='assistant'))dispatchTranscript({type:'delta',role:e.role,name:e.role==='user'?'You':current.current.narrator?.name??'Aether',text:e.text});
     }else if(e.type==='delegate'){
      delegations.current?.enqueue({id:e.id,text:e.text,session:s.epoch});
     }else if(e.type==='error'){setError(e.message);stop('error');}
@@ -134,6 +137,8 @@ export function useLiveNarrator(options:LiveNarratorOptions){
  const voice=options.narrator?.voice??'vesper',name=options.narrator?.name??'Aether',persona=options.narrator?[options.narrator.persona,...options.narrator.personality,...options.narrator.speakingStyle].join('. '):'';
  useEffect(()=>{if(active.current){setError('The new voice is ready. Unmute your mic to talk again.');stop('paused');}},[voice,name,persona,stop]);
  useEffect(()=>{if(!options.enabled)stop();},[options.enabled,stop]);
+ useEffect(()=>{stop();dispatchTranscript({type:'clear'});},[options.scope,stop]);
  useEffect(()=>{const timer=setTimeout(()=>emit({type:'context',text:options.context.slice(0,2000)}),650);return()=>clearTimeout(timer);},[options.context,emit]);
- return {status,micMuted,speakerMuted,speaking,error,transcript,connect,disconnect,setMicMuted,setSpeakerMuted,speak,updateContext,reply};
+ const clearTranscript=()=>dispatchTranscript({type:'clear'});
+ return {status,micMuted,speakerMuted,speaking,error,transcript:transcript.lines,transcriptStarted:transcript.nextId>1,clearTranscript,connect,disconnect,setMicMuted,setSpeakerMuted,speak,updateContext,reply};
 }
