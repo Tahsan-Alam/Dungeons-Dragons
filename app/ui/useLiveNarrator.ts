@@ -110,7 +110,7 @@ export function useLiveNarrator(options:LiveNarratorOptions){
     }
    });
    socket.addEventListener('error',()=>{if(active.current===s){setError('Live voice is unavailable. You can keep creating with text.');stop('error');}});
-   socket.addEventListener('close',()=>{if(active.current===s&&s.ready){if(s.sources.size&&mode==='listen')setTimeout(()=>{if(active.current===s)stop();},Math.max(0,(s.nextAt-audio.currentTime)*1000+50));else stop('paused');}else if(active.current===s){setError('Could not connect live voice. Check that team AI is unlocked.');stop('error');}});
+   socket.addEventListener('close',()=>{if(active.current===s&&s.ready){if(s.sources.size&&mode==='listen')setTimeout(()=>{if(active.current===s)stop();},Math.max(0,(s.nextAt-audio.currentTime)*1000+50));else stop('paused');}else if(active.current===s){setError('Could not connect live voice. Check AI settings and try again.');stop('error');}});
   }catch(e){pendingStream?.getTracks().forEach(t=>t.stop());if(pendingAudio)void pendingAudio.close().catch(()=>{});if(epoch!==serial.current)return;stop('error');setError(e instanceof VoicePreflightError?e.message:e instanceof DOMException&&e.name==='NotAllowedError'?'Microphone permission was declined. Allow microphone access in your browser, then start the call again.':e instanceof DOMException&&e.name==='NotFoundError'?'No microphone was found. Connect one, then start the call again.':'Could not start live voice. You can keep typing.');}
  }
  const connect=()=>{setSpeakerMuted(false);return start('call');};

@@ -10,10 +10,11 @@
     "dev": "node scripts/run-framework.mjs dev",
     "build": "node scripts/run-framework.mjs build",
     "start": "node scripts/start-local.mjs",
+    "local:setup": "node scripts/setup-local.mjs",
     "lint": "eslint . --ignore-pattern dist --ignore-pattern .next",
     "db:generate": "drizzle-kit generate",
     "typecheck": "tsc --noEmit",
-    "test": "node --experimental-strip-types --test game/*.test.ts server/*.test.ts app/ui/*.test.ts",
+    "test": "node --experimental-strip-types --test game/*.test.ts server/*.test.ts app/ui/*.test.ts scripts/*.test.mjs",
     "check": "npm run typecheck && npm test && npm run build"
   },
   "dependencies": {

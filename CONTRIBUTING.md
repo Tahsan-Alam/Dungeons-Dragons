@@ -62,4 +62,4 @@ Do not commit API keys, `.env` files, `.dev.vars` files, local databases, browse
 
 ## Team AI development
 
-The hosted game uses the owner’s server key after **Table settings → AI → Unlock AI**. Your local checkout does not receive that key. For authorized local API experiments, obtain it privately from the owner, keep it in ignored `.dev.vars`, and follow [the team setup](AI-SETUP.md#teammate-development-using-the-owners-account). Each local database has its own spend ledger; coordinate budgets before testing. Fixtures and automated tests remain free.
+Follow [TEAM-DEVELOPMENT.md](TEAM-DEVELOPMENT.md). Each person uses their own feature branch, local database and server-side project key. The stable ChatGPT Site remains the shared demo; it is not needed to test your changes with AI. The normal configuration requires no AI password. Each database has its own spending ledger, so agree on budgets before enabling paid testing. Fixtures and automated tests make no provider calls.

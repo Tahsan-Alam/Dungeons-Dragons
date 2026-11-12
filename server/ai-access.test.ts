@@ -5,16 +5,30 @@ import {pbkdf2Sync} from 'node:crypto';
 import {aiAccessAllowed,unlockAI,lockAI,paidAvailable,setAIEnabled,aiAccessState} from './ai-access.ts';
 const password='test-only-team-password',salt='b'.repeat(32);
 const verifier=`pbkdf2-sha256:100000:${salt}:${pbkdf2Sync(password,Buffer.from(salt,'hex'),100_000,32,'sha256').toString('hex')}`;
+test('open access ignores legacy passwords, requires server opt-in and persists device opt-out',async()=>{
+ const db={prepare(){throw new Error('Open access must not query session storage');}} as unknown as D1Database;
+ const env={DB:db,AI_MODE:'openai',AI_ENABLE_PAID:'I_ACCEPT_SMALL_API_CHARGES',OPENAI_API_KEY:'test-only',AI_ACCESS_PASSWORD_HASH:'legacy-verifier'};
+ const request=new Request('https://example.com/api/ai/access');
+ assert.equal(paidAvailable(env),true);
+ assert.equal(await aiAccessAllowed(request,env),true);
+ const disabled=await setAIEnabled(request,env,false);
+ assert.match(disabled!,/HttpOnly; SameSite=Strict; Max-Age=31536000; Secure$/);
+ const off=new Request(request,{headers:{cookie:disabled!.split(';')[0]}});
+ assert.equal(await aiAccessAllowed(off,env),false);
+ const enabled=await setAIEnabled(off,env,true);
+ assert.equal(await aiAccessAllowed(new Request(request,{headers:{cookie:enabled!.split(';')[0]}}),env),true);
+ for(const change of [{DB:undefined},{AI_MODE:'fixture'},{AI_ENABLE_PAID:'DISABLED'},{OPENAI_API_KEY:''},{AI_ACCESS_MODE:'typo'},{AI_ACCESS_MODE:'password'}])assert.equal(paidAvailable({...env,...change}),false);
+});
 function setup(){
  const db=new DatabaseSync(':memory:');db.exec('CREATE TABLE ai_access_sessions (token_hash TEXT PRIMARY KEY, password_version TEXT NOT NULL, expires_at INTEGER NOT NULL, enabled INTEGER NOT NULL DEFAULT 1)');
  const binding={prepare(sql:string){return {bind(...values:(string|number)[]){return {async first(){return db.prepare(sql).get(...values)??null;},async run(){return {meta:{changes:Number(db.prepare(sql).run(...values).changes)}};}};}};}} as unknown as D1Database;
- const env={DB:binding,AI_ACCESS_PASSWORD_HASH:verifier,AI_MODE:'openai',AI_ENABLE_PAID:'I_ACCEPT_SMALL_API_CHARGES',OPENAI_API_KEY:'test-only-key'};
+ const env={DB:binding,AI_ACCESS_MODE:'password',AI_ACCESS_PASSWORD_HASH:verifier,AI_MODE:'openai',AI_ENABLE_PAID:'I_ACCEPT_SMALL_API_CHARGES',OPENAI_API_KEY:'test-only-key'};
  const request=(cookie?:string,url='https://example.com/api/ai/access')=>new Request(url,{headers:cookie?{Cookie:cookie}:{}});
  return {db,env,request};
 }
 test('AI sessions are opaque, expire, revoke on logout/rotation, and fail closed',async()=>{
  const {db,env,request}=setup();try{
-  assert.equal(paidAvailable({...env,AI_ACCESS_PASSWORD_HASH:undefined}),false);
+  assert.equal(paidAvailable({...env,AI_ACCESS_MODE:'password',AI_ACCESS_PASSWORD_HASH:undefined}),false);
   assert.equal(await aiAccessAllowed(request(),env,1000),false);
   await assert.rejects(()=>unlockAI(request(),env,'wrong-password',1000),/did not match/);
   const header=await unlockAI(request(),env,password,1000),cookie=header.split(';')[0];
@@ -24,7 +38,7 @@ test('AI sessions are opaque, expire, revoke on logout/rotation, and fail closed
   await setAIEnabled(request(cookie),env,true,1003);assert.equal(await aiAccessAllowed(request(cookie),env,1004),true);
   assert.equal(await aiAccessAllowed(request(cookie),env,1000+31_536_000_000),false);
   assert.equal(await aiAccessAllowed(request(cookie),{...env,AI_ENABLE_PAID:'DISABLED'},1001),false);
-  assert.equal(await aiAccessAllowed(request(cookie),{...env,AI_ACCESS_PASSWORD_HASH:verifier.slice(0,-1)+(verifier.endsWith('f')?'e':'f')},1001),false);
+  assert.equal(await aiAccessAllowed(request(cookie),{...env,AI_ACCESS_MODE:'password',AI_ACCESS_PASSWORD_HASH:verifier.slice(0,-1)+(verifier.endsWith('f')?'e':'f')},1001),false);
   assert.equal(await aiAccessAllowed(request(cookie+'; '+cookie),env,1001),false);
   assert.equal(await aiAccessAllowed(request(cookie.replace(/.$/,'z')),env,1001),false);
   const stored=JSON.stringify(db.prepare('SELECT * FROM ai_access_sessions').all());assert.ok(!stored.includes(cookie.split('=')[1]));assert.ok(!stored.includes(password));

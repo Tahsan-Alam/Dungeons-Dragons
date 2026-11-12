@@ -1,0 +1,12 @@
+# Copy to .dev.vars (ignored). Never commit a real API key.
+# Fresh clones make no paid calls. See TEAM-DEVELOPMENT.md to enable them.
+AI_ACCESS_MODE=open
+AI_MODE=fixture
+AI_ENABLE_PAID=DISABLED
+AI_ENABLE_AUDIO=DISABLED
+OPENAI_API_KEY=
+AI_PLANNER_MODEL=gpt-6-luna
+# Conservative local defaults; these do NOT share the hosted site's ledger.
+AI_CAMPAIGN_MICRO_USD=400000
+AI_DAY_MICRO_USD=1000000
+AI_MONTH_MICRO_USD=4000000

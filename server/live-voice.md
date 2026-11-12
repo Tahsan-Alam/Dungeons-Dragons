@@ -3,7 +3,7 @@
 `/api/quest/live` is a same-origin WebSocket endpoint. It requires the existing
 team AI session cookie, configured paid AI, configured paid audio, D1, and the
 creator rate limit. A non-upgrade GET performs a free access preflight before
-microphone permission, so disabled audio or a missing unlock produces a readable
+microphone permission, so disabled audio or unavailable AI access produces a readable
 error instead of an opaque WebSocket failure. Keys and provider sockets remain in the Worker. There is no
 browser ephemeral token with a session lifetime the browser could extend.
 

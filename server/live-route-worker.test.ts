@@ -10,7 +10,7 @@ const passwordHash=`pbkdf2-sha256:100000:${salt}:${pbkdf2Sync(password,Buffer.fr
 test('voice preflight explains locked and disabled access without opening a paid session, then upgrades after unlock',async()=>{
  const bundle=await build({stdin:{contents:`import {GET} from './app/api/quest/live/route.ts';import {POST} from './app/api/ai/access/route.ts';export default {fetch(request){return new URL(request.url).pathname==='/api/ai/access'?POST(request):GET(request)}};`,resolveDir:process.cwd()},bundle:true,write:false,format:'esm',platform:'browser',external:['cloudflare:workers']});
  const mock=createFetchMock();mock.disableNetConnect();
- const mf=new Miniflare({modules:true,script:bundle.outputFiles[0].text,compatibilityDate:'2026-05-15',fetchMock:mock,d1Databases:['DB'],bindings:{OPENAI_API_KEY:'voice-test-only',AI_MODE:'openai',AI_ENABLE_PAID:'I_ACCEPT_SMALL_API_CHARGES',AI_ENABLE_AUDIO:'I_ACCEPT_PAID_AUDIO',AI_ACCESS_PASSWORD_HASH:passwordHash}});
+ const mf=new Miniflare({modules:true,script:bundle.outputFiles[0].text,compatibilityDate:'2026-05-15',fetchMock:mock,d1Databases:['DB'],bindings:{OPENAI_API_KEY:'voice-test-only',AI_MODE:'openai',AI_ENABLE_PAID:'I_ACCEPT_SMALL_API_CHARGES',AI_ENABLE_AUDIO:'I_ACCEPT_PAID_AUDIO',AI_ACCESS_MODE:'password',AI_ACCESS_PASSWORD_HASH:passwordHash}});
  try{
   const db=await mf.getD1Database('DB');
   for(const file of ['0000_wealthy_ben_grimm.sql','0001_ai_ledger.sql','0002_dazzling_power_pack.sql','0003_loving_kree.sql'])for(const sql of readFileSync(new URL('../drizzle/'+file,import.meta.url),'utf8').split(';').map(x=>x.replace('--> statement-breakpoint','').trim()).filter(Boolean))await db.prepare(sql).run();

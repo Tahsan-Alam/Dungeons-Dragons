@@ -36,7 +36,7 @@ test('application routes read Worker secret bindings and persist bounded provide
  `,resolveDir:process.cwd()},bundle:true,write:false,format:'esm',platform:'browser',external:['cloudflare:workers']});
  const mock=createFetchMock();mock.disableNetConnect();
  mock.get('https://api.openai.com').intercept({path:'/v1/responses',method:'POST',headers:{authorization:'Bearer worker-binding-test-only'}}).reply(429,JSON.stringify({error:{code:'insufficient_quota',message:'private-provider-detail'}}));
- const mf=new Miniflare({modules:true,script:bundle.outputFiles[0].text,compatibilityDate:'2026-05-15',fetchMock:mock,d1Databases:['DB'],bindings:{OPENAI_API_KEY:'worker-binding-test-only',AI_MODE:'openai',AI_ENABLE_PAID:'I_ACCEPT_SMALL_API_CHARGES',AI_ENABLE_AUDIO:'I_ACCEPT_PAID_AUDIO',AI_ACCESS_PASSWORD_HASH:passwordHash}});
+ const mf=new Miniflare({modules:true,script:bundle.outputFiles[0].text,compatibilityDate:'2026-05-15',fetchMock:mock,d1Databases:['DB'],bindings:{OPENAI_API_KEY:'worker-binding-test-only',AI_MODE:'openai',AI_ENABLE_PAID:'I_ACCEPT_SMALL_API_CHARGES',AI_ENABLE_AUDIO:'I_ACCEPT_PAID_AUDIO',AI_ACCESS_MODE:'password',AI_ACCESS_PASSWORD_HASH:passwordHash}});
  try{
   const db=await mf.getD1Database('DB');
   for(const file of ['0000_wealthy_ben_grimm.sql','0001_ai_ledger.sql','0002_dazzling_power_pack.sql','0003_loving_kree.sql'])for(const sql of readFileSync(new URL('../drizzle/'+file,import.meta.url),'utf8').split(';').map(x=>x.replace('--> statement-breakpoint','').trim()).filter(Boolean))await db.prepare(sql).run();

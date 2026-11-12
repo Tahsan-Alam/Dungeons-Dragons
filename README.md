@@ -4,14 +4,14 @@
 
 [Play the hosted game](https://painted-realms.richie-r9.chatgpt.site/) · [Contribute](CONTRIBUTING.md) · [Roadmap](ROADMAP.md) · [Changelog](CHANGELOG.md)
 
-A playable cooperative browser adventure with Paint and Pixel artwork, each available in 2D and 2.5D. All four presentations render the same game state without restarting the room, turn or character. Changing world view reframes the camera; changing art style preserves it. Local stories work without credentials; optional server-side AI adds quest planning, companion identities, narration, guidance and live voice. Paid AI also requires the team password in Table settings > AI and remaining shared allowance.
+A playable cooperative browser adventure with Paint and Pixel artwork, each available in 2D and 2.5D. All four presentations render the same game state without restarting the room, turn or character. Changing world view reframes the camera; changing art style preserves it. Local stories work without credentials; optional server-side AI adds quest planning, companion identities, narration, guidance and live voice. AI is password-free by default and still requires server configuration and remaining shared allowance. Each teammate can run an independent local copy; see [Team development](TEAM-DEVELOPMENT.md).
 
 ## Play
 
 - **Create an adventure:** the creator follows **Imagine → Your hero → Begin**. Use one conversation to describe a world, shape a narrator, or ask a question. The editing column scrolls while Aether’s animated creation scene stays in view (above the editor on phones). White/silver Ether begins with rainbow particles; personality, delivery and appearance shape the narrator’s palette across the creator. A separate story background builds behind the character. Paint and Pixel preserve the same identity, and reduced motion is supported.
 - **Shape the story and hero:** your chosen narrator drafts a short synopsis, timeline, world and key locations. Refine through conversation or edit the fields directly. Pick one of three story-linked heroes, or customize a character with a prompt, background/personality traits, name, class and palette. Choose length, companions and rules last. The reviewed synopsis, narrator, character and location names are saved into the game and replay; starting does not regenerate your approved story.
 - **Read live speech:** short narrator comments and voice calls show captions below the creation scene. Recent speech stays readable when sound is muted or a call ends. Scroll or focus the transcript to review it, choose Latest to follow along again, or Clear to remove it. Captions keep only a bounded recent history for this visit; Paint and Pixel share the same controls, with reduced-motion support and screen-reader announcements at pauses rather than every streamed character.
-- **AI adventures:** enabling or unlocking AI in Settings also enables the creator. A per-quest choice remains separate and survives draft reloads. The creator waits for access checks and never silently replaces enabled AI with an offline draft; failed requests retain your message. Greetings remain conversation, without a story proposal. Aether uses a persistent Vesper voice; confirmed narrators keep their own voice and delivery. **Start voice** checks access before requesting the microphone. Speaker and microphone mute independently. Calls close after 120 seconds of inactivity or a funded 120/240/360-second window; both sides muted ends the call. See [AI usage limits](AI-USAGE-LIMITS.md) for spending and request caps. [Voice architecture and bounds](server/live-voice.md). AI solo starts a saved server room; offline solo stays local.
+- **AI adventures:** enabling AI in Settings also enables the creator. A per-quest choice remains separate and survives draft reloads. The creator waits for access checks and never silently replaces enabled AI with an offline draft; failed requests retain your message. Greetings remain conversation, without a story proposal. Aether uses a persistent Vesper voice; confirmed narrators keep their own voice and delivery. **Start voice** checks access before requesting the microphone. Speaker and microphone mute independently. Calls close after 120 seconds of inactivity or a funded 120/240/360-second window; both sides muted ends the call. See [AI usage limits](AI-USAGE-LIMITS.md) for spending and request caps. [Voice architecture and bounds](server/live-voice.md). AI solo starts a saved server room; offline solo stays local.
 - **Gather party:** create a room and share its invite link/code. Up to ten heroes total, including companions. Everyone clicks Ready, then the host begins.
 - Everyone at an open table sees other players', companions' and enemies' dice rolls, with the character, target and confirmed result. Rolls arriving together play in order: use Next roll, Pause auto-advance to read at your own pace, or Back to board to skip the queued presentations. Recent results remain in the adventure log. Rolls wait while you inspect a character or use a table dialog. Your own attack still starts with Roll d20. Opening a saved adventure does not replay old rolls.
 - Turn guidance stays visible on phones. Targeting shows available choices and explains when to move or end your turn. Chest and gateway buttons become available when you are close enough; the final gateway shows Finish adventure.
@@ -38,14 +38,16 @@ npm run dev -- --port 5347 --hostname 127.0.0.1
 
 Open the address printed by the server. Start with offline solo play; no AI keys are required. Multiplayer and AI solo need the local database initialization below. Live AI also needs server-only credentials and explicit paid flags; a key or player preference alone enables no paid requests.
 
-For a fresh local multiplayer database, build once with `npm run build`, then run:
+For a complete local setup, including multiplayer and AI storage, run:
 
 ```sh
-node --import ./scripts/sites-env.mjs ./node_modules/wrangler/bin/wrangler.js d1 execute DB --local --config dist/server/wrangler.json --persist-to .wrangler/state --file drizzle/0000_wealthy_ben_grimm.sql
-node --import ./scripts/sites-env.mjs ./node_modules/wrangler/bin/wrangler.js d1 execute DB --local --config dist/server/wrangler.json --persist-to .wrangler/state --file drizzle/0001_ai_ledger.sql
+npm run local:setup
+npm run dev -- --port 5347 --hostname 127.0.0.1
 ```
 
-Apply each migration only once; check existing tables before initializing an existing database. The dev and built previews share `.wrangler/state`. `npm start -- --port 5347` runs the production build locally and loads the ignored root `.dev.vars` when present. A local address is only available on this computer; friends elsewhere need the hosted deployment and visitor access. Apply outstanding AI access migrations as described in [AI setup](AI-SETUP.md#secure-setup).
+Setup builds the app, creates a fixture-only ignored `.dev.vars` if missing, and applies missing local schema changes. It is safe to rerun: existing settings, adventures and spending receipts are preserved. Stop running servers before setup/building on Windows. Each checkout owns its local database. `npm start -- --port 5347` runs the production build and loads the root `.dev.vars`.
+
+Follow [Team development](TEAM-DEVELOPMENT.md) for individual server keys, AI opt-in, shared billing and the GitHub review workflow. [AI setup](AI-SETUP.md) documents server access modes. Local development does not require publishing to ChatGPT Sites.
 
 ## Verify
 
