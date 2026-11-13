@@ -63,3 +63,14 @@ Interface text is never smaller than 11px. Health bars turn to the warning colou
 The Pixel art style, the Paint/Pixel switch and their assets are removed; earlier sections that describe two art styles are historical. The hand-drawn style is the only one, and a saved Pixel preference is ignored. `data-theme="paint"` stays on the root element because interface styles use it for specificity. 2D/2.5D, colour mode, accent and motion remain personal settings.
 
 Camp's header shows only the logo: the title menu offers Adventures, the Adventurer’s guide and Table settings. Every other screen keeps the guide and settings buttons in the header, because that is the only way to reach them during setup, play and replay.
+
+## Screens outside the board
+
+- **Narrator conversation.** Questions and replies form a thread of the newest twelve exchanges, kept in memory for the open adventure. It is presentation only: nothing is saved, replayed or sent as context.
+- **Join party.** Code first, hero second. The server has no room preview, so the code is checked for shape (six letters) before the hero step and for existence when joining.
+- **Party camp.** The title comes from the created story. Open seats are counted against the ten-player limit.
+- **Results.** The recap reads the final game state. Damage and critical hits come from the retained event log (the newest 180 events), so a long adventure is told that the totals cover its last part.
+
+## Styles
+
+The interface is hand-written CSS in `app/`; there is no component library. Before adding `!important`, look for the rule being overridden and raise or reorder that instead. The overrides that remain are reduced-motion rules, focus and pressed states, and a few specificity conflicts between `globals.css` and the `.play-refined` and creator layers that still need untangling.
