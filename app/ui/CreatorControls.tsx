@@ -2,15 +2,8 @@
 import {useState} from 'react';
 import {TRAITS} from '../../game/creation';
 import type {TraitCategory,CreationResult} from '../../game/creation';
-import type {HeroClass} from '../../game/types';
-import {HeroArt,Icon} from './Art';
+import {Icon} from './Art';
 
-export function PairedModel({model,color,name}:{model:HeroClass;color:string;name:string}){
- return <div className="creator-models" role="img" aria-label={`${name} in MS Paint and pixel art`}>
-  <div><HeroArt heroClass={model} color={color} artStyle="paint"/><span>MS Paint</span></div>
-  <div><HeroArt heroClass={model} color={color} artStyle="pixel"/><span>Pixel art</span></div>
- </div>;
-}
 export function TraitPicker({category,label,values,onChange,validate,disabled}:{category:TraitCategory;label:string;values:string[];onChange:(values:string[])=>void;validate:(category:TraitCategory,value:string)=>Promise<CreationResult|null>;disabled:boolean}){
  const [custom,setCustom]=useState(''),[feedback,setFeedback]=useState(''),[suggestion,setSuggestion]=useState('');
  const options=[...new Set<string>([...TRAITS[category],...values])];

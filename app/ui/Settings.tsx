@@ -3,7 +3,7 @@ import {useEffect,useId,useRef,useState} from 'react';
 import type {CSSProperties} from 'react';
 import Modal from './Modal';
 import {Icon} from './Art';
-import {ThemeToggle,useTheme} from './Theme';
+import {useTheme} from './Theme';
 import type {useAudio} from './useAudio';
 import {ACCENT_NAMES,ACCENT_PALETTES} from './appearance';
 import ControlsSettings from './ControlsSettings';
@@ -37,7 +37,6 @@ export default function Settings({onClose,onAI,audio,game,initialSection='appear
  {section==='ai'?<AISettings onAbout={onAI}/>:null}
  {section==='appearance'?<>
  <p className="settings-description section-intro">Make this table your own. Your adventure stays the same.</p>
- <div className="settings-row"><div><strong>Art style</strong><p>Painted characters or crisp pixel art.</p></div><ThemeToggle/></div>
  <div className="settings-row"><div><strong>Color mode</strong><p>Match your room or follow your device.</p></div><div className="color-mode-toggle" role="group" aria-label="Color mode">{(['light','dark','system'] as const).map(mode=><button key={mode} type="button" aria-pressed={colorMode===mode} onClick={()=>setColorMode(mode)}>{mode[0].toUpperCase()+mode.slice(1)}</button>)}</div></div>
  <div className="settings-row world-view-setting"><div><strong>World view</strong><p id={`${id}-world-view-description`}>A flat map or angled scenery. Your view only.</p></div><div className="color-mode-toggle world-view-toggle" role="group" aria-label="World view" aria-describedby={`${id}-world-view-description`}>{(['2d','2.5d'] as const).map(mode=><button key={mode} type="button" aria-pressed={viewMode===mode} onClick={()=>setViewMode(mode)}>{mode==='2d'?'2D':'2.5D'}</button>)}</div></div>
  <div className="accent-setting"><strong>Accent color</strong><div className="accent-options" role="group" aria-label="Accent color">{ACCENT_NAMES.map(name=><button key={name} type="button" aria-pressed={accent===name} onClick={()=>setAccent(name)} style={{'--swatch':ACCENT_PALETTES[name][resolvedColorMode].accent} as CSSProperties}><span className="accent-swatch" aria-hidden="true">{accent===name?<Icon name="check" size={14}/>:null}</span><span>{name[0].toUpperCase()+name.slice(1)}</span></button>)}</div></div>

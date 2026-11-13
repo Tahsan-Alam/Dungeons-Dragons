@@ -1,7 +1,5 @@
 .depth-terrain,.depth-prop,.depth-chest,.depth-gateway{pointer-events:none}
 .depth-prop{transition:opacity 180ms ease}
-.pixel-depth{shape-rendering:crispEdges}
-.pixel-depth .depth-prism{stroke-linejoin:miter}
 .hero-art.depth-art,.panorama.depth-art{isolation:isolate}
 html[data-motion='reduced'] .depth-prop{transition:none}
 @media(prefers-reduced-motion:reduce){html:not([data-motion='full']) .depth-prop{transition:none}}

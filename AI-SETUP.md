@@ -36,7 +36,7 @@ Each database has a separate ledger. Local testing does not consume or obey the 
 
 D1 reserves allowance atomically before outbound calls. Failures retain reservations; uncertain calls are not automatically retried. Cached results and duplicate requests avoid regeneration. Session duration, idle, token, payload, concurrency and storage limits remain enforced. Do not clear receipts to obtain more allowance.
 
-Text uses the bounded Responses adapter and validated structured outputs. Narration uses committed events; dice, actions, combat and maps stay engine-owned. Paired Paint/Pixel recipes preserve identity. Voice uses a server relay without exposing the provider credential; see [live voice](server/live-voice.md). Removed dictation is not part of current setup.
+Text uses the bounded Responses adapter and validated structured outputs. Narration uses committed events; dice, actions, combat and maps stay engine-owned. Character recipes preserve identity across the supported 2D/2.5D views. Voice uses a server relay without exposing the provider credential; see [live voice](server/live-voice.md). Removed dictation is not part of current setup.
 
 ## Hosted publishing
 

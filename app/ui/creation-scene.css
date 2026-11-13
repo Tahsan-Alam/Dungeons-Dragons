@@ -42,10 +42,6 @@ html:root[data-color-mode][data-theme] body button.creation-ether,html:root[data
 .creation-scene[data-pending=true] .creation-ether-core{animation-duration:19s;}
 .creation-scene[data-pending=true] .creation-core-light{animation:creation-core-breath 1.8s ease-in-out infinite;}
 .creation-scene[data-speaking=true] .creation-core-light{animation:creation-core-speaking .6s ease-in-out infinite alternate;}
-.creation-scene[data-art=pixel] .creation-ether-core,.creation-scene[data-art=pixel] canvas{image-rendering:pixelated;}
-.creation-scene[data-art=pixel] .creation-ether-core{animation-timing-function:steps(240,end);filter:brightness(var(--art-exposure));}
-.creation-scene[data-art=pixel] .creation-distant-planets i{clip-path:polygon(25% 0,75% 0,75% 12%,88% 12%,88% 25%,100% 25%,100% 75%,88% 75%,88% 88%,75% 88%,75% 100%,25% 100%,25% 88%,12% 88%,12% 75%,0 75%,0 25%,12% 25%,12% 12%,25% 12%);border-radius:0;}
-.creation-scene[data-art=pixel] .creation-core-ribbon{border-style:dashed;}
 .creation-scene[data-paused=true] *, .creation-scene[data-paused=true] *::after{animation-play-state:paused!important;}
 .creation-scene[data-reduced=true] *, .creation-scene[data-reduced=true] *::after{animation:none!important;transition:none!important;}
 @media(prefers-reduced-motion:reduce){html:not([data-motion=full]) .creation-scene *,html:not([data-motion=full]) .creation-scene *::after{animation:none!important;transition:none!important;}}

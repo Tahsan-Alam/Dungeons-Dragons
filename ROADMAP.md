@@ -7,7 +7,7 @@ Keep this as the short checkpoint overview. Use GitHub issues for individual tas
 - [x] Solo adventures with scripted companions and seeded encounters.
 - [x] Online rooms for up to ten heroes, turn handling and reconnection.
 - [x] Streamlined rules and a Classic SRD-inspired subset.
-- [x] Paint/Pixel art, 2D/2.5D views, dark/light modes and responsive controls.
+- [x] Hand-drawn art, 2D/2.5D views, dark/light modes and responsive controls. (The Pixel art style was later removed.)
 - [x] Saved adventures, replay, configurable shortcuts and local audio.
 - [x] Automated engine/server tests and shared repository checks.
 

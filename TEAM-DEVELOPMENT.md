@@ -39,11 +39,19 @@ AI settings shows availability and server limits; open mode has no password prom
 
 The hosted $25/month ceiling stays unchanged. **Local ledgers do not share it:** three $4 development allowances can add $12 on top of hosted usage. Agree on the total with the owner before testing; app reservations are conservative estimates, not verified billing. Never delete a ledger to regain allowance. Separate keys enable revocation and attribution, not a global app budget. Provider controls are managed separately.
 
+## Can we use one shared key?
+
+The app accepts the same development API key in each person's local .dev.vars; no code change is needed. Sharing is the fewest initial steps, but every copy has the same permissions and rotating it means updating all computers. It also makes individual usage harder to identify. Keep a dedicated development credential separate from the hosted production key, and transfer it only through a private secret-sharing tool, never Git or chat.
+
+Our recommendation remains one key per teammate under the same funded project. Invite the two teammates once, let each create their project key, and keep the same setup commands. OpenAI recommends project membership instead of sharing personal keys: https://help.openai.com/en/articles/5008148-can-i-share-my-api-key-with-my-teammatecoworker
+
+Either arrangement uses the project's billing and does not combine the separate local spending ledgers. No keys are created or copied by local:setup.
+
 ## Work together
 
 1. Claim a GitHub issue with one owner and a clear result. Coordinate shared types, routes, schemas and global styles before editing them.
 2. Start each task from updated `main`: `git switch main`, `git pull --ff-only origin main`, then create a feature branch. Commit or stash your own work before switching.
-3. Develop/test locally. Rerun `npm run local:setup` after schema changes and `npm ci` when the lockfile changes. Run `npm run check` before review; check desktop/mobile Paint and Pixel for visible changes.
+3. Develop/test locally. Rerun `npm run local:setup` after schema changes and `npm ci` when the lockfile changes. Run `npm run check` before review; check desktop/mobile light and dark modes for visible changes.
 4. Push the branch and open a PR. Another teammate can check out that branch and run it with their own `.dev.vars` and database. Separate clones allow two versions on different ports without mixing saves.
 5. Review, merge into `main`, then have one release coordinator publish the agreed commit to the existing ChatGPT Site. A push or merge alone does not deploy it.
 

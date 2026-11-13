@@ -16,9 +16,10 @@ import type {ConversationLine} from './CreatorControls';
 import CreationScene from './CreationScene';
 import LiveTranscript from './LiveTranscript';
 import {creatorPalette} from './creator-palette';
+import {quickStartDraft} from './quick-start';
 import './adventure-creator.css';
 
-type Props={mode:'solo'|'online';onBack:()=>void;onStart:(name:string,cls:HeroClass,options:GameOptions,code:string)=>void;busy:boolean;onNavigationBlockChange?:(blocked:boolean)=>void;onAISettings?:()=>void};
+type Props={mode:'solo'|'online';onBack:()=>void;onStart:(name:string,cls:HeroClass,options:GameOptions,code:string)=>void;busy:boolean;onNavigationBlockChange?:(blocked:boolean)=>void;onAISettings?:()=>void;quick?:boolean};
 type Access={passwordRequired?:boolean;available:boolean;unlocked:boolean;audioAvailable:boolean};
 const INITIAL_MESSAGE='A place, a feeling, a wonderfully strange idea. I’m listening.';
 const VOICE_NAMES:Record<string,string>={vesper:'Vesper · British',willow:'Willow · Irish',stone:'Stone · Irish',marin:'Marin',cedar:'Cedar',gleam:'Gleam',meridian:'Meridian'};
@@ -26,7 +27,7 @@ const newDraft=():CreatorDraft=>({...emptyCreatorDraft(),narrator:structuredClon
 const heroSeed=(world:string):HeroProfile=>({name:'Wren',heroClass:'ranger',color:HERO_COLORS[4],personality:['Curious'],background:'A wanderer from '+world+', following an impossible promise.'});
 const cap=(s:string)=>s.charAt(0).toUpperCase()+s.slice(1);
 
-export default function AdventureCreator({mode,onBack,onStart,busy,onNavigationBlockChange,onAISettings}:Props){
+export default function AdventureCreator({mode,onBack,onStart,busy,onNavigationBlockChange,onAISettings,quick=false}:Props){
  const [stage,setStage]=useState(0),[focus,setFocus]=useState<CreatorFocus>('story');
  const [draft,setDraft]=useState<CreatorDraft>(newDraft),draftRef=useRef(draft);
  const [confirmed,setConfirmed]=useState<NarratorProfile>(structuredClone(AETHER)),[speaker,setSpeaker]=useState<'guide'|'narrator'>('guide');
@@ -61,6 +62,12 @@ export default function AdventureCreator({mode,onBack,onStart,busy,onNavigationB
  function say(text:string,aloud=false){setAsideText(text);if(aloud&&!live.speakerMuted)void live.speak(text);}
 
  useEffect(()=>{
+  // Quick start opens a ready-made adventure on the review step. It uses built-in drafts and leaves any saved draft alone.
+  if(quick){
+   const ready=quickStartDraft(),next=editCreatorDraft(emptyCreatorDraft(),{narrator:ready.narrator,story:ready.story,hero:ready.hero});
+   if(next){install(next);setHeroes(ready.heroes);setStage(2);setOverrideAI(false);setAsideText('A ready-made adventure. Change anything you like, or begin.');}
+   setReady(true);return;
+  }
   try{
    const raw=JSON.parse(localStorage.getItem(storageKey)??'null');
    if(raw?.v===2&&raw.draft&&Number.isSafeInteger(raw.draft.version)&&raw.draft.version>=0&&raw.draft.version<1_000_000){
@@ -83,11 +90,11 @@ export default function AdventureCreator({mode,onBack,onStart,busy,onNavigationB
    }
   }catch{/* Creation works when storage is unavailable. */}
   setReady(true);
- },[storageKey]);
+ },[storageKey,quick]);
  useEffect(()=>{
-  if(!ready)return;
+  if(!ready||quick)return;
   try{localStorage.setItem(storageKey,JSON.stringify({v:2,draft,confirmed,speaker,focus,prompt,message,scope,stage,heroes,options,overrideAI,aiPreferenceRevision:2,aiDefault:savedAI,lines}));setStored(true);}catch{setStored(false);}
- },[ready,storageKey,draft,confirmed,speaker,focus,prompt,message,scope,stage,heroes,options,overrideAI,savedAI,lines]);
+ },[ready,quick,storageKey,draft,confirmed,speaker,focus,prompt,message,scope,stage,heroes,options,overrideAI,savedAI,lines]);
  useEffect(()=>{onNavigationBlockChange?.(creation.pending);return()=>onNavigationBlockChange?.(false);},[creation.pending,onNavigationBlockChange]);
  useEffect(()=>{
   const controller=new AbortController();
@@ -170,7 +177,7 @@ export default function AdventureCreator({mode,onBack,onStart,busy,onNavigationB
   <nav className="creator-steps" aria-label="Adventure setup">
    {['Imagine','Your hero','Begin'].map((label,i)=><button key={label} type="button" aria-current={stage===i?'step':undefined} disabled={pending||i>stage} onClick={()=>{setStage(i);creation.setError('');}}>{i<stage?<Check size={14}/>:null}{label}</button>)}
   </nav>
-    <div className="creator-conversation-area">
+    <div className={`creator-conversation-area${quick&&stage===2?' creator-quick-review':''}`}>
      <h2 ref={heading} tabIndex={-1}>{stage===0?'What shall we create?':stage===1?'Who will you become?':'One last look.'}</h2>
      <form className="creator-composer" onSubmit={e=>{e.preventDefault();void send();}}><label htmlFor="narrator-message" className="sr-only">Message your narrator</label><textarea ref={messageInput} id="narrator-message" rows={2} maxLength={400} value={message} onChange={e=>setMessage(e.target.value)} placeholder={stage===0?'Tell '+activeNarrator.name+' about a world, a narrator, or just say hello…':'Ask '+activeNarrator.name+'…'} onKeyDown={e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();void send();}}}/><button type="submit" className="creator-send" disabled={pending||!canRequest||!message.trim()} aria-label="Send message"><Send size={18}/></button></form>
      {!lines.length&&stage===0?<div className="creator-suggestions"><button disabled={pending} onClick={()=>void submitIdea('A city above the clouds, where a dragon has vanished.')}>A world above the clouds</button><button disabled={pending} onClick={()=>void submitIdea('Surprise me with an imaginative D&D-style adventure.')}><Sparkles size={14}/>Surprise me</button></div>:null}
@@ -208,7 +215,7 @@ export default function AdventureCreator({mode,onBack,onStart,busy,onNavigationB
      {!hero?<button className="creator-link" onClick={()=>edit({hero:heroSeed(story?.world??'Asterfall')})}>Create my own hero<ArrowRight size={15}/></button>:<div className="creator-hero-editor"><div className="creator-detail-grid"><label className="creator-field">Hero name<input aria-label="Hero name" maxLength={24} value={hero.name} onChange={e=>editHero({name:e.target.value})}/></label><label className="creator-field">Class<select aria-label="Class" value={hero.heroClass} onChange={e=>editHero({heroClass:e.target.value as HeroClass})}>{Object.entries(CLASS_INFO).map(([key,value])=><option key={key} value={key}>{value.name}</option>)}</select></label></div><p className="creator-class-description">{CLASS_INFO[hero.heroClass].description} · {CLASS_INFO[hero.heroClass].ability}</p><label className="creator-field">Background<textarea aria-label="Background" rows={3} maxLength={240} value={hero.background} onChange={e=>editHero({background:e.target.value})}/></label><TraitPicker category="personality" label="Personality" values={hero.personality} onChange={values=>editHero({personality:values})} validate={validate} disabled={pending}/><label className="creator-field">Palette<select aria-label="Hero palette" value={hero.color} onChange={e=>editHero({color:e.target.value})}>{HERO_COLORS.map((c,i)=><option value={c} key={c}>{['Coral','Sky','Gold','Lilac','Sage','Rose','Teal','Sand','Lime','Slate'][i]}</option>)}</select></label></div>}
     </>:<>
 
-     <div className="creator-review"><HeroArt heroClass={hero?.heroClass} color={hero?.color}/><div><h3>{story?.title}</h3><p>{hero?.name} · Narrated by {confirmed.name}</p></div></div><p className="creator-review-synopsis">{story?.synopsis}</p>
+     <div className="creator-review"><HeroArt heroClass={hero?.heroClass} color={hero?.color}/><div><h3>{story?.title}</h3><p>{hero?.name}{hero?' the '+CLASS_INFO[hero.heroClass].name:''} · Narrated by {confirmed.name} · {story?cap(story.biome):''}</p></div></div><p className="creator-review-synopsis">{story?.synopsis}</p>
      <div className="creator-detail-grid"><label className="creator-field">Adventure length<select aria-label="Adventure length" value={options.duration} onChange={e=>setOptions({...options,duration:e.target.value as GameOptions['duration']})}><option value="short">Short · 1 chapter</option><option value="standard">Standard · 3 chapters</option><option value="long">Long · 5 chapters</option></select></label><label className="creator-field">Companions<select aria-label="Companions" value={options.companions} onChange={e=>setOptions({...options,companions:Number(e.target.value)})}>{[0,1,2,3].map(n=><option key={n} value={n}>{n?n+' companion'+(n===1?'':'s'):'Just me'}</option>)}</select></label></div>
      <label className="creator-field">Rules<select aria-label="Rules" value={options.rules} onChange={e=>setOptions({...options,rules:e.target.value as GameOptions['rules']})}><option value="simple">Streamlined · recommended</option><option value="classic">Classic · SRD subset</option></select></label>
      <details className="creator-details"><summary>World settings<ChevronDown size={14}/></summary><label className="creator-field">Terrain<select aria-label="Terrain" value={story?.biome} onChange={e=>editStory({biome:e.target.value as StoryBlueprint['biome']})}><option value="woodland">Woodland</option><option value="ruins">Ruins</option><option value="coast">Coast</option></select></label><label className="creator-field">World seed<input aria-label="Seed" maxLength={64} value={options.seed} onChange={e=>setOptions({...options,seed:e.target.value})}/></label></details>

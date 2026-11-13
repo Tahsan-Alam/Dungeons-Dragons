@@ -18,7 +18,7 @@ Follow [Run locally](README.md#run-locally). Use Node 26. Solo play and automate
    ```
 
    Use a short descriptive name, such as `fix/mobile-menu` or `feature/new-encounter`.
-3. Make and test the change. Use `npm run check` for types, automated tests and a production build. For UI work, also check a phone-sized and desktop-sized window in both Paint and Pixel.
+3. Make and test the change. Use `npm run check` for types, automated tests and a production build. For UI work, also check a phone-sized and desktop-sized window.
 4. Commit and push your branch:
 
    ```sh

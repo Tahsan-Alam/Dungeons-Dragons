@@ -1,4 +1,6 @@
-/* Color mode is independent from Paint/Pixel. Both styles resolve these exact tokens. */
+/* Headings share one line height everywhere. */
+.rail-heading h2,.scene-heading h1,.party-objective h3,.modal-head h2,.setup-title h1,.lobby-heading h1,.section-heading h2,.lobby-adventure h2,.help-grid h3,.character-detail h3{line-height:1.2}
+/* Color mode resolves these exact tokens. */
 :root,html[data-color-mode='light']{
  --canvas:#fff;--paper:#fff;--surface:#f7f7f8;--surface-raised:#fff;--subtle:#eeeeF1;
  --ink:#18181c;--muted:#62626b;--line:#d9d9df;--line-strong:#9898a3;
@@ -42,20 +44,15 @@ html[data-color-mode][data-theme] .brand-die{background:var(--accent-soft);borde
 html[data-color-mode][data-theme] :is(.menu-copy>p,.menu-caption,.menu-footer,.hand-note,.map-corner,.ready-label,.you-mark,.health-row i,.party-objective .mono,.scene-heading .mono,.round-label>svg,.map-compass>span,.target-summary,.action-button>kbd,.action-button>small,.action-hint,.entry-symbol,.journal-entry p,.journal-entry.system p,.journal-entry.story .mono,.play-footer,.chapter-copy>div>span,.budget-banner>span,.integration-list article>svg){color:var(--muted)}
 html[data-color-mode][data-theme] :is(.chapter-copy>p,.journal-entry.story p){color:var(--ink)}
 html[data-color-mode][data-theme] :is(.menu-copy h1 em,.small-stars){color:var(--accent)}
-html[data-color-mode][data-theme] .menu-links button{text-decoration-color:var(--line-strong)}
-html[data-color-mode][data-theme] .menu-footer i{background:var(--muted)}
 html[data-color-mode][data-theme] :is(.illustration-frame,.map-title){background:var(--surface);box-shadow:var(--shadow);border-color:var(--line)}
 html[data-color-mode][data-theme] .class-option{background:var(--surface-raised);border-color:var(--line)}
 html[data-color-mode][data-theme] .class-option:hover{background:var(--sage);border-color:var(--line-strong)}
 html[data-color-mode][data-theme] .class-option.selected{background:var(--accent-soft);border-color:var(--accent);box-shadow:var(--shadow)}
-html[data-color-mode][data-theme] .class-check{background:var(--accent);color:var(--accent-ink)}
-html[data-color-mode][data-theme] :is(.segmented,.theme-toggle,.color-mode-toggle){background:var(--surface);border-color:var(--line)}
-html[data-color-mode][data-theme] :is(.segmented button,.theme-toggle button,.color-mode-toggle button){color:var(--muted)}
-html[data-color-mode][data-theme] :is(.segmented button,.theme-toggle button,.color-mode-toggle button):hover:not(:disabled){background:var(--sage);color:var(--ink)}
-html[data-color-mode][data-theme] :is(.segmented .active,.theme-toggle button[aria-pressed=true],.color-mode-toggle button[aria-pressed=true]){background:var(--surface-raised);border-color:var(--line);box-shadow:var(--shadow);color:var(--ink)}
-html[data-color-mode][data-theme] :is(.theme-toggle button[aria-pressed=true],.color-mode-toggle button[aria-pressed=true]):hover{background:var(--surface-raised);box-shadow:var(--shadow-hover)}
-html[data-color-mode][data-theme] .input-button button{background:var(--surface)}
-html[data-color-mode][data-theme] .input-button button:hover{background:var(--sage);color:var(--ink)}
+html[data-color-mode][data-theme] :is(.segmented,.color-mode-toggle){background:var(--surface);border-color:var(--line)}
+html[data-color-mode][data-theme] :is(.segmented button,.color-mode-toggle button){color:var(--muted)}
+html[data-color-mode][data-theme] :is(.segmented button,.color-mode-toggle button):hover:not(:disabled){background:var(--sage);color:var(--ink)}
+html[data-color-mode][data-theme] :is(.segmented .active,.color-mode-toggle button[aria-pressed=true]){background:var(--surface-raised);border-color:var(--line);box-shadow:var(--shadow);color:var(--ink)}
+html[data-color-mode][data-theme] :is(.color-mode-toggle button[aria-pressed=true]):hover{background:var(--surface-raised);box-shadow:var(--shadow-hover)}
 html[data-color-mode][data-theme] :is(.invite-ticket,.lobby-player,.rules-note,.budget-banner,.narrator-portrait,.roll-die,.leave-confirm){background:var(--surface);border-color:var(--line);color:var(--ink)}
 html[data-color-mode][data-theme] .mini-panorama{border-color:var(--line);box-shadow:var(--shadow)}
 html[data-color-mode][data-theme] .ready-label.ready{color:var(--success)}
@@ -73,7 +70,6 @@ html[data-color-mode][data-theme] .board-caption{background:var(--surface);borde
 html[data-color-mode][data-theme] .board-viewport{background:var(--board-world)}
 html[data-color-mode][data-theme] .board-tools{background:var(--surface-raised);border-color:var(--line-strong);box-shadow:var(--shadow);color:var(--ink)}
 html[data-color-mode][data-theme] .board-tools button:hover{background:var(--sage)}
-html[data-color-mode][data-theme] .board-note{color:var(--muted);background:var(--surface-raised)}
 html[data-color-mode][data-theme] .game-board .tile-hit.reachable:hover,html[data-color-mode][data-theme] .game-board .tile-hit.reachable:focus-visible{fill:var(--accent);stroke:var(--accent)}
 html[data-color-mode][data-theme] .board-actor:hover>ellipse{stroke:var(--accent)}
 html[data-color-mode][data-theme] .action-button{background:var(--surface-raised);border-color:var(--line);color:var(--ink)}

@@ -1,18 +1,45 @@
-.landing-main{max-width:1480px;margin:0 auto;padding:50px clamp(22px,4vw,64px) 32px;width:100%}
-.landing-hero{display:grid;grid-template-columns:minmax(0,.88fr) minmax(0,1.12fr);gap:clamp(32px,4.6vw,72px);align-items:center;min-height:550px;padding:10px 0 50px}
-.landing-copy h1{--hero-font:clamp(40px,4.2vw,66px);font-size:var(--hero-font);line-height:calc(var(--hero-font)*1.08);letter-spacing:-.045em;font-weight:500;max-width:620px}
-.landing-copy h1>span{color:var(--muted)}
-.landing-copy>p{font-size:15px;line-height:1.8;max-width:420px;margin:25px 0 29px;color:var(--muted)}
-.landing-actions{display:flex;gap:12px;flex-wrap:wrap}.landing-actions .button{min-height:48px;font-size:13px;padding:13px 21px}
-.landing-join{margin-top:17px;color:var(--muted);gap:10px}.landing-facts{display:flex;gap:18px;margin-top:32px;color:var(--muted);font-size:11px;line-height:1.5}.landing-facts span+span{padding-left:18px;border-left:1px solid var(--line)}
-.landing-preview{min-width:0;align-self:center;border:1px solid var(--line);border-radius:15px 12px 16px 11px;background:var(--surface);overflow:hidden;box-shadow:0 18px 65px color-mix(in srgb,var(--ink) 7%,transparent)}
-.preview-heading{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:16px 20px;border-bottom:1px solid var(--line)}.preview-heading h2{font:600 12px/1.4 var(--body)}.preview-heading>span{font-size:11px;color:var(--muted)}
-.preview-board{height:345px;display:flex;padding:0;min-width:0}.preview-board .board-container{border:0;border-radius:0;box-shadow:none;min-height:0}.preview-board .board-tools{right:12px;bottom:12px}.preview-board .map-compass{top:12px;right:16px}
-.preview-bottom{padding:0 20px;border-top:1px solid var(--line)}.preview-tabs{display:flex;flex-wrap:wrap;gap:6px;padding:12px 0;border-bottom:1px solid var(--line)}.preview-tabs button{display:flex;flex:1 0 auto;align-items:center;justify-content:center;gap:8px;min-height:44px;padding:10px 12px;border:0;color:var(--muted);font-size:12px;white-space:nowrap}.preview-tabs button[aria-selected=true]{color:var(--ink);font-weight:600}.preview-tabs button>span{flex:none;font:10px var(--mono);opacity:.65}.preview-tabs button:hover{color:var(--accent)}
-.preview-explanation{display:flex;align-items:center;gap:16px;min-height:83px;padding:13px 0}.preview-explanation p{font-size:12px;line-height:1.6;color:var(--muted);flex:1;min-width:0}.preview-explanation button{width:36px;height:36px;flex-shrink:0;border:1px solid var(--line)}
-.landing-resume{margin-top:28px;display:flex;align-items:center;gap:14px;text-align:left;padding:15px;border:1px solid var(--line);border-radius:9px;background:var(--surface);width:100%;max-width:420px;min-height:76px}.landing-resume>.resume-copy{min-width:0;flex:1}.landing-resume>.resume-mark{display:grid;place-items:center;width:36px;height:36px;flex:none;color:var(--muted);border-radius:7px;background:var(--surface-raised,var(--paper))}.landing-resume>svg{flex:none}.landing-resume small{display:block;font-size:11px;line-height:1.4;color:var(--muted);margin-bottom:4px}.landing-resume strong{font-size:13px;line-height:1.5;font-weight:550;display:block;overflow-wrap:anywhere}.landing-resume:hover{border-color:var(--accent);color:var(--accent)}
-.landing-overview{display:flex;align-items:center;gap:25px;border-top:1px solid var(--line);padding:30px 0 8px}.landing-party{display:flex;align-items:center;flex-shrink:0}.landing-party .hero-art{width:40px;height:49px;margin-left:-6px}.landing-party .hero-art:first-child{margin-left:0}.landing-overview>div:nth-child(2){max-width:430px}.landing-overview h2{font:600 13px var(--body);margin-bottom:7px}.landing-overview p{font-size:12px;line-height:1.65;color:var(--muted)}.landing-save-note{display:flex;align-items:center;gap:14px;margin-left:auto;padding-left:30px;border-left:1px solid var(--line)}.landing-save-note>svg{color:var(--muted);flex-shrink:0}.landing-save-note strong{color:var(--ink);font-weight:550}
-@media(min-width:1500px){.landing-hero{min-height:640px}.preview-board{height:390px}}
-@media(max-width:1050px){.landing-main{padding-top:36px}.landing-hero{gap:30px;min-height:500px}.landing-copy h1{--hero-font:43px}.landing-copy>p{font-size:14px}.landing-actions .button{padding:11px 15px}.preview-board{height:310px}.landing-facts{gap:12px}.landing-facts span+span{padding-left:12px}.landing-save-note{display:none}}
-@media(max-width:760px){.landing-main{padding:30px 22px 26px}.landing-hero{display:flex;flex-direction:column;align-items:stretch;gap:30px;padding:0 0 30px;min-height:0}.landing-copy h1{--hero-font:clamp(35px,7vw,48px);max-width:600px}.landing-copy h1 br{display:none}.landing-copy>p{max-width:550px;font-size:14px;margin:18px 0 22px}.landing-actions .button{min-height:46px}.landing-join{margin-top:10px}.landing-facts{margin-top:18px}.landing-preview{align-self:stretch}.preview-board{height:310px}.landing-resume{max-width:none;margin-top:17px}.landing-overview{gap:17px;padding-top:24px}.landing-party .hero-art{width:30px;height:38px}.landing-overview>div:nth-child(2){flex:1}.landing-overview h2{font-size:12px}.landing-overview p{font-size:11px}}
-@media(max-width:400px){.landing-main{padding-left:16px;padding-right:16px}.landing-copy h1{--hero-font:35px}.landing-actions{gap:9px}.landing-actions .button{flex:1 0 auto;padding:12px 11px;gap:8px}.landing-facts{font-size:10px}.preview-heading{padding:13px 14px}.preview-board{height:275px}.preview-bottom{padding:0 14px}.preview-tabs button{font-size:11px;padding-inline:8px;gap:6px}.preview-explanation{min-height:90px}.preview-explanation p{font-size:11px}.landing-overview{align-items:flex-start}.landing-party{display:grid;grid-template-columns:repeat(2,30px)}.landing-party .hero-art{margin:0}}
+/* Camp: a full-screen game title menu. The panorama fills the screen under a dark wash; the logo sits top left and
+   the menu is a plain text list at the lower left, with a bar behind the item under the pointer or focus.
+   The wash and text colours are fixed, so the menu reads the same in light and dark mode. */
+.title-screen{--title-font:var(--heading);--title-ink:#f4f6f1;--title-dim:#f4f6f1c7;--title-bar:#f4f6f138;position:relative;display:flex;min-height:100dvh;overflow:hidden;background:#141d1b;color:var(--title-ink)}
+.title-art{position:absolute;inset:0;overflow:hidden}
+/* The panorama keeps its 5:3 drawing and covers the frame; the SVG's own ratio resolves the two minimums. */
+.title-art>svg{position:absolute;top:50%;left:50%;width:auto;height:auto;min-width:100%;min-height:100%;max-width:none;transform:translate(-50%,-50%)}
+.title-art::after{content:'';position:absolute;inset:0;background:linear-gradient(90deg,#0d1514f0 0%,#0d1514d1 26%,#0d151485 52%,#0d151440 100%),linear-gradient(0deg,#0d1514b8 0%,#0d151400 42%)}
+.title-panel{position:relative;z-index:1;display:flex;flex-direction:column;flex:1;min-width:0;padding:clamp(22px,5.5vh,56px) clamp(20px,6.5vw,96px) clamp(18px,4.5vh,44px)}
+.title-logo{display:flex;align-items:center;gap:14px;margin:0;font:500 clamp(32px,3.7vw,48px)/1.05 var(--title-font);letter-spacing:.005em;color:var(--title-ink)}
+.title-logo>span:last-child>span{color:var(--title-dim)}
+.title-logo-die{display:grid;place-items:center;flex:none;width:1.2em;height:1.2em;border:1.5px solid var(--title-dim);border-radius:.3em}
+.title-logo-die>svg{width:.72em;height:.72em}
+.title-nav{margin-top:auto;padding-top:28px;width:min(360px,100%)}
+.title-crumb{margin:0 0 10px 14px;font:500 13px/1.4 var(--title-font);letter-spacing:.16em;text-transform:uppercase;color:var(--title-dim)}
+.title-menu{display:flex;flex-direction:column;gap:2px;margin:0;padding:0;list-style:none}
+/* The shared raised button surface is replaced by flat text; these selectors outrank it on purpose. */
+html:root[data-color-mode][data-theme] body .title-screen .title-panel .title-menu button.title-item{
+ display:flex;align-items:center;justify-content:flex-start;gap:10px;width:100%;min-height:40px;padding:7px 14px;
+ border-radius:2px;background:transparent;background-image:none;box-shadow:none;transform:none;
+ color:var(--title-dim);font:500 19px/1.2 var(--title-font);letter-spacing:.08em;text-transform:uppercase;text-align:left;
+ transition:background-color 120ms ease,color 120ms ease;
+}
+html:root[data-color-mode][data-theme] body .title-screen .title-panel .title-menu button.title-item:is(:hover,:focus-visible):not(:disabled){background:var(--title-bar);background-image:none;box-shadow:none;transform:none;color:#fff}
+html:root[data-color-mode][data-theme] body .title-screen .title-panel .title-menu button.title-item:active:not(:disabled){background:#f4f6f157}
+.title-screen .title-item:focus-visible{outline:2px solid #fff;outline-offset:2px}
+.title-item-label{display:flex;flex-direction:column;gap:3px;flex:1;min-width:0}
+.title-item-label small{font-size:12px;font-weight:400;line-height:1.4;letter-spacing:0;text-transform:none;color:var(--title-dim);overflow-wrap:anywhere}
+.title-menu .title-back{margin-top:10px}
+@media(max-width:650px){
+ .title-art::after{background:linear-gradient(0deg,#0d1514f5 0%,#0d1514d6 45%,#0d151480 100%)}
+ .title-panel{padding:26px 14px 22px}
+ .title-nav{width:100%}
+ html:root[data-color-mode][data-theme] body .title-screen .title-panel .title-menu button.title-item{min-height:46px;font-size:18px}
+}
+@media(max-height:560px) and (orientation:landscape){
+ .title-panel{padding:14px clamp(16px,5vw,56px) 12px}
+ .title-logo{font-size:26px}
+ .title-nav{padding-top:10px}
+ html:root[data-color-mode][data-theme] body .title-screen .title-panel .title-menu button.title-item{min-height:34px;padding:4px 12px;font-size:15px}
+ .title-item-label small{font-size:11px}
+ .title-menu .title-back{margin-top:4px}
+}
+/* The title screen carries its own logo and every destination, so Camp has no app header. */
+.app-root[data-screen='home'] .app-header{display:none}

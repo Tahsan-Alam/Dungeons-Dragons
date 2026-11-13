@@ -8,7 +8,7 @@
 }
 .app-button-tooltip[hidden]{display:none!important}
 .app-button-tooltip::backdrop{background:transparent;pointer-events:none}
-.app-button-tooltip-shortcut{display:block;margin-top:5px;font:10px/1.4 var(--mono);color:var(--muted);font-weight:400}
+.app-button-tooltip-shortcut{display:block;margin-top:5px;font:11px/1.4 var(--mono);color:var(--muted);font-weight:400}
 .app-button-tooltip-shortcut[hidden]{display:none}
 html[data-motion='reduced'] .app-button-tooltip{animation:none}
 @keyframes button-tooltip-in{from{opacity:0;transform:translateY(2px)}to{opacity:1;transform:translateY(0)}}

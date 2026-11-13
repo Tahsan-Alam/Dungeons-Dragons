@@ -38,6 +38,14 @@ Both art styles share modern, subtly raised controls with soft 9px corners, fain
 
 The adventure creator inherits Light/Dark/System surfaces and text. Narrator traits supply a dark accent for light surfaces and a lighter accent for dark surfaces; they never override the brightness preference. The unformed creator stays neutral. Dark world palettes cover terrain, portraits, outfits and dice in previews, chapter scenes, play and replay; raster narrator art uses a softer exposure without dimming interface text or game markers.
 
+## Title menu and quick start
+
+Camp is now a game title menu instead of a two-column introduction. The left panel holds the title and a vertical list: Continue quest (when a save exists), New quest, Play with friends, Adventures, Adventurer’s guide and Table settings. New quest and Play with friends open short submenus (Quick start / Create your own; Gather party / Join party) with a one-line description under each choice. Arrow keys, Home and End move through the list and Escape returns to the main menu. The shared panorama fills the rest of the screen and follows Paint/Pixel and 2D/2.5D like any other scene; on phones it becomes a band above the menu. The interactive board preview was removed from Camp.
+
+The shared header stays mounted, but its Camp/Adventures buttons are hidden on Camp because the menu already offers them. They keep their slots, so nothing moves when they return on other screens.
+
+Quick start opens the creator on its review step with one of three ready-made adventures (woodland, ruins or coast), a suggested hero and the default guide. It uses built-in drafts, never calls a provider, and neither reads nor overwrites a saved creator draft. Every earlier step remains reachable from the review, and the review names the terrain.
+
 ## 2D and 2.5D presentation
 
 World view is a personal Appearance setting, independent of Paint/Pixel, brightness, accent and motion. 2D remains the default for existing players. 2.5D uses a dimetric ground plane, dimensional scenery, upright character cutouts and the same canonical palette/identity. Menus and labels retain their geometry and legibility. The preview, live table, chapter illustrations, portraits and replay all consume this preference.
@@ -45,3 +53,24 @@ World view is a personal Appearance setting, independent of Paint/Pixel, brightn
 Projection operates only in rendering. Game coordinates, legal movement, dice, room commands and saved/replayed events do not change. Projected route previews and hit regions use the same transform as the floor; actor motion uses projected waypoints. Camera framing uses projected bounds. View changes safely finish presentation motion and reframe without resetting a game.
 
 Efficiency rule: reuse asset components, palettes and seed data across every view. Construct depth with bounded SVG faces and layers, avoid per-sprite filters or a second generated image set, and never connect a paid provider just to change presentation. The canonical recipe contract and future caching strategy are documented in AI-OPTIONS.md.
+
+## Readability and consistency
+
+Interface text is never smaller than 11px. Health bars turn to the warning colour at half health and the danger colour at a quarter, always beside the number; a fallen hero is also labelled in the party list. Messages clear themselves after six to twelve seconds depending on length, and stay while pointed at or focused. Dialogs carry only a close button: art style is changed from the header or Table settings.
+
+## Single art style
+
+The Pixel art style, the Paint/Pixel switch and their assets are removed; earlier sections that describe two art styles are historical. The hand-drawn style is the only one, and a saved Pixel preference is ignored. `data-theme="paint"` stays on the root element because interface styles use it for specificity. 2D/2.5D, colour mode, accent and motion remain personal settings.
+
+Camp has no app header: it is a full-screen title menu with its own logo, and it offers Adventures, the Adventurer’s guide and Table settings. The scene sits under a fixed dark wash with light text, so the menu looks the same in light and dark mode. Every other screen keeps the guide and settings buttons in the header, because that is the only way to reach them during setup, play and replay.
+
+## Screens outside the board
+
+- **Narrator conversation.** Questions and replies form a thread of the newest twelve exchanges, kept in memory for the open adventure. It is presentation only: nothing is saved, replayed or sent as context.
+- **Join party.** Code first, hero second. The server has no room preview, so the code is checked for shape (six letters) before the hero step and for existence when joining.
+- **Party camp.** The title comes from the created story. Open seats are counted against the ten-player limit.
+- **Results.** The recap reads the final game state. Damage and critical hits come from the retained event log (the newest 180 events), so a long adventure is told that the totals cover its last part.
+
+## Styles
+
+The interface is hand-written CSS in `app/`; there is no component library. Before adding `!important`, look for the rule being overridden and raise or reorder that instead. The overrides that remain are reduced-motion rules, focus and pressed states, and a few specificity conflicts between `globals.css` and the `.play-refined` and creator layers that still need untangling.
