@@ -2,7 +2,6 @@
 import {useLayoutEffect,useRef,type ReactNode} from 'react';
 import {Brand} from './Menu';
 import {Icon} from './Art';
-import {ThemeToggle} from './Theme';
 import './navigation.css';
 export interface AppHeaderProps {active:'home'|'games'|null;onHome:()=>void;onGames:()=>void;onHelp:()=>void;onSettings:()=>void;inert?:boolean;children?:ReactNode;}
 export default function AppHeader({active,onHome,onGames,onHelp,onSettings,inert=false,children}:AppHeaderProps){
@@ -12,7 +11,6 @@ export default function AppHeader({active,onHome,onGames,onHelp,onSettings,inert
   <div className="app-header-brand"><Brand onClick={onHome}/></div>
   <nav className="app-main-nav" aria-label="Main navigation"><button className={active==='home'?'active':''} aria-current={active==='home'?'page':undefined} data-tooltip="Return to camp and start a new quest." onClick={onHome}>Camp</button><button className={active==='games'?'active':''} aria-current={active==='games'?'page':undefined} data-tooltip="Continue saved adventures or watch a replay." onClick={onGames}>Adventures</button></nav>
   <div className="app-header-status">{children}</div>
-  <div className="app-header-style"><ThemeToggle/></div>
   <div className="app-header-utilities"><button className="header-tool" title="Read the rules, controls and quest objectives." aria-label="Adventurer’s guide" onClick={onHelp}><Icon name="book" size={18}/><span>Adventurer’s guide</span></button><button className="header-tool" title="Change appearance, sound, key bindings and play preferences." aria-label="Table settings" onClick={onSettings}><Icon name="gear" size={18}/><span>Table settings</span></button></div>
  </header>;
 }

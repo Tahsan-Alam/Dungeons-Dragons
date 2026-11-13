@@ -5,7 +5,6 @@
 .modal:has(.settings-shell){width:min(880px,calc(100vw - 32px));max-height:calc(100dvh - 32px);overflow:hidden}
 .modal[open]:has(.settings-shell){display:flex;flex-direction:column}
 .modal:has(.settings-shell) .modal-head{flex:none;padding:20px 24px}
-.modal:has(.settings-shell) .modal-head .theme-toggle{display:none}
 .modal:has(.settings-shell) .modal-head h2{min-width:0}
 .modal:has(.settings-shell) .modal-head .icon-button{min-width:44px;min-height:44px}
 .settings-shell{display:grid;grid-template-columns:152px minmax(0,1fr);height:min(548px,calc(100dvh - 122px));min-height:0;flex:1 1 auto}
@@ -24,8 +23,8 @@
 .settings-content .settings-row strong,.accent-setting>strong{font-size:13px;font-weight:600}
 .settings-content .settings-row p{font-size:12px;color:var(--muted);line-height:1.5;margin-top:4px}
 .settings-content .setting-toggle{min-width:58px;min-height:40px}
-.settings-content :is(.theme-toggle,.color-mode-toggle){max-width:100%;flex-wrap:wrap}
-.settings-content :is(.theme-toggle,.color-mode-toggle) button{min-height:38px;min-width:54px;padding:8px 10px;font-size:12px}
+.settings-content :is(.color-mode-toggle){max-width:100%;flex-wrap:wrap}
+.settings-content :is(.color-mode-toggle) button{min-height:38px;min-width:54px;padding:8px 10px;font-size:12px}
 .accent-setting{padding:16px 0;border-bottom:1px solid var(--line)}
 .accent-options{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
 .accent-options button{display:flex;align-items:center;gap:7px;min-height:40px;padding:8px 10px;border:1px solid var(--line);border-radius:var(--button-radius);background:var(--surface-raised);font-size:12px}
@@ -84,7 +83,7 @@
  .settings-navigation>button{flex:1;min-width:0;padding:10px 4px;text-align:center;font-size:12px;min-height:44px}
  .settings-saved-note{display:none}.settings-content{padding:18px 18px 22px;flex:1}.settings-content>h3{font-size:17px}
  .settings-content .settings-row{padding:14px 0;gap:10px 12px}.settings-content .settings-row>div:first-child{flex-basis:170px}
- .settings-content :is(.theme-toggle,.color-mode-toggle) button{min-height:40px}
+ .settings-content :is(.color-mode-toggle) button{min-height:40px}
  .accent-options{gap:8px}.accent-options button{min-height:42px}
  .settings-content .binding-column-labels,.settings-content .binding-row{grid-template-columns:minmax(90px,1fr) minmax(78px,.8fr) minmax(78px,.8fr);gap:6px}.settings-content .binding-key{min-height:44px;font-size:11px}.settings-content .binding-clear{width:28px}
  .shortcut-filters input,.shortcut-filters select{min-height:44px;font-size:14px}.shortcut-filters select{min-width:90px}
@@ -104,6 +103,6 @@
  .settings-content .settings-row{padding:12px 0}
 }
 @media(pointer:coarse){
- .audio-range input{min-height:40px}.settings-content :is(.theme-toggle,.color-mode-toggle) button,.settings-content .setting-toggle,.sound-options>.button,.voice-preview>.button,.accent-options button,.setting-reset-row>.button{min-height:44px}
+ .audio-range input{min-height:40px}.settings-content :is(.color-mode-toggle) button,.settings-content .setting-toggle,.sound-options>.button,.voice-preview>.button,.accent-options button,.setting-reset-row>.button{min-height:44px}
  .sound-options .preference-check{min-height:44px;align-items:center}
 }

@@ -3,8 +3,7 @@ import {memo,useMemo,useRef,useState,useEffect,useLayoutEffect,useImperativeHand
 import type {Actor,GameState} from '../../game/types';
 import {getReachable,getValidTargets} from '../../game/engine';
 import {HeroArt,Icon,Tree} from './Art';
-import {useTheme,type ArtTheme} from './Theme';
-import {PixelTerrain,PixelChest,PixelGateway} from './PixelArt';
+import {useTheme} from './Theme';
 import {ART_PALETTE as P} from './artPalette';
 import {findBoardPath,isBoardDiscontinuity,planActorMotions,boardPathKeyframes,sampleBoardPath,initialBoardFrame,followBoardTarget,anchoredBoardPan,type BoardPoint} from './board-motion';
 import {createBoardProjection,type BoardProjection} from './board-projection';
@@ -26,9 +25,9 @@ const Terrain=memo(function Terrain({game,grid}:{game:GameState;grid:boolean}){r
  {grid?<rect width={game.width*50} height={game.height*50} fill="url(#board-dots)"/>:null}
  {game.tiles.filter(t=>t.decoration==='tree').map(t=><Tree key={`tree${t.x}-${t.y}`} x={t.x*50+25} y={t.y*50+32} size={.75+(t.x%3)*.08} tone={t.x+t.y}/>)}
  </>});
-const BoardTerrain=memo(function BoardTerrain({game,grid,projection,theme}:{game:GameState;grid:boolean;projection:BoardProjection;theme:ArtTheme}){
- return projection.mode==='2.5d'?<DepthTerrain game={game} grid={grid} projection={projection}/>:theme==='pixel'?<PixelTerrain game={game} grid={grid}/>:<Terrain game={game} grid={grid}/>;
-},(before,after)=>before.grid===after.grid&&before.theme===after.theme&&before.projection===after.projection&&sameBoardTerrain(before.game,after.game));
+const BoardTerrain=memo(function BoardTerrain({game,grid,projection}:{game:GameState;grid:boolean;projection:BoardProjection}){
+ return projection.mode==='2.5d'?<DepthTerrain game={game} grid={grid} projection={projection}/>:<Terrain game={game} grid={grid}/>;
+},(before,after)=>before.grid===after.grid&&before.projection===after.projection&&sameBoardTerrain(before.game,after.game));
 function useActorMotion(game:GameState,projection:BoardProjection,focusId:string|undefined,enabled:boolean,resetKey:string|number|undefined,reducedMotion:boolean,onChange?:((moving:boolean)=>void)){
  const nodes=useRef(new Map<string,SVGGElement>()),animations=useRef(new Map<string,{animation:Animation;x:number;y:number;path:BoardPoint[];duration:number}>()),previous=useRef<GameState|null>(null),lastReset=useRef(resetKey),lastProjection=useRef(projection);
  const[depthPositions,setDepthPositions]=useState<Record<string,BoardPoint>>({}),depthFrame=useRef(0),projectionMode=useRef(projection.mode);projectionMode.current=projection.mode;
@@ -83,7 +82,7 @@ function useBoardFeedback(game:GameState,enabled:boolean,resetKey:string|number|
  return shown;
 }
 export default function Board({game,actor,tool,onTile,onActor,selectedId,myTurn,controlsRef,focusId,caption,onMotionChange,animateMovement=true,motionResetKey,autoFrame=false,holdFeedback=false,children}:{game:GameState;actor?:Actor;tool:Tool;onTile:(x:number,y:number)=>void;onActor:(a:Actor)=>void;selectedId:string;myTurn:boolean;controlsRef?:Ref<BoardControls>;focusId?:string;caption?:string;onMotionChange?:(moving:boolean)=>void;animateMovement?:boolean;motionResetKey?:string|number;autoFrame?:boolean;holdFeedback?:boolean;children?:ReactNode}){
- const {theme,reducedMotion,viewMode}=useTheme();
+ const {reducedMotion,viewMode}=useTheme();
  const projection=useMemo(()=>createBoardProjection(viewMode,game.width,game.height),[viewMode,game.width,game.height]);
  const motion=useActorMotion(game,projection,focusId??actor?.id,animateMovement,motionResetKey,reducedMotion,onMotionChange);
  const feedback=useBoardFeedback(game,animateMovement,motionResetKey,holdFeedback);
@@ -189,12 +188,12 @@ export default function Board({game,actor,tool,onTile,onActor,selectedId,myTurn,
  onPointerMove={e=>{if(!pointers.current.has(e.pointerId))return;pointers.current.set(e.pointerId,{x:e.clientX,y:e.clientY});const bounds=svg.current?.getBoundingClientRect();const scale=Math.max(w/(bounds?.width||w),h/(bounds?.height||h));if(pinch.current&&pointers.current.size>=2){const[a,b]=[...pointers.current.values()],p=pinch.current,nextZoom=clampZoom(p.zoom*Math.hypot(a.x-b.x,a.y-b.y)/Math.max(1,p.distance)),centerX=(bounds?.left||0)+(bounds?.width||w)/2,centerY=(bounds?.top||0)+(bounds?.height||h)/2;setZoom(nextZoom);setPan(clampPan(anchoredBoardPan({x:p.px,y:p.py},p.zoom,nextZoom,{x:(p.midX-centerX)*scale,y:(p.midY-centerY)*scale},{x:((a.x+b.x)/2-centerX)*scale,y:((a.y+b.y)/2-centerY)*scale}),nextZoom));suppressClick.current=Date.now()+250;return}if(!drag.current)return;const dx=e.clientX-drag.current.x,dy=e.clientY-drag.current.y;if(Math.abs(dx)+Math.abs(dy)>6){cameraTouched.current=true;drag.current.move=true;setDragging(true);svg.current?.setPointerCapture(e.pointerId);setPan(clampPan({x:drag.current.px+dx*scale,y:drag.current.py+dy*scale}))}}}
  onPointerUp={e=>releasePointer(e.pointerId)} onPointerCancel={e=>releasePointer(e.pointerId)}>
  <g className={`board-camera ${smoothCamera&&!dragging&&!reducedMotion?'camera-smooth':''}`} style={{transitionDuration:`${cameraDuration}ms`,transform:`translate(${w/2+pan.x}px, ${h/2+pan.y}px) scale(${zoom}) translate(${-w/2}px, ${-h/2}px)`}}>
- <BoardTerrain game={game} grid={grid} projection={projection} theme={theme}/>
+ <BoardTerrain game={game} grid={grid} projection={projection}/>
  <g className="board-ground-overlay" transform={projection.groundTransform||undefined}>
  {reachable.map(t=><rect key={`reach${t.x},${t.y}`} x={t.x*50+3} y={t.y*50+3} width="44" height="44" rx="9" fill={P.reachable} fillOpacity=".15" stroke={P.reachable} strokeOpacity=".4" strokeDasharray="3 4"/>)}
  {route&&route.length>1?<g className="board-route" aria-hidden="true"><polyline className="board-route-line" points={route.map(p=>`${p.x*50+25},${p.y*50+25}`).join(' ')} fill="none" stroke={P.route} strokeWidth="3.5"/><circle className="board-route-destination" cx={route.at(-1)!.x*50+25} cy={route.at(-1)!.y*50+25} r="9" fill={P.grass} stroke={P.route}/></g>:null}
- {viewMode==='2d'?<> <g role="img" aria-label="Gateway" transform={`translate(${game.exit.x*50+25} ${game.exit.y*50+25})`}>{theme==='pixel'?<PixelGateway active={game.chest.opened}/>:<><ellipse rx="19" ry="15" fill={game.chest.opened?P.gatewayActive:P.gateway} stroke={P.glyph} strokeDasharray="3 3"/><path d="M-13 3h25m-7-6 7 6-7 6" stroke={P.glyph} strokeWidth="2" fill="none"/></>}</g>
- <g role="img" aria-label="Chest" transform={`translate(${game.chest.x*50+10} ${game.chest.y*50+13})`} stroke={P.ink} strokeWidth="2">{theme==='pixel'?<PixelChest opened={game.chest.opened}/>:<><path d={game.chest.opened?'M0 11 5 2l26 4-2 9v14H0Z':'M0 11q0-18 30 0v18H0Z'} fill={game.chest.opened?P.chestOpen:P.chest}/><path d="M0 16h30m-18-4v9h6v-9" fill={P.chestTrim}/></>}</g>
+ {viewMode==='2d'?<> <g role="img" aria-label="Gateway" transform={`translate(${game.exit.x*50+25} ${game.exit.y*50+25})`}>{<><ellipse rx="19" ry="15" fill={game.chest.opened?P.gatewayActive:P.gateway} stroke={P.glyph} strokeDasharray="3 3"/><path d="M-13 3h25m-7-6 7 6-7 6" stroke={P.glyph} strokeWidth="2" fill="none"/></>}</g>
+ <g role="img" aria-label="Chest" transform={`translate(${game.chest.x*50+10} ${game.chest.y*50+13})`} stroke={P.ink} strokeWidth="2">{<><path d={game.chest.opened?'M0 11 5 2l26 4-2 9v14H0Z':'M0 11q0-18 30 0v18H0Z'} fill={game.chest.opened?P.chestOpen:P.chest}/><path d="M0 16h30m-18-4v9h6v-9" fill={P.chestTrim}/></>}</g>
  </>:null}
  {game.tiles.map(t=>{const tileKey=`${t.x},${t.y}`,canMove=reachableKeys.has(tileKey);return <rect key={`hit${tileKey}`} data-board-tile={tileKey} x={t.x*50} y={t.y*50} width="50" height="50" fill="transparent" className={`tile-hit ${canMove?'reachable':''}`} role={canMove?'button':undefined} aria-label={canMove?`Move to ${t.x}, ${t.y}`:undefined} aria-describedby={canMove?keyboardHelpId:undefined} tabIndex={canMove?(keyboardTile?.x===t.x&&keyboardTile.y===t.y?0:-1):undefined} onPointerEnter={e=>{if(e.pointerType!=='touch'&&canMove)setPreviewTile({x:t.x,y:t.y})}} onPointerLeave={e=>{if(document.activeElement!==e.currentTarget)setPreviewTile(null)}} onFocus={e=>{if(canMove)previewFocus(t,e.currentTarget.matches(':focus-visible'))}} onBlur={()=>setPreviewTile(null)} onClick={()=>{if(!motion.isMoving()&&Date.now()>suppressClick.current&&canMove)onTile(t.x,t.y)}} onKeyDown={e=>{
   if(!e.altKey&&!e.ctrlKey&&!e.metaKey&&!e.shiftKey&&['ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.key)){

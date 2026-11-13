@@ -1,31 +1,30 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import vm from 'node:vm';
-import {APPEARANCE_BOOTSTRAP,ACCENT_NAMES,ACCENT_PALETTES,ACCENT_STORAGE_KEY,MOTION_STORAGE_KEY,COLOR_MODE_STORAGE_KEY,THEME_STORAGE_KEY,VIEW_MODE_STORAGE_KEY,normalizeViewMode,viewModeStorageChange,normalizeAccent,normalizeMotion,resolveReducedMotion,normalizeArtTheme,normalizeColorMode,resolveColorMode} from './appearance.ts';
+import {APPEARANCE_BOOTSTRAP,ACCENT_NAMES,ACCENT_PALETTES,ACCENT_STORAGE_KEY,MOTION_STORAGE_KEY,COLOR_MODE_STORAGE_KEY,VIEW_MODE_STORAGE_KEY,normalizeViewMode,viewModeStorageChange,normalizeAccent,normalizeMotion,resolveReducedMotion,normalizeColorMode,resolveColorMode} from './appearance.ts';
+// A preference saved while Pixel art existed. It must be ignored, never restored.
+const LEGACY_THEME_KEY='painted-realms-theme';
 
-test('color mode is independent of art style and follows the system only when selected',()=>{
- for(const style of ['paint','pixel']){
-  assert.equal(normalizeArtTheme(style),style);
-  for(const dark of [false,true]){
-   assert.equal(resolveColorMode('light',dark),'light');assert.equal(resolveColorMode('dark',dark),'dark');assert.equal(resolveColorMode('system',dark),dark?'dark':'light');
-  }
+test('color mode follows the system only when selected',()=>{
+ for(const dark of [false,true]){
+  assert.equal(resolveColorMode('light',dark),'light');assert.equal(resolveColorMode('dark',dark),'dark');assert.equal(resolveColorMode('system',dark),dark?'dark':'light');
  }
- assert.equal(normalizeArtTheme('other'),'paint');assert.equal(normalizeColorMode(null),'system');assert.equal(normalizeColorMode('other'),'system');
+ assert.equal(normalizeColorMode(null),'system');assert.equal(normalizeColorMode('other'),'system');
 });
 function bootstrap(values:Record<string,string>,dark:boolean,blocked=false,systemReduced=false){
  const root={dataset:{} as Record<string,string>,style:{} as Record<string,string>};
  vm.runInNewContext(APPEARANCE_BOOTSTRAP,{localStorage:{getItem(key:string){if(blocked)throw new Error('Storage disabled');return values[key]??null}},matchMedia:(query:string)=>({matches:query.includes('reduced-motion')?systemReduced:dark}),document:{documentElement:root}});
  return root;
 }
-test('pre-paint bootstrap restores both choices without default-theme flash',()=>{
- for(const style of ['paint','pixel'])for(const view of ['2d','2.5d'])for(const mode of ['light','dark','system'])for(const dark of [false,true]){
-  const root=bootstrap({[THEME_STORAGE_KEY]:style,[VIEW_MODE_STORAGE_KEY]:view,[COLOR_MODE_STORAGE_KEY]:mode},dark);
-  assert.equal(root.dataset.theme,style);assert.equal(root.dataset.viewMode,view);assert.equal(root.dataset.colorPreference,mode);assert.equal(root.dataset.colorMode,resolveColorMode(mode as 'light'|'dark'|'system',dark));assert.equal(root.style.colorScheme,root.dataset.colorMode);
+test('pre-paint bootstrap restores view and color, and always uses the single art style',()=>{
+ for(const style of ['paint','pixel','broken'])for(const view of ['2d','2.5d'])for(const mode of ['light','dark','system'])for(const dark of [false,true]){
+  const root=bootstrap({[LEGACY_THEME_KEY]:style,[VIEW_MODE_STORAGE_KEY]:view,[COLOR_MODE_STORAGE_KEY]:mode},dark);
+  assert.equal(root.dataset.theme,'paint');assert.equal(root.dataset.viewMode,view);assert.equal(root.dataset.colorPreference,mode);assert.equal(root.dataset.colorMode,resolveColorMode(mode as 'light'|'dark'|'system',dark));assert.equal(root.style.colorScheme,root.dataset.colorMode);
  }
 });
 test('pre-paint bootstrap handles blocked storage and invalid preferences',()=>{
  assert.equal(bootstrap({},true,true).dataset.colorMode,'dark');assert.equal(bootstrap({},false,true).dataset.colorMode,'light');
- const invalid=bootstrap({[THEME_STORAGE_KEY]:'broken',[COLOR_MODE_STORAGE_KEY]:'sepia'},true);assert.equal(invalid.dataset.theme,'paint');assert.equal(invalid.dataset.colorPreference,'system');assert.equal(invalid.dataset.colorMode,'dark');
+ const invalid=bootstrap({[LEGACY_THEME_KEY]:'broken',[COLOR_MODE_STORAGE_KEY]:'sepia'},true);assert.equal(invalid.dataset.theme,'paint');assert.equal(invalid.dataset.colorPreference,'system');assert.equal(invalid.dataset.colorMode,'dark');
 });
 
 test('both color modes retain readable text, muted labels and primary buttons',async()=>{
@@ -39,14 +38,13 @@ test('both color modes retain readable text, muted labels and primary buttons',a
   for(const surface of ['canvas','surface','surface-raised'])for(const text of ['ink','muted'])assert.ok(contrast(token(surface),token(text))>=4.5,`${mode} ${text} on ${surface} must reach WCAG AA text contrast`);
   assert.ok(contrast(token('accent'),token('accent-ink'))>=4.5,`${mode} primary buttons must reach WCAG AA text contrast`);
  }
- const pixel=await readFile(new URL('../pixel.css',import.meta.url),'utf8');assert.ok(!/(?:^|[;{])\s*(?:color|background(?:-color)?|border-color)\s*:/m.test(pixel),'Art style must not redefine the color palette');
 });
 
 
-test('accent and motion preferences restore independently in every art and color mode',()=>{
- for(const art of ['paint','pixel'])for(const view of ['2d','2.5d'])for(const color of ['light','dark','system'])for(const accent of ACCENT_NAMES)for(const motion of ['system','full','reduced'] as const)for(const systemReduced of [false,true]){
-  const root=bootstrap({[THEME_STORAGE_KEY]:art,[VIEW_MODE_STORAGE_KEY]:view,[COLOR_MODE_STORAGE_KEY]:color,[ACCENT_STORAGE_KEY]:accent,[MOTION_STORAGE_KEY]:motion},true,false,systemReduced);
-  assert.equal(root.dataset.theme,art);assert.equal(root.dataset.viewMode,view);assert.equal(root.dataset.accent,accent);assert.equal(root.dataset.motionPreference,motion);assert.equal(root.dataset.motion,resolveReducedMotion(motion,systemReduced)?'reduced':'full');
+test('accent and motion preferences restore independently in every view and color mode',()=>{
+ for(const view of ['2d','2.5d'])for(const color of ['light','dark','system'])for(const accent of ACCENT_NAMES)for(const motion of ['system','full','reduced'] as const)for(const systemReduced of [false,true]){
+  const root=bootstrap({[VIEW_MODE_STORAGE_KEY]:view,[COLOR_MODE_STORAGE_KEY]:color,[ACCENT_STORAGE_KEY]:accent,[MOTION_STORAGE_KEY]:motion},true,false,systemReduced);
+  assert.equal(root.dataset.theme,'paint');assert.equal(root.dataset.viewMode,view);assert.equal(root.dataset.accent,accent);assert.equal(root.dataset.motionPreference,motion);assert.equal(root.dataset.motion,resolveReducedMotion(motion,systemReduced)?'reduced':'full');
   assert.equal(root.dataset.colorMode,color==='light'?'light':'dark');
  }
  assert.equal(normalizeAccent('unknown'),'blue');assert.equal(normalizeMotion('unknown'),'system');
@@ -56,9 +54,9 @@ test('accent and motion preferences restore independently in every art and color
 test('world view defaults safely and preserves preferences saved before it existed',()=>{
  assert.equal(normalizeViewMode('2.5d'),'2.5d');
  for(const value of ['2d',null,undefined,'3d','2.5D',{},true,2.5])assert.equal(normalizeViewMode(value),'2d');
- const saved={[THEME_STORAGE_KEY]:'pixel',[COLOR_MODE_STORAGE_KEY]:'dark',[ACCENT_STORAGE_KEY]:'rose',[MOTION_STORAGE_KEY]:'reduced'};
+ const saved={[LEGACY_THEME_KEY]:'pixel',[COLOR_MODE_STORAGE_KEY]:'dark',[ACCENT_STORAGE_KEY]:'rose',[MOTION_STORAGE_KEY]:'reduced'};
  const old=bootstrap(saved,false);
- assert.equal(old.dataset.viewMode,'2d');assert.equal(old.dataset.theme,'pixel');assert.equal(old.dataset.accent,'rose');assert.equal(old.dataset.colorMode,'dark');assert.equal(old.dataset.motion,'reduced');
+ assert.equal(old.dataset.viewMode,'2d');assert.equal(old.dataset.theme,'paint','a saved Pixel preference falls back to the single art style');assert.equal(old.dataset.accent,'rose');assert.equal(old.dataset.colorMode,'dark');assert.equal(old.dataset.motion,'reduced');
  const invalid=bootstrap({...saved,[VIEW_MODE_STORAGE_KEY]:'broken'},false);assert.deepEqual(invalid,old);
  assert.equal(bootstrap({[VIEW_MODE_STORAGE_KEY]:'2.5d'},false,true).dataset.viewMode,'2d');
 });
@@ -69,7 +67,7 @@ test('cross-tab view changes normalize independently and removal or clear restor
  assert.equal(viewModeStorageChange({key:VIEW_MODE_STORAGE_KEY,newValue:null}),'2d');
  assert.equal(viewModeStorageChange({key:VIEW_MODE_STORAGE_KEY,newValue:'invalid'}),'2d');
  assert.equal(viewModeStorageChange({key:null,newValue:null}),'2d');
- for(const key of [THEME_STORAGE_KEY,COLOR_MODE_STORAGE_KEY,ACCENT_STORAGE_KEY,MOTION_STORAGE_KEY,'painted-realms-controls-v1']){
+ for(const key of [LEGACY_THEME_KEY,COLOR_MODE_STORAGE_KEY,ACCENT_STORAGE_KEY,MOTION_STORAGE_KEY,'painted-realms-controls-v1']){
   assert.equal(viewModeStorageChange({key,newValue:'2.5d'}),undefined);
   assert.equal(viewModeStorageChange({key,newValue:null}),undefined);
  }

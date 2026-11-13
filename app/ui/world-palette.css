@@ -1,4 +1,4 @@
-/* One scene palette per brightness mode, shared by Paint and Pixel. */
+/* One scene palette per brightness mode. */
 :root{
  --world-pigment-strength:100%;
  --art-exposure:1;

@@ -57,3 +57,9 @@ Efficiency rule: reuse asset components, palettes and seed data across every vie
 ## Readability and consistency
 
 Interface text is never smaller than 11px. Health bars turn to the warning colour at half health and the danger colour at a quarter, always beside the number; a fallen hero is also labelled in the party list. Messages clear themselves after six to twelve seconds depending on length, and stay while pointed at or focused. Dialogs carry only a close button: art style is changed from the header or Table settings.
+
+## Single art style
+
+The Pixel art style, the Paint/Pixel switch and their assets are removed; earlier sections that describe two art styles are historical. The hand-drawn style is the only one, and a saved Pixel preference is ignored. `data-theme="paint"` stays on the root element because interface styles use it for specificity. 2D/2.5D, colour mode, accent and motion remain personal settings.
+
+Camp's header shows only the logo: the title menu offers Adventures, the Adventurer’s guide and Table settings. Every other screen keeps the guide and settings buttons in the header, because that is the only way to reach them during setup, play and replay.

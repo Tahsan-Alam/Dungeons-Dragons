@@ -2,7 +2,6 @@
 import { memo } from 'react';
 import type { HeroClass } from '../../game/types';
 import { useTheme } from './Theme';
-import { PixelHeroArt, PixelPanorama, PixelTree } from './PixelArt';
 import {ART_PALETTE as P,TREE_TONES,worldPigment} from './artPalette';
 import './world-palette.css';
 import './icon-motion.css';
@@ -21,9 +20,8 @@ export function Icon({name,size=20,className}:{name:string;size?:number;classNam
  // Interface icons stay identical; art style only changes world illustrations.
  return <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" className={`ui-icon icon-${name}${className?` ${className}`:''}`}><g className="ui-icon-body">{paths[name]||paths.spark}</g></svg>;
 }
-export const HeroArt=memo(function HeroArt({heroClass='knight',color='#ed9877',enemy=false,large=false,artStyle,animated=false}:{heroClass?:HeroClass;color?:string;enemy?:boolean;large?:boolean;artStyle?:'paint'|'pixel';animated?:boolean}){
- const {theme,viewMode}=useTheme(),depth=viewMode==='2.5d',coat='m27 43-10 24 12 4 24-1 13-5-12-23Z';
- if((artStyle??theme)==='pixel')return <PixelHeroArt heroClass={heroClass} color={color} enemy={enemy} large={large} animated={animated}/>;
+export const HeroArt=memo(function HeroArt({heroClass='knight',color='#ed9877',enemy=false,large=false,animated=false}:{heroClass?:HeroClass;color?:string;enemy?:boolean;large?:boolean;animated?:boolean}){
+ const {viewMode}=useTheme(),depth=viewMode==='2.5d',coat='m27 43-10 24 12 4 24-1 13-5-12-23Z';
  color=worldPigment(color);
  return <svg width="80" height="90" viewBox="0 0 80 90" aria-hidden="true" className={`hero-art${large?' large':''}${depth?' depth-art':''}`}><g stroke={P.ink} strokeWidth="2.2" strokeLinejoin="round" strokeLinecap="round">
  <ellipse cx={depth?43:40} cy="81" rx={depth?27:24} ry="6" fill={P.ink} opacity={depth?.2:.12} stroke="none"/>{depth?<g className="hero-depth-faces"><path d={coat} transform="translate(4 3)" fill={P.dark}/><path d="m53 19 6 5-1 19-10 8-4-5 11-5Z" fill={enemy?P.leafDark:P.skinShade}/><path d="m48 77 10 1 4 4-12 2Z" fill={P.ink}/></g>:null}
@@ -36,17 +34,15 @@ export const HeroArt=memo(function HeroArt({heroClass='knight',color='#ed9877',e
  </g></svg>;
 });
 export const Tree=memo(function Tree({x,y,size=1,tone=0}:{x:number;y:number;size?:number;tone?:number}){
- const{theme,viewMode}=useTheme(),depth=viewMode==='2.5d',canopy='M-24 3-12-15-20-13-7-34-13-32 0-55l15 24-9-3L23-12l-10-2L27 4 9 1l3 10-24-2 2-6Z';
- if(theme==='pixel')return <PixelTree x={x} y={y} size={size} tone={tone}/>;
+ const{viewMode}=useTheme(),depth=viewMode==='2.5d',canopy='M-24 3-12-15-20-13-7-34-13-32 0-55l15 24-9-3L23-12l-10-2L27 4 9 1l3 10-24-2 2-6Z';
  return <g transform={`translate(${x} ${y}) scale(${size})`} stroke={P.leafDark} strokeWidth="1.8" strokeLinejoin="round"><ellipse cx={depth?4:0} cy="24" rx={depth?26:23} ry="7" fill={P.leafDark} opacity={depth?.22:.13} stroke="none"/>{depth?<><path d={canopy} transform="translate(4 3)" fill={P.leafDark}/><path d="M5-5h5v28H5Z" fill={P.dark}/></>:null}<path d="m-4 23 1-30h7l1 30" fill={P.bark}/><path d={canopy} fill={TREE_TONES[((tone%3)+3)%3]}/>{depth?<path d="M0-55 15-31l-9-3L23-12l-10-2L27 4 9 1l3 10L0 9Z" fill={P.leafDark} opacity=".25" stroke="none"/>:null}<path d="M0-36v38m0-18-8-5M0-7l10-8" stroke={P.leafDark} opacity=".5"/></g>
 });
 export function Panorama({biome='woodland',characters}:{biome?:string;characters?:readonly {heroClass:HeroClass;color:string}[]}){
- const{theme,viewMode}=useTheme(),depth=viewMode==='2.5d',coastal=biome==='coast',ruins=biome==='ruins';
+ const{viewMode}=useTheme(),depth=viewMode==='2.5d',coastal=biome==='coast',ruins=biome==='ruins';
  const party=(characters??[{heroClass:'knight' as const,color:'#ed9877'},{heroClass:'mage' as const,color:'#b4a6cf'}]).slice(0,4);
  const road=coastal?'M356 480Q325 423 411 379T506 320q34-15 48-36':'M382 480q-71-83 73-125t-14-80';
  const trees=coastal?[{x:48,y:437,size:1.1},{x:145,y:401,size:.8}]:ruins?[{x:56,y:400,size:1.4},{x:725,y:371,size:1.3},{x:658,y:420,size:1.2}]:[{x:74,y:329,size:2.2},{x:134,y:303,size:1.6},{x:666,y:320,size:1.8},{x:732,y:368,size:2.5},{x:43,y:450,size:2.8},{x:170,y:410,size:2},{x:604,y:397,size:2.4}];
  const setting=coastal?'coast with an ocean and a lighthouse':ruins?'ancient ruins with broken columns and a stone gateway':'woodland with winding paths and a ruined tower';
- if(theme==='pixel')return <PixelPanorama biome={biome} characters={characters}/>;
  return <svg viewBox="0 0 800 480" className={`panorama${depth?' depth-art':''}`} role="img" aria-label={`A hand-drawn ${setting}${party.length?', with an adventuring party':''}`}>
  <rect width="800" height="480" fill={P.sky}/><circle cx="580" cy="100" r="43" fill={P.sun}/>
  {coastal?<>

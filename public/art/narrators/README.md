@@ -8,12 +8,11 @@ Each transparent 1536 by 1024 atlas has six aligned cells:
 | Row 1 | Spirit / Aether | Human | Cat |
 | Row 2 | Owl | Fox | Dragon |
 
-`paint-atlas.webp` preserves the hand-painted version. `pixel-atlas.webp`
-contains a separately generated pixel interpretation of the same identities.
-Both are losslessly encoded from transparent PNG masters. The app uses one
-atlas for the active style, with local orbital particles, blinking, emergence,
-and talking resonance. Accessories are small SVG overlays. No image service is
-called while selecting traits or switching art styles.
+`paint-atlas.webp` holds the hand-painted version, losslessly encoded from a
+transparent PNG master. The app adds local orbital particles, blinking,
+emergence, and talking resonance. Accessories are small SVG overlays. No image
+service is called while selecting traits. The separately generated pixel atlas
+was removed together with the Pixel art style.
 
 These are reusable character forms, not on-demand generation of arbitrary new
 species. Unusual requests are interpreted using the closest supported form and
@@ -21,12 +20,12 @@ kept in the narrator's persona/appearance description.
 
 ## Ether, second edition
 
-`ether-paint.png` and `ether-pixel.png` replace the original hooded spirit cell.
-Both were generated using the built-in OpenAI Image Gen tool on 2026-11-07,
-with genuinely transparent backgrounds. The Paint prompt requested an abstract,
-faceless, hollow white/silver cosmic vortex with sparse rainbow freckles,
-hand-painted wisps, no dominant hue, and no baked-in environment. The Pixel edit
-preserved that silhouette and identity using sharp pixel clusters and dithering.
+`ether-paint.png` replaces the original hooded spirit cell. It was generated
+using the built-in OpenAI Image Gen tool on 2026-11-07, with a genuinely
+transparent background. The prompt requested an abstract, faceless, hollow
+white/silver cosmic vortex with sparse rainbow freckles, hand-painted wisps, no
+dominant hue, and no baked-in environment. Its pixel edit was removed together
+with the Pixel art style.
 
 `CreationScene` composes this reusable core with two animated canvas planes:
 stars, elliptical orbital trails, gathering motes and speaking rings. Planets,
