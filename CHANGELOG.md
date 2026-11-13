@@ -4,6 +4,11 @@ Record user-visible changes at version checkpoints. Git history and pull request
 
 ## Unreleased
 
+- Asking the narrator is now a short conversation: earlier questions and replies stay in view and survive closing the dialog, for the current adventure.
+- Join party asks for the party code first and shows which party you are joining while you pick a hero; a refused code returns to the code step with your hero kept.
+- Party camp shows the created story's title, the number of open seats, and a Share invite button where the device has a share sheet.
+- Victory and defeat show a recap (shards, chapters, rounds, damage, critical hits, who fell) and a New quest button.
+- Removed the unused vendored component library and the 19 packages only it needed, 284 style rules for classes nothing uses, and 13 redundant `!important` overrides.
 - Removed the Pixel art style and the Paint/Pixel switch; the game now has a single hand-drawn style. A saved Pixel preference is ignored. Camp's header shows only the logo, because the title menu already offers the guide and settings.
 - Story-first adventure creation: describe a premise and narrator, select or converse about traits, preview three narrator profiles in Paint and Pixel, shape an editable storyline, choose or customize a story-linked hero, then set the rules and begin. Custom traits receive category-fit feedback and replacement suggestions.
 - Fresh narrator auditions use generated sample text and persona-specific delivery. Live auditions require the existing team unlock, paid-audio opt-in and shared allowance. Selected narrator identity, voice direction, reviewed story, key locations and hero recipe persist through gameplay, saves and replay.
