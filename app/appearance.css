@@ -1,4 +1,6 @@
-/* Color mode is independent from Paint/Pixel. Both styles resolve these exact tokens. */
+/* Headings share one line height everywhere. */
+.rail-heading h2,.scene-heading h1,.party-objective h3,.modal-head h2,.setup-title h1,.lobby-heading h1,.section-heading h2,.adventure-settings h2,.lobby-adventure h2,.help-grid h3,.character-detail h3,.integration-list h3{line-height:1.2}
+/* Color mode resolves these exact tokens. */
 :root,html[data-color-mode='light']{
  --canvas:#fff;--paper:#fff;--surface:#f7f7f8;--surface-raised:#fff;--subtle:#eeeeF1;
  --ink:#18181c;--muted:#62626b;--line:#d9d9df;--line-strong:#9898a3;
@@ -49,11 +51,11 @@ html[data-color-mode][data-theme] .class-option{background:var(--surface-raised)
 html[data-color-mode][data-theme] .class-option:hover{background:var(--sage);border-color:var(--line-strong)}
 html[data-color-mode][data-theme] .class-option.selected{background:var(--accent-soft);border-color:var(--accent);box-shadow:var(--shadow)}
 html[data-color-mode][data-theme] .class-check{background:var(--accent);color:var(--accent-ink)}
-html[data-color-mode][data-theme] :is(.segmented,.theme-toggle,.color-mode-toggle){background:var(--surface);border-color:var(--line)}
-html[data-color-mode][data-theme] :is(.segmented button,.theme-toggle button,.color-mode-toggle button){color:var(--muted)}
-html[data-color-mode][data-theme] :is(.segmented button,.theme-toggle button,.color-mode-toggle button):hover:not(:disabled){background:var(--sage);color:var(--ink)}
-html[data-color-mode][data-theme] :is(.segmented .active,.theme-toggle button[aria-pressed=true],.color-mode-toggle button[aria-pressed=true]){background:var(--surface-raised);border-color:var(--line);box-shadow:var(--shadow);color:var(--ink)}
-html[data-color-mode][data-theme] :is(.theme-toggle button[aria-pressed=true],.color-mode-toggle button[aria-pressed=true]):hover{background:var(--surface-raised);box-shadow:var(--shadow-hover)}
+html[data-color-mode][data-theme] :is(.segmented,.color-mode-toggle){background:var(--surface);border-color:var(--line)}
+html[data-color-mode][data-theme] :is(.segmented button,.color-mode-toggle button){color:var(--muted)}
+html[data-color-mode][data-theme] :is(.segmented button,.color-mode-toggle button):hover:not(:disabled){background:var(--sage);color:var(--ink)}
+html[data-color-mode][data-theme] :is(.segmented .active,.color-mode-toggle button[aria-pressed=true]){background:var(--surface-raised);border-color:var(--line);box-shadow:var(--shadow);color:var(--ink)}
+html[data-color-mode][data-theme] :is(.color-mode-toggle button[aria-pressed=true]):hover{background:var(--surface-raised);box-shadow:var(--shadow-hover)}
 html[data-color-mode][data-theme] .input-button button{background:var(--surface)}
 html[data-color-mode][data-theme] .input-button button:hover{background:var(--sage);color:var(--ink)}
 html[data-color-mode][data-theme] :is(.invite-ticket,.lobby-player,.rules-note,.budget-banner,.narrator-portrait,.roll-die,.leave-confirm){background:var(--surface);border-color:var(--line);color:var(--ink)}

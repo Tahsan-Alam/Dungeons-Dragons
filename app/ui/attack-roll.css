@@ -6,7 +6,6 @@
 .die-shadow{fill:var(--ink);opacity:.15}
 .die-body{transform-origin:100px 100px}
 .attack-die.is-rolling .die-body{animation:attack-dice-tumble 900ms ease-out both}
-.attack-die.pixel-die.is-rolling .die-body{animation-timing-function:steps(12,end)}
 .attack-roll-status{min-height:66px;display:flex;flex-direction:column;justify-content:center;gap:4px}
 .attack-roll-status p{margin:0;font-size:14px;line-height:1.5;overflow-wrap:anywhere}
 .attack-roll-status p>span{color:var(--muted)}

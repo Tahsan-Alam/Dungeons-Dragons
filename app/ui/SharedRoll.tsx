@@ -21,7 +21,7 @@ export default function SharedRoll(props:SharedRollProps){
 
 /** Only this content remounts between rolls, so timers reset without flashing the backdrop. */
 function RollPresentation({roll,remaining,paused,onPausedChange,onBackToBoard,dismiss,activeEventId,onResultShown}:SharedRollProps&{dismiss:ModalDismiss;activeEventId:RefObject<number>;onResultShown:(eventId:number)=>void}){
- const{theme,reducedMotion}=useTheme();
+ const{reducedMotion}=useTheme();
  const[animationDone,setAnimationDone]=useState(false),[visible,setVisible]=useState(()=>typeof document==='undefined'||!document.hidden);
  const nextButton=useRef<HTMLButtonElement>(null);
  const showingResult=animationDone||reducedMotion;
@@ -39,7 +39,7 @@ function RollPresentation({roll,remaining,paused,onPausedChange,onBackToBoard,di
  },[visible,showingResult,paused,roll.event.attack,roll.event.id,dismiss,activeEventId]);
  return <div className="attack-roll shared-roll" data-paused={!visible}>
    <p className="attack-roll-target"><strong>{roll.actorName}</strong><span>{roll.description}</span>{roll.targetName?<span>Against {roll.targetName}</span>:null}</p>
-   <DiceArt theme={theme} value={showingResult?roll.event.roll:undefined} rolling={!showingResult}/>
+   <DiceArt value={showingResult?roll.event.roll:undefined} rolling={!showingResult}/>
    <div className="attack-roll-status" role="status" aria-live="polite" aria-atomic="true">{showingResult?<RollOutcome event={roll.event}/>:<p>{roll.actorName} is rolling…</p>}</div>
    <div className="attack-roll-actions"><button ref={nextButton} className="button primary" onClick={()=>dismiss()}>{remaining>1?'Next roll':'Continue'}</button></div>
    <div className="shared-roll-controls"><button className="button paper" onClick={()=>onPausedChange(!paused)}>{paused?'Resume auto-advance':'Pause auto-advance'}</button><button className="button paper" onClick={()=>dismiss(onBackToBoard)}>Back to board</button></div>

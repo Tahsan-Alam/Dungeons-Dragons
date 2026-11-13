@@ -10,7 +10,7 @@ import {useTheme} from './Theme';
 import './attack-roll.css';
 
 export default function AttackRoll({request,game,busy,onRoll,onClose}:{request:AttackRollRequest;game:GameState;busy:boolean;onRoll:()=>unknown;onClose:()=>void}){
- const {theme,reducedMotion}=useTheme();
+ const {reducedMotion}=useTheme();
  const[started,setStarted]=useState(false),[settled,setSettled]=useState(false),[animationDone,setAnimationDone]=useState(false),[result,setResult]=useState<GameEvent>();
  const submitted=useRef(false),mounted=useRef(true),close=useRef(onClose),continueButton=useRef<HTMLButtonElement>(null),rollButton=useRef<HTMLButtonElement>(null);close.current=onClose;
  const valid=canStartAttackRoll(game,request);
@@ -39,7 +39,7 @@ export default function AttackRoll({request,game,busy,onRoll,onClose}:{request:A
  return <Modal title={outcome?'Attack result':'Roll to attack'} onClose={onClose} dismissible={!waiting} initialFocus={rollButton}>{dismiss=>
   <div className="attack-roll">
    <p className="attack-roll-target"><strong>{request.title}</strong><span>Against {request.targetName}</span></p>
-   <DiceArt theme={theme} value={outcome?.roll} rolling={rolling}/>
+   <DiceArt value={outcome?.roll} rolling={rolling}/>
    <div className="attack-roll-status" role="status" aria-live="polite" aria-atomic="true">
     {outcome?<RollOutcome event={outcome}/>:waiting?<p>{rolling?'Rolling…':'Waiting for your roll…'}</p>:unconfirmed?<p>No confirmed result yet. Check the adventure log before trying again.</p>:<p>Ready when you are. Roll to attack.</p>}
    </div>

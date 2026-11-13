@@ -4,6 +4,7 @@ Record user-visible changes at version checkpoints. Git history and pull request
 
 ## Unreleased
 
+- Removed the Pixel art style and the Paint/Pixel switch; the game now has a single hand-drawn style. A saved Pixel preference is ignored. Camp's header shows only the logo, because the title menu already offers the guide and settings.
 - Story-first adventure creation: describe a premise and narrator, select or converse about traits, preview three narrator profiles in Paint and Pixel, shape an editable storyline, choose or customize a story-linked hero, then set the rules and begin. Custom traits receive category-fit feedback and replacement suggestions.
 - Fresh narrator auditions use generated sample text and persona-specific delivery. Live auditions require the existing team unlock, paid-audio opt-in and shared allowance. Selected narrator identity, voice direction, reviewed story, key locations and hero recipe persist through gameplay, saves and replay.
 

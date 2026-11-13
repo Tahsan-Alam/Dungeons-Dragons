@@ -1,4 +1,3 @@
-export type ArtTheme='paint'|'pixel';
 export type ViewMode='2d'|'2.5d';
 export type ColorMode='light'|'dark'|'system';
 export type ResolvedColorMode='light'|'dark';
@@ -12,12 +11,10 @@ export const ACCENT_PALETTES:Record<Accent,Record<ResolvedColorMode,{accent:stri
  rose:{light:{accent:'#be2757',hover:'#a51f4a',ink:'#ffffff',soft:'#fff0f4'},dark:{accent:'#ff8db1',hover:'#ffb3ca',ink:'#350914',soft:'#351420'}},
  orange:{light:{accent:'#c13e0b',hover:'#a93408',ink:'#ffffff',soft:'#fff1ea'},dark:{accent:'#ffa15e',hover:'#ffbf91',ink:'#321405',soft:'#342014'}},
 };
-export const THEME_STORAGE_KEY='painted-realms-theme';
 export const VIEW_MODE_STORAGE_KEY='painted-realms-view-mode';
 export const COLOR_MODE_STORAGE_KEY='painted-realms-color-mode';
 export const ACCENT_STORAGE_KEY='painted-realms-accent';
 export const MOTION_STORAGE_KEY='painted-realms-motion';
-export function normalizeArtTheme(value:unknown):ArtTheme{return value==='pixel'?'pixel':'paint'}
 export function normalizeViewMode(value:unknown):ViewMode{return value==='2.5d'?'2.5d':'2d'}
 /** Ignore unrelated preferences; deletion and storage.clear() restore the flat view. */
 export function viewModeStorageChange(event:{key:string|null;newValue:string|null}):ViewMode|undefined{return event.key===null?'2d':event.key===VIEW_MODE_STORAGE_KEY?normalizeViewMode(event.newValue):undefined}
@@ -27,4 +24,4 @@ export function normalizeMotion(value:unknown):MotionPreference{return value==='
 export function resolveColorMode(mode:ColorMode,systemDark:boolean):ResolvedColorMode{return mode==='system'?(systemDark?'dark':'light'):mode}
 export function resolveReducedMotion(motion:MotionPreference,systemReduced:boolean){return motion==='reduced'||motion==='system'&&systemReduced}
 /** Runs in <head> before the page paints. Every stored value is validated. */
-export const APPEARANCE_BOOTSTRAP=`(()=>{let theme='paint',view='2d',mode='system',accent='blue',motion='system';try{theme=localStorage.getItem('${THEME_STORAGE_KEY}')==='pixel'?'pixel':'paint';const saved=localStorage.getItem('${COLOR_MODE_STORAGE_KEY}');if(saved==='light'||saved==='dark')mode=saved;const color=localStorage.getItem('${ACCENT_STORAGE_KEY}');if(${JSON.stringify(ACCENT_NAMES)}.includes(color))accent=color;const movement=localStorage.getItem('${MOTION_STORAGE_KEY}');if(movement==='full'||movement==='reduced')motion=movement;if(localStorage.getItem('${VIEW_MODE_STORAGE_KEY}')==='2.5d')view='2.5d'}catch{}let dark=false,reduced=false;try{dark=matchMedia('(prefers-color-scheme: dark)').matches;reduced=matchMedia('(prefers-reduced-motion: reduce)').matches}catch{}const resolved=mode==='system'?(dark?'dark':'light'):mode;const root=document.documentElement;root.dataset.theme=theme;root.dataset.viewMode=view;root.dataset.colorPreference=mode;root.dataset.colorMode=resolved;root.dataset.accent=accent;root.dataset.motionPreference=motion;root.dataset.motion=motion==='reduced'||motion==='system'&&reduced?'reduced':'full';root.style.colorScheme=resolved})()`;
+export const APPEARANCE_BOOTSTRAP=`(()=>{let view='2d',mode='system',accent='blue',motion='system';try{const saved=localStorage.getItem('${COLOR_MODE_STORAGE_KEY}');if(saved==='light'||saved==='dark')mode=saved;const color=localStorage.getItem('${ACCENT_STORAGE_KEY}');if(${JSON.stringify(ACCENT_NAMES)}.includes(color))accent=color;const movement=localStorage.getItem('${MOTION_STORAGE_KEY}');if(movement==='full'||movement==='reduced')motion=movement;if(localStorage.getItem('${VIEW_MODE_STORAGE_KEY}')==='2.5d')view='2.5d'}catch{}let dark=false,reduced=false;try{dark=matchMedia('(prefers-color-scheme: dark)').matches;reduced=matchMedia('(prefers-reduced-motion: reduce)').matches}catch{}const resolved=mode==='system'?(dark?'dark':'light'):mode;const root=document.documentElement;root.dataset.theme='paint';root.dataset.viewMode=view;root.dataset.colorPreference=mode;root.dataset.colorMode=resolved;root.dataset.accent=accent;root.dataset.motionPreference=motion;root.dataset.motion=motion==='reduced'||motion==='system'&&reduced?'reduced':'full';root.style.colorScheme=resolved})()`;

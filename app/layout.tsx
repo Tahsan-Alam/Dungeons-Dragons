@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import "./globals.css";
-import "./pixel.css";
 import "./appearance.css";
 import "./ui/button-surfaces.css";
 import "./ui/motion.css";

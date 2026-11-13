@@ -15,7 +15,7 @@ const customHue=(text:string):Hue=>Object.keys(SWATCHES)[Array.from(text.toLower
 export const isUnformedNarrator=(profile:NarratorProfile)=>JSON.stringify(profile)===JSON.stringify(AETHER);
 /** Personality has the strongest vote; delivery and appearance add secondary colors.
  * Ignore untouched Aether defaults, so a first choice has an immediate visible effect.
- * Pure and order-independent: re-rendering and Paint/Pixel never change identity.
+ * Pure and order-independent: re-rendering never changes identity.
  */
 export function creatorPalette(profile:NarratorProfile){
  if(isUnformedNarrator(profile))return {primary:'#202127',secondary:'#b9bac3',neutral:true,label:'Unformed'};

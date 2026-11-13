@@ -1,6 +1,0 @@
-/* Art style belongs to illustrations. UI geometry and typography stay shared. */
-.rail-heading h2,.scene-heading h1,.party-objective h3,.modal-head h2,.setup-title h1,.lobby-heading h1,.section-heading h2,.adventure-settings h2,.lobby-adventure h2,.help-grid h3,.character-detail h3,.integration-list h3{line-height:1.2}
-html[data-theme='pixel'] .game-board rect{rx:0;ry:0}
-html[data-theme='pixel'] .pixel-art{image-rendering:pixelated}
-html[data-theme='pixel'] .chapter-art>.panorama{animation-name:pixel-scene-in}
-@keyframes pixel-scene-in{from{opacity:.6}to{opacity:1}}
