@@ -4,6 +4,7 @@ Record user-visible changes at version checkpoints. Git history and pull request
 
 ## Unreleased
 
+- Headings throughout the game, and the title screen's logo and menu, use the EB Garamond typeface in place of Georgia. Interface text stays in Inter.
 - Camp is a full-screen title menu: the scene fills the screen, the logo sits top left and the menu is a plain text list at the lower left with a highlight bar. Camp no longer shows the app header.
 - Asking the narrator is now a short conversation: earlier questions and replies stay in view and survive closing the dialog, for the current adventure.
 - Join party asks for the party code first and shows which party you are joining while you pick a hero; a refused code returns to the code step with your hero kept.
