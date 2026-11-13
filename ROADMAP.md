@@ -28,7 +28,7 @@ Keep this as the short checkpoint overview. Use GitHub issues for individual tas
 - [x] Verify bounded Luna planning/narration/legal-choice access with budgeted live experiments (small samples; broader quality remains a playtest task).
 - [x] Add bounded cached narrator audio with transcript validation and device fallback; fresh local application-route generation and native Edge playback passed. Earlier hosted generation/playback passed; the guided update is awaiting publication and audible quality remains unverified.
 - [x] Publish the earlier reviewed Windows changes and pass hosted runtime/AI checks.
-- [x] Add server-enforced team-password unlock and local developer setup.
+- [x] Add password-free AI access by default, optional password mode and repeatable local team setup.
 - [x] Publish the guided adventure update as existing-Site version 9. The subsequent story-first creator is a separate local change awaiting publication authorization.
 - [x] Verify the new setup, Continue card, Pip, ordinary actions, style identity and resume at desktop/narrow sizes in both Paint and Pixel through the explicitly approved local browser fallback; synthetic microphone capture/transcription/review and stubbed speech animation also passed. Human microphone/audio and physical devices remain unverified.
 - [x] Complete the three-model UI/gameplay/AI panel and fix supported findings within ten quality rounds; measured mean 90.87/100 before final corrections, below the aspirational95 target.
@@ -42,4 +42,4 @@ These are proposed next tasks, not promises that every feature lands in alpha.2.
 - [ ] Broader content and rule coverage.
 - [ ] Support for using the AI narrator alongside a physical tabletop game.
 
-The prototype does not implement the full D&D ruleset. Optional server-side paid AI is implemented behind explicit configuration, team-password unlock and conservative spending controls; checked-in defaults use fixtures. See [AI-VALIDATION.md](AI-VALIDATION.md) for current evidence and remaining checks. Hosted publication and hosted AI verification remain separate from successful local API tests.
+The prototype does not implement the full D&D ruleset. Optional server-side paid AI is implemented behind explicit server configuration and conservative spending controls; checked-in defaults use fixtures. See [AI-VALIDATION.md](AI-VALIDATION.md) for current evidence and remaining checks. Hosted publication and hosted AI verification remain separate from successful local API tests.

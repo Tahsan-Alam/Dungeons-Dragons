@@ -18,6 +18,8 @@ test('distributed rate bucket accepts only its atomic limit, recovers next minut
     assert.equal(await b.consume('join','203.0.113.2',120_000),true);
     assert.equal(await b.consume('join','203.0.113.1',180_000),true);
     assert.equal(await b.consume('read','203.0.113.1',120_000),true);
+    const creator=await Promise.all(Array.from({length:121},(_,i)=>(i%2?a:b).consume('creator','creator-test',120_000)));
+    assert.equal(creator.filter(Boolean).length,120);assert.equal(await b.consume('creator','creator-test',180_000),true);
     const stored=JSON.stringify(db.prepare('SELECT * FROM room_rate_limits').all());
     assert.ok(!stored.includes('203.0.113.1'));
     await b.consume('join','cleanup',400_000);

@@ -12,7 +12,7 @@ const envelope=(result:unknown)=>Response.json({status:'completed',output:[{type
 test('creation uses the real structured adapter, bounded reservations, deduplication and conversation context',async()=>{
  const store=new MemoryLedger();let calls=0;
  const ai=new GameAI(config,new BudgetLedger(store),async(_url,options)=>{
-  calls++;const body=JSON.parse(String(options?.body)),context=JSON.parse(body.input);assert.equal(body.model,'gpt-6-luna');assert.equal(body.text.format.strict,true);assert.equal(body.max_output_tokens,1600);assert.match(context.prompt,/wandering library/);assert.equal(context.history[0].text,'Less cruel, more playful.');
+  calls++;const body=JSON.parse(String(options?.body)),context=JSON.parse(body.input);assert.equal(body.model,'gpt-6-luna');assert.equal(body.text.format.strict,true);assert.equal(body.max_output_tokens,6400);assert.match(context.prompt,/wandering library/);assert.equal(context.history[0].text,'Less cruel, more playful.');
   assert.ok(Object.values((await store.read()).entries)[0].reserved>0);
   const result=creationFixture(input);return envelope({reply:'Three guides for your library.',narrators:result.narrators});
  });

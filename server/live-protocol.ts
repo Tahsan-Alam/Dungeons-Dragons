@@ -4,16 +4,16 @@ export const LIVE_MODEL='gpt-live-1';
 export const LIVE_RATE=24_000;
 export const LIVE_VOICES=['vesper','willow','stone','marin','cedar','gleam','meridian'] as const;
 export type LiveVoice=typeof LIVE_VOICES[number];
-export const LIVE_LIMITS={listen:18_000,call:90_000,idle:30_000,start:10_000,grace:3_000};
+export const LIVE_LIMITS={listen:72_000,call:360_000,idle:120_000,start:10_000,grace:3_000};
 // $0.05/min duration, 2x margin, including startup/closure. No hosted backend,
 // tools, automatic reconnection, or refund of uncertain usage is permitted.
-export const LIVE_RESERVATION={listen:60_000,call:200_000};
+export const LIVE_RESERVATION={listen:240_000,call:800_000};
 // Smaller sessions fit existing allowances; they never raise a spending cap.
 // Each reserve covers two times $0.05/min, including 10s startup + 3s close.
 export const LIVE_CALL_WINDOWS=[
  {duration:LIVE_LIMITS.call,reservation:LIVE_RESERVATION.call},
- {duration:60_000,reservation:125_000},
- {duration:30_000,reservation:75_000},
+ {duration:240_000,reservation:500_000},
+ {duration:120_000,reservation:300_000},
 ] as const;
 export interface LiveStart {type:'start';scope:string;requestId:string;mode:'listen'|'call';voice:LiveVoice;name:string;persona:string;context:string;opening:string;guide?:boolean;}
 export type LiveClientEvent=LiveStart|{type:'audio';audio:string}|{type:'mic';muted:boolean}|{type:'context';text:string}|{type:'reply';text:string;delegationId?:string}|{type:'close'};

@@ -3,9 +3,9 @@
 export const SPEECH_MODEL = 'gpt-realtime-2.1-mini';
 export const SPEECH_VOICE = 'marin';
 export const SPEECH_VERSION = 'realtime-v1';
-export const SPEECH_TOKENS = 1800;
+export const SPEECH_TOKENS = 7200;
 export const SPEECH_INPUT_BYTES = 4096;
-export const SPEECH_AUDIO_BYTES = 8000 * 30; // G.711 mu-law, 8 kHz, <=30 seconds.
+export const SPEECH_AUDIO_BYTES = 8000 * 120; // G.711 mu-law, 8 kHz, <=120 seconds.
 export const SPEECH_CACHE_BYTES = 321_000;
 // Upper bound text input (bytes + framing), ALL output charged at audio rate.
 // 2x margin also covers cached input/write accounting; no audio/image input,
@@ -43,7 +43,7 @@ const normalized = (text:string) => {
 };
 const base64 = (bytes:Uint8Array) => btoa(Array.from(bytes,b=>String.fromCharCode(b)).join(''));
 
-export function realtimeSpeech(key:string,caption:string,transport:typeof fetch,signal?:AbortSignal,timeoutMs=15_000,style='',maxAudioBytes=SPEECH_AUDIO_BYTES):Promise<SpeechResult> {
+export function realtimeSpeech(key:string,caption:string,transport:typeof fetch,signal?:AbortSignal,timeoutMs=60_000,style='',maxAudioBytes=SPEECH_AUDIO_BYTES):Promise<SpeechResult> {
  if(!validSpeechInput(caption)||new TextEncoder().encode(JSON.stringify(speechRequest(caption,style))).length>SPEECH_INPUT_BYTES||signal?.aborted)return Promise.reject(new Error('Speech unavailable'));
  return new Promise((resolve,reject)=>{
   const controller=new AbortController();let socket:Socket|undefined,settled=false,requested=false,phase='connecting';
@@ -56,14 +56,14 @@ export function realtimeSpeech(key:string,caption:string,transport:typeof fetch,
    if(socket){close(socket);socket.removeEventListener('message',message);socket.removeEventListener('error',abort);socket.removeEventListener('close',abort);}
    if(result)resolve(result);else reject(new SpeechFailure(failure,httpStatus));
   };
-  const abort=()=>finish();const timer=setTimeout(abort,Math.min(15_000,Math.max(1,timeoutMs)));
+  const abort=()=>finish();const timer=setTimeout(abort,Math.min(60_000,Math.max(1,timeoutMs)));
   signal?.addEventListener('abort',abort,{once:true});
   const message=(event:{data:unknown})=>{
    if(settled)return;
    try{
     if(typeof event.data!=='string'||event.data.length>350_000)throw new Error();
     wireBytes+=new TextEncoder().encode(event.data).length;
-    if(++events>2000||wireBytes>1_000_000)throw new Error();
+    if(++events>8000||wireBytes>4_000_000)throw new Error();
     const e=JSON.parse(event.data);if(!e||typeof e.type!=='string')throw new Error();
     if(e.type==='error'){failure='provider_error';throw new Error();}
     if(e.type==='session.created'){
@@ -117,7 +117,7 @@ export function realtimeSpeech(key:string,caption:string,transport:typeof fetch,
 // Cache compact mu-law; deliver universally playable mono PCM WAV to browsers.
 export function speechDataUrl(value:unknown):string|null {
  const clip=value as SpeechClip|null;
- if(clip?.version!==SPEECH_VERSION||typeof clip.mulaw!=='string'||clip.mulaw.length>320_000)return null;
+ if(clip?.version!==SPEECH_VERSION||typeof clip.mulaw!=='string'||clip.mulaw.length>Math.ceil(SPEECH_AUDIO_BYTES/3)*4)return null;
  try{
   const raw=atob(clip.mulaw);if(!raw.length||raw.length>SPEECH_AUDIO_BYTES)return null;
   const bytes=new Uint8Array(44+raw.length*2),view=new DataView(bytes.buffer);

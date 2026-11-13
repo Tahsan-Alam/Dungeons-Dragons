@@ -14,12 +14,13 @@ import {useLiveNarrator} from './useLiveNarrator';
 import {TraitPicker} from './CreatorControls';
 import type {ConversationLine} from './CreatorControls';
 import CreationScene from './CreationScene';
+import LiveTranscript from './LiveTranscript';
 import {creatorPalette} from './creator-palette';
 import {quickStartDraft} from './quick-start';
 import './adventure-creator.css';
 
 type Props={mode:'solo'|'online';onBack:()=>void;onStart:(name:string,cls:HeroClass,options:GameOptions,code:string)=>void;busy:boolean;onNavigationBlockChange?:(blocked:boolean)=>void;onAISettings?:()=>void;quick?:boolean};
-type Access={available:boolean;unlocked:boolean;audioAvailable:boolean};
+type Access={passwordRequired?:boolean;available:boolean;unlocked:boolean;audioAvailable:boolean};
 const INITIAL_MESSAGE='A place, a feeling, a wonderfully strange idea. I’m listening.';
 const VOICE_NAMES:Record<string,string>={vesper:'Vesper · British',willow:'Willow · Irish',stone:'Stone · Irish',marin:'Marin',cedar:'Cedar',gleam:'Gleam',meridian:'Meridian'};
 const newDraft=():CreatorDraft=>({...emptyCreatorDraft(),narrator:structuredClone(AETHER)});
@@ -184,7 +185,6 @@ export default function AdventureCreator({mode,onBack,onStart,busy,onNavigationB
     {creation.pending?<p className="creator-progress" role="status"><span/>Shaping your next page…<button className="creator-link" onClick={creation.cancel}>Cancel</button></p>:null}
     {creation.error?<div className="creator-error" role="alert"><p>{creation.error}</p>{enabled&&onAISettings?<button className="creator-link" onClick={onAISettings}>Open AI settings</button>:null}{enabled?<button className="creator-link" onClick={()=>{setOverrideAI(false);creation.setError('');say('Built-in drafts are on. Your choices are still here.');}}>Use built-in drafts</button>:null}</div>:null}
      {!accessResolved&&overrideAI!==false?<div className="creator-access-status" role="status"><p>{accessError||"Checking AI access…"}</p>{accessError?<><button className="creator-link" onClick={()=>window.dispatchEvent(new Event("painted-realms-ai-access"))}>Retry</button><button className="creator-link" onClick={()=>setOverrideAI(false)}>Choose offline mode</button></>:null}</div>:null}
-     {live.transcript?<details className="creator-history"><summary>Voice transcript<ChevronDown size={14}/></summary><p className="creator-live-transcript">{live.transcript}</p></details>:null}
     </div>
 
     {stage===0?<><div className="creator-focus" role="tablist" aria-label="Shape your adventure">{(['story','narrator'] as const).map(tab=><button role="tab" type="button" id={'creator-tab-'+tab} aria-controls={'creator-panel-'+tab} aria-selected={focus===tab} tabIndex={focus===tab?0:-1} key={tab} onClick={()=>chooseFocus(tab)} onKeyDown={e=>{if(e.key==='ArrowLeft'||e.key==='ArrowRight'){e.preventDefault();const next=tab==='story'?'narrator':'story';chooseFocus(next);document.getElementById('creator-tab-'+next)?.focus();}}}>{cap(tab)}</button>)}</div>
@@ -223,9 +223,9 @@ export default function AdventureCreator({mode,onBack,onStart,busy,onNavigationB
     </>}
     {proposal?<section className="creator-confirm" aria-label="Suggested changes"><div><strong>{proposal.narrator?'Ready to become '+proposal.narrator.name+'?':proposal.hero?'Meet '+proposal.hero.name+'.':'Shall we tell this story?'}</strong><p>{proposal.narrator?proposal.narrator.personality.join(' · ')+' · '+proposal.narrator.speakingStyle.join(' · '):proposal.hero?proposal.hero.background:proposal.story?.title}</p></div><div className="creator-proposal-details">{proposal.narrator?<p><strong>Narrator · {proposal.narrator.name}</strong>{proposal.narrator.persona}</p>:null}{proposal.story?<p><strong>Story · {proposal.story.title}</strong>{proposal.story.synopsis}<br/>{proposal.story.world} · {proposal.story.timeline} · {proposal.story.locations.join(", ")}</p>:null}{proposal.hero?<p><strong>Hero · {proposal.hero.name}</strong>{CLASS_INFO[proposal.hero.heroClass].name} · {proposal.hero.background}</p>:null}</div><div className="creator-confirm-actions"><button className="creator-primary" disabled={pending} onClick={confirmProposal}>{[proposal.narrator,proposal.story,proposal.hero].filter(Boolean).length>1?'Apply these changes':proposal.narrator?'Confirm narrator':proposal.hero?'Choose this hero':'Use this story'}<Check size={16}/></button><button className="creator-link" onClick={()=>setProposal(null)}>Keep exploring</button></div></section>:null}
     <footer className="creator-editor-footer">{undo?<button className="creator-link" onClick={restoreUndo}><Undo2 size={14}/>Undo</button>:<span/>}<button className="creator-primary" disabled={pending} onClick={()=>stage===0?void continueToHero():stage===1?toBegin():start()}>{busy?'Preparing…':stage===0?'Continue to your hero':stage===1?'Choose game settings':mode==='online'?'Create party':'Begin adventure'}<ArrowRight size={17}/></button></footer>
-  <footer className="creator-access"><label><input type="checkbox" checked={enabled} onChange={e=>setOverrideAI(e.target.checked)}/><span>AI storyteller</span></label><span>{!accessResolved&&overrideAI!==false?'Checking AI access…':enabled?access?.unlocked?'Connected to AI':'AI needs unlocking':'Offline mode'}{enabled&&source==='openai'?' · Last reply from AI':''}</span>{enabled&&!access?.unlocked&&onAISettings?<button className="creator-link" onClick={onAISettings}>Unlock team AI<ArrowRight size={13}/></button>:null}<small>{stored?"Saved on this device":""}</small></footer>
+  <footer className="creator-access"><label><input type="checkbox" checked={enabled} onChange={e=>setOverrideAI(e.target.checked)}/><span>AI storyteller</span></label><span>{!accessResolved&&overrideAI!==false?'Checking AI access…':enabled?access?.unlocked?'Connected to AI':access?.passwordRequired?'AI needs unlocking':'AI is unavailable':'Offline mode'}{enabled&&source==='openai'?' · Last reply from AI':''}</span>{enabled&&!access?.unlocked&&onAISettings?<button className="creator-link" onClick={onAISettings}>AI settings<ArrowRight size={13}/></button>:null}<small>{stored?"Saved on this device":""}</small></footer>
    </section>
-   <aside className="creator-companion" aria-label="Narrator companion">
+   <aside className="creator-companion" aria-label="Narrator companion" data-captions={liveActive||live.transcriptStarted}>
     <div className="creator-scene-space"><CreationScene profile={displayAvatar} story={story} neutral={JSON.stringify(displayAvatar)===JSON.stringify(AETHER)} palette={palette} speaking={live.speaking&&!previewing} pending={creation.pending} onClick={openChat}/></div>
     <div className="creator-companion-bottom">
      <div className="creator-companion-identity"><h2>{displayAvatar.name}</h2>{previewing?<span>Preview · Speaking with {activeNarrator.name}</span>:null}</div>
@@ -234,8 +234,9 @@ export default function AdventureCreator({mode,onBack,onStart,busy,onNavigationB
       {liveActive?<span className="creator-live-state" role="status">{live.status==='connecting'?'Connecting…':live.micMuted?'Mic muted':'Live'}</span>:null}
       {JSON.stringify(confirmed)!==JSON.stringify(AETHER)?<select className="creator-speaker-select" aria-label="Conversation partner" value={speaker} onChange={e=>setSpeaker(e.target.value as 'guide'|'narrator')}><option value="narrator">{confirmed.name}</option><option value="guide">Aether</option></select>:null}
      </div>
-     {live.error?<p className="creator-voice-error" role="status">{live.error}</p>:!voiceAvailable?<p className="creator-voice-note">{enabled?(access?.unlocked?'Voice is not enabled on this server.':'Unlock AI to talk with '+activeNarrator.name+'.'):'Turn on AI to talk with '+activeNarrator.name+'.'}</p>:null}
+     {live.error?<p className="creator-voice-error" role="status">{live.error}</p>:!voiceAvailable?<p className="creator-voice-note">{enabled?(access?.unlocked?'Voice is not enabled on this server.':'Check AI settings to talk with '+activeNarrator.name+'.'):'Turn on AI to talk with '+activeNarrator.name+'.'}</p>:null}
     </div>
+    {liveActive||live.transcriptStarted?<LiveTranscript lines={live.transcript} active={liveActive} onClear={live.clearTranscript}/>:null}
    </aside>
 
   </div>
