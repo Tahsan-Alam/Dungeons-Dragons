@@ -1,31 +1,45 @@
-/* Camp: a game title menu over the shared panorama. The art follows 2D/2.5D like any scene. */
-.title-screen{display:grid;grid-template-columns:minmax(320px,460px) minmax(0,1fr);min-height:calc(100dvh - var(--app-header-height,72px));background:var(--paper)}
-.title-panel{grid-column:1;grid-row:1;display:flex;flex-direction:column;justify-content:center;gap:26px;min-width:0;padding:clamp(28px,5vw,64px) clamp(22px,4vw,56px)}
-.title-heading h1{font:500 clamp(40px,4.4vw,60px)/1.02 var(--heading);letter-spacing:-.035em;margin:0}
-.title-heading h1>span{display:block;color:var(--muted)}
-.title-heading p{margin:14px 0 0;max-width:340px;font-size:13px;line-height:1.55;color:var(--muted)}
-.title-menu{display:flex;flex-direction:column;gap:9px;margin:0;padding:0;list-style:none}
-.title-menu .title-item{display:flex;align-items:center;justify-content:flex-start;gap:13px;width:100%;min-height:54px;padding:10px 16px;font-size:15px;font-weight:600;text-align:left}
-.title-item-label{display:flex;flex-direction:column;gap:3px;flex:1;min-width:0}
-.title-item-label small{font-size:12px;font-weight:400;line-height:1.4;opacity:.85;overflow-wrap:anywhere}
-.title-menu .title-item.title-back{min-height:46px;margin-top:8px;font-weight:500}
-.title-art{grid-column:2;grid-row:1;position:relative;overflow:hidden;min-height:260px;border-left:1px solid var(--line);background:var(--surface)}
+/* Camp: a full-screen game title menu. The panorama fills the screen under a dark wash; the logo sits top left and
+   the menu is a plain text list at the lower left, with a bar behind the item under the pointer or focus.
+   The wash and text colours are fixed, so the menu reads the same in light and dark mode. */
+.title-screen{--title-ink:#f4f6f1;--title-dim:#f4f6f1c7;--title-bar:#f4f6f138;position:relative;display:flex;min-height:100dvh;overflow:hidden;background:#141d1b;color:var(--title-ink)}
+.title-art{position:absolute;inset:0;overflow:hidden}
 /* The panorama keeps its 5:3 drawing and covers the frame; the SVG's own ratio resolves the two minimums. */
 .title-art>svg{position:absolute;top:50%;left:50%;width:auto;height:auto;min-width:100%;min-height:100%;max-width:none;transform:translate(-50%,-50%)}
-@media(max-width:860px){
- .title-screen{grid-template-columns:minmax(0,1fr);grid-template-rows:auto 1fr}
- .title-art{grid-column:1;grid-row:1;min-height:0;height:clamp(130px,26dvh,230px);border-left:0;border-bottom:1px solid var(--line)}
- .title-panel{grid-column:1;grid-row:2;justify-content:flex-start;gap:20px;padding:24px 20px 28px;width:100%;max-width:560px;margin:0 auto;box-sizing:border-box}
- .title-heading h1{font-size:38px}.title-heading h1>span{display:inline}
- .title-heading p{margin-top:8px}
+.title-art::after{content:'';position:absolute;inset:0;background:linear-gradient(90deg,#0d1514f0 0%,#0d1514d1 26%,#0d151485 52%,#0d151440 100%),linear-gradient(0deg,#0d1514b8 0%,#0d151400 42%)}
+.title-panel{position:relative;z-index:1;display:flex;flex-direction:column;flex:1;min-width:0;padding:clamp(22px,5.5vh,56px) clamp(20px,6.5vw,96px) clamp(18px,4.5vh,44px)}
+.title-logo{display:flex;align-items:center;gap:14px;margin:0;font:500 clamp(30px,3.6vw,46px)/1.05 var(--heading);letter-spacing:.01em;color:var(--title-ink)}
+.title-logo>span:last-child>span{color:var(--title-dim)}
+.title-logo-die{display:grid;place-items:center;flex:none;width:1.2em;height:1.2em;border:1.5px solid var(--title-dim);border-radius:.3em}
+.title-logo-die>svg{width:.72em;height:.72em}
+.title-nav{margin-top:auto;padding-top:28px;width:min(360px,100%)}
+.title-crumb{margin:0 0 10px 14px;font-size:12px;line-height:1.4;letter-spacing:.14em;text-transform:uppercase;color:var(--title-dim)}
+.title-menu{display:flex;flex-direction:column;gap:2px;margin:0;padding:0;list-style:none}
+/* The shared raised button surface is replaced by flat text; these selectors outrank it on purpose. */
+html:root[data-color-mode][data-theme] body .title-screen .title-panel .title-menu button.title-item{
+ display:flex;align-items:center;justify-content:flex-start;gap:10px;width:100%;min-height:40px;padding:7px 14px;
+ border-radius:2px;background:transparent;background-image:none;box-shadow:none;transform:none;
+ color:var(--title-dim);font:500 17px/1.25 var(--body);letter-spacing:.07em;text-transform:uppercase;text-align:left;
+ transition:background-color 120ms ease,color 120ms ease;
+}
+html:root[data-color-mode][data-theme] body .title-screen .title-panel .title-menu button.title-item:is(:hover,:focus-visible):not(:disabled){background:var(--title-bar);background-image:none;box-shadow:none;transform:none;color:#fff}
+html:root[data-color-mode][data-theme] body .title-screen .title-panel .title-menu button.title-item:active:not(:disabled){background:#f4f6f157}
+.title-screen .title-item:focus-visible{outline:2px solid #fff;outline-offset:2px}
+.title-item-label{display:flex;flex-direction:column;gap:3px;flex:1;min-width:0}
+.title-item-label small{font-size:12px;font-weight:400;line-height:1.4;letter-spacing:0;text-transform:none;color:var(--title-dim);overflow-wrap:anywhere}
+.title-menu .title-back{margin-top:10px}
+@media(max-width:650px){
+ .title-art::after{background:linear-gradient(0deg,#0d1514f5 0%,#0d1514d6 45%,#0d151480 100%)}
+ .title-panel{padding:26px 14px 22px}
+ .title-nav{width:100%}
+ html:root[data-color-mode][data-theme] body .title-screen .title-panel .title-menu button.title-item{min-height:46px;font-size:16px}
 }
 @media(max-height:560px) and (orientation:landscape){
- .title-screen{grid-template-columns:minmax(280px,1fr) minmax(0,1fr);grid-template-rows:auto}
- .title-art{grid-column:2;grid-row:1;height:auto;border-bottom:0;border-left:1px solid var(--line)}
- .title-panel{grid-column:1;grid-row:1;gap:14px;padding:16px 20px}
- .title-heading h1{font-size:30px}.title-heading h1>span{display:inline}.title-heading p{margin-top:4px}
- .title-menu{gap:6px}.title-menu .title-item{min-height:44px;padding:6px 14px}
+ .title-panel{padding:14px clamp(16px,5vw,56px) 12px}
+ .title-logo{font-size:26px}
+ .title-nav{padding-top:10px}
+ html:root[data-color-mode][data-theme] body .title-screen .title-panel .title-menu button.title-item{min-height:34px;padding:4px 12px;font-size:14px}
+ .title-item-label small{font-size:11px}
+ .title-menu .title-back{margin-top:4px}
 }
-/* The title menu already offers every destination, guide and settings, so Camp's header keeps only the logo. */
-.app-root[data-screen='home'] :is(.app-main-nav,.app-header-utilities){display:none}
-@media(max-width:650px){.app-root[data-screen='home'] .app-header{height:56px;min-height:56px;grid-template-rows:40px;grid-template-areas:'brand brand'}}
+/* The title screen carries its own logo and every destination, so Camp has no app header. */
+.app-root[data-screen='home'] .app-header{display:none}

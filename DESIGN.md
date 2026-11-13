@@ -62,7 +62,7 @@ Interface text is never smaller than 11px. Health bars turn to the warning colou
 
 The Pixel art style, the Paint/Pixel switch and their assets are removed; earlier sections that describe two art styles are historical. The hand-drawn style is the only one, and a saved Pixel preference is ignored. `data-theme="paint"` stays on the root element because interface styles use it for specificity. 2D/2.5D, colour mode, accent and motion remain personal settings.
 
-Camp's header shows only the logo: the title menu offers Adventures, the Adventurer’s guide and Table settings. Every other screen keeps the guide and settings buttons in the header, because that is the only way to reach them during setup, play and replay.
+Camp has no app header: it is a full-screen title menu with its own logo, and it offers Adventures, the Adventurer’s guide and Table settings. The scene sits under a fixed dark wash with light text, so the menu looks the same in light and dark mode. Every other screen keeps the guide and settings buttons in the header, because that is the only way to reach them during setup, play and replay.
 
 ## Screens outside the board
 

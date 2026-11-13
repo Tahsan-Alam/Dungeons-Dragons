@@ -36,7 +36,7 @@ export default function Landing({onNew,onQuick,onJoin,onGames,onHelp,onSettings,
    back,
   ],
  };
- const items=menus[view],lead=items[0].id;
+ const items=menus[view];
  // Moving between menus is the player's action, so focus follows it; the first visit leaves focus alone.
  useEffect(()=>{if(moved)list.current?.querySelector<HTMLButtonElement>('button:not(:disabled)')?.focus()},[view,moved]);
  function keys(event:KeyboardEvent<HTMLUListElement>){
@@ -49,8 +49,8 @@ export default function Landing({onNew,onQuick,onJoin,onGames,onHelp,onSettings,
  return <main className="title-screen">
   <div className="title-art" aria-hidden="true"><Panorama biome="woodland" characters={PARTY}/></div>
   <section className="title-panel" aria-labelledby="title-heading">
-   <div className="title-heading"><h1 id="title-heading">Painted<span> Realms</span></h1><p>{view==='main'?'A tabletop adventure in your browser. 1–10 players, turn-based.':HEADINGS[view]}</p></div>
-   <nav aria-label={HEADINGS[view]}><ul className="title-menu" ref={list} onKeyDown={keys}>{items.map(item=><li key={item.id}><button type="button" className={`button ${item.id===lead?'primary':'paper'} title-item ${item.back?'title-back':''}`} disabled={item.locked} data-tooltip={item.tip} aria-describedby={item.detail?`title-detail-${item.id}`:undefined} onClick={item.run}><Icon name={item.icon} size={19}/><span className="title-item-label">{item.label}{item.detail?<small id={`title-detail-${item.id}`} aria-hidden="true">{item.detail}</small>:null}</span>{item.opens?<Icon name="arrow" size={17}/>:null}</button></li>)}</ul></nav>
+   <h1 id="title-heading" className="title-logo"><span className="title-logo-die" aria-hidden="true"><Icon name="dice" size={30}/></span><span>Painted <span>Realms</span></span></h1>
+   <nav className="title-nav" aria-label={HEADINGS[view]}>{view!=='main'?<p className="title-crumb" aria-hidden="true">{HEADINGS[view]}</p>:null}<ul className="title-menu" ref={list} onKeyDown={keys}>{items.map(item=><li key={item.id}><button type="button" className={`title-item ${item.back?'title-back':''}`} disabled={item.locked} data-tooltip={item.tip} aria-describedby={item.detail?`title-detail-${item.id}`:undefined} onClick={item.run}>{item.back?<Icon name="back" size={16}/>:null}<span className="title-item-label">{item.label}{item.detail?<small id={`title-detail-${item.id}`} aria-hidden="true">{item.detail}</small>:null}</span></button></li>)}</ul></nav>
   </section>
  </main>;
 }
