@@ -9,3 +9,5 @@ Source: [SRD 5.2.1, legal information on page 1](https://media.dndbeyond.com/com
 Interface hover and click samples are reused from Richie's local Hex Settlers project at his request: `ui-hover-thockyyy.wav` and `ui-hover-thock-instant.wav`, respectively. They are stored here as `public/audio/hover-thock.wav` and `public/audio/click-thock.wav`. No music tracks were copied.
 
 Headings and the title screen use EB Garamond, copyright 2017 The EB Garamond Project Authors (https://github.com/octaviopardo/EBGaramond12), under the SIL Open Font License 1.1. The Latin subset is stored as `public/fonts/eb-garamond-latin.woff2` with its licence in `public/fonts/EBGaramond-OFL.txt`.
+
+The title screen's heading uses Cinzel, copyright 2020 The Cinzel Project Authors (https://github.com/NDISCOVER/Cinzel), under the SIL Open Font License 1.1. The Latin subset is stored as `public/fonts/cinzel-latin-600.woff2` with its licence in `public/fonts/Cinzel-OFL.txt`.

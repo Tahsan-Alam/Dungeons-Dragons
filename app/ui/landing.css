@@ -1,17 +1,17 @@
-/* Camp: a full-screen game title menu. The panorama fills the screen under a dark wash; the logo sits top left and
-   the menu is a plain text list at the lower left, with a bar behind the item under the pointer or focus.
-   The wash and text colours are fixed, so the menu reads the same in light and dark mode. */
-.title-screen{--title-font:var(--heading);--title-ink:#f4f6f1;--title-dim:#f4f6f1c7;--title-bar:#f4f6f138;position:relative;display:flex;min-height:100dvh;overflow:hidden;background:#141d1b;color:var(--title-ink)}
+/* Camp: a full-screen game title menu over a ruined castle above a misty valley (public/art/title). The title sits top left in Cinzel,
+   the menu is a plain ivory list below it, with a bar behind the item under the pointer or focus.
+   The scene, wash and text colours are fixed, so the menu reads the same in light and dark mode. */
+@font-face{font-family:'Cinzel';src:url('/fonts/cinzel-latin-600.woff2') format('woff2');font-weight:600;font-style:normal;font-display:swap}
+.title-screen{--title-font:var(--heading);--title-ink:#efe6d2;--title-dim:#efe6d2c7;--title-bar:#f4f6f138;position:relative;display:flex;min-height:100dvh;overflow:hidden;background:#141a23;color:var(--title-ink)}
 .title-art{position:absolute;inset:0;overflow:hidden}
-/* The panorama keeps its 5:3 drawing and covers the frame; the SVG's own ratio resolves the two minimums. */
-.title-art>svg{position:absolute;top:50%;left:50%;width:auto;height:auto;min-width:100%;min-height:100%;max-width:none;transform:translate(-50%,-50%)}
-.title-art::after{content:'';position:absolute;inset:0;background:linear-gradient(90deg,#0d1514f0 0%,#0d1514d1 26%,#0d151485 52%,#0d151440 100%),linear-gradient(0deg,#0d1514b8 0%,#0d151400 42%)}
+/* The scene covers the frame. Cropping keeps the castle on the right; the dark arch on the left can be lost first on narrow screens. */
+.title-art>img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:72% 50%;user-select:none}
+/* The scene darkens its own left third, so the wash stays light. */
+.title-art::after{content:'';position:absolute;inset:0;background:linear-gradient(90deg,#0b0f16a0 0%,#0b0f1640 30%,#0b0f1600 48%)}
 .title-panel{position:relative;z-index:1;display:flex;flex-direction:column;flex:1;min-width:0;padding:clamp(22px,5.5vh,56px) clamp(20px,6.5vw,96px) clamp(18px,4.5vh,44px)}
-.title-logo{display:flex;align-items:center;gap:14px;margin:0;font:500 clamp(32px,3.7vw,48px)/1.05 var(--title-font);letter-spacing:.005em;color:var(--title-ink)}
-.title-logo>span:last-child>span{color:var(--title-dim)}
-.title-logo-die{display:grid;place-items:center;flex:none;width:1.2em;height:1.2em;border:1.5px solid var(--title-dim);border-radius:.3em}
-.title-logo-die>svg{width:.72em;height:.72em}
-.title-nav{margin-top:auto;padding-top:28px;width:min(360px,100%)}
+.title-logo{margin:0;font:600 clamp(38px,4.4vw,60px)/1.02 Cinzel,var(--title-font);letter-spacing:.04em;color:var(--title-ink);text-shadow:0 2px 18px #00000099}
+/* The menu sits below the title, a little above the middle of the screen, as on the design board. */
+.title-nav{margin-top:clamp(32px,15vh,150px);padding-top:0;width:min(360px,100%)}
 .title-crumb{margin:0 0 10px 14px;font:500 13px/1.4 var(--title-font);letter-spacing:.16em;text-transform:uppercase;color:var(--title-dim)}
 .title-menu{display:flex;flex-direction:column;gap:2px;margin:0;padding:0;list-style:none}
 /* The shared raised button surface is replaced by flat text; these selectors outrank it on purpose. */
@@ -28,15 +28,16 @@ html:root[data-color-mode][data-theme] body .title-screen .title-panel .title-me
 .title-item-label small{font-size:12px;font-weight:400;line-height:1.4;letter-spacing:0;text-transform:none;color:var(--title-dim);overflow-wrap:anywhere}
 .title-menu .title-back{margin-top:10px}
 @media(max-width:650px){
- .title-art::after{background:linear-gradient(0deg,#0d1514f5 0%,#0d1514d6 45%,#0d151480 100%)}
+ .title-art::after{background:linear-gradient(0deg,#0b0f16e6 0%,#0b0f16a8 46%,#0b0f1640 100%)}
  .title-panel{padding:26px 14px 22px}
- .title-nav{width:100%}
+ .title-logo{font-size:38px}
+ .title-nav{margin-top:auto;width:100%}
  html:root[data-color-mode][data-theme] body .title-screen .title-panel .title-menu button.title-item{min-height:46px;font-size:18px}
 }
 @media(max-height:560px) and (orientation:landscape){
  .title-panel{padding:14px clamp(16px,5vw,56px) 12px}
- .title-logo{font-size:26px}
- .title-nav{padding-top:10px}
+ .title-logo{font-size:28px}
+ .title-nav{margin-top:14px}
  html:root[data-color-mode][data-theme] body .title-screen .title-panel .title-menu button.title-item{min-height:34px;padding:4px 12px;font-size:15px}
  .title-item-label small{font-size:11px}
  .title-menu .title-back{margin-top:4px}
