@@ -1,0 +1,99 @@
+/* Party camp: the scene is a fixed 16:9 stage so figures stay planted on the clearing; panels sit over it on wide screens
+   and flow below it on phones. */
+.app-root .app-content>.lobby-screen.camp-scroll{max-width:none;margin:0;padding:0;background:#0b0f15}
+.camp{min-height:100%;padding:0}
+.camp-frame{position:relative;width:min(100%,calc((100dvh - 72px) * 16 / 9));margin:0 auto}
+.camp-stage{position:relative;aspect-ratio:16/9;overflow:hidden;background:#0b0f15}
+.camp-scene{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.camp-fire{position:absolute;z-index:20}
+.camp-figure{position:absolute}
+.camp-figure>img,.camp-figure>svg{display:block;width:100%;height:100%;object-fit:contain;object-position:50% 100%}
+.camp-contact{position:absolute;z-index:9;height:1.7%;border-radius:50%;background:rgba(3,5,8,.75)}
+.camp-plates{position:absolute;inset:0;z-index:40;margin:0;padding:0;list-style:none;pointer-events:none}
+.camp-plate{position:absolute;width:8.75%;min-width:92px;box-sizing:border-box;padding:3px 6px 4px;text-align:center;pointer-events:auto;
+ background:rgba(12,16,22,.92);border-top:1px solid var(--realm-edge);border-radius:0 0 2px 2px;font:600 12px/1.3 Inter,system-ui,sans-serif}
+.camp-plate strong{display:block;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;font-size:13px;color:var(--realm-ink)}
+.camp-you{font-weight:500;color:var(--realm-muted)}
+.camp-ready{display:inline-flex;align-items:center;gap:4px;color:var(--realm-ready);font-weight:600}
+.camp-not-ready{display:inline-flex;align-items:center;gap:5px;color:#d2cbbf}
+.camp-not-ready>span{width:6px;height:6px;border-radius:50%;border:1.5px solid #d2cbbf}
+html:root[data-color-mode][data-theme] body .realm button.camp-remove{position:absolute;right:-8px;top:-8px;display:grid;place-items:center;width:22px;height:22px;min-height:0;padding:0;border-radius:50%;background:#1a212b;box-shadow:inset 0 0 0 1px var(--realm-edge);color:var(--realm-ink)}
+.camp-ui{position:absolute;inset:0;z-index:50;pointer-events:none}
+.camp-ui>*{pointer-events:auto}
+.camp-title{position:absolute;left:3.75%;top:4%;max-width:52%}
+.camp-title h1{margin:4px 0 4px;font-size:clamp(26px,2.8vw,36px);line-height:1.1;text-shadow:0 2px 12px rgba(0,0,0,.7)}
+.camp-meta{margin:0;font:500 14px Inter,system-ui,sans-serif;color:#d2cbbf;text-shadow:0 1px 6px #000}
+.camp-leave-row{margin-top:10px}
+.camp-confirm{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin-top:10px;padding:10px 12px}
+.camp-confirm span{flex:1 1 200px;font:500 14px Inter,system-ui,sans-serif}
+.camp-invite,.camp-seats{position:absolute;right:3.2%;width:232px;box-sizing:border-box;padding:14px;display:flex;flex-direction:column;gap:9px}
+.camp-invite{top:4%}
+.camp-seats{top:31%}
+.camp-code{font:700 28px/1 var(--realm-serif);letter-spacing:.18em;color:var(--realm-ink)}
+.camp-invite-actions{display:flex;flex-wrap:wrap;gap:8px}
+.camp-seat-count{margin:0;display:flex;flex-direction:column;font:500 13.5px Inter,system-ui,sans-serif;color:#d2cbbf}
+.camp-seat-count strong{font-size:16px;color:var(--realm-ink)}
+.camp-pips{display:flex;flex-wrap:wrap;gap:6px}
+.camp-pips span{width:18px;height:18px;box-sizing:border-box;border-radius:50%;border:1.5px dashed #5c6a79}
+.camp-pips span.taken{background:#3c4a5b;border:1.5px solid #6a7d92}
+.camp-note{margin:0;font:400 12.5px/1.4 Inter,system-ui,sans-serif;color:var(--realm-muted)}
+.camp-gm{position:absolute;left:3.75%;bottom:3.5%;width:min(44%,520px);box-sizing:border-box;padding:7px 14px 7px 8px;display:flex;align-items:center;gap:12px}
+.camp-gm p{margin:0;font:400 15.5px/1.3 var(--realm-prose);color:var(--realm-ink)}
+.camp-gm .realm-eyebrow{display:block}
+.camp-action{position:absolute;right:3.2%;bottom:3.5%;display:flex;align-items:center;gap:14px}
+.camp-action p{margin:0;display:flex;flex-direction:column;align-items:flex-end;font:500 13px Inter,system-ui,sans-serif;color:#d2cbbf}
+.camp-action strong{font-size:14px;color:var(--realm-ink)}
+.camp-list{display:none}
+@media(max-width:900px){
+ .camp-frame{width:100%}
+ .camp-plates{display:none}
+ .camp-ui{position:static;display:flex;flex-direction:column;gap:12px;padding:14px 16px}
+ .camp-ui>*{position:static!important;width:auto!important;max-width:none!important}
+ .camp-title{order:-1}
+ .camp-action{justify-content:space-between}
+ .camp-action p{align-items:flex-start}
+ .camp-list{display:flex;flex-direction:column;gap:8px;margin:0 16px 20px;padding:0;list-style:none}
+ .camp-list li{position:relative;display:flex;align-items:center;gap:12px;padding:8px 12px 8px 8px;background:#141a23;border:1px solid #3a4655;border-radius:3px}
+ .camp-list li>span:nth-child(2){flex:1;display:flex;flex-direction:column;font:500 12.5px Inter,system-ui,sans-serif;color:var(--realm-muted)}
+ .camp-list strong{font:600 14px Inter,system-ui,sans-serif;color:var(--realm-ink)}
+ .camp-list-art{display:block;width:44px;height:44px;overflow:hidden;border-radius:3px;background:#1c2431}
+ .camp-list-art svg{width:44px;height:50px}
+ .camp-list .camp-remove{position:static!important}
+}
+
+/* ---- Join a party: the code on a compact panel, an invitation that opens in place, the camp behind. ---- */
+.jp{position:relative;isolation:isolate;overflow:hidden}
+.jp-scene{position:absolute;inset:0;z-index:-2;width:100%;height:100%;object-fit:cover;object-position:30% 100%}
+.jp-fire{position:absolute;z-index:-1;left:16%;bottom:7%;width:clamp(70px,8vw,120px)}
+.jp-steps-hidden{display:none}
+.jp-main{display:grid;grid-template-columns:minmax(0,470px) minmax(0,1fr);gap:28px;align-items:start}
+.jp-code{display:flex;flex-direction:column;gap:12px;padding:22px 24px}
+.jp-code h1{margin:0;font-size:30px;line-height:1.1}
+.jp-code p{margin:0;font:400 14.5px/1.5 Inter,system-ui,sans-serif;color:#d2cbbf}
+.jp-boxes{display:flex;gap:9px}
+.jp-boxes input{width:56px;height:66px;box-sizing:border-box;text-align:center;border:1px solid var(--realm-edge);border-radius:3px;background:#10151c;font:700 28px var(--realm-serif);color:var(--realm-ink);text-transform:uppercase}
+.jp-boxes input.next{border:2px solid var(--realm-select)}
+.jp-boxes input:focus{outline:none;border:2px solid var(--realm-select);box-shadow:0 0 0 3px rgba(156,201,234,.15)}
+.jp-status{display:flex;align-items:center;gap:8px;font:600 14px Inter,system-ui,sans-serif!important;color:#d2cbbf!important}
+.jp-status.ok{color:var(--realm-ready)!important}
+.jp-status.bad{color:#e3c4bd!important}
+.jp-dot{width:7px;height:7px;border-radius:50%;border:1.5px solid #8d99a6}
+.jp-invite{padding:10px;min-height:min(460px,calc(var(--qs-h,460px)))}
+.jp-invite-frame{display:flex;flex-direction:column;gap:12px;height:100%;box-sizing:border-box;padding:18px 22px;border:1px solid #2c3644;border-radius:2px}
+.jp-banner{width:100%;height:150px;object-fit:cover;object-position:50% 100%;border:1px solid #3a4655;border-radius:2px}
+.jp-invite-head{text-align:center}
+.jp-invite-head h2{font-size:24px}
+.jp-invite-head p{margin:3px 0 0;font:500 13.5px Inter,system-ui,sans-serif;color:#d2cbbf}
+.jp-invite .realm-eyebrow{text-align:center}
+.jp-party{display:flex;flex-wrap:wrap;justify-content:center;gap:12px;margin:0;padding:0;list-style:none}
+.jp-party li{display:flex;flex-direction:column;align-items:center;gap:4px;width:72px;font:600 12.5px Inter,system-ui,sans-serif;text-align:center}
+.jp-art{display:block;width:64px;height:64px;overflow:hidden;border-radius:3px;background:#1c2431}
+.jp-art svg{width:64px;height:72px}
+.jp-seats{margin:0;text-align:center;font:500 14px Inter,system-ui,sans-serif;color:#d2cbbf}
+.jp-seats strong{color:var(--realm-ink)}
+.jp-waiting{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;flex:1;text-align:center;padding:30px 0}
+.jp-waiting img{width:min(300px,80%)}
+.jp-waiting p{margin:0;max-width:340px;font:400 15px/1.5 Inter,system-ui,sans-serif;color:#d2cbbf}
+.jp-joining{margin:0;font:500 14px Inter,system-ui,sans-serif;color:#d2cbbf}
+.jp-joining strong{color:var(--realm-ink)}
+@media(max-width:900px){.jp-main{grid-template-columns:minmax(0,1fr)}.jp-boxes input{width:44px;height:54px;font-size:24px}.jp-fire{display:none}}
