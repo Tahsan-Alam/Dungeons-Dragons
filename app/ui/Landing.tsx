@@ -46,9 +46,9 @@ export default function Landing({onNew,onQuick,onJoin,onGames,onHelp,onSettings,
   event.preventDefault();buttons[index]?.focus();
  }
  return <main className="title-screen">
-  <div className="title-art" aria-hidden="true"><img src="/art/title/ruined-castle.svg" alt="" width={1280} height={720} decoding="async" draggable={false}/></div>
+  <div className="title-art" aria-hidden="true"><img src="/art/title/painted-realms-title.webp" alt="" width={1678} height={937} decoding="async" draggable={false}/></div>
   <section className="title-panel" aria-labelledby="title-heading">
-   <h1 id="title-heading" className="title-logo">Painted<br/>Realms</h1>
+   <h1 id="title-heading" className="sr-only">Painted Realms</h1>
    <nav className="title-nav" aria-label={HEADINGS[view]}>{view!=='main'?<p className="title-crumb" aria-hidden="true">{HEADINGS[view]}</p>:null}<ul className="title-menu" ref={list} onKeyDown={keys}>{items.map(item=><li key={item.id}><button type="button" className={`title-item ${item.back?'title-back':''}`} disabled={item.locked} data-tooltip={item.tip} aria-describedby={item.detail?`title-detail-${item.id}`:undefined} onClick={item.run}>{item.back?<Icon name="back" size={16}/>:null}<span className="title-item-label">{item.label}{item.detail?<small id={`title-detail-${item.id}`} aria-hidden="true">{item.detail}</small>:null}</span></button></li>)}</ul></nav>
   </section>
  </main>;
