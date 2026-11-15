@@ -1,0 +1,86 @@
+/* Adventures journal: saves listed on the left, the chosen save opened on the right. Phones stack the two. */
+.journal{display:grid;grid-template-columns:minmax(260px,340px) minmax(0,1fr);grid-template-rows:auto auto;gap:16px 20px;align-items:start;width:100%;box-sizing:border-box;padding:4px 0 8px;background:none}
+.journal-list{display:flex;flex-direction:column;gap:10px;min-width:0}
+.journal-tabs{display:flex;gap:2px;border-bottom:1px solid var(--realm-edge)}
+.realm .journal-tab,html:root[data-color-mode][data-theme] body .realm button.journal-tab{flex:1;display:flex;align-items:center;justify-content:center;gap:6px;min-height:42px;padding:0 8px;border:0;border-bottom:2px solid transparent;border-radius:0;margin-bottom:-1px;background:none;box-shadow:none;transform:none;cursor:pointer;font:600 13px Inter,system-ui,sans-serif;color:var(--realm-muted)}
+.realm .journal-tab span{font-weight:500;font-size:12px;color:#7f8b98}
+html:root[data-color-mode][data-theme] body .realm button.journal-tab:hover{background:rgba(156,201,234,.06);color:var(--realm-ink)}
+html:root[data-color-mode][data-theme] body .realm button.journal-tab.on{color:var(--realm-ink);border-bottom-color:var(--realm-select)}
+.realm .journal-tab:focus-visible{outline:2px solid var(--realm-ink);outline-offset:-2px}
+.journal-search input{box-sizing:border-box;width:100%;min-height:40px;padding:0 12px;border:1px solid var(--realm-edge);border-radius:3px;background:var(--realm-surface);color:var(--realm-ink);font:400 14px Inter,system-ui,sans-serif}
+.journal-search input::placeholder{color:#8792a0}
+.journal-search input:focus-visible{outline:2px solid var(--realm-select);outline-offset:1px}
+.journal-rows{display:flex;flex-direction:column;gap:6px;max-height:calc(100dvh - 300px);min-height:120px;overflow-y:auto;padding:3px}
+.realm .journal-row,html:root[data-color-mode][data-theme] body .realm button.journal-row{display:grid;grid-template-columns:64px minmax(0,1fr) auto auto;align-items:center;gap:12px;width:100%;min-height:62px;padding:6px 12px 6px 6px;text-align:left;font:inherit}
+.realm .journal-row[aria-checked='true']::before{content:'';position:absolute;left:-1px;top:6px;bottom:6px;width:3px;background:var(--realm-select);border-radius:0 2px 2px 0}
+.journal-thumb{width:64px;height:48px;object-fit:cover;border-radius:2px;display:block}
+.journal-row-text{display:flex;flex-direction:column;gap:3px;min-width:0;padding:4px 6px;border-radius:2px;background:none}
+.journal-row-text strong{font:600 15px/1.2 var(--realm-serif);color:var(--realm-ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.journal-row-text>span{font:400 12.5px/1.3 Inter,system-ui,sans-serif;color:var(--realm-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.journal-row-text>span.turn{color:var(--realm-select)}
+.journal-pin{color:#b9c9d8;display:flex}
+.journal-empty{padding:24px 12px;text-align:center;color:var(--realm-muted);font:400 14px/1.5 Inter,system-ui,sans-serif}
+.journal-empty h2{font-size:17px;margin:0 0 6px}
+.journal-empty p{margin:0}
+
+.journal-preview{position:relative;display:flex;flex-direction:column;min-width:0;overflow:visible}
+.journal-scene{display:block;width:100%;aspect-ratio:16/7;max-height:max(150px,calc(100dvh - 500px));object-fit:cover;border-bottom:1px solid #3a4655;animation:journal-fade 260ms ease both}
+@keyframes journal-fade{from{opacity:.25}to{opacity:1}}
+@media (prefers-reduced-motion:reduce){.journal-scene{animation:none}}
+.journal-blank{opacity:.5}
+.journal-blank img{width:100%;aspect-ratio:16/7;object-fit:cover;border-radius:3px;filter:grayscale(.5)}
+.journal-body{display:flex;flex-direction:column;gap:16px;padding:18px 22px 20px}
+.journal-head{display:flex;flex-direction:column;gap:2px}
+.journal-head h2{margin:0;font-size:clamp(22px,2.4vw,30px);line-height:1.15}
+.journal-head span{font:italic 400 16px var(--realm-prose);color:var(--realm-dim)}
+.journal-facts{display:flex;align-items:center;gap:20px;flex-wrap:wrap}
+.journal-hero{display:flex;align-items:center;gap:12px;min-width:0}
+.journal-hero>div{display:flex;flex-direction:column;gap:2px}
+.journal-hero strong{font:600 17px var(--realm-serif);color:var(--realm-ink)}
+.journal-hero>div>span:last-child{font:400 13px Inter,system-ui,sans-serif;color:var(--realm-muted)}
+.journal-portrait{border:1px solid var(--realm-edge-hi);border-radius:3px;box-shadow:0 0 0 3px var(--realm-surface),0 0 0 4px #3a4655}
+.journal-art{display:block;width:64px;height:64px;overflow:hidden;background:#1d2530}
+.journal-art svg{width:100%;height:100%}
+.journal-divider{width:1px;align-self:stretch;background:#3a4655}
+.journal-progress{display:flex;flex-direction:column;gap:6px;font:400 13px Inter,system-ui,sans-serif;color:var(--realm-muted)}
+.journal-progress strong{font:600 15px var(--realm-serif);color:var(--realm-ink)}
+.journal-marks{display:flex;gap:6px}
+.journal-marks span{width:22px;height:4px;border-radius:1px;background:#3a4655}
+.journal-marks span.done{background:#5d7690}
+.journal-marks span.now{background:var(--realm-select)}
+.journal-result{display:inline-flex;align-items:center;gap:6px;font:600 15px var(--realm-serif)}
+.journal-result.victory{color:var(--realm-ready)}
+.journal-result.defeat{color:#e39b8f}
+.journal-actions{display:flex;align-items:center;gap:12px;flex-wrap:wrap;justify-content:flex-end;padding-top:14px;border-top:1px solid #2c3643}
+.journal-tools{position:relative;display:flex;gap:6px;margin-right:auto}
+.realm .journal-icon,html:root[data-color-mode][data-theme] body .realm button.journal-icon{display:flex;align-items:center;justify-content:center;width:40px;height:40px;min-height:40px;padding:0;border:1px solid var(--realm-edge);border-radius:3px;background:var(--realm-surface-2);box-shadow:none;transform:none;color:var(--realm-dim);cursor:pointer;font:700 13px Inter,system-ui,sans-serif;letter-spacing:.05em}
+html:root[data-color-mode][data-theme] body .realm button.journal-icon:hover:not(:disabled){background:#212a36;border-color:var(--realm-edge-hi);color:var(--realm-ink)}
+html:root[data-color-mode][data-theme] body .realm button.journal-icon.on{color:var(--realm-select);border-color:var(--realm-select)}
+.realm .journal-icon:focus-visible{outline:2px solid var(--realm-ink);outline-offset:2px}
+.journal-menu{position:absolute;left:0;bottom:calc(100% + 6px);z-index:20;display:flex;flex-direction:column;min-width:150px;padding:4px;background:var(--realm-surface-2);border:1px solid var(--realm-edge-hi);border-radius:3px;box-shadow:0 10px 24px rgba(0,0,0,.45)}
+.realm .journal-menu button,html:root[data-color-mode][data-theme] body .realm .journal-menu button{min-height:38px;padding:0 12px;border:0;border-radius:2px;background:none;box-shadow:none;transform:none;text-align:left;cursor:pointer;font:500 14px Inter,system-ui,sans-serif;color:var(--realm-ink)}
+html:root[data-color-mode][data-theme] body .realm .journal-menu button:hover{background:#262f3c}
+html:root[data-color-mode][data-theme] body .realm .journal-menu button.danger{color:#e39b8f}
+.journal-side{display:inline-flex;align-items:center;gap:7px;font:500 13.5px Inter,system-ui,sans-serif;color:var(--realm-muted)}
+.journal-side.turn{color:var(--realm-select)}
+.journal-side.turn span{width:8px;height:8px;border-radius:50%;background:var(--realm-select);box-shadow:0 0 8px rgba(156,201,234,.7)}
+.journal-storage{grid-column:1/-1;margin:0;font:400 12.5px/1.5 Inter,system-ui,sans-serif;color:#8792a0}
+
+@media (max-width:760px){
+ .journal{grid-template-columns:minmax(0,1fr)}
+ .journal-preview{order:-1}
+ .journal-rows{max-height:none}
+ .journal-scene{aspect-ratio:16/8}
+ .journal-body{padding:14px 14px 16px}
+ .journal-divider{display:none}
+ .journal-actions{justify-content:stretch}
+ .journal-actions .realm-btn{flex:1 1 auto}
+}
+
+/* The Adventures page around the journal: night sky behind a lit table, never a plain app page. */
+.menu-screen.journal-page{flex:1 1 auto;min-height:calc(100dvh - 72px);box-sizing:border-box;background:radial-gradient(ellipse at 62% 30%,#1a2330,#0a0e14 72%)}
+.journal-page .games-main{box-sizing:border-box;max-width:1280px;margin:0 auto;padding:22px clamp(16px,3.6vw,48px) 28px;background:none}
+.journal-top{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:18px}
+.journal-top h1{margin:2px 0 0;font-size:clamp(28px,3vw,38px);line-height:1.1}
+.journal-quests{display:flex;gap:8px;flex-wrap:wrap}
+@media (max-width:760px){.journal-quests{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));width:100%;gap:6px}.journal-quests .realm-btn{width:100%;min-width:0}.journal-quests .realm-btn-face{padding:0 4px;font-size:12.5px;white-space:nowrap}}
