@@ -1,0 +1,76 @@
+/* Realm kit: the shared controls of the redesigned screens (see DESIGN.md, "Realm interface").
+   Dark slate surfaces, ivory text, pale-blue selection, steel-blue primary actions. Amber is left to lanterns and fires
+   in the artwork. Colours are fixed like the title screen, so screens read the same in light and dark mode. */
+.realm{
+ --realm-select:#9CC9EA;--realm-primary:#284B68;--realm-primary-hi:#4b739a;--realm-primary-hover:#30587a;--realm-primary-press:#1d3a52;
+ --realm-ink:#F1E5CF;--realm-dim:#c9c3b8;--realm-muted:#a9b3be;--realm-edge:#435263;--realm-edge-hi:#6a7d92;
+ --realm-surface:#141a23;--realm-surface-2:#1a212b;--realm-night:#0d1218;--realm-ready:#8FD18B;
+ --realm-serif:Cinzel,'EB Garamond',Georgia,serif;--realm-prose:'EB Garamond',Georgia,serif;
+ color:var(--realm-ink);background:var(--realm-night);
+}
+.realm :is(h1,h2,h3){color:var(--realm-ink);font-family:var(--realm-serif);font-weight:600;letter-spacing:.03em}
+.realm-eyebrow{margin:0;font:600 11.5px/1.3 Inter,system-ui,sans-serif;letter-spacing:.16em;text-transform:uppercase;color:#b9c9d8}
+.realm-panel{background:var(--realm-surface);border:1px solid #3a4655;border-radius:3px}
+
+/* Buttons: the control is never clipped, so the ivory focus ring stays visible outside the clipped face.
+   The doubled class outranks the app's shared raised button surface on purpose. */
+html:root[data-color-mode][data-theme] body .realm .realm-btn.realm-btn{
+ display:inline-flex;padding:0;border:0;border-radius:0;background:none;background-image:none;box-shadow:none;transform:none;
+ min-height:0;color:var(--realm-ink);cursor:pointer;font:inherit;
+}
+.realm .realm-btn-face{
+ display:flex;align-items:center;justify-content:center;min-height:48px;min-width:var(--realm-btn-min,0px);box-sizing:border-box;padding:0 24px;
+ clip-path:polygon(10px 0,calc(100% - 10px) 0,100% 10px,100% calc(100% - 10px),calc(100% - 10px) 100%,10px 100%,0 calc(100% - 10px),0 10px);
+ transition:background-color 120ms ease;
+}
+.realm .realm-btn-label{display:flex;align-items:center;gap:10px;white-space:nowrap;font:700 15px/1.2 Inter,system-ui,sans-serif;letter-spacing:.05em;text-transform:uppercase}
+.realm .realm-primary .realm-btn-face{background-color:var(--realm-primary);background-image:linear-gradient(180deg,var(--realm-primary-hi) 0,var(--realm-primary-hi) 1px,transparent 1px);color:var(--realm-ink)}
+.realm .realm-primary:hover:not(:disabled) .realm-btn-face{background-color:var(--realm-primary-hover)}
+.realm .realm-primary:active:not(:disabled) .realm-btn-face{background-color:var(--realm-primary-press)}
+.realm .realm-btn:active:not(:disabled) .realm-btn-label{transform:translateY(1px)}
+/* Secondary: a dark face inside a thin slate edge with the same clipped shape. */
+.realm .realm-secondary .realm-btn-face{background-color:var(--realm-edge);padding:1px}
+.realm .realm-secondary .realm-btn-inner{display:flex;align-items:center;justify-content:center;width:100%;min-height:46px;box-sizing:border-box;padding:0 20px;background:var(--realm-surface-2);
+ clip-path:polygon(9px 0,calc(100% - 9px) 0,100% 9px,100% calc(100% - 9px),calc(100% - 9px) 100%,9px 100%,0 calc(100% - 9px),0 9px);transition:background-color 120ms ease}
+.realm .realm-secondary .realm-btn-label{font:600 14px/1.2 Inter,system-ui,sans-serif;letter-spacing:.03em;text-transform:none}
+.realm .realm-secondary:hover:not(:disabled) .realm-btn-face{background-color:var(--realm-edge-hi)}
+.realm .realm-secondary:hover:not(:disabled) .realm-btn-inner{background:#212a36}
+.realm .realm-btn.realm-small .realm-btn-face{min-height:38px}
+.realm .realm-small .realm-btn-inner{min-height:36px}
+/* Unavailable actions stay readable in muted slate. */
+.realm .realm-btn:disabled{cursor:not-allowed}
+.realm .realm-btn:disabled .realm-btn-face{background:#3a434f;background-image:none;color:#aab2bb}
+.realm .realm-btn:disabled .realm-btn-inner{background:#2a313b;color:#aab2bb}
+/* Keyboard focus: a thin ivory ring outside the control, distinct from the pale-blue selection edge. */
+.realm :is(button,a,input,textarea,select,[tabindex]):focus-visible{outline:1.5px solid var(--realm-ink);outline-offset:4px}
+
+/* Choices: hover lightens; selection is a crisp 2 px pale-blue edge, a faint tint and one small mark. */
+.realm .realm-choice{position:relative;cursor:pointer;background:var(--realm-surface-2);border:1px solid var(--realm-edge);border-radius:3px;color:var(--realm-ink);transition:background-color 120ms ease,border-color 120ms ease}
+html:root[data-color-mode][data-theme] body .realm button.realm-choice{background:var(--realm-surface-2);background-image:none;box-shadow:none;border-radius:3px;transform:none}
+.realm .realm-choice:hover:not([aria-disabled='true']){background-color:#212a36;border-color:var(--realm-edge-hi)}
+html:root[data-color-mode][data-theme] body .realm button.realm-choice:hover:not([aria-disabled='true']){background:#212a36}
+.realm .realm-choice[aria-pressed='true'],.realm .realm-choice[aria-checked='true'],.realm .realm-choice[aria-selected='true']{box-shadow:0 0 0 2px var(--realm-select)}
+html:root[data-color-mode][data-theme] body .realm button.realm-choice:is([aria-pressed='true'],[aria-checked='true'],[aria-selected='true']){box-shadow:0 0 0 2px var(--realm-select)}
+.realm .realm-choice[aria-disabled='true']{cursor:not-allowed}
+.realm-tint{background:rgba(156,201,234,.1)}
+.realm-diamond{position:absolute;right:7px;top:7px;width:9px;height:9px;transform:rotate(45deg);background:var(--realm-select);box-shadow:0 0 0 2px var(--realm-night)}
+.realm-check{position:absolute;right:-6px;top:-6px;display:grid;place-items:center;width:16px;height:16px;border-radius:50%;background:var(--realm-select);color:#0f1a24;box-shadow:0 0 0 2px var(--realm-night)}
+.realm-status-ready{display:inline-flex;align-items:center;gap:5px;color:var(--realm-ready);font-weight:600}
+
+/* Quest steps: done = check, current = pale-blue diamond, ahead = outlined diamond. Always top right on setup screens. */
+.realm-steps{display:flex;align-items:center;gap:10px;margin:0;padding:9px 16px;list-style:none;background:rgba(16,21,29,.92);border:1px solid var(--realm-edge);border-radius:2px}
+.realm-steps li{display:flex;align-items:center;gap:7px;font:500 13px Inter,system-ui,sans-serif;color:#a2abb5}
+.realm-steps li+li::before{content:'→';margin-right:3px;color:#5c6a79}
+.realm-steps .done{color:#d8d0c2}
+.realm-steps .current{font-weight:700;color:var(--realm-ink)}
+.realm-step-mark{display:inline-block;width:9px;height:9px;transform:rotate(45deg);box-sizing:border-box;border:1.5px solid #6d7c8c}
+.current .realm-step-mark{background:var(--realm-select);border-color:var(--realm-select)}
+.realm-step-done{display:grid;place-items:center;width:16px;height:16px;border-radius:50%;background:#2f3b49;border:1px solid #5c6e82}
+
+/* Portraits: a head-to-chest crop of the full-body art inside a slate frame. */
+.realm-portrait{position:relative;display:block;flex:none;overflow:hidden;box-sizing:border-box;border-radius:3px;background:radial-gradient(circle at 50% 40%,#44526a,#1c2431 75%)}
+.realm-portrait>img{position:absolute;max-width:none;user-select:none}
+.realm-fade{transition:opacity 180ms ease}
+@media(prefers-reduced-motion:reduce){.realm-fade,.realm .realm-btn-face,.realm .realm-choice{transition:none}}
+@media(max-width:640px){.realm-steps{flex-wrap:wrap;gap:6px 10px;padding:7px 12px}.realm-steps li{font-size:12px}}
+.realm .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}

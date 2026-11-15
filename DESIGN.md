@@ -64,6 +64,16 @@ The Pixel art style, the Paint/Pixel switch and their assets are removed; earlie
 
 Camp has no app header: it is a full-screen title menu with its own logo, and it offers Adventures, the Adventurer’s guide and Table settings. The scene sits under a fixed dark wash with light text, so the menu looks the same in light and dark mode. Every other screen keeps the guide and settings buttons in the header, because that is the only way to reach them during setup, play and replay.
 
+## Realm interface
+
+The screens are being rebuilt from the team's design canvas ("Wandering Storyteller", November 2026). They should feel like a game: each screen starts from a scene or an object in the world, and the controls sit inside it.
+
+- **Colours.** Dark slate surfaces, ivory text, pale blue `#9CC9EA` for selection, steel blue `#284B68` for the primary action, slate `#435263` for ordinary edges. Amber comes only from lanterns, fires and other lights in the artwork.
+- **States.** Hover lightens a surface and its edge. Selection is a 2 px pale-blue edge, a faint blue tint behind the label and one small diamond or check. Keyboard focus is a separate thin ivory ring outside the control. Unavailable actions stay readable in muted slate, and status is always written out (**Taken · Leo**, **Choosing**, **Ready** with a green check).
+- **Kit.** `app/ui/RealmKit.tsx` and `realm-kit.css` hold the clipped buttons, the selection marks, the quest steps (Game Master → Tale → Hero → Set Out) and the portrait frame. Screens opt in with the `realm` class.
+- **Presets.** `game/presets.ts` holds the three Game Masters, three tales and sixteen heroes. Each carries the same validated profile the AI produces, so built-in and generated content mix freely: any hero can join any tale, and any Game Master can tell a custom story. Until the class expansion lands, the four new classes (Guardian, Rogue, Bard, Druid) play as the nearest existing rules class.
+- **Art.** Full-body heroes and Game Masters live in `public/art/heroes` and `public/art/game-masters`. Portraits are head-to-chest crops of the same files, aligned on each face centre; there are no separate portrait images.
+
 ## Screens outside the board
 
 - **Narrator conversation.** Questions and replies form a thread of the newest twelve exchanges, kept in memory for the open adventure. It is presentation only: nothing is saved, replayed or sent as context.
