@@ -1,10 +1,12 @@
-import type {GameState,HeroClass,RoomView,Session,ReplayArchive} from './types.ts';
+import type {Biome,GameOptions,GameState,HeroClass,RoomView,Session,ReplayArchive} from './types.ts';
 import {newReplay} from './replay.ts';
 
 export interface SavedAdventure {
  id:string;title:string;kind:'solo'|'online';status:'playing'|'victory'|'defeat'|'lobby'|'unavailable';
  createdAt:number;updatedAt:number;pinned:boolean;archived:boolean;heroName:string;heroClass:HeroClass;
  sceneName:string;scene:number;round:number;roomCode?:string;yourTurn:boolean;recordedActions:number;
+ /** For the journal: the tale's region (picks its scene art), its title, how many chapters, and whose turn it is when not yours. */
+ biome?:Biome;taleTitle?:string;chapters?:number;turnOf?:string;
 }
 export interface AdventureRecord {
  meta:SavedAdventure;game:GameState|null;room:RoomView|null;session:Session|null;replay:ReplayArchive|null;revision:number;
@@ -21,18 +23,26 @@ export function isSession(value:unknown):value is Session {
  if(!value||typeof value!=='object')return false;const v=value as Session;
  return /^[A-Z]{6}$/.test(v.code)&&typeof v.playerId==='string'&&/^[a-f0-9]{64}$/.test(v.token);
 }
+const CHAPTERS={short:1,standard:3,long:5} as const;
+/** Journal details that older saves may lack; every field is optional so earlier records stay valid. */
+function journal(options:GameOptions|undefined,game:GameState|null,me?:string):Pick<SavedAdventure,'biome'|'taleTitle'|'chapters'|'turnOf'>{
+ if(!options)return {};
+ const active=game?.status==='playing'?game.actors.find(a=>a.id===game.activeActorId):undefined;
+ const turnOf=me&&active&&!active.enemy&&active.playerId&&active.playerId!==me?active.name:undefined;
+ return {biome:options.biome,chapters:CHAPTERS[options.duration??'standard'],...(options.creation?{taleTitle:options.creation.story.title}:{}),...(turnOf?{turnOf}:{})};
+}
 export function soloRecord(game:GameState,replay:ReplayArchive,id:string,now=Date.now()):AdventureRecord {
  const me=game.actors.find(a=>a.playerId==='you')??game.actors.find(a=>!a.enemy)!;
- return {meta:{id,title:`${me.name} · ${game.sceneName}`,kind:'solo',status:game.status,createdAt:now,updatedAt:now,pinned:false,archived:false,heroName:me.name,heroClass:me.heroClass,sceneName:game.sceneName,scene:game.scene,round:game.round,yourTurn:game.status==='playing',recordedActions:replay.commands.length},game,room:null,session:null,replay,revision:1};
+ return {meta:{id,title:`${me.name} · ${game.sceneName}`,kind:'solo',status:game.status,createdAt:now,updatedAt:now,pinned:false,archived:false,heroName:me.name,heroClass:me.heroClass,sceneName:game.sceneName,scene:game.scene,round:game.round,yourTurn:game.status==='playing',recordedActions:replay.commands.length,...journal(game.options,game)},game,room:null,session:null,replay,revision:1};
 }
 export function roomRecord(room:RoomView|null,session:Session,previous?:AdventureRecord,now=Date.now()):AdventureRecord {
  const game=room?.game??previous?.game??null;
  const me=room?.players.find(p=>p.id===session.playerId);
  const replay=room?.replay??previous?.replay??(game?newReplay(game,false):null);
- return {meta:{id:`room-${session.code}-${session.playerId}`,title:previous?.meta.title??`${me?.name??'Online game'} · ${session.code}`,kind:'online',status:room?(game?.status??'lobby'):(previous?.meta.status??'lobby'),createdAt:previous?.meta.createdAt??room?.createdAt??now,updatedAt:now,pinned:previous?.meta.pinned??false,archived:previous?.meta.archived??false,heroName:me?.name??previous?.meta.heroName??'Adventurer',heroClass:me?.heroClass??previous?.meta.heroClass??'ranger',sceneName:game?.sceneName??'Lobby',scene:game?.scene??0,round:game?.round??0,roomCode:session.code,yourTurn:game?.status==='playing'&&game.actors.find(a=>a.id===game.activeActorId)?.playerId===session.playerId,recordedActions:replay?.commands.length??0},game,room:room??previous?.room??null,session,replay,revision:(previous?.revision??0)+1};
+ return {meta:{id:`room-${session.code}-${session.playerId}`,title:previous?.meta.title??`${me?.name??'Online game'} · ${session.code}`,kind:'online',status:room?(game?.status??'lobby'):(previous?.meta.status??'lobby'),createdAt:previous?.meta.createdAt??room?.createdAt??now,updatedAt:now,pinned:previous?.meta.pinned??false,archived:previous?.meta.archived??false,heroName:me?.name??previous?.meta.heroName??'Adventurer',heroClass:me?.heroClass??previous?.meta.heroClass??'ranger',sceneName:game?.sceneName??'Lobby',scene:game?.scene??0,round:game?.round??0,roomCode:session.code,yourTurn:game?.status==='playing'&&game.actors.find(a=>a.id===game.activeActorId)?.playerId===session.playerId,recordedActions:replay?.commands.length??0,...journal(room?.options??game?.options,game,session.playerId)},game,room:room??previous?.room??null,session,replay,revision:(previous?.revision??0)+1};
 }
 export function updateSoloRecord(previous:AdventureRecord,game:GameState,replay:ReplayArchive,now=Date.now()):AdventureRecord {
- return {...previous,game,replay,revision:previous.revision+1,meta:{...previous.meta,status:game.status,updatedAt:now,scene:game.scene,sceneName:game.sceneName,round:game.round,yourTurn:game.status==='playing',recordedActions:replay.commands.length}};
+ return {...previous,game,replay,revision:previous.revision+1,meta:{...previous.meta,status:game.status,updatedAt:now,scene:game.scene,sceneName:game.sceneName,round:game.round,yourTurn:game.status==='playing',recordedActions:replay.commands.length,...journal(game.options,game)}};
 }
 export function sortedLibrary(records:AdventureRecord[]):SavedAdventure[]{
  return records.map(r=>r.meta).sort((a,b)=>Number(b.pinned)-Number(a.pinned)||b.updatedAt-a.updatedAt||a.id.localeCompare(b.id));

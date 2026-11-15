@@ -41,3 +41,15 @@ test('asynchronous replay matches snapshots and supports cancellation without mu
  const controller=new AbortController();controller.abort();await assert.rejects(()=>reconstructReplayAsync(archive,controller.signal),{name:'AbortError'});
  assert.equal(JSON.stringify(archive),before);
 });
+test('journal details record the region, chapter count and whose turn it is',()=>{
+ const solo=soloRecord(initial(),newReplay(initial()),'j',10);
+ assert.equal(solo.meta.biome,'woodland');assert.equal(solo.meta.chapters,3);assert.equal(solo.meta.turnOf,undefined);assert.equal(solo.meta.taleTitle,undefined);
+ const long=createGame([{id:'you',name:'Rowan',heroClass:'ranger',color:'#abc',bot:false}],{...DEFAULT_OPTIONS,companions:0,duration:'long',biome:'coast'});
+ const later=updateSoloRecord(solo,long,newReplay(long),20);
+ assert.equal(later.meta.biome,'coast');assert.equal(later.meta.chapters,5);
+ const party=createGame([{id:'you',name:'Rowan',heroClass:'ranger',color:'#abc',bot:false},{id:'ally',name:'Vess',heroClass:'rogue',color:'#cba',bot:false}],{...DEFAULT_OPTIONS,companions:0});
+ const other=party.actors.find(a=>a.playerId==='ally')!,game={...party,status:'playing' as const,activeActorId:other.id};
+ const room={code:'ABCDEF',hostId:'you',players:[],options:party.options,game} as unknown as RoomView;
+ const record=roomRecord(room,auth,undefined,30);
+ assert.equal(record.meta.turnOf,'Vess');assert.equal(record.meta.yourTurn,false);
+});

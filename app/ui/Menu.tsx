@@ -2,6 +2,9 @@
 import type {ReactNode} from 'react';
 import type {GameOptions,HeroClass,RoomView,Session} from '../../game/types';
 import {Icon} from './Art';
+import {RealmButton} from './RealmKit';
+import './realm-kit.css';
+import './journal.css';
 import './setup-flow.css';
 import QuestSetup from './QuestSetup';
 import JoinParty from './JoinParty';
@@ -14,9 +17,12 @@ export function Brand({onClick}:{onClick?:()=>void}) {
 
 type MenuProps={onNew:(mode:'solo'|'online')=>void;onJoin:()=>void;onHelp:()=>void;onSettings?:()=>void;children?:ReactNode;disabled?:boolean};
 export function Menu({onNew,onJoin,onHelp,onSettings,children,disabled=false}:MenuProps) {
- return <div className="menu-screen library-menu">
-
-  <main className="games-main"><div className="games-heading"><h1>Adventures</h1><div className="menu-actions"><button className="button primary" disabled={disabled} onClick={()=>onNew('solo')}><Icon name="dice" size={18}/>Solo quest</button><button className="button paper" disabled={disabled} onClick={()=>onNew('online')}><Icon name="people" size={18}/>Gather party</button><button className="button paper" disabled={disabled} onClick={onJoin}><Icon name="link" size={18}/>Join party</button></div></div>{children}</main>
+ return <div className="menu-screen library-menu realm journal-page">
+  <main className="games-main"><header className="journal-top"><div><p className="realm-eyebrow">Your journal</p><h1>Adventures</h1></div><div className="journal-quests">
+   <RealmButton small disabled={disabled} onClick={()=>onNew('solo')}>New Quest</RealmButton>
+   <RealmButton small disabled={disabled} onClick={()=>onNew('online')}>Gather Party</RealmButton>
+   <RealmButton small disabled={disabled} onClick={onJoin}>Join Party</RealmButton>
+  </div></header>{children}</main>
  </div>;
 }
 
