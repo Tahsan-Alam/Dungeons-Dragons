@@ -2,6 +2,7 @@ import {NARRATION_LIMIT} from '../game/campaign.ts';
 import { DEFAULT_OPTIONS, HERO_COLORS } from '../game/types.ts';
 import {parseBlueprint} from '../game/creation.ts';
 import type { GameAction, GameOptions, HeroClass, RoomPlayer, RoomView, Session } from '../game/types.ts';
+import { HERO_CLASSES } from '../game/types.ts';
 import { applyAction, createGame, runBots } from '../game/engine.ts';
 import {appendReplay,newReplay} from '../game/replay.ts';
 import type { RoomStore, StoredRoom } from './room-store.ts';
@@ -13,7 +14,7 @@ export const ROOM_CAPACITY = 10;
 export const ROOM_LIFETIME = 30 * 24 * 60 * 60 * 1000;
 export const OFFLINE_AFTER = 45_000;
 const HOST_TRANSFER_AFTER = 90_000;
-const CLASSES: HeroClass[] = ['knight', 'ranger', 'mage', 'cleric'];
+const CLASSES: readonly HeroClass[] = HERO_CLASSES;
 const BOT_NAMES = ['Pip', 'Clover', 'Wren', 'Moss', 'Bramble', 'Fern', 'Otto', 'Cricket', 'Rue'];
 export type RoomCommand =
   | {type:'ready'; ready:boolean}

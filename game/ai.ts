@@ -1,4 +1,5 @@
 import type { Biome, GameAction, GameEvent, GameState, HeroClass, Narrator } from './types';
+import { HERO_CLASSES as ALL_CLASSES } from './types.ts';
 
 /** Local integration boundaries. Nothing in this module connects to an AI service. */
 export const AI_CAPABILITIES = ['narration', 'decisions', 'art', 'speech'] as const;
@@ -74,7 +75,7 @@ export interface StoryProvider {
   speak(request: SpeechRequest): Promise<ProviderResult<SpeechResult>>;
 }
 
-const HERO_CLASSES: readonly HeroClass[] = ['knight', 'ranger', 'mage', 'cleric'];
+const HERO_CLASSES: readonly HeroClass[] = ALL_CLASSES;
 const BIOMES: readonly Biome[] = ['woodland', 'ruins', 'coast'];
 const COLOR = /^#[\da-f]{6}$/i;
 const fixture = <T>(data: T): FixtureResult<T> => ({ data, provider: 'scripted', model: null, costUsd: 0, externalRequest: false });

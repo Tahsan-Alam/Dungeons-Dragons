@@ -1,13 +1,17 @@
 import type {StoryState,StoryRecord} from './campaign.ts';
 import type {AdventureBlueprint} from './creation.ts';
 export type RulesMode = 'simple' | 'classic';
-export type HeroClass = 'knight' | 'ranger' | 'mage' | 'cleric';
+export type HeroClass = 'knight' | 'ranger' | 'mage' | 'cleric' | 'guardian' | 'rogue' | 'bard' | 'druid';
+export const HERO_CLASSES: readonly HeroClass[] = ['knight','ranger','mage','cleric','guardian','rogue','bard','druid'];
 export type Narrator = 'warm' | 'dramatic' | 'wry';
 export type Biome = 'woodland' | 'ruins' | 'coast';
 export interface GameOptions { rules: RulesMode; seed: string; narrator: Narrator; biome: Biome; companions: number; storyPrompt?:string; narratorPrompt?:string; characterPrompt?:string; aiEnabled?:boolean; duration?:'short'|'standard'|'long'; creation?:AdventureBlueprint; }
 export interface PlayerSpec { id: string; name: string; heroClass: HeroClass; color: string; bot: boolean; }
 export interface Tile { x: number; y: number; kind: 'grass' | 'path' | 'water' | 'wall'; decoration?: 'tree' | 'rock' | 'flower' | 'mushroom' | 'ruin'; }
-export interface Actor { id: string; playerId?: string; name: string; heroClass: HeroClass; color: string; enemy: boolean; bot: boolean; x: number; y: number; hp: number; maxHp: number; ac: number; speed: number; movement: number; actionUsed: boolean; guarding: boolean; potions: number; abilityUses: number; initiative: number; deathSuccesses: number; deathFailures: number; defeated: boolean; }
+export interface Actor { id: string; playerId?: string; name: string; heroClass: HeroClass; color: string; enemy: boolean; bot: boolean; x: number; y: number; hp: number; maxHp: number; ac: number; speed: number; movement: number; actionUsed: boolean; guarding: boolean; potions: number; abilityUses: number; initiative: number; deathSuccesses: number; deathFailures: number; defeated: boolean;
+  /** Shield wall: the guardian taking hits for this actor until the guardian's next turn. */ guardedBy?: string;
+  /** Inspire: advantage on this actor's next attack roll. */ inspired?: boolean;
+  /** Entangle: this actor cannot move on its next turn. */ rooted?: boolean; }
 export interface AttackResult { targetId: string; action: 'attack' | 'ability'; hit: boolean; critical: boolean; damage: number; }
 export interface GameEvent { id: number; kind: 'story' | 'action' | 'roll' | 'system'; text: string; actorId?: string; roll?: number; attack?: AttackResult; }
 export interface GameState { story?:StoryState; schemaVersion: 1; options: GameOptions; rng: number; status: 'playing' | 'victory' | 'defeat'; width: number; height: number; tiles: Tile[]; actors: Actor[]; activeActorId: string; turnOrder: string[]; round: number; scene: number; sceneName: string; objective: string; relics: number; exit: {x:number;y:number}; chest: {x:number;y:number;opened:boolean}; events: GameEvent[]; eventSequence: number; }
@@ -24,4 +28,12 @@ export const CLASS_INFO: Record<HeroClass,{name:string; description:string; abil
  ranger: {name:'Ranger',description:'Quick-footed scout · ranged bow',ability:'Aimed shot',range:5},
  mage: {name:'Mage',description:'Spellcaster · ranged magic',ability:'Arcane burst',range:4},
  cleric: {name:'Cleric',description:'Party healer · close combat',ability:'Healing light',range:1},
+ guardian: {name:'Guardian',description:'Shield-bearer · protects allies',ability:'Shield wall',range:1},
+ rogue: {name:'Rogue',description:'Quick blade · strikes from the flank',ability:'Sneak attack',range:1},
+ bard: {name:'Bard',description:'Storyteller · inspires the party',ability:'Inspire',range:4},
+ druid: {name:'Druid',description:'Wild caller · controls the field',ability:'Entangle',range:4},
 };
+/** Abilities aimed at an ally instead of an enemy. */
+export const SUPPORT_ABILITY: Partial<Record<HeroClass,true>> = {cleric:true,guardian:true,bard:true};
+/** Abilities that make no attack roll. */
+export const NO_ROLL_ABILITY: Partial<Record<HeroClass,true>> = {cleric:true,guardian:true,bard:true,druid:true};
