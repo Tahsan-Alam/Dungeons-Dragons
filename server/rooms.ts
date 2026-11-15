@@ -3,6 +3,8 @@ import { DEFAULT_OPTIONS, HERO_COLORS } from '../game/types.ts';
 import {parseBlueprint} from '../game/creation.ts';
 import type { GameAction, GameOptions, HeroClass, RoomPlayer, RoomView, Session } from '../game/types.ts';
 import { HERO_CLASSES } from '../game/types.ts';
+import { HEROES } from '../game/presets.ts';
+import type { RoomPreview } from '../game/types.ts';
 import { applyAction, createGame, runBots } from '../game/engine.ts';
 import {appendReplay,newReplay} from '../game/replay.ts';
 import type { RoomStore, StoredRoom } from './room-store.ts';
@@ -87,13 +89,25 @@ function validateAction(input: unknown): GameAction {
   if (['guard','potion','end','interact','advance'].includes(String(a.type))) return {type:a.type} as GameAction;
   return reject('That action is not supported.');
 }
+/** An optional roster hero: it must exist, match the chosen class and not already be in the party. */
+function heroOf(input: unknown, heroClass: HeroClass, players: RoomPlayer[] = []): string | undefined {
+  if (input === undefined || input === null || input === '') return undefined;
+  const hero = HEROES.find(h => h.id === input);
+  if (!hero || hero.profile.heroClass !== heroClass) return reject('Choose a hero from the roster.');
+  if (players.some(p => p.heroId === hero.id)) return reject(`${hero.name} is already in this party. Choose another hero.`, 409, 'HERO_TAKEN');
+  return hero.id;
+}
+
 function addBot(room: RoomView, heroClass?: HeroClass) {
   if (room.players.length >= ROOM_CAPACITY) return reject('This party already has 10 adventurers.', 409, 'ROOM_FULL');
   const index = room.players.length;
   const usedNames = new Set(room.players.map(p => p.name));
-  const name = BOT_NAMES.find(n => !usedNames.has(n)) ?? `Companion ${index}`;
+  const cls = heroClass ?? CLASSES[index % 4];
+  // Companions are roster heroes nobody has taken yet, so the camp can draw them; otherwise they get a plain companion name.
+  const hero = HEROES.find(h => h.profile.heroClass === cls && !room.players.some(p => p.heroId === h.id) && !usedNames.has(h.short));
+  const name = hero?.short ?? BOT_NAMES.find(n => !usedNames.has(n)) ?? `Companion ${index}`;
   const color=HERO_COLORS.find(c=>!room.players.some(p=>p.color===c))??HERO_COLORS[index];
-  room.players.push({id:crypto.randomUUID(),name,heroClass:heroClass ?? CLASSES[index % 4],color,bot:true,ready:true,lastSeen:0});
+  room.players.push({id:crypto.randomUUID(),name,heroClass:cls,color,bot:true,ready:true,lastSeen:0,...(hero?{heroId:hero.id}:{})});
 }
 
 export class RoomService {
@@ -102,10 +116,10 @@ export class RoomService {
   ai?:GameAI;
   constructor(store: RoomStore, now: () => number = Date.now, ai?:GameAI) { this.store=store; this.now=now;this.ai=ai; }
 
-  async create(input: {name:unknown;heroClass:unknown;options?:unknown;requestId?:unknown}): Promise<{session:Session;room:RoomView}> {
-    const name=nameOf(input.name), heroClass=classOf(input.heroClass);
+  async create(input: {name:unknown;heroClass:unknown;heroId?:unknown;options?:unknown;requestId?:unknown}): Promise<{session:Session;room:RoomView}> {
+    const name=nameOf(input.name), heroClass=classOf(input.heroClass), heroId=heroOf(input.heroId,heroClass);
     const options=validateOptions(input.options ?? DEFAULT_OPTIONS);
-    const receipt=await admission('create',input.requestId,{name,heroClass,options});
+    const receipt=await admission('create',input.requestId,heroId?{name,heroClass,heroId,options}:{name,heroClass,options});
     const {playerId,token}=receipt,tokenHash=await hash(token),now=this.now();
     for(let i=0;i<12;i++) {
       const code=makeCode(await hash(`${receipt.requestHash}:${i}`));
@@ -119,7 +133,7 @@ export class RoomService {
         continue;
       }
       if(options.creation&&(options.creation.hero.name!==name||options.creation.hero.heroClass!==heroClass))return reject('The selected character must match your hero.');
-      const room:RoomView={code,hostId:playerId,version:1,players:[{id:playerId,name,heroClass,color:options.creation?.hero.color??HERO_COLORS[0],bot:false,ready:true,lastSeen:now}],options,game:null,createdAt:now};
+      const room:RoomView={code,hostId:playerId,version:1,players:[{id:playerId,name,heroClass,color:options.creation?.hero.color??HERO_COLORS[0],bot:false,ready:true,lastSeen:now,...(heroId?{heroId}:{})}],options,game:null,createdAt:now};
       for(let j=0;j<options.companions;j++) addBot(room);
       const record:StoredRoom={revision:1,room,tokenHashes:{[playerId]:tokenHash},requests:[],admissions:[{kind:'create',requestHash:receipt.requestHash,payloadHash:receipt.payloadHash,playerId}],expiresAt:now+ROOM_LIFETIME};
       if(await this.store.insert(record)) return {session:{code,playerId,token},room:publicView(record)};
@@ -131,9 +145,9 @@ export class RoomService {
     return reject('Could not create a room. Please try again.',503,'BUSY');
   }
 
-  async join(input: {code:unknown;name:unknown;heroClass:unknown;requestId?:unknown}): Promise<{session:Session;room:RoomView}> {
-    const code=this.code(input.code), name=nameOf(input.name),heroClass=classOf(input.heroClass);
-    const receipt=await admission('join',input.requestId,{name,heroClass},code);
+  async join(input: {code:unknown;name:unknown;heroClass:unknown;heroId?:unknown;requestId?:unknown}): Promise<{session:Session;room:RoomView}> {
+    const code=this.code(input.code), name=nameOf(input.name),heroClass=classOf(input.heroClass), wanted=heroOf(input.heroId,heroClass);
+    const receipt=await admission('join',input.requestId,wanted?{name,heroClass,heroId:wanted}:{name,heroClass},code);
     const {playerId,token}=receipt,tokenHash=await hash(token);
     for(let i=0;i<20;i++) {
       const record=await this.load(code), next=structuredClone(record), now=this.now();
@@ -142,7 +156,8 @@ export class RoomService {
       if(next.room.game) return reject('This adventure has started. Reconnect using the browser where you joined, or start a new room.',409,'ALREADY_STARTED');
       if(next.room.players.length>=ROOM_CAPACITY) return reject('This party is full. The host can remove a companion to make room.',409,'ROOM_FULL');
       const color=HERO_COLORS.find(c=>!next.room.players.some(p=>p.color===c)) ?? HERO_COLORS[next.room.players.length];
-      next.room.players.push({id:playerId,name,heroClass,color,bot:false,ready:false,lastSeen:now});
+      const heroId=heroOf(wanted,heroClass,next.room.players);
+      next.room.players.push({id:playerId,name,heroClass,color,bot:false,ready:false,lastSeen:now,...(heroId?{heroId}:{})});
       next.tokenHashes[playerId]=tokenHash;
       const admissions=next.admissions??[];
       next.admissions=[...admissions.filter(r=>r.kind==='create'),...admissions.filter(r=>r.kind==='join').slice(-126),{kind:'join',requestHash:receipt.requestHash,payloadHash:receipt.payloadHash,playerId}];
@@ -152,6 +167,14 @@ export class RoomService {
       if(await this.store.compareAndSwap(code,record.revision,next)) return {session:{code,playerId,token},room:publicView(next)};
     }
     return reject('The room is busy. Try joining again.',503,'BUSY');
+  }
+
+  /** The invitation: tale, host and who is already at the fire. Needs only the party code, never a token. */
+  async preview(codeInput: unknown): Promise<RoomPreview> {
+    const code=this.code(codeInput), record=await this.load(code), room=record.room;
+    const host=room.players.find(p=>p.id===room.hostId);
+    return {code,title:room.options.creation?.story.title??'An adventure',world:room.options.creation?.story.world??'',biome:room.options.biome,host:host?.name??'',
+      started:!!room.game,capacity:ROOM_CAPACITY,players:room.players.map(p=>({name:p.name,heroClass:p.heroClass,bot:p.bot,ready:p.ready,...(p.heroId?{heroId:p.heroId}:{})}))};
   }
 
   async get(codeInput: unknown, token: string, knownVersion?: number, passive=false): Promise<{room:RoomView}|{unchanged:true;version:number;players:RoomPlayer[];hostId:string}> {

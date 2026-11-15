@@ -78,8 +78,8 @@ The screens are being rebuilt from the team's design canvas ("Wandering Storytel
 ## Screens outside the board
 
 - **Narrator conversation.** Questions and replies form a thread of the newest twelve exchanges, kept in memory for the open adventure. It is presentation only: nothing is saved, replayed or sent as context.
-- **Join party.** Code first, hero second. The server has no room preview, so the code is checked for shape (six letters) before the hero step and for existence when joining.
-- **Party camp.** The title comes from the created story. Open seats are counted against the ten-player limit.
+- **Join party.** Code first, hero second. Once all six letters are in, `GET /api/rooms/:code/preview` returns the invitation (tale, host, who is at the fire, seats) without a session token; the party code is the only credential. Joiners then pick from the same 16-hero roster as solo setup; heroes already in the party are marked taken, and the server rejects a hero who is already there (`HERO_TAKEN`).
+- **Party camp.** The party stands in an arc around one fire (`app/ui/PartyCamp.tsx`), each player drawn as their roster hero or, without one, their class figure. Companions added by the host become roster heroes nobody has taken. The title comes from the created story. Open seats are counted against the ten-player limit. On phones the scene shrinks and the party is listed beneath it.
 - **Results.** The recap reads the final game state. Damage and critical hits come from the retained event log (the newest 180 events), so a long adventure is told that the totals cover its last part.
 
 ## Styles

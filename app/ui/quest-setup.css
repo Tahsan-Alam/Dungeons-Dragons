@@ -197,3 +197,5 @@ html:root[data-color-mode][data-theme] body .realm button.tc-voice-btn:disabled{
  .tc-scene{height:260px}
  .tc-tale{min-height:260px}
 }
+.qs-tile.taken .realm-portrait{opacity:.82}
+.qs-tile.taken .qs-tile-name span{display:inline-block;align-self:flex-start;margin-top:1px;padding:0 5px;background:#2a323d;color:#c4ccd5;font-weight:600}

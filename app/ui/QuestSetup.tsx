@@ -12,7 +12,7 @@ import {RealmButton,QuestSteps,Portrait,Diamond,CheckBadge} from './RealmKit';
 import TaleConversation from './TaleConversation';
 import './quest-setup.css';
 
-type Props={mode:'solo'|'online';onBack:()=>void;onStart:(name:string,cls:HeroClass,options:GameOptions,code:string)=>unknown;busy:boolean;quick?:boolean;onAISettings?:()=>void};
+type Props={mode:'solo'|'online';onBack:()=>void;onStart:(name:string,cls:HeroClass,options:GameOptions,code:string,heroId?:string)=>unknown;busy:boolean;quick?:boolean;onAISettings?:()=>void};
 type Saved={v:1;step:number;gm:string;tale:string;custom:StoryBlueprint|null;hero:string;length:'short'|'standard'|'long';rules:'simple'|'classic';seed:string;companions:number};
 const ROLES:('All'|Role)[]=['All','Tank','Damage','Support','Control'];
 const LENGTHS=[['short','Short','1 chapter · about 30 minutes'],['standard','Standard','3 chapters · about 90 minutes'],['long','Long','5 chapters · an evening or two']] as const;
@@ -67,7 +67,7 @@ export default function QuestSetup({mode,onBack,onStart,busy,quick=false,onAISet
   const options:GameOptions={...DEFAULT_OPTIONS,rules:s.rules,seed:s.seed.trim()||fresh().seed,duration:s.length,companions:s.companions,aiEnabled:savedAI,
    narrator:narratorTone(gm.profile),biome:story.biome,narratorPrompt:[gm.profile.persona,...gm.profile.speakingStyle].join('. ').slice(0,400),characterPrompt:hero.profile.background,
    creation:{narrator:gm.profile,story,hero:hero.profile}};
-  void onStart(hero.profile.name,hero.profile.heroClass,options,'');
+  void onStart(hero.profile.name,hero.profile.heroClass,options,'',hero.id);
  }
 
  // Talking a tale through with the Game Master replaces the Tale step until the player keeps a tale or goes back.
@@ -159,7 +159,8 @@ function TaleStep({s,gm,story,art,pick,idea,setIdea,shape,tellAnother,pending,er
  </div>;
 }
 
-function HeroStep({hero,role,setRole,pick,sheet,openSheet}:{hero:HeroPreset;role:'All'|Role;setRole:(r:'All'|Role)=>void;pick:(id:string)=>void;sheet:boolean;openSheet:()=>void}){
+/** The roster and the hero's stage. Also used when joining a party, where heroes already at the fire are marked taken. */
+export function HeroStep({hero,role,setRole,pick,sheet,openSheet,taken={}}:{hero:HeroPreset;role:'All'|Role;setRole:(r:'All'|Role)=>void;pick:(id:string)=>void;sheet:boolean;openSheet:()=>void;taken?:Record<string,string>}){
  const wide=hero.id==='mira';
  const stage=<div className="qs-stage" aria-label={`${hero.name}, ${hero.className} ${hero.subclass}`} role="img">
   <img className="realm-fade qs-stage-set" src="/art/scenes/hero-stage.svg" alt="" style={{opacity:wide?0:1}}/>
@@ -193,11 +194,11 @@ function HeroStep({hero,role,setRole,pick,sheet,openSheet}:{hero:HeroPreset;role
     <span>16 heroes · two may share a class</span>
    </div>
    <div className="qs-grid realm-panel" role="radiogroup" aria-label="Heroes">
-    {shown.map(h=><button key={h.id} type="button" role="radio" aria-checked={h.id===hero.id} aria-label={`${h.name}, ${h.subclass}`} className="realm-choice qs-tile" onClick={()=>pick(h.id)}>
+    {shown.map(h=>{const by=taken[h.id];return <button key={h.id} type="button" role="radio" aria-checked={h.id===hero.id} aria-disabled={by?true:undefined} aria-label={by?`${h.name}, ${h.subclass}, taken by ${by}`:`${h.name}, ${h.subclass}`} className={`realm-choice qs-tile${by?' taken':''}`} onClick={()=>{if(!by)pick(h.id);}}>
      <Portrait art={h.art} face={h.face} ratio={HERO_ART_RATIO} width={120} height={58} scale={1.33} eye={0.42}/>
-     <span className={`qs-tile-name${h.id===hero.id?' realm-tint':''}`}><strong>{h.name}</strong><span>{h.subclass}</span></span>
+     <span className={`qs-tile-name${h.id===hero.id?' realm-tint':''}`}><strong>{h.name}</strong><span>{by?`Taken · ${by}`:h.subclass}</span></span>
      {h.id===hero.id?<Diamond/>:null}
-    </button>)}
+    </button>;})}
    </div>
   </div>
   <section className="qs-hero-stage" aria-live="polite">

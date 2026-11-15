@@ -164,8 +164,8 @@ export function useSession(){
    throw e;
   }
  }
- async function createRoom(name:string,heroClass:HeroClass,options:GameOptions){return guarded(()=>admit('/api/rooms',{name,heroClass,options}));}
- async function joinRoom(code:string,name:string,heroClass:HeroClass){return guarded(()=>admit('/api/rooms/join',{code:code.trim().toUpperCase(),name,heroClass}));}
+ async function createRoom(name:string,heroClass:HeroClass,options:GameOptions,heroId?:string){return guarded(()=>admit('/api/rooms',heroId?{name,heroClass,heroId,options}:{name,heroClass,options}));}
+ async function joinRoom(code:string,name:string,heroClass:HeroClass,heroId?:string){return guarded(()=>admit('/api/rooms/join',heroId?{code:code.trim().toUpperCase(),name,heroClass,heroId}:{code:code.trim().toUpperCase(),name,heroClass}));}
  async function openSaved(id:string){
   if(deleting.current.has(id))return false;
   await reloadLibrary(id);
