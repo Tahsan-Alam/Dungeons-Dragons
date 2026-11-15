@@ -1,3 +1,3 @@
 # Title screen artwork
 
-`ruined-castle.svg` is the main menu background: a ruined castle above a mist-filled valley, seen from a rocky overlook through a crumbling arch, with a dragon gliding past a band of warm light. It is original project artwork drawn as SVG for Painted Realms. The menu, title and wash are drawn by the interface over it, so the image contains no text.
+`painted-realms-title.webp` is the main menu background: a ruined castle on a cliff above a mist-filled valley, a long bridge, a dragon gliding past a band of warm light, and the Painted Realms logo painted in the top left. It is original project artwork for Painted Realms. Because the logo is part of the image, the interface keeps the page heading for screen readers only and draws just the menu and a readability wash over it.

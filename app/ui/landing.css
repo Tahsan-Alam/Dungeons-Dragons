@@ -1,17 +1,19 @@
-/* Camp: a full-screen game title menu over a ruined castle above a misty valley (public/art/title). The title sits top left in Cinzel,
-   the menu is a plain ivory list below it, with a bar behind the item under the pointer or focus.
+/* Camp: a full-screen game title menu over the painted title art (public/art/title). The Painted Realms logo is part of that image,
+   top left, so the heading is kept for screen readers only. The menu is a plain ivory list below the logo, with a bar behind the item
+   under the pointer or focus.
    The scene, wash and text colours are fixed, so the menu reads the same in light and dark mode. */
 @font-face{font-family:'Cinzel';src:url('/fonts/cinzel-latin-600.woff2') format('woff2');font-weight:600;font-style:normal;font-display:swap}
 .title-screen{--title-font:var(--heading);--title-ink:#efe6d2;--title-dim:#efe6d2c7;--title-bar:#f4f6f138;position:relative;display:flex;min-height:100dvh;overflow:hidden;background:#141a23;color:var(--title-ink)}
 .title-art{position:absolute;inset:0;overflow:hidden}
-/* The scene covers the frame. Cropping keeps the castle on the right; the dark arch on the left can be lost first on narrow screens. */
-.title-art>img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:72% 50%;user-select:none}
-/* The scene darkens its own left third, so the wash stays light. */
-.title-art::after{content:'';position:absolute;inset:0;background:linear-gradient(90deg,#0b0f16a0 0%,#0b0f1640 30%,#0b0f1600 48%)}
-.title-panel{position:relative;z-index:1;display:flex;flex-direction:column;flex:1;min-width:0;padding:clamp(22px,5.5vh,56px) clamp(20px,6.5vw,96px) clamp(18px,4.5vh,44px)}
-.title-logo{margin:0;font:600 clamp(38px,4.4vw,60px)/1.02 Cinzel,var(--title-font);letter-spacing:.04em;color:var(--title-ink);text-shadow:0 2px 18px #00000099}
-/* The menu sits below the title, a little above the middle of the screen, as on the design board. */
-.title-nav{margin-top:clamp(32px,15vh,150px);padding-top:0;width:min(360px,100%)}
+/* The art covers the frame from its top left corner, so the painted logo is never cropped; the castle on the right goes first.
+   Scaled to cover, the art is max(100vw, 179vh) wide and max(100vh, 55.8vw) tall; the logo spans about 10-42% across and ends 47% down. */
+.title-art>img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:0 0;user-select:none}
+/* The mist under the logo is pale, so a wash from the lower left keeps the ivory menu readable without dimming the logo. */
+.title-art::after{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 70% 62% at 8% 100%,#0b0f16d0 0%,#0b0f1690 45%,#0b0f1600 100%)}
+.title-screen .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+/* The menu starts just below the painted logo and lines up with its left edge. */
+.title-panel{position:relative;z-index:1;display:flex;flex-direction:column;flex:1;min-width:0;padding:max(52dvh,29vw) 20px clamp(18px,4.5vh,44px) max(20px,min(9vw,16dvh))}
+.title-nav{width:min(360px,100%)}
 .title-crumb{margin:0 0 10px 14px;font:500 13px/1.4 var(--title-font);letter-spacing:.16em;text-transform:uppercase;color:var(--title-dim)}
 .title-menu{display:flex;flex-direction:column;gap:2px;margin:0;padding:0;list-style:none}
 /* The shared raised button surface is replaced by flat text; these selectors outrank it on purpose. */
@@ -27,17 +29,19 @@ html:root[data-color-mode][data-theme] body .title-screen .title-panel .title-me
 .title-item-label{display:flex;flex-direction:column;gap:3px;flex:1;min-width:0}
 .title-item-label small{font-size:12px;font-weight:400;line-height:1.4;letter-spacing:0;text-transform:none;color:var(--title-dim);overflow-wrap:anywhere}
 .title-menu .title-back{margin-top:10px}
+/* On phones the art is drawn wider than the screen so the logo fills the top, then fades into the screen colour behind the menu. */
 @media(max-width:650px){
- .title-art::after{background:linear-gradient(0deg,#0b0f16e6 0%,#0b0f16a8 46%,#0b0f1640 100%)}
- .title-panel{padding:26px 14px 22px}
- .title-logo{font-size:38px}
+ .title-art>img{inset:0 auto auto -7vw;width:220vw;height:auto;object-fit:fill;-webkit-mask-image:linear-gradient(180deg,#000 62%,transparent 100%);mask-image:linear-gradient(180deg,#000 62%,transparent 100%)}
+ .title-art::after{background:linear-gradient(0deg,#141a23 0%,#141a23cc 30%,#141a2300 55%)}
+ .title-panel{padding:min(66vw,46dvh) 14px 22px}
  .title-nav{margin-top:auto;width:100%}
  html:root[data-color-mode][data-theme] body .title-screen .title-panel .title-menu button.title-item{min-height:46px;font-size:18px}
 }
+/* Short landscape screens have no room under the logo, so the menu moves to the right of it over a darker wash. */
 @media(max-height:560px) and (orientation:landscape){
- .title-panel{padding:14px clamp(16px,5vw,56px) 12px}
- .title-logo{font-size:28px}
- .title-nav{margin-top:14px}
+ .title-art::after{background:linear-gradient(90deg,#0b0f1600 38%,#0b0f16b0 52%,#0b0f16c8 100%)}
+ .title-panel{justify-content:center;padding:12px clamp(16px,4vw,40px) 12px 50vw}
+ .title-nav{width:min(320px,100%)}
  html:root[data-color-mode][data-theme] body .title-screen .title-panel .title-menu button.title-item{min-height:34px;padding:4px 12px;font-size:15px}
  .title-item-label small{font-size:11px}
  .title-menu .title-back{margin-top:4px}
