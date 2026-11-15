@@ -10,6 +10,7 @@ test('every built-in Game Master, tale and hero passes the same validation as AI
  for(const g of GAME_MASTERS)assert.deepEqual(parseNarrator(g.profile),g.profile,g.id);
  for(const t of TALES){assert.deepEqual(parseStory(t.story),t.story,t.id);assert.equal(t.story.biome,t.biome);}
  for(const h of HEROES)assert.deepEqual(parseHero(h.profile),h.profile,h.id);
+ for(const h of HEROES)assert.ok(h.intro.length>20&&h.intro.length<=110&&h.story.length>120&&h.profile.background===h.story,`${h.id} needs an intro and a story`);
 });
 
 test('the roster has sixteen heroes, two for each of the eight classes, with unique ids',()=>{

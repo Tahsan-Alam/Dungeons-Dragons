@@ -56,15 +56,15 @@ export const TALES:readonly TalePreset[]=[
 /** The eight classes as the designs present them. `heroClass` is the rules class each hero plays as. */
 export type ClassName='Warrior'|'Guardian'|'Rogue'|'Ranger'|'Mage'|'Cleric'|'Bard'|'Druid';
 export type Role='Tank'|'Damage'|'Support'|'Control';
-export interface HeroPreset {id:string;name:string;short:string;className:ClassName;subclass:string;role:Role;epithet:string;intro:string;art:string;face:FaceCentre;profile:HeroProfile}
+export interface HeroPreset {id:string;name:string;short:string;className:ClassName;subclass:string;role:Role;epithet:string;intro:string;story:string;art:string;face:FaceCentre;profile:HeroProfile}
 
 // Warrior is the rules' knight; every other class plays as itself.
 const PLAYS_AS:Record<ClassName,HeroClass>={Warrior:'knight',Guardian:'guardian',Rogue:'rogue',Ranger:'ranger',Mage:'mage',Cleric:'cleric',Bard:'bard',Druid:'druid'};
 const ROLE:Record<ClassName,Role>={Warrior:'Tank',Guardian:'Tank',Rogue:'Damage',Ranger:'Damage',Mage:'Damage',Cleric:'Support',Bard:'Support',Druid:'Control'};
 
-type Row=[id:string,name:string,short:string,className:ClassName,subclass:string,face:[number,number],colour:number,epithet:string,traits:[string,string],intro?:string];
+type Row=[id:string,name:string,short:string,className:ClassName,subclass:string,face:[number,number],colour:number,epithet:string,traits:[string,string]];
 const ROWS:Row[]=[
- ['corin','Corin Vale','Corin','Warrior','Champion',[.52,.27],0,'The Last Banner-Bearer',['Steady','Stubborn'],'The last Grey Lantern left standing at Hollow Ford. He takes the front of every fight.'],
+ ['corin','Corin Vale','Corin','Warrior','Champion',[.52,.27],0,'The Last Banner-Bearer',['Steady','Stubborn']],
  ['brunna','Brunna Oxthroat','Brunna','Warrior','Berserker',[.52,.28],0,'Ash-Born',['Fierce','Loyal']],
  ['ilsa','Ilsa Marrow','Ilsa','Guardian','Sentinel',[.52,.29],9,'The Gatekeeper of Thorn Pass',['Watchful','Patient']],
  ['aldric','Sir Aldric Fenn','Aldric','Guardian','Paladin',[.505,.28],7,'The Oath of the Unmarked Grave',['Devout','Honourable']],
@@ -81,9 +81,44 @@ const ROWS:Row[]=[
  ['fenn','Fenn Greystone','Fenn','Druid','Shapeshifter',[.51,.27],8,'The Boy Who Forgot to Change Back',['Shy','Wild']],
  ['granny','Granny Marrow','Granny','Druid','Wilds',[.52,.29],4,'The Storm-Speaker of the Salt Marsh',['Sharp','Stormy']],
 ];
-export const HEROES:readonly HeroPreset[]=ROWS.map(([id,name,short,className,subclass,[x,y],colour,epithet,traits,intro=''])=>({
- id,name,short,className,subclass,role:ROLE[className],epithet,intro,art:`/art/heroes/${id}.svg`,face:{x,y},
- profile:{name,background:intro||`${epithet}. ${className} · ${subclass}.`,personality:[...traits],heroClass:PLAYS_AS[className],color:HERO_COLORS[colour]},
+/** Each hero's line under their name, and the short story on their sheet (also the background the Game Master reads, so at most 240 characters). Drawn from the player character backstories. */
+const STORIES:Record<string,[intro:string,story:string]>={
+ corin:['The last Grey Lantern left standing at Hollow Ford. He takes the front of every fight.',
+  'Corin carried the Grey Lanterns’ banner home from Hollow Ford and told forty families how their soldiers fell. Now he fights under no flag but his word, with forty notches under his shield strap and a vow never to add another.'],
+ brunna:['She walks in the red, a battle trance where pain disappears. She fears what she does there.',
+  'Brunna’s clan taught her to walk in the red. Then she woke in a rival clan’s burning hall with blood on her hands and no memory. She left that night. She still fights, and asks her companions to stop her if she goes too far.'],
+ ilsa:['Eleven years alone at Thorn Pass. Then her order vanished, and she came down the mountain.',
+  'For eleven years Ilsa held Thorn Pass alone with a goat, a bell and a tower shield. When the supplies stopped, she found her order’s fortress empty and the tables still set. Now she carries her shield into the world to learn why.'],
+ aldric:['A temple knight who obeyed one order too many. Now he guards the people the powerful forget.',
+  'Aldric cleared a village his temple called plague-worshippers, then learned they only owned land it wanted. He buried them himself and swore a new oath: protect the inconvenient. His holy light still answers. He isn’t sure why.'],
+ vess:['Twelve contracts, no failures. The thirteenth had her own name on it.',
+  'Raised by the Quiet House to be forgettable, Vess never failed a contract. Her thirteenth came sealed, with her own name inside. She survived the ambush. Now she hunts whoever signed it, and wonders about the life she never had.'],
+ pip:['Duke’s nephew, travelling priest, tax inspector. None of it true, all of it profitable.',
+  'Pip has been a duke’s nephew, a priest and, for one glorious week, a baroness’s fiancé. One con went too far: a fake cure sold to a fever town. Now he only robs those who can afford it, and keeps a token from every mark.'],
+ talen:['The best tracker in Greywood, until it burned. He saves one arrow for the man who ordered it.',
+  'Talen was out hunting the night a timber company burned Greywood and his village with it. He reads tracks like books and hunts monsters for coin, carrying one owl-fletched arrow for the man who gave the order.'],
+ mira:['Found living with wolves at six. Now she fights beside her wolf, Ash.',
+  'Found at six living with wolves, Mira never quite belonged in the village that took her in. Then a wolf pup named Ash came to her door. They hunt in perfect rhythm, searching for why a little girl was left alone in the woods.'],
+ seren:['Struck by lightning at nine, she walked away laughing. Her storms are growing.',
+  'Lightning found Seren at nine, and sparks have followed her since. Expelled from the Academy of the Five Winds for taking half a tower with her, she teaches herself now. Her storms grow past her control, and she wants to know why.'],
+ lucan:['A gravedigger’s son who learned the forbidden art to bring his sister home.',
+  'When fever took his little sister Nell, gravedigger’s son Lucan stole forbidden books and taught himself necromancy. He raises the restless dead gently and lets them rest after. He hasn’t brought Nell back. Not yet.'],
+ amara:['She healed both armies through a three-hundred-day siege. Everyone deserves saving.',
+  'Through the three-hundred-day siege of Kesh, Amara healed soldiers from both armies. The victors executed every healer who treated the enemy. She escaped with bandages and a cracked holy symbol, and still never asks whose side you’re on.'],
+ hagan:['A blacksmith turned battle priest. His god answers with fire in his hammer.',
+  'When raiders burned his mountain shrine, blacksmith Hagan prayed one angry prayer and went after them alone. His god answered with fire. He laughs loud and leads from the front, but the raiders wore holy symbols too.'],
+ elowen:['A royal archivist who memorised a song that could topple a king.',
+  'Elowen found a ballad telling how the king really took his throne. She memorised it, burned the copy, and sang her guards to sleep to escape her cell. Now she travels as a performer, passing the forbidden song to anyone who’ll listen.'],
+ nerys:['Found singing on a broken door the night her city sank. When she sings, people stop.',
+  'Nerys was found floating on a broken door the night her city sank, singing a song no one taught her. Her voice can calm a riot or make a cruel man forget his name. She seeks the drowned city, sure someone below still sings back.'],
+ fenn:['He spent three years as a bear. Each time he changes, part of him wants to stay.',
+  'Fenn fled slavers as a bear and stayed one for three years, until a druid circle coaxed him home. Now he becomes wolf, hawk or bear at will, though part of him always wants to stay. He fights for forests and anyone who’s been caged.'],
+ granny:['Somewhere between sixty and two hundred years old. The weather usually listens to her.',
+  'Granny Marrow tended the Salt Marsh for decades, coaxing reeds over sinking paths and calling fog to hide neighbours from tax men. When a duke drained it for a road, the land fell silent. She packed her pipe and went to find him.'],
+};
+export const HEROES:readonly HeroPreset[]=ROWS.map(([id,name,short,className,subclass,[x,y],colour,epithet,traits])=>({
+ id,name,short,className,subclass,role:ROLE[className],epithet,intro:STORIES[id][0],story:STORIES[id][1],art:`/art/heroes/${id}.svg`,face:{x,y},
+ profile:{name,background:STORIES[id][1],personality:[...traits],heroClass:PLAYS_AS[className],color:HERO_COLORS[colour]},
 }));
 
 export const gameMaster=(id:string)=>GAME_MASTERS.find(g=>g.id===id);
