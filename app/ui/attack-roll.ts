@@ -1,6 +1,6 @@
 import type {Actor,GameAction,GameState} from '../../game/types';
 import {getValidTargets} from '../../game/engine.ts';
-import {CLASS_INFO} from '../../game/types.ts';
+import {CLASS_INFO,NO_ROLL_ABILITY} from '../../game/types.ts';
 
 export type AttackAction=Extract<GameAction,{targetId:string}>;
 export interface AttackRollRequest {
@@ -15,7 +15,7 @@ export interface AttackRollRequest {
 
 /** Selecting a target never advances the random generator or submits a command. */
 export function prepareAttackRoll(game:GameState,actor:Actor,action:AttackAction):AttackRollRequest|null {
- if(actor.bot||game.activeActorId!==actor.id||(action.type==='ability'&&actor.heroClass==='cleric'))return null;
+ if(actor.bot||game.activeActorId!==actor.id||(action.type==='ability'&&!!NO_ROLL_ABILITY[actor.heroClass]))return null;
  const target=getValidTargets(game,actor,action.type==='ability').find(a=>a.id===action.targetId);
  return target?{action:{...action},actorId:actor.id,targetName:target.name,title:action.type==='ability'?CLASS_INFO[actor.heroClass].ability:'Attack',eventSequence:game.eventSequence,round:game.round,scene:game.scene}:null;
 }

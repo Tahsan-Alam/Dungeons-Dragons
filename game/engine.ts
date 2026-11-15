@@ -1,4 +1,5 @@
 import type { Actor, GameAction, GameEvent, GameOptions, GameState, HeroClass, PlayerSpec, Tile } from './types';
+import { SUPPORT_ABILITY } from './types.ts';
 import {campaignFixture,installCampaign,rememberChapter,storyGoal} from './campaign.ts';
 import {parseBlueprint} from './creation.ts';
 
@@ -12,6 +13,10 @@ const CLASS = {
   ranger: { hp: 23, ac: 14, bonus: 5, die: 6, range: 5, speed: 7 },
   mage: { hp: 20, ac: 12, bonus: 5, die: 8, range: 4, speed: 6 },
   cleric: { hp: 25, ac: 15, bonus: 4, die: 6, range: 1, speed: 6 },
+  guardian: { hp: 30, ac: 17, bonus: 4, die: 6, range: 1, speed: 5 },
+  rogue: { hp: 22, ac: 14, bonus: 6, die: 6, range: 1, speed: 7 },
+  bard: { hp: 22, ac: 13, bonus: 4, die: 6, range: 4, speed: 6 },
+  druid: { hp: 23, ac: 13, bonus: 5, die: 6, range: 4, speed: 6 },
 } as const;
 const SCENES = {
   woodland: ['The Lanternwood', 'Bramble Crossing', 'The Moonwell', 'Foxglove Hollow', 'The Dawn Tree'],
@@ -95,9 +100,14 @@ export function hasLineOfSight(game: GameState, a: { x: number; y: number }, b: 
 
 export function getValidTargets(game: GameState, actor: Actor, ability = false): Actor[] {
   if (game.status !== 'playing' || actor.hp <= 0 || actor.actionUsed || actor.defeated || (ability && actor.abilityUses < 1)) return [];
-  const healing = ability && actor.heroClass === 'cleric' && !actor.enemy;
-  const range = healing ? 4 : CLASS[actor.heroClass].range + (ability && actor.heroClass === 'ranger' ? 2 : 0);
-  return game.actors.filter(target => !target.defeated && (healing ? target.enemy === actor.enemy && target.hp < target.maxHp : target.enemy !== actor.enemy && target.hp > 0)
+  if (ability && !actor.enemy && SUPPORT_ABILITY[actor.heroClass]) {
+    // Healing light reaches a hurt ally within 4; shield wall an adjacent ally; inspire an ally within 4 who is not already inspired.
+    const cls = actor.heroClass, range = cls === 'guardian' ? 1 : 4;
+    return game.actors.filter(target => !target.defeated && target.enemy === actor.enemy && manhattan(actor, target) <= range && hasLineOfSight(game, actor, target)
+      && (cls === 'cleric' ? target.hp < target.maxHp : target.id !== actor.id && target.hp > 0 && (cls !== 'bard' || !target.inspired)));
+  }
+  const range = CLASS[actor.heroClass].range + (ability && actor.heroClass === 'ranger' ? 2 : 0);
+  return game.actors.filter(target => !target.defeated && target.enemy !== actor.enemy && target.hp > 0
     && manhattan(actor, target) <= range && hasLineOfSight(game, actor, target));
 }
 
@@ -250,6 +260,9 @@ function evaluate(game: GameState) {
 
 function beginTurn(game: GameState, actor: Actor) {
   actor.movement = actor.speed; actor.actionUsed = false; actor.guarding = false;
+  // A shield wall lasts until the guardian's next turn; roots hold for one turn.
+  for (const a of game.actors) if (a.guardedBy === actor.id) delete a.guardedBy;
+  if (actor.rooted) { actor.movement = 0; actor.rooted = false; event(game, 'action', `${actor.name} is held by roots and cannot move this turn.`, actor.id); }
   if (actor.hp <= 0 && !actor.defeated && game.options.rules === 'classic') {
     const result = die(game, 20);
     if (result === 20) {
@@ -282,10 +295,20 @@ function nextTurn(game: GameState) {
   evaluate(game);
 }
 
+/** Sneak attack: another hero stands next to the target. */
+function flanked(game: GameState, actor: Actor, target: Actor) {
+  return game.actors.some(a => a.id !== actor.id && a.enemy === actor.enemy && !a.defeated && a.hp > 0 && manhattan(a, target) === 1);
+}
+
 function strike(game: GameState, actor: Actor, target: Actor, ability: boolean) {
   const stats = CLASS[actor.heroClass];
+  // Shield wall: an enemy blow aimed at a guarded ally lands on the guardian while they stand beside them.
+  const guardian = actor.enemy && target.guardedBy ? game.actors.find(a => a.id === target.guardedBy && !a.defeated && a.hp > 0 && manhattan(a, target) <= 1) : undefined;
+  if (guardian) { event(game, 'action', `${guardian.name} steps in front of ${target.name} and takes the blow.`, guardian.id); target = guardian; }
+  const inspired = !!actor.inspired;
+  if (inspired) { actor.inspired = false; event(game, 'action', `${actor.name} attacks with inspiration (advantage).`, actor.id); }
   const first = die(game, 20);
-  const advantage = ability && actor.heroClass === 'ranger';
+  const advantage = (ability && actor.heroClass === 'ranger') || inspired;
   const disadvantage = target.guarding;
   const second = advantage !== disadvantage ? die(game, 20) : first;
   const roll = advantage && !disadvantage ? Math.max(first, second) : disadvantage && !advantage ? Math.min(first, second) : first;
@@ -300,10 +323,11 @@ function strike(game: GameState, actor: Actor, target: Actor, ability: boolean) 
   const damageDie = actor.enemy ? 4 : stats.die;
   let damage = die(game, damageDie) + (actor.enemy ? 1 : 3);
   if (roll === 20) damage += die(game, damageDie);
-  if (ability) damage += actor.heroClass === 'knight' ? 5 : 4;
+  const sneak = ability && actor.heroClass === 'rogue' && flanked(game, actor, target);
+  if (ability) damage += actor.heroClass === 'knight' ? 5 : actor.heroClass === 'rogue' ? (sneak ? 7 : 2) : 4;
   if (game.options.rules === 'simple' && target.guarding) damage = Math.max(1, Math.floor(damage / 2));
   target.hp = Math.max(0, target.hp - damage);
-  event(game, 'roll', `${actor.name} ${ability ? 'uses a special attack on' : 'hits'} ${target.name} for ${damage} damage${roll === 20 ? ' — critical hit!' : '.'} (d20: ${roll})`, actor.id, roll, {targetId:target.id,action:ability?'ability':'attack',hit:true,critical:roll===20,damage});
+  event(game, 'roll', `${actor.name} ${sneak ? 'strikes from the flank at' : ability ? 'uses a special attack on' : 'hits'} ${target.name} for ${damage} damage${roll === 20 ? ' — critical hit!' : '.'} (d20: ${roll})`, actor.id, roll, {targetId:target.id,action:ability?'ability':'attack',hit:true,critical:roll===20,damage});
   if (target.hp === 0) {
     target.defeated = target.enemy;
     target.deathSuccesses = 0; target.deathFailures = 0;
@@ -323,11 +347,21 @@ function perform(game: GameState, actor: Actor, action: GameAction) {
     if (action.type === 'ability' && actor.abilityUses < 1) throw new Error('No ability uses left in this encounter.');
     const target = getValidTargets(game, actor, action.type === 'ability').find(a => a.id === action.targetId);
     if (!target) throw new Error('Choose a valid target in range with a clear line of sight.');
-    if (action.type === 'ability' && actor.heroClass === 'cleric' && !actor.enemy) {
+    const cls = actor.heroClass, own = action.type === 'ability' && !actor.enemy;
+    if (own && cls === 'cleric') {
       const amount = Math.min(target.maxHp - target.hp, die(game, 8) + 7);
       target.hp += amount; target.deathSuccesses = 0; target.deathFailures = 0;
       actor.abilityUses--; actor.actionUsed = true;
       event(game, 'action', `${actor.name}'s healing light restores ${amount} HP to ${target.name}.`, actor.id);
+    } else if (own && cls === 'guardian') {
+      target.guardedBy = actor.id; actor.abilityUses--; actor.actionUsed = true;
+      event(game, 'action', `${actor.name} raises a shield wall beside ${target.name}. Blows meant for them land on ${actor.name} until their next turn.`, actor.id);
+    } else if (own && cls === 'bard') {
+      target.inspired = true; actor.abilityUses--; actor.actionUsed = true;
+      event(game, 'action', `${actor.name}'s song inspires ${target.name}. Their next attack has advantage.`, actor.id);
+    } else if (own && cls === 'druid') {
+      target.rooted = true; actor.abilityUses--; actor.actionUsed = true;
+      event(game, 'action', `Roots burst from the ground and hold ${target.name} in place for a round.`, actor.id);
     } else strike(game, actor, target, action.type === 'ability');
   } else if (action.type === 'guard') {
     if (actor.actionUsed) throw new Error('Your action is already used.');
@@ -399,6 +433,7 @@ function botTurn(game: GameState, actor: Actor, observe?:FrameObserver) {
     if (manhattan(actor, destination) <= 1) perform(game, actor, { type: game.chest.opened ? 'advance' : 'interact' });
     return;
   }
+  if (!actor.enemy && actor.abilityUses > 0 && supportTurn(game, actor, observe)) return;
   if (!actor.enemy && actor.heroClass === 'cleric' && actor.abilityUses > 0) {
     const ally = game.actors.filter(a => !a.enemy && !a.defeated && a.hp < a.maxHp * 0.65).sort((a, b) => a.hp / a.maxHp - b.hp / b.maxHp)[0];
     if (ally) {
@@ -413,9 +448,31 @@ function botTurn(game: GameState, actor: Actor, observe?:FrameObserver) {
   approach(game, actor, target, CLASS[actor.heroClass].range, observe);
   const available = getValidTargets(game, actor).sort((a, b) => a.hp - b.hp);
   if (available.length) {
-    const special = !actor.enemy && actor.heroClass !== 'cleric' && actor.abilityUses > 0 && available[0].hp > 7;
+    const cls = actor.heroClass;
+    const special = !actor.enemy && actor.abilityUses > 0 && available[0].hp > 7
+      && (cls === 'knight' || cls === 'ranger' || cls === 'mage' || (cls === 'rogue' && flanked(game, actor, available[0])));
     perform(game, actor, { type: special ? 'ability' : 'attack', targetId: available[0].id });
   } else if (!actor.actionUsed) perform(game, actor, { type: 'guard' });
+}
+
+/** Scripted use of the guardian, bard and druid abilities. Returns true when the turn's action was spent. */
+function supportTurn(game: GameState, actor: Actor, observe?: FrameObserver): boolean {
+  const cls = actor.heroClass, enemies = game.actors.filter(a => a.enemy && a.hp > 0 && !a.defeated);
+  if (!enemies.length) return false;
+  if (cls === 'guardian') {
+    const ward = getValidTargets(game, actor, true).filter(a => a.hp < a.maxHp * 0.7 && enemies.some(e => manhattan(e, a) <= 2)).sort((a, b) => a.hp - b.hp)[0];
+    if (ward) { perform(game, actor, { type: 'ability', targetId: ward.id }); return true; }
+  } else if (cls === 'bard') {
+    const ally = getValidTargets(game, actor, true).filter(a => enemies.some(e => manhattan(e, a) <= CLASS[a.heroClass].range + 1))[0];
+    if (ally) { perform(game, actor, { type: 'ability', targetId: ally.id }); return true; }
+  } else if (cls === 'druid') {
+    const nearest = enemies.filter(e => !e.rooted).sort((a, b) => manhattan(actor, a) - manhattan(actor, b))[0];
+    if (nearest && manhattan(actor, nearest) <= 3) {
+      approach(game, actor, nearest, CLASS.druid.range, observe);
+      if (getValidTargets(game, actor, true).some(a => a.id === nearest.id)) { perform(game, actor, { type: 'ability', targetId: nearest.id }); return true; }
+    }
+  }
+  return false;
 }
 
 /** Run scripted turns without timers. This remains authoritative on the room server. */

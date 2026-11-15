@@ -1,4 +1,5 @@
 import type {Biome,HeroClass} from './types.ts';
+import {HERO_CLASSES} from './types.ts';
 import {HERO_COLORS} from './types.ts';
 
 export const TRAITS={
@@ -28,7 +29,7 @@ const prose=(value:unknown):unknown=>typeof value==='string'?value.replace(/[\r\
 const exact=(v:Record<string,unknown>,keys:string[])=>Object.keys(v).length===keys.length&&keys.every(k=>k in v);
 export const creationText=(v:unknown,max:number):v is string=>typeof v==='string'&&!!v.trim()&&v.length<=max&&!/[<>\u0000-\u001f\u007f]/.test(v);
 const list=(v:unknown,max=3)=>Array.isArray(v)&&v.length>0&&v.length<=max&&v.every(x=>creationText(x,40))&&new Set(v.map(x=>x.toLowerCase())).size===v.length;
-const model=(v:unknown)=>['knight','ranger','mage','cleric'].includes(String(v));
+const model=(v:unknown)=>(HERO_CLASSES as readonly string[]).includes(String(v));
 export function parseNarrator(v:unknown,editing=false):NarratorProfile|null {
  v=prose(v);const text=(value:unknown,max:number)=>creationText(value,max)||(editing&&value===''),traits=(value:unknown)=>list(value)||(editing&&Array.isArray(value)&&value.length===0);
  if(!object(v)||!exact(v,['name','persona','personality','speakingStyle','appearance','model','color',...('avatar'in v?['avatar']:[]),...('voice'in v?['voice']:[])])||!text(v.name,28)||!text(v.persona,240)||!traits(v.personality)||!traits(v.speakingStyle)||!traits(v.appearance)||!model(v.model)||!HERO_COLORS.includes(String(v.color)))return null;
@@ -64,9 +65,9 @@ export function parseCreationRequest(v:unknown):CreationRequest|null {
 const obj=(properties:Record<string,unknown>)=>({type:'object',properties,required:Object.keys(properties),additionalProperties:false});
 const plain=(max:number)=>({type:'string',pattern:`^[^<>\\u0000-\\u001f\\u007f]{1,${max}}$`});
 const labels={type:'array',minItems:1,maxItems:3,items:{type:'string',pattern:'^[^\\s<>]{1,20}(?: [^\\s<>]{1,19})?$'}};
-const narratorSchema=obj({name:plain(28),persona:plain(240),personality:labels,speakingStyle:labels,appearance:labels,model:{type:'string',enum:['knight','ranger','mage','cleric']},color:{type:'string',enum:HERO_COLORS}});
+const narratorSchema=obj({name:plain(28),persona:plain(240),personality:labels,speakingStyle:labels,appearance:labels,model:{type:'string',enum:[...HERO_CLASSES]},color:{type:'string',enum:HERO_COLORS}});
 const storySchema=obj({title:plain(80),synopsis:plain(700),timeline:plain(80),world:plain(80),locations:{type:'array',minItems:1,maxItems:4,items:plain(60)},biome:{type:'string',enum:['woodland','ruins','coast']}});
-const heroSchema=obj({name:plain(24),background:plain(240),personality:labels,heroClass:{type:'string',enum:['knight','ranger','mage','cleric']},color:{type:'string',enum:HERO_COLORS}});
+const heroSchema=obj({name:plain(24),background:plain(240),personality:labels,heroClass:{type:'string',enum:[...HERO_CLASSES]},color:{type:'string',enum:HERO_COLORS}});
 const creativeNarratorSchema=obj({...narratorSchema.properties,avatar:obj({form:{type:'string',enum:NARRATOR_FORMS},accessory:{type:'string',enum:NARRATOR_ACCESSORIES}}),voice:{type:'string',enum:NARRATOR_VOICES}});
 const nullable=(schema:unknown)=>({anyOf:[schema,{type:'null'}]});
 export function creationSchema(action:CreationAction,category?:TraitCategory,draftVersion=0){return obj({reply:plain(400),...(action==='guide'?{guide:obj({proposal:nullable(obj({baseVersion:{type:'integer',enum:[draftVersion]},narrator:nullable(creativeNarratorSchema),story:nullable(storySchema),hero:nullable(heroSchema)}))})}:action==='narrators'?{narrators:{type:'array',minItems:3,maxItems:3,items:narratorSchema}}:action==='story'?{story:storySchema}:action==='heroes'?{heroes:{type:'array',minItems:3,maxItems:3,items:heroSchema}}:action==='hero'?{hero:heroSchema}:action==='trait'?{trait:obj({accepted:{type:'boolean'},suggestion:{type:'string',enum:category?[...TRAITS[category]]:[...TRAITS.personality]}})}:{sample:plain(180)})});}

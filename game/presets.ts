@@ -58,8 +58,8 @@ export type ClassName='Warrior'|'Guardian'|'Rogue'|'Ranger'|'Mage'|'Cleric'|'Bar
 export type Role='Tank'|'Damage'|'Support'|'Control';
 export interface HeroPreset {id:string;name:string;short:string;className:ClassName;subclass:string;role:Role;epithet:string;intro:string;art:string;face:FaceCentre;profile:HeroProfile}
 
-// Until the class expansion lands, the four new classes play as the nearest existing rules class.
-const PLAYS_AS:Record<ClassName,HeroClass>={Warrior:'knight',Guardian:'knight',Rogue:'ranger',Ranger:'ranger',Mage:'mage',Cleric:'cleric',Bard:'cleric',Druid:'mage'};
+// Warrior is the rules' knight; every other class plays as itself.
+const PLAYS_AS:Record<ClassName,HeroClass>={Warrior:'knight',Guardian:'guardian',Rogue:'rogue',Ranger:'ranger',Mage:'mage',Cleric:'cleric',Bard:'bard',Druid:'druid'};
 const ROLE:Record<ClassName,Role>={Warrior:'Tank',Guardian:'Tank',Rogue:'Damage',Ranger:'Damage',Mage:'Damage',Cleric:'Support',Bard:'Support',Druid:'Control'};
 
 type Row=[id:string,name:string,short:string,className:ClassName,subclass:string,face:[number,number],colour:number,epithet:string,traits:[string,string],intro?:string];
