@@ -9,7 +9,7 @@ import {useCreation} from './useCreation';
 import {useLiveNarrator} from './useLiveNarrator';
 import {adoptLegacyAIUnlock,useAIPreference} from './ai-preferences';
 import LiveTranscript from './LiveTranscript';
-import {RealmButton,QuestSteps,Portrait} from './RealmKit';
+import {RealmButton,RealmTools,QuestSteps,Portrait} from './RealmKit';
 
 type Line={role:'player'|'narrator';text:string};
 type Access={available:boolean;unlocked:boolean;audioAvailable:boolean};
@@ -67,7 +67,7 @@ export default function TaleConversation({gm,initialIdea,initialStory,onKeep,onB
  const scene=shown?SCENE_FOR_BIOME[shown.biome].scene:null;
 
  return <main className="realm qs tc" aria-labelledby="tc-title">
-  <header className="qs-top"><h1 id="tc-title">Shape a tale with {gm.title.replace('The ','the ')}</h1><QuestSteps current={1}/></header>
+  <header className="qs-top"><h1 id="tc-title">Shape a tale with {gm.title.replace('The ','the ')}</h1><div className="qs-top-end"><RealmTools/><QuestSteps current={1}/></div></header>
   <div className="tc-main">
    <section className="tc-scene" aria-label={`${gm.title} in their scene`}>
     <img className="tc-backdrop" src={gm.scene} alt=""/>

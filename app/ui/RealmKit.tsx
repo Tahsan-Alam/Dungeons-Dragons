@@ -1,10 +1,24 @@
 'use client';
+import {createContext,useContext} from 'react';
 import type {ButtonHTMLAttributes,CSSProperties,ReactNode} from 'react';
+import {Icon} from './Art';
 import {portraitCrop} from '../../game/presets';
 import type {FaceCentre} from '../../game/presets';
 import './realm-kit.css';
 
 /* Shared controls for the redesigned screens. Screens wrap their root in `className="realm"`. */
+
+/** Full-window screens have no app header; they reach the guide and settings through this. */
+export const RealmToolsContext=createContext<{onHelp:()=>void;onSettings:()=>void}|null>(null);
+/** The Adventurer's guide and Table settings as two quiet icons, framed like the step tracker beside them. */
+export function RealmTools(){
+ const tools=useContext(RealmToolsContext);
+ if(!tools)return null;
+ return <div className="realm-tools" role="group" aria-label="Guide and settings">
+  <button type="button" className="realm-tool" aria-label="Adventurer’s guide" data-tooltip="Adventurer’s guide" onClick={tools.onHelp}><Icon name="book" size={18}/></button>
+  <button type="button" className="realm-tool" aria-label="Table settings" data-tooltip="Table settings" onClick={tools.onSettings}><Icon name="gear" size={18}/></button>
+ </div>;
+}
 
 type ButtonProps=ButtonHTMLAttributes<HTMLButtonElement>&{variant?:'primary'|'secondary';small?:boolean;minWidth?:number;children:ReactNode};
 /** Clipped-corner action. Primary is the steel-blue main action of a group; secondary is a dark face in a slate edge. */

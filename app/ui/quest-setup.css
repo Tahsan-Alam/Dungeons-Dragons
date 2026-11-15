@@ -2,7 +2,7 @@
 /* The setup is a full-window screen with no app header (its own Back leads home); it scrolls only when the window is too short. --qs-h is the height left for a step. */
 .app-root:is([data-screen=solo],[data-screen=online],[data-screen=join]) .app-header{display:none}
 .app-root:is([data-screen=solo],[data-screen=online],[data-screen=join])>.app-content>.qs{height:100%}
-.qs{--qs-h:calc(100dvh - 176px);box-sizing:border-box;display:grid;grid-template-rows:auto minmax(0,1fr) auto;gap:14px;width:100%;flex:1 1 auto;min-height:0;overflow-y:auto;overscroll-behavior:contain;padding:20px clamp(16px,3.6vw,48px) 20px;
+.qs{--qs-h:calc(100dvh - 176px);box-sizing:border-box;display:grid;grid-template-columns:minmax(0,1fr);grid-template-rows:auto minmax(0,1fr) auto;gap:14px;width:100%;flex:1 1 auto;min-height:0;overflow-y:auto;overscroll-behavior:contain;padding:20px clamp(16px,3.6vw,48px) 20px;
  background:radial-gradient(ellipse at 60% 40%,#18202c,#0a0e14 75%)}
 .qs-top{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}
 .qs-top h1{margin:0;font-size:clamp(26px,2.8vw,36px);line-height:1.1;outline:none}
@@ -153,7 +153,7 @@ html:root[data-color-mode][data-theme] body .realm button.qs-seg-option[aria-che
 
 /* ---- Shape a tale with the Game Master: the narrator in their scene, the tale forming beside them, one dialogue panel below. ---- */
 .tc{grid-template-rows:auto minmax(0,1fr) auto auto}
-.tc-main{display:grid;grid-template-columns:minmax(0,1fr) minmax(300px,380px);gap:20px;height:clamp(210px,calc(var(--qs-h) - 236px),460px);min-height:0}
+.tc-main{display:grid;grid-template-columns:minmax(0,1fr) minmax(300px,380px);gap:20px;height:clamp(210px,calc(var(--qs-h) - 236px),680px);min-height:0}
 .tc-scene{position:relative;overflow:hidden;border:1px solid #3a4655;border-radius:3px;background:#10151c}
 .tc-backdrop{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:0 50%}
 .tc-figure{position:absolute;left:9%;bottom:3%;height:92%;width:auto;transition:transform 200ms ease}
@@ -187,7 +187,7 @@ html:root[data-color-mode][data-theme] body .realm button.qs-seg-option[aria-che
 .tc-dots i:nth-child(2){opacity:.6}.tc-dots i:nth-child(3){opacity:.3}
 .tc-failed{display:flex;align-items:center;gap:12px}.tc-failed p{margin:0;font:500 14px Inter,system-ui,sans-serif;color:#e3c4bd}
 .tc-input{display:flex;align-items:flex-end;gap:12px}
-.tc-input textarea{flex:1;min-height:48px;resize:none;box-sizing:border-box;padding:10px 12px;border:1px solid var(--realm-edge);border-radius:2px;background:#0f141b;color:var(--realm-ink);font:500 15px/1.4 Inter,system-ui,sans-serif}
+.tc-input textarea{flex:1;min-width:0;min-height:48px;resize:none;box-sizing:border-box;padding:10px 12px;border:1px solid var(--realm-edge);border-radius:2px;background:#0f141b;color:var(--realm-ink);font:500 15px/1.4 Inter,system-ui,sans-serif}
 .tc-input textarea:focus{border-color:var(--realm-select)}
 .tc-voice{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
 html:root[data-color-mode][data-theme] body .realm button.tc-voice-btn{display:grid;place-items:center;width:34px;height:34px;min-height:0;padding:0;border-radius:50%;background:transparent;box-shadow:inset 0 0 0 1px var(--realm-edge);color:var(--realm-ink)}
@@ -198,6 +198,9 @@ html:root[data-color-mode][data-theme] body .realm button.tc-voice-btn:disabled{
  .tc-main{grid-template-columns:minmax(0,1fr);height:auto}
  .tc-scene{height:260px}
  .tc-tale{min-height:260px}
+ .tc .qs-footer{gap:8px}
+ .tc .qs-footer .realm-btn-face{min-width:0}
+ .tc .qs-footer .realm-primary .realm-btn-face{padding:0 14px;white-space:nowrap}
 }
 .qs-tile.taken .realm-portrait{opacity:.82}
 .qs-tile.taken .qs-tile-name span{display:inline-block;align-self:flex-start;margin-top:1px;padding:0 5px;background:#2a323d;color:#c4ccd5;font-weight:600}

@@ -76,3 +76,19 @@ html:root[data-color-mode][data-theme] body .realm button.realm-choice:is([aria-
 .realm .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
 /* The app's shared button hover and press styles must not paint behind the clipped face. */
 html:root[data-color-mode][data-theme] body .realm .realm-btn.realm-btn:is(:hover,:active,:focus,:focus-visible){background:none;background-image:none;box-shadow:none;transform:none}
+
+/* Guide and settings on full-window screens: square icons in the step tracker's frame. */
+.qs-top-end{display:flex;align-items:center;gap:8px;margin-left:auto}
+.realm-tools{display:flex;gap:6px}
+.realm .realm-tool,html:root[data-color-mode][data-theme] body .realm button.realm-tool{display:flex;align-items:center;justify-content:center;width:40px;height:40px;min-height:40px;padding:0;background:rgba(16,21,29,.92);border:1px solid var(--realm-edge);border-radius:2px;box-shadow:none;transform:none;color:#d8d0c2;cursor:pointer}
+html:root[data-color-mode][data-theme] body .realm button.realm-tool:hover{background:#1a222d;border-color:var(--realm-edge-hi);color:var(--realm-ink)}
+html:root[data-color-mode][data-theme] body .realm button.realm-tool:active{background:#121821}
+.realm .realm-tool:focus-visible{outline:2px solid var(--realm-ink);outline-offset:2px}
+/* Phones: the icons ride beside the title; the step tracker gets its own full-width row. */
+@media (max-width:760px){
+ .qs-top{flex-wrap:wrap}
+ .qs-top-end{display:contents}
+ .qs-top>h1{flex:1 1 0;min-width:0}
+ .qs-top .realm-tools{align-self:flex-start}
+ .qs-top .realm-steps{flex:1 1 100%;justify-content:center}
+}

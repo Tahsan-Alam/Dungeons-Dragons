@@ -8,7 +8,7 @@ import {narratorTone,parseStory} from '../../game/creation';
 import type {StoryBlueprint} from '../../game/creation';
 import {useCreation} from './useCreation';
 import {useAIPreference} from './ai-preferences';
-import {RealmButton,QuestSteps,Portrait,Diamond,CheckBadge} from './RealmKit';
+import {RealmButton,RealmTools,QuestSteps,Portrait,Diamond,CheckBadge} from './RealmKit';
 import TaleConversation from './TaleConversation';
 import './quest-setup.css';
 
@@ -84,7 +84,7 @@ export default function QuestSetup({mode,onBack,onStart,busy,quick=false,onAISet
  return <main className="realm qs" aria-labelledby="qs-title">
   <header className="qs-top">
    <h1 id="qs-title" ref={heading} tabIndex={-1}>{title}</h1>
-   <QuestSteps current={s.step}/>
+   <div className="qs-top-end"><RealmTools/><QuestSteps current={s.step}/></div>
   </header>
   {!ready?null:s.step===0?<GameMasterStep gm={gm} pick={id=>update({gm:id})}/>
    :s.step===1?<TaleStep s={s} gm={gm} story={story} art={taleArt.scene} pick={id=>update({tale:id})} idea={idea} setIdea={setIdea} shape={shape} tellAnother={tellAnother} pending={creation.pending} error={creation.error} onCreateWithNarrator={()=>setTalking(true)}/>

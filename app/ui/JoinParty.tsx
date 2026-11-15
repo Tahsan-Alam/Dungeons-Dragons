@@ -6,7 +6,7 @@ import {HEROES,HERO_ART_RATIO,SCENE_FOR_BIOME} from '../../game/presets';
 import type {Role} from '../../game/presets';
 import {normalizePartyCode,partyCodeComplete} from './party';
 import {HeroArt} from './Art';
-import {RealmButton,QuestSteps,Portrait,Check} from './RealmKit';
+import {RealmButton,RealmTools,Portrait,Check} from './RealmKit';
 import {HeroStep} from './QuestSetup';
 import './quest-setup.css';
 import './party-camp.css';
@@ -56,7 +56,7 @@ export default function JoinParty({onBack,onStart,busy,initialCode=''}:Props){
   :<p className="jp-status" role="status"><span className="jp-dot" aria-hidden="true"/>{6-code.length===6?'Six letters from your host’s invite.':`${6-code.length} more ${6-code.length===1?'letter':'letters'} to go`}</p>;
 
  if(step==='hero'&&preview)return <main className="realm qs" aria-labelledby="jp-hero-title">
-  <header className="qs-top"><h1 id="jp-hero-title" tabIndex={-1}>Who will you be?</h1><p className="jp-joining">Joining <strong>{preview.title}</strong> · {preview.code}</p></header>
+  <header className="qs-top"><h1 id="jp-hero-title" tabIndex={-1}>Who will you be?</h1><p className="jp-joining">Joining <strong>{preview.title}</strong> · {preview.code}</p><div className="qs-top-end"><RealmTools/></div></header>
   <HeroStep hero={hero} role={role} setRole={setRole} pick={setHeroId} sheet={false} openSheet={()=>{}} taken={taken}/>
   <footer className="qs-footer">
    <RealmButton onClick={()=>setStep('code')}><BackArrow/>Back</RealmButton>
@@ -66,7 +66,7 @@ export default function JoinParty({onBack,onStart,busy,initialCode=''}:Props){
 
  return <main className="realm qs jp" aria-labelledby="jp-title">
   <img className="jp-scene" src="/art/scenes/camp.svg" alt=""/><img className="jp-fire" src="/art/scenes/campfire.svg" alt=""/>
-  <header className="qs-top"><span/><QuestSteps current={0} className="jp-steps-hidden"/></header>
+  <header className="qs-top"><span/><div className="qs-top-end"><RealmTools/></div></header>
   <div className="jp-main">
    <section className="jp-code realm-panel" aria-labelledby="jp-title">
     <h1 id="jp-title">Join a party</h1>
