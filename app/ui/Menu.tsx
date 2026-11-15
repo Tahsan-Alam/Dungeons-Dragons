@@ -6,7 +6,6 @@ import type {GameOptions,HeroClass,RoomView,Session} from '../../game/types';
 import {HeroArt,Icon,Panorama} from './Art';
 import {useAIPreference} from './ai-preferences';
 import './setup-flow.css';
-import AdventureCreator from './AdventureCreator';
 import QuestSetup from './QuestSetup';
 import {normalizePartyCode,partyCodeComplete,openSeats} from './party';
 
@@ -24,11 +23,7 @@ export function Menu({onNew,onJoin,onHelp,onSettings,children,disabled=false}:Me
 }
 
 export function Setup({quick,...props}:Parameters<typeof JoinSetup>[0]&{onAISettings?:()=>void;quick?:boolean}){
- // Quest setup is choice-first; the conversation-led creator stays one step away for players who want to talk a tale through.
- const [conversation,setConversation]=useState(false);
- if(props.mode==='join')return <JoinSetup {...props}/>;
- if(conversation)return <AdventureCreator {...props} mode={props.mode} onBack={()=>setConversation(false)}/>;
- return <QuestSetup mode={props.mode} onBack={props.onBack} onStart={props.onStart} busy={props.busy} quick={quick} onCreateWithNarrator={()=>setConversation(true)}/>;
+ return props.mode==='join'?<JoinSetup {...props}/>:<QuestSetup mode={props.mode} onBack={props.onBack} onStart={props.onStart} busy={props.busy} quick={quick} onAISettings={props.onAISettings}/>;
 }
 function JoinSetup({onBack,onStart,busy,initialCode=''}:{mode:'solo'|'online'|'join';onBack:()=>void;onStart:(name:string,cls:HeroClass,options:GameOptions,code:string)=>unknown;busy:boolean;initialCode?:string;onNavigationBlockChange?:(blocked:boolean)=>void}) {
  const [name,setName]=useState(''),[cls,setCls]=useState<HeroClass>('ranger'),[code,setCode]=useState(()=>normalizePartyCode(initialCode)),[step,setStep]=useState(()=>partyCodeComplete(normalizePartyCode(initialCode))?1:0);
