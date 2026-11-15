@@ -1,13 +1,12 @@
 'use client';
 import {useEffect,useRef,useState,type KeyboardEvent} from 'react';
-import {Icon,Panorama} from './Art';
+import {Icon} from './Art';
 import './landing.css';
 
 type Props={onNew:(mode:'solo'|'online')=>void;onQuick:()=>void;onJoin:()=>void;onGames:()=>void;onHelp:()=>void;onSettings:()=>void;onResume?:()=>void;resumeTitle?:string;disabled:boolean};
 type View='main'|'quest'|'friends';
 /** `detail` stays visible under the label; `tip` appears in the shared tooltip layer. */
 type Item={id:string;label:string;icon:string;run:()=>void;detail?:string;tip?:string;locked?:boolean;opens?:boolean;back?:boolean};
-const PARTY=[{heroClass:'knight' as const,color:'#ef997c'},{heroClass:'ranger' as const,color:'#8ac4ae'},{heroClass:'mage' as const,color:'#b19bd3'},{heroClass:'cleric' as const,color:'#a3bbf0'}];
 const HEADINGS:Record<View,string>={main:'Main menu',quest:'New quest',friends:'Play with friends'};
 
 /** Camp is the game's title menu. Every entry calls an existing action; nothing here writes a save. */
@@ -47,9 +46,9 @@ export default function Landing({onNew,onQuick,onJoin,onGames,onHelp,onSettings,
   event.preventDefault();buttons[index]?.focus();
  }
  return <main className="title-screen">
-  <div className="title-art" aria-hidden="true"><Panorama biome="woodland" characters={PARTY}/></div>
+  <div className="title-art" aria-hidden="true"><img src="/art/title/ruined-castle.svg" alt="" width={1280} height={720} decoding="async" draggable={false}/></div>
   <section className="title-panel" aria-labelledby="title-heading">
-   <h1 id="title-heading" className="title-logo"><span className="title-logo-die" aria-hidden="true"><Icon name="dice" size={30}/></span><span>Painted <span>Realms</span></span></h1>
+   <h1 id="title-heading" className="title-logo">Painted<br/>Realms</h1>
    <nav className="title-nav" aria-label={HEADINGS[view]}>{view!=='main'?<p className="title-crumb" aria-hidden="true">{HEADINGS[view]}</p>:null}<ul className="title-menu" ref={list} onKeyDown={keys}>{items.map(item=><li key={item.id}><button type="button" className={`title-item ${item.back?'title-back':''}`} disabled={item.locked} data-tooltip={item.tip} aria-describedby={item.detail?`title-detail-${item.id}`:undefined} onClick={item.run}>{item.back?<Icon name="back" size={16}/>:null}<span className="title-item-label">{item.label}{item.detail?<small id={`title-detail-${item.id}`} aria-hidden="true">{item.detail}</small>:null}</span></button></li>)}</ul></nav>
   </section>
  </main>;
