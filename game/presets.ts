@@ -16,25 +16,31 @@ export const HERO_ART_RATIO=376/488;
 export const GAME_MASTER_ART_RATIO=400/520;
 
 export type GameMasterId='wanderer'|'survivor'|'cursed';
-export interface GameMasterPreset {id:GameMasterId;title:string;realName:string;mood:string;tone:string;style:string;excerpt:string;quote:string;art:string;face:FaceCentre;profile:NarratorProfile}
+/** `lines` are what the Game Master says on the Tale and Set Out screens; `scene` is their backdrop on the selection screen. */
+export interface GameMasterPreset {id:GameMasterId;title:string;realName:string;mood:string;tone:string;style:string;excerpt:string;quote:string;art:string;scene:string;face:FaceCentre;lines:{tale:string;setOut:string};profile:NarratorProfile}
 
 export const GAME_MASTERS:readonly GameMasterPreset[]=[
  {id:'wanderer',title:'The Wanderer',realName:'Oswin Marsh',mood:'Optimistic',tone:'Tells it with hope',style:'Hopeful · Curious · Without judgment',
   excerpt:'His wife asked one thing before she died. So he walks from fire to fire, carrying other people’s stories from one place to the next: heroes, villains and everyone caught between.',
-  quote:'Don’t let the stories die with the people who lived them.',art:'/art/game-masters/wanderer.svg',face:{x:.50,y:.28},
+  quote:'Don’t let the stories die with the people who lived them.',art:'/art/game-masters/wanderer.svg',scene:'/art/scenes/gm-wanderer.svg',face:{x:.50,y:.28},
+  lines:{tale:'Every road keeps a story. Pick one, or tell me yours.',setOut:'A good road, good company. This one will be worth writing down.'},
   profile:{name:'The Wanderer',persona:'Oswin Marsh, a laughing traveller in a patched coat who keeps other people’s stories so they are not lost.',personality:['Warm','Curious'],speakingStyle:['Hopeful','Unjudging'],appearance:['Patched coat','Lantern staff'],model:'ranger',color:HERO_COLORS[2],avatar:{form:'human',accessory:'none'},voice:'cedar'}},
  {id:'survivor',title:'The Survivor',realName:'Liora Thorne',mood:'Wicked',tone:'Tells it with a smile',style:'Measured · Cunning · Always a step ahead',
   excerpt:'War took her family and taught her that banners protect no one. She lived by reading people faster than they could read her, and now she trades in secrets and favours.',
-  quote:'Kindness only gets you buried first.',art:'/art/game-masters/survivor.svg',face:{x:.52,y:.30},
+  quote:'Kindness only gets you buried first.',art:'/art/game-masters/survivor.svg',scene:'/art/scenes/gm-survivor.svg',face:{x:.52,y:.30},
+  lines:{tale:'Choose your stage carefully. Or write your own, if you think you can do better.',setOut:'Everyone has a price. Let’s go and find out yours.'},
   profile:{name:'The Survivor',persona:'Liora Thorne, the calmest person in the room, who trades in secrets and favours and is always a step ahead.',personality:['Sarcastic','Calculating'],speakingStyle:['Silken','Amused'],appearance:['Plum coat','Wine glass'],model:'mage',color:HERO_COLORS[3],avatar:{form:'human',accessory:'none'},voice:'willow'}},
  {id:'cursed',title:'The Cursed One',realName:'Ser Dorian Vane',mood:'Broken by past battles',tone:'Tells it at a cost',style:'Grave · Spare with words · Mindful of the cost',
   excerpt:'Betrayed by those he trusted and left to die, the knight took a demon’s bargain. It gave him life and took his shape. Now he looks for a way to break the curse, or a death worth dying.',
-  quote:'Some days I cannot tell which thoughts are mine.',art:'/art/game-masters/cursed.svg',face:{x:.49,y:.36},
+  quote:'Some days I cannot tell which thoughts are mine.',art:'/art/game-masters/cursed.svg',scene:'/art/scenes/gm-cursed.svg',face:{x:.49,y:.36},
+  lines:{tale:'Choose the road. I will tell you what it costs.',setOut:'Keep your eyes on the road. It remembers every step.'},
   profile:{name:'The Cursed One',persona:'Ser Dorian Vane, a knight cursed into the shape of a cat, who speaks rarely and counts the cost of every victory.',personality:['Dramatic','Grim'],speakingStyle:['Low','Spare'],appearance:['Dented armour','Violet eye'],model:'knight',color:HERO_COLORS[9],avatar:{form:'cat',accessory:'none'},voice:'stone'}},
 ];
 
 export type TaleId='lantern'|'crown'|'salt';
 export interface TalePreset {id:TaleId;title:string;premise:string;region:string;chapters:number;biome:Biome;story:StoryBlueprint}
+/** Scene art for a biome; custom tales use the built-in tale that shares their biome. */
+export const SCENE_FOR_BIOME:Record<Biome,{scene:string;thumb:string}>={woodland:{scene:'/art/scenes/tale-lantern.svg',thumb:'/art/scenes/tale-lantern-thumb.svg'},ruins:{scene:'/art/scenes/tale-crown.svg',thumb:'/art/scenes/tale-crown-thumb.svg'},coast:{scene:'/art/scenes/tale-salt.svg',thumb:'/art/scenes/tale-salt-thumb.svg'}};
 export const TALES:readonly TalePreset[]=[
  {id:'lantern',title:'The Lantern Road',region:'Woodland',chapters:3,biome:'woodland',
   premise:'Three lantern shards lie along a forest road. Bring the light home before the paths between villages vanish.',
