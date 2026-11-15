@@ -9,9 +9,10 @@ import type {StoryBlueprint} from '../../game/creation';
 import {useCreation} from './useCreation';
 import {useAIPreference} from './ai-preferences';
 import {RealmButton,QuestSteps,Portrait,Diamond,CheckBadge} from './RealmKit';
+import TaleConversation from './TaleConversation';
 import './quest-setup.css';
 
-type Props={mode:'solo'|'online';onBack:()=>void;onStart:(name:string,cls:HeroClass,options:GameOptions,code:string)=>unknown;busy:boolean;quick?:boolean;onCreateWithNarrator:()=>void};
+type Props={mode:'solo'|'online';onBack:()=>void;onStart:(name:string,cls:HeroClass,options:GameOptions,code:string)=>unknown;busy:boolean;quick?:boolean;onAISettings?:()=>void};
 type Saved={v:1;step:number;gm:string;tale:string;custom:StoryBlueprint|null;hero:string;length:'short'|'standard'|'long';rules:'simple'|'classic';seed:string;companions:number};
 const ROLES:('All'|Role)[]=['All','Tank','Damage','Support','Control'];
 const LENGTHS=[['short','Short','1 chapter · about 30 minutes'],['standard','Standard','3 chapters · about 90 minutes'],['long','Long','5 chapters · an evening or two']] as const;
@@ -23,10 +24,10 @@ const fresh=():Saved=>({v:1,step:0,gm:'wanderer',tale:'lantern',custom:null,hero
 /** Where the hero stands on the stage art (600 × 560): boots at y 485, figure 380 high. Mira is placed so Ash fits too. */
 function heroPlacement(h:HeroPreset){const w=380*HERO_ART_RATIO/600*100,top=(485-0.955*380)/560*100;return {width:w+'%',top:top+'%',left:(50-(h.id==='mira'?0.58:0.5)*w)+'%'};}
 
-export default function QuestSetup({mode,onBack,onStart,busy,quick=false,onCreateWithNarrator}:Props){
+export default function QuestSetup({mode,onBack,onStart,busy,quick=false,onAISettings}:Props){
  const key='painted-realms-setup-v1-'+mode;
  const [s,setS]=useState<Saved>(fresh),[ready,setReady]=useState(false);
- const [role,setRole]=useState<'All'|Role>('All'),[sheet,setSheet]=useState(false),[idea,setIdea]=useState(''),[advanced,setAdvanced]=useState(false);
+ const [role,setRole]=useState<'All'|Role>('All'),[sheet,setSheet]=useState(false),[talking,setTalking]=useState(false),[idea,setIdea]=useState(''),[advanced,setAdvanced]=useState(false);
  const [savedAI]=useAIPreference();const creation=useCreation();
  const heading=useRef<HTMLHeadingElement>(null);
  const update=(patch:Partial<Saved>)=>setS(current=>({...current,...patch}));
@@ -44,7 +45,7 @@ export default function QuestSetup({mode,onBack,onStart,busy,quick=false,onCreat
   setS(next);setReady(true);
  },[key,quick]);
  useEffect(()=>{if(!ready||quick)return;try{localStorage.setItem(key,JSON.stringify(s));}catch{/* Storage is optional. */}},[ready,quick,key,s]);
- useEffect(()=>{heading.current?.focus({preventScroll:true});},[s.step,sheet]);
+ useEffect(()=>{heading.current?.focus({preventScroll:true});},[s.step,sheet,talking]);
 
  const gm=GAME_MASTERS.find(g=>g.id===s.gm)??GAME_MASTERS[0];
  const hero=HEROES.find(h=>h.id===s.hero)??HEROES[0];
@@ -69,6 +70,10 @@ export default function QuestSetup({mode,onBack,onStart,busy,quick=false,onCreat
   void onStart(hero.profile.name,hero.profile.heroClass,options,'');
  }
 
+ // Talking a tale through with the Game Master replaces the Tale step until the player keeps a tale or goes back.
+ if(ready&&talking&&s.step===1)return <TaleConversation gm={gm} initialIdea={idea} initialStory={s.tale==='custom'?s.custom:null} onAISettings={onAISettings}
+  onKeep={made=>{update({custom:made,tale:'custom'});setTalking(false);}} onBack={()=>setTalking(false)}/>;
+
  const title=['Who will tell your tale?','Which tale shall I tell?',sheet?hero.name:'Who will you be?','Ready to set out?'][s.step];
  const back=()=>sheet?setSheet(false):s.step===0?onBack():go(s.step-1);
  const forward=s.step===0?<RealmButton variant="primary" minWidth={190} onClick={()=>go(1)}>Continue<Arrow/></RealmButton>
@@ -82,7 +87,7 @@ export default function QuestSetup({mode,onBack,onStart,busy,quick=false,onCreat
    <QuestSteps current={s.step}/>
   </header>
   {!ready?null:s.step===0?<GameMasterStep gm={gm} pick={id=>update({gm:id})}/>
-   :s.step===1?<TaleStep s={s} gm={gm} story={story} art={taleArt.scene} pick={id=>update({tale:id})} idea={idea} setIdea={setIdea} shape={shape} tellAnother={tellAnother} pending={creation.pending} error={creation.error} onCreateWithNarrator={onCreateWithNarrator}/>
+   :s.step===1?<TaleStep s={s} gm={gm} story={story} art={taleArt.scene} pick={id=>update({tale:id})} idea={idea} setIdea={setIdea} shape={shape} tellAnother={tellAnother} pending={creation.pending} error={creation.error} onCreateWithNarrator={()=>setTalking(true)}/>
    :s.step===2?<HeroStep hero={hero} role={role} setRole={setRole} pick={id=>update({hero:id})} sheet={sheet} openSheet={()=>setSheet(true)}/>
    :<SetOutStep s={s} gm={gm} hero={hero} story={story} art={taleArt.scene} thumb={taleArt.thumb} update={update} advanced={advanced} setAdvanced={setAdvanced} mode={mode}/>}
   <footer className="qs-footer">
@@ -144,7 +149,7 @@ function TaleStep({s,gm,story,art,pick,idea,setIdea,shape,tellAnother,pending,er
     <textarea id="qs-idea" rows={2} maxLength={400} value={idea} onChange={e=>setIdea(e.target.value)} placeholder="A heist in a city built on a sleeping giant…"/>
     {error?<p className="qs-error" role="alert">{error}</p>:null}
     <div className="qs-own-actions"><RealmButton small disabled={pending||!idea.trim()} onClick={shape}>{pending?`Shaping…`:'Shape it'}</RealmButton>
-     <button type="button" className="qs-link" onClick={onCreateWithNarrator}>Talk it through with a narrator</button></div>
+     <button type="button" className="qs-link" onClick={onCreateWithNarrator}>Talk it through with {gm.title.replace('The ','the ')}</button></div>
    </section>
   </div>
   <div className="qs-gm-line">
