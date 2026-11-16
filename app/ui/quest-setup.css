@@ -130,7 +130,8 @@ html:root[data-color-mode][data-theme] body .realm button.qs-seg-option[aria-che
 
 /* ---- Phones and narrow windows: one column, art first. ---- */
 @media(max-width:900px){
- .qs{padding:18px 16px 20px;gap:14px}
+ /* The step grows with its content and the page scrolls, so the footer follows the last row and stays pinned to the bottom instead of floating over the step. */
+ .qs{padding:18px 16px 20px;gap:14px;grid-template-rows:auto minmax(max-content,1fr) auto}
  .qs-gm-preview{height:auto}
  .qs-tale-scene{height:auto;aspect-ratio:752/372}
  .qs-stage{height:auto;width:100%;max-width:340px}
@@ -195,6 +196,7 @@ html:root[data-color-mode][data-theme] body .realm button.tc-voice-btn[aria-pres
 html:root[data-color-mode][data-theme] body .realm button.tc-voice-btn:disabled{opacity:.45}
 .tc-voice-note{font:500 12.5px Inter,system-ui,sans-serif;color:#e3c4bd}
 @media(max-width:900px){
+ .tc{grid-template-rows:auto minmax(max-content,1fr) auto auto}
  .tc-main{grid-template-columns:minmax(0,1fr);height:auto}
  .tc-scene{height:260px}
  .tc-tale{min-height:260px}
