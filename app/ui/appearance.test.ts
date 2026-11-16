@@ -51,22 +51,23 @@ test('accent and motion preferences restore independently in every view and colo
  assert.equal(bootstrap({[ACCENT_STORAGE_KEY]:'unknown',[MOTION_STORAGE_KEY]:'unknown'},false).dataset.accent,'blue');
 });
 
-test('world view defaults safely and preserves preferences saved before it existed',()=>{
- assert.equal(normalizeViewMode('2.5d'),'2.5d');
- for(const value of ['2d',null,undefined,'3d','2.5D',{},true,2.5])assert.equal(normalizeViewMode(value),'2d');
+test('world view defaults to the scene and keeps a chosen tactical map',()=>{
+ assert.equal(normalizeViewMode('2d'),'2d');
+ for(const value of ['2.5d',null,undefined,'3d','2D',{},true,2.5])assert.equal(normalizeViewMode(value),'2.5d');
  const saved={[LEGACY_THEME_KEY]:'pixel',[COLOR_MODE_STORAGE_KEY]:'dark',[ACCENT_STORAGE_KEY]:'rose',[MOTION_STORAGE_KEY]:'reduced'};
  const old=bootstrap(saved,false);
- assert.equal(old.dataset.viewMode,'2d');assert.equal(old.dataset.theme,'paint','a saved Pixel preference falls back to the single art style');assert.equal(old.dataset.accent,'rose');assert.equal(old.dataset.colorMode,'dark');assert.equal(old.dataset.motion,'reduced');
+ assert.equal(old.dataset.viewMode,'2.5d');assert.equal(old.dataset.theme,'paint','a saved Pixel preference falls back to the single art style');assert.equal(old.dataset.accent,'rose');assert.equal(old.dataset.colorMode,'dark');assert.equal(old.dataset.motion,'reduced');
  const invalid=bootstrap({...saved,[VIEW_MODE_STORAGE_KEY]:'broken'},false);assert.deepEqual(invalid,old);
- assert.equal(bootstrap({[VIEW_MODE_STORAGE_KEY]:'2.5d'},false,true).dataset.viewMode,'2d');
+ assert.equal(bootstrap({[VIEW_MODE_STORAGE_KEY]:'2d'},false).dataset.viewMode,'2d');
+ assert.equal(bootstrap({[VIEW_MODE_STORAGE_KEY]:'2d'},false,true).dataset.viewMode,'2.5d','blocked storage falls back to the scene');
 });
 
-test('cross-tab view changes normalize independently and removal or clear restores 2D',()=>{
+test('cross-tab view changes normalize independently and removal or clear restores the scene',()=>{
  assert.equal(viewModeStorageChange({key:VIEW_MODE_STORAGE_KEY,newValue:'2.5d'}),'2.5d');
  assert.equal(viewModeStorageChange({key:VIEW_MODE_STORAGE_KEY,newValue:'2d'}),'2d');
- assert.equal(viewModeStorageChange({key:VIEW_MODE_STORAGE_KEY,newValue:null}),'2d');
- assert.equal(viewModeStorageChange({key:VIEW_MODE_STORAGE_KEY,newValue:'invalid'}),'2d');
- assert.equal(viewModeStorageChange({key:null,newValue:null}),'2d');
+ assert.equal(viewModeStorageChange({key:VIEW_MODE_STORAGE_KEY,newValue:null}),'2.5d');
+ assert.equal(viewModeStorageChange({key:VIEW_MODE_STORAGE_KEY,newValue:'invalid'}),'2.5d');
+ assert.equal(viewModeStorageChange({key:null,newValue:null}),'2.5d');
  for(const key of [LEGACY_THEME_KEY,COLOR_MODE_STORAGE_KEY,ACCENT_STORAGE_KEY,MOTION_STORAGE_KEY,'painted-realms-controls-v1']){
   assert.equal(viewModeStorageChange({key,newValue:'2.5d'}),undefined);
   assert.equal(viewModeStorageChange({key,newValue:null}),undefined);

@@ -25,8 +25,9 @@ test('keyboard preview follows screen directions, skips unavailable destinations
  assert.deepEqual(nextBoardTile(tiles,{x:0,y:0},'ArrowRight'),{x:2,y:0});
  assert.deepEqual(nextBoardTile(tiles,{x:2,y:0},'ArrowDown'),{x:2,y:2});
  assert.deepEqual(nextBoardTile(tiles,{x:0,y:0},'ArrowLeft'),{x:0,y:0});
- const projection=createBoardProjection('2.5d',5,5),depthTiles=[{x:2,y:2},{x:1,y:1},{x:3,y:1},{x:3,y:3},{x:1,y:3}];
- for(const[direction,target]of [['ArrowUp',{x:1,y:1}],['ArrowRight',{x:3,y:1}],['ArrowDown',{x:3,y:3}],['ArrowLeft',{x:1,y:3}]] as const)assert.deepEqual(nextBoardTile(depthTiles,{x:2,y:2},direction,projection.tileCenter),target);
+ // The scene camera faces the board, so screen directions follow rows and columns.
+ const projection=createBoardProjection('2.5d',5,5),depthTiles=[{x:2,y:2},{x:2,y:0},{x:4,y:2},{x:2,y:4},{x:1,y:2},{x:3,y:3}];
+ for(const[direction,target]of [['ArrowUp',{x:2,y:0}],['ArrowRight',{x:4,y:2}],['ArrowDown',{x:2,y:4}],['ArrowLeft',{x:1,y:2}]] as const)assert.deepEqual(nextBoardTile(depthTiles,{x:2,y:2},direction,projection.tileCenter),target);
 });
 
 test('resize keeps a valid manual frame and clamps exposed edges without changing zoom',()=>{

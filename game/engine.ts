@@ -23,7 +23,7 @@ const SCENES = {
   ruins: ['The Fallen Courtyard', 'The Sunken Archive', 'The Star Chamber', 'The Painted Vault', 'The First Observatory'],
   coast: ['Saltwind Landing', 'The Tideglass Steps', 'The Beacon Isle', 'The Mistwater Cove', 'The Sunrise Lighthouse'],
 };
-const ENEMIES = {
+export const ENEMIES = {
   woodland: ['Bramble imp', 'Moss goblin', 'Thornling', 'Root guardian'],
   ruins: ['Ink wisp', 'Clay sentinel', 'Vault imp', 'Paper golem'],
   coast: ['Shell bandit', 'Tide imp', 'Crab knight', 'Salt wisp'],

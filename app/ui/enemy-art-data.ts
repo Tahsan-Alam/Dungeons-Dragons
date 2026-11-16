@@ -1,0 +1,41 @@
+// Generated from the design canvas ("Wandering Storyteller"). Placement data for public/art/enemies.
+// viewBox: the art's own coordinate box; anchor: the point that stands on the tile; unitsPerTile: art units per board tile;
+// portrait: square crop (x, y, size) for turn order and lists.
+export type EnemyArt={src:string;viewBox:readonly [number,number,number,number];anchor:readonly [number,number];unitsPerTile:number;floats:boolean;portrait:readonly [number,number,number]};
+export const ENEMY_ART={
+ 'bramble-imp':{src:'/art/enemies/bramble-imp.svg',viewBox:[24.7,34,155.3,130.1],anchor:[104,150],unitsPerTile:120,floats:false,portrait:[98,34,66]},
+ 'moss-goblin':{src:'/art/enemies/moss-goblin.svg',viewBox:[21.9,14.6,154.2,186.4],anchor:[96,190],unitsPerTile:160,floats:false,portrait:[32,4,140]},
+ 'thornling':{src:'/art/enemies/thornling.svg',viewBox:[42,27,130,212.5],anchor:[104,228],unitsPerTile:160,floats:false,portrait:[58,20,100]},
+ 'thornling-lash':{src:'/art/enemies/thornling-lash.svg',viewBox:[16.1,8.7,149.9,230.8],anchor:[104,228],unitsPerTile:160,floats:false,portrait:[40,10,110]},
+ 'thornhound':{src:'/art/enemies/thornhound.svg',viewBox:[12.3,45,259.3,130],anchor:[142,158],unitsPerTile:160,floats:false,portrait:[174,46,98]},
+ 'thornhound-rush':{src:'/art/enemies/thornhound-rush.svg',viewBox:[10,43.1,272.3,133.2],anchor:[142,158],unitsPerTile:160,floats:false,portrait:[174,60,98]},
+ 'dawn-sentinel':{src:'/art/enemies/dawn-sentinel.svg',viewBox:[43.1,6.2,138.9,280.6],anchor:[100,276],unitsPerTile:160,floats:false,portrait:[46,10,116]},
+ 'root-guardian':{src:'/art/enemies/root-guardian.svg',viewBox:[15.2,43.7,216.8,187.3],anchor:[128,214],unitsPerTile:160,floats:false,portrait:[54,44,128]},
+ 'clay-sentinel':{src:'/art/enemies/clay-sentinel.svg',viewBox:[36,48,176,220.6],anchor:[106,257],unitsPerTile:160,floats:false,portrait:[44,40,124]},
+ 'oathbound-guard':{src:'/art/enemies/oathbound-guard.svg',viewBox:[46,-40,167,320.1],anchor:[104,268],unitsPerTile:160,floats:false,portrait:[76,24,74]},
+ 'ridge-giant':{src:'/art/enemies/ridge-giant.svg',viewBox:[34,127.8,256,348.8],anchor:[150,458],unitsPerTile:160,floats:false,portrait:[120,122,130]},
+ 'ridge-giant-slam':{src:'/art/enemies/ridge-giant-slam.svg',viewBox:[34,-19.3,240,495.9],anchor:[150,458],unitsPerTile:160,floats:false,portrait:[100,0,200]},
+ 'sealwax-ooze':{src:'/art/enemies/sealwax-ooze.svg',viewBox:[8,66,224,84],anchor:[120,136],unitsPerTile:160,floats:false,portrait:[78,52,104]},
+ 'ink-wisp':{src:'/art/enemies/ink-wisp.svg',viewBox:[44.8,22,69.6,200.8],anchor:[80,214],unitsPerTile:116,floats:true,portrait:[30,24,104]},
+ 'vault-imp':{src:'/art/enemies/vault-imp.svg',viewBox:[42,58,114.5,111.5],anchor:[104,160],unitsPerTile:120,floats:false,portrait:[84,50,76]},
+ 'paper-golem':{src:'/art/enemies/paper-golem.svg',viewBox:[34,30.5,140.3,237],anchor:[102,257],unitsPerTile:160,floats:false,portrait:[50,30,124]},
+ 'shell-bandit':{src:'/art/enemies/shell-bandit.svg',viewBox:[38,44.8,180,215.3],anchor:[104,250],unitsPerTile:160,floats:false,portrait:[86,38,100]},
+ 'salt-wisp':{src:'/art/enemies/salt-wisp.svg',viewBox:[36.5,53.2,105.2,163.6],anchor:[82,208],unitsPerTile:112,floats:true,portrait:[28,44,104]},
+ 'salt-wisp-pulse':{src:'/art/enemies/salt-wisp-pulse.svg',viewBox:[36.5,53.2,105.2,163.6],anchor:[82,208],unitsPerTile:112,floats:true,portrait:[28,44,104]},
+ 'crab-knight':{src:'/art/enemies/crab-knight.svg',viewBox:[-1.5,27.4,223.5,146],anchor:[112,158],unitsPerTile:150,floats:false,portrait:[0,26,124]},
+ 'crab-knight-guard':{src:'/art/enemies/crab-knight-guard.svg',viewBox:[20,23.7,196,149.7],anchor:[112,158],unitsPerTile:150,floats:false,portrait:[50,20,124]},
+ 'glass-eye':{src:'/art/enemies/glass-eye.svg',viewBox:[14,26,145,203.4],anchor:[94,220],unitsPerTile:160,floats:true,portrait:[14,38,146]},
+ 'glass-eye-gaze':{src:'/art/enemies/glass-eye-gaze.svg',viewBox:[14,26,145,203.4],anchor:[94,220],unitsPerTile:160,floats:true,portrait:[14,38,146]},
+ 'tide-imp':{src:'/art/enemies/tide-imp.svg',viewBox:[18,42,154,128.2],anchor:[104,160],unitsPerTile:120,floats:false,portrait:[86,38,80]},
+ 'warden':{src:'/art/enemies/warden.svg',viewBox:[30,12.6,241.5,308.6],anchor:[118,306],unitsPerTile:160,floats:false,portrait:[68,6,124]},
+ 'warden-windup':{src:'/art/enemies/warden-windup.svg',viewBox:[-26.2,8.7,236.2,312.5],anchor:[118,306],unitsPerTile:160,floats:false,portrait:[68,6,124]},
+ 'warden-cut-1':{src:'/art/enemies/warden-cut-1.svg',viewBox:[-12,10.6,342,310.6],anchor:[118,306],unitsPerTile:160,floats:false,portrait:[68,6,124]},
+ 'warden-cut-2':{src:'/art/enemies/warden-cut-2.svg',viewBox:[30,-28.1,244.4,349.3],anchor:[118,306],unitsPerTile:160,floats:false,portrait:[68,6,124]},
+ 'warden-landing':{src:'/art/enemies/warden-landing.svg',viewBox:[-20,34,355.7,287.2],anchor:[118,306],unitsPerTile:160,floats:false,portrait:[68,6,124]},
+ 'warden-yield':{src:'/art/enemies/warden-yield.svg',viewBox:[20,57.7,304,265.3],anchor:[118,306],unitsPerTile:160,floats:false,portrait:[68,6,124]},
+ 'wolf':{src:'/art/enemies/wolf.webp',viewBox:[0,0,1774,887],anchor:[1200,728],unitsPerTile:320,floats:false,portrait:[1110,170,360]},
+ 'wolf-pounce':{src:'/art/enemies/wolf-pounce.webp',viewBox:[0,0,1774,887],anchor:[1150,860],unitsPerTile:320,floats:false,portrait:[1180,170,360]},
+ 'dragon':{src:'/art/enemies/dragon.webp',viewBox:[0,0,1774,887],anchor:[1000,832],unitsPerTile:312,floats:false,portrait:[1250,380,420]},
+ 'dragon-roar':{src:'/art/enemies/dragon-roar.webp',viewBox:[0,0,1774,887],anchor:[1000,832],unitsPerTile:312,floats:false,portrait:[1290,300,430]},
+} as const satisfies Record<string,EnemyArt>;
+export type EnemyArtKey=keyof typeof ENEMY_ART;
