@@ -91,7 +91,7 @@ test('the built-in tales share the Lantern Marches as their setting and keep the
  assert.match(facts,/The Lantern Marches.*Waylantern.*Aether/);
 });
 
-test('chapter I of each built-in tale is its authored landmark scene, legal and connected; other chapters stay generated',async()=>{
+test('chapter I of each built-in tale is its authored landmark scene, legal and connected; later chapters follow their own layouts',async()=>{
  const {SET_PIECES,isSetPieceProp}=await import('./set-pieces.ts');
  const {getReachable}=await import('./engine.ts');
  for(const tale of TALES){
@@ -109,7 +109,8 @@ test('chapter I of each built-in tale is its authored landmark scene, legal and 
   active(later).x=later.chest.x-1;active(later).y=later.chest.y;let next=applyAction(later,player.id,{type:'interact'});
   active(next).x=next.exit.x-1;active(next).y=next.exit.y;if(next.tiles[next.exit.y*next.width+next.exit.x-1].kind==='wall'){active(next).x=next.exit.x;active(next).y=next.exit.y+1;}
   next=runBots(applyAction(next,player.id,{type:'advance'}));
-  assert.equal(next.scene,1);assert.ok(!next.tiles.some(t=>isSetPieceProp(t.decoration)),tale.id);
+  // The Lantern Road's chapter II is authored too (game/lanternwood.test.ts); the other tales' are generated.
+  assert.equal(next.scene,1);assert.equal(next.tiles.some(t=>isSetPieceProp(t.decoration)),tale.id==='lantern',tale.id);
  }
  // A custom tale keeps its generated map.
  const custom:StoryBlueprint={title:'The Clockwork Orchard',synopsis:'Gears grow on the trees.',timeline:'Harvest',world:'Cogmere',locations:['The gear gate','The oil well','The spring tower'],biome:'woodland'};

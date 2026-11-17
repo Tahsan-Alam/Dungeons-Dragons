@@ -8,7 +8,7 @@ export function turnGuidance(game:GameState,actor:Actor|undefined,myTurn:boolean
  if(game.status!=='playing')return game.status==='victory'?'Adventure complete. The lantern is restored.':'The party has fallen. Your adventure is saved.';
  if(!myTurn||!actor)return `Waiting for ${actor?.name??'the party'}. You can inspect characters or read the log.`;
  const danger=threatsAt(game,actor)[0];
- if(danger)return keeperWarning(danger,actor);
+ if(danger)return keeperWarning(danger,actor,danger.plan?.move==='hunt'&&game.tiles.some(t=>t.decoration==='refuge'));
  const quest=getQuestAction(game,actor);
  if(quest){
   if(!quest.available&&actor.movement===0)return `End your turn to recover movement, then reach the ${game.chest.opened?'gateway':'chest'}.`;
@@ -31,8 +31,8 @@ export function turnGuidance(game:GameState,actor:Actor|undefined,myTurn:boolean
 }
 
 /** Standing on a Keeper's marked tiles: the one thing worth saying before anything else. */
-function keeperWarning(keeper:Actor,actor:Actor):string {
+function keeperWarning(keeper:Actor,actor:Actor,light:boolean):string {
  const move=KEEPER_PROFILE[keeper.keeper!].moveName??'its attack';
- if(actor.movement>0)return `You stand on ${keeper.name}’s marked ground. Move off it before ${move} lands.`;
+ if(actor.movement>0)return `You stand on ${keeper.name}’s marked ground. Move off it${light?' or into the shrine’s light':''} before ${move} lands.`;
  return actor.actionUsed?`${move} will catch you here. End your turn and hold on.`:`${move} will catch you here. Guard to soften the blow.`;
 }

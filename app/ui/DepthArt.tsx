@@ -4,8 +4,8 @@ import type {GameState,Tile} from '../../game/types';
 import type {BoardProjection} from './board-projection';
 import {ART_PALETTE as P} from './artPalette';
 import {Tree} from './Art';
-import {DepthSetPiece,GroundLight,GroundMarkArt} from './SetPieceArt';
-import {groundOf,isGroundMark,isSetPieceProp} from '../../game/set-pieces';
+import {DepthSetPiece,GroundLight,GroundMarkArt,RefugeEdges} from './SetPieceArt';
+import {groundOf,isGroundMark,isSetPieceProp,refugeEdges} from '../../game/set-pieces';
 import './depth-art.css';
 
 type Point={x:number;y:number};
@@ -43,6 +43,7 @@ export const DepthTerrain=memo(function DepthTerrain({game,grid,projection}:{gam
     </g>;
    })}
    {game.tiles.map(tile=>isSetPieceProp(tile.decoration)?<g key={`light-${tile.x}-${tile.y}`} transform={`translate(${tile.x*50} ${tile.y*50})`}><GroundLight prop={tile.decoration}/></g>:null)}
+   <RefugeEdges edges={refugeEdges(game)}/>
   </g>
   <polyline points={points([corners[3],corners[2],corners[1]])} fill="none" stroke={P.grassDetail} strokeWidth="1" opacity=".65"/>
  </g>;

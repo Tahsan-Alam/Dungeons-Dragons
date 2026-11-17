@@ -8,9 +8,10 @@ export type Biome = 'woodland' | 'ruins' | 'coast';
 export interface GameOptions { rules: RulesMode; seed: string; narrator: Narrator; biome: Biome; companions: number; storyPrompt?:string; narratorPrompt?:string; characterPrompt?:string; aiEnabled?:boolean; duration?:'short'|'standard'|'long'; creation?:AdventureBlueprint; }
 export interface PlayerSpec { id: string; name: string; heroClass: HeroClass; color: string; bot: boolean; }
 /** Landmark props of an authored chapter (game/set-pieces.ts). They stand on wall tiles; `span` marks the extra tiles a wide prop covers. */
-export type SetPieceProp = 'span' | 'shop' | 'stall' | 'salt-stall' | 'stall-skew' | 'oil-cart' | 'lamp' | 'gate-left' | 'gate-right' | 'gate-rubble' | 'masonry' | 'carving' | 'arch' | 'rubble' | 'cage-empty' | 'cage-lit' | 'crates' | 'bollard' | 'quay' | 'stairs';
-/** Marks painted on walkable ground: cobbles, cart grooves, pier planks, a loading square, a shard of lens glass. */
-export type GroundMark = 'cobble' | 'groove' | 'deck' | 'loading' | 'glass';
+export type SetPieceProp = 'span' | 'shop' | 'stall' | 'salt-stall' | 'stall-skew' | 'oil-cart' | 'lamp' | 'gate-left' | 'gate-right' | 'gate-rubble' | 'masonry' | 'carving' | 'arch' | 'rubble' | 'cage-empty' | 'cage-lit' | 'crates' | 'bollard' | 'quay' | 'stairs'
+  | 'fence' | 'waymark-lit' | 'waymark-dark' | 'standing-stone' | 'shrine' | 'road-on' | 'threshold' | 'wolf-eyes';
+/** Marks painted on the ground: cobbles, cart grooves, pier planks, a loading square, a shard of lens glass, low water (on water tiles), the shrine's refuge, flagstones and a trampled path. */
+export type GroundMark = 'cobble' | 'groove' | 'deck' | 'loading' | 'glass' | 'hollow' | 'refuge' | 'flagstone' | 'trampled';
 /** The Hollow Keepers: the built-in tales' named finales, the custom-tale boss pool, and the untitled Keeper of edition-2 custom tales. */
 export type KeeperKind = 'wolf' | 'dragon' | 'warden' | 'hollow' | 'thornhound' | 'grey-wolf' | 'giant' | 'drake' | 'eye' | 'tide-warden';
 export interface Cell { x: number; y: number; }

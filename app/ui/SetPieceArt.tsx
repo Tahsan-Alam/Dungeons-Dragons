@@ -2,12 +2,12 @@
 import type {GroundMark,SetPieceProp} from '../../game/types';
 import {ART_PALETTE as P} from './artPalette';
 
-/* The first-chapter landmarks of the built-in tales (game/set-pieces.ts), redrawn from the approved World page
+/* The authored landmarks of the built-in tales (game/set-pieces.ts), redrawn from the approved World page
    samples in the board's own palette. Depth props are drawn upright from the centre of their left tile, at the
    board's scale (a tile is 50 units wide, a hero about 89 tall). Flat props and ground marks use tile-local
    coordinates (0 to 50), so ground marks serve both views. */
 
-const LAMP='#ffe7a0',LAMP_GLOW='#e8a840',LENS='#a6e6dc',BRASS='#b8a46a',SALT='#f4f1ea';
+const LAMP='#ffe7a0',LAMP_GLOW='#e8a840',LENS='#a6e6dc',BRASS='#b8a46a',SALT='#f4f1ea',LIGHT_EDGE='#f6dc94',DARK_GLASS='#39424a';
 const shadow=(rx:number,ry=8,cx=0)=><ellipse cx={cx} cy={4} rx={rx} ry={ry} fill={P.ink} opacity=".13"/>;
 const stroke={stroke:P.ink,strokeOpacity:.55,strokeWidth:1.4,strokeLinejoin:'round' as const};
 
@@ -140,6 +140,43 @@ export function DepthSetPiece({prop}:{prop:SetPieceProp}){
     <rect x={16} y={-54} width={9} height={6} fill={P.stoneLight} {...stroke}/>
     <path d="M-20 -14 L16 -60 H25" fill="none" stroke={P.stoneDeep} strokeWidth={2.4}/>
    </g>;}
+  // Lanternwood: the forest road and the lantern shrine
+  case 'fence':return <g>{shadow(26,4)}
+   <path d="M-25 -27H25M-25 -14H25" stroke={P.bark} strokeWidth={4} strokeLinecap="round"/><path d="M-25 -28.5H25M-25 -15.5H25" stroke={P.barkLight} strokeWidth={1.3}/>
+   {[-19,19].map(x=><path key={x} d={`M${x-3} 2l-1 -36l4 -3l4 3l-1 36Z`} fill={P.bark} {...stroke}/>)}
+  </g>;
+  case 'waymark-lit':case 'waymark-dark':{const lit=prop==='waymark-lit';return <g>{shadow(12,5)}
+   {lit?<circle cx={0} cy={-66} r={30} fill={LAMP_GLOW} opacity=".24"/>:null}
+   <path d="M-8 2L-6 -54H6L8 2Z" fill={P.stone} {...stroke}/><path d="M-7 -14h14M-7 -28h14M-6 -42h12" stroke={P.stoneDark} strokeWidth={1.2}/>
+   <path d="M-10 -56h20l-3 -5h-14Z" fill={P.stoneDeep} {...stroke}/>
+   <rect x={-7} y={-74} width={14} height={18} fill={lit?LAMP:DARK_GLASS} {...stroke}/><rect x={1} y={-72} width={4} height={14} fill={lit?'#cfe6b8':'#2a3138'}/>
+   <path d="M-9 -74h18l-3 -5h-12Z" fill={P.stoneDeep} {...stroke}/>
+   {lit?null:<path d="M-5 -71l5 7l-2 6" fill="none" stroke={P.metalLight} strokeWidth={1}/>}
+  </g>;}
+  case 'standing-stone':return <g>{shadow(18,6)}
+   <path d="M-16 3q16 -5 32 0" fill={P.stoneDark} {...stroke}/>
+   <path d="M-12 2L-10 -42Q0 -52 10 -40L13 2Z" fill={P.stone} {...stroke}/>
+   <path d="M-9 -24q6 -4 11 1" fill="none" stroke={P.leafDark} strokeWidth={3.5} strokeLinecap="round"/><path d="M4 -8v-9" stroke={P.stoneDark} strokeWidth={1.2}/>
+  </g>;
+  case 'shrine':return <g>{shadow(76,10,50)}
+   <circle cx={50} cy={-30} r={44} fill={LAMP_GLOW} opacity=".2"/>
+   <rect x={-22} y={-64} width={144} height={66} fill={P.stone} {...stroke}/><Courses x={-22} y={-64} w={144} h={66} rows={4} seed={1}/>
+   <path d="M-30 -62L50 -100L130 -62Z" fill={P.stoneDeep} {...stroke}/>
+   <path d="M28 2V-40A22 22 0 0 1 72 -40V2Z" fill={P.stoneLight} {...stroke}/>
+   {[1,2,3,4,5].map(i=>{const a=Math.PI*i/6;return <path key={i} d={`M${50+15*Math.cos(a)} ${-40-15*Math.sin(a)}L${50+22*Math.cos(a)} ${-40-22*Math.sin(a)}`} stroke={P.stoneDark} strokeWidth={1.4}/>})}
+   <path d="M35 2V-40A15 15 0 0 1 65 -40V2Z" fill={P.ink} opacity=".82"/>
+   <path d="M43 -40h14l2 4v14l-2 4h-14l-2 -4v-14Z" fill={LAMP} {...stroke}/><rect x={51} y={-37} width={4} height={14} fill="#cfe6b8"/>
+   <path d="M24 2h52l5 8h-62Z" fill={P.stoneLight} {...stroke}/><path d="M38 5q12 3 24 0" fill="none" stroke={P.stoneDark} strokeWidth={2}/>
+   {[2,98].map(x=><path key={x} d={`M${x} 2q-6 -2 -6 -11q0 -7 6 -9h6q6 2 6 9q0 9 -6 11Z`} fill={P.barkLight} {...stroke}/>)}
+  </g>;
+  case 'road-on':case 'threshold':return null;
+  // Two dark trunks with a gap between them; low in the gap, ear tips, a shoulder and two amber eyes.
+  case 'wolf-eyes':return <g>{shadow(26,6)}
+   <rect x={-22} y={-78} width={12} height={80} fill={P.bark} {...stroke}/><rect x={10} y={-84} width={14} height={86} fill={P.bark} {...stroke}/>
+   <path d="M-10 -4Q-8 -20 -2 -21Q6 -22 10 -4Z" fill={P.ink} opacity=".9"/>
+   <path d="M-6 -20l1 -7l3 6M1 -21l3 -7l2 7" fill={P.ink} opacity=".9"/>
+   <circle cx={-3.5} cy={-15} r={1.4} fill={LAMP}/><circle cx={3} cy={-15.5} r={1.4} fill={LAMP}/>
+  </g>;
  }
 }
 
@@ -162,6 +199,12 @@ export function FlatSetPiece({prop}:{prop:SetPieceProp}){
   case 'crates':return <g><rect x={8} y={8} width={34} height={34} fill={P.barkLight} {...stroke}/><path d="M8 8l34 34M42 8 8 42" stroke={P.bark} strokeWidth={1.5}/></g>;
   case 'bollard':return <g><circle cx={25} cy={25} r={9} fill={P.stoneDeep} {...stroke}/><circle cx={36} cy={34} r={6} fill="none" stroke={P.bark} strokeWidth={2.5}/></g>;
   case 'stairs':return <g><rect x={4} y={4} width={42} height={42} fill={P.stone} {...stroke}/>{[12,20,28,36].map(y=><path key={y} d={`M4 ${y}h42`} stroke={P.stoneDark} strokeWidth={1.5}/>)}</g>;
+  case 'fence':return <g><path d="M0 20h50M0 30h50" stroke={P.barkLight} strokeWidth={3}/><rect x={4} y={17} width={6} height={16} fill={P.bark} {...stroke}/><rect x={40} y={17} width={6} height={16} fill={P.bark} {...stroke}/></g>;
+  case 'waymark-lit':case 'waymark-dark':{const lit=prop==='waymark-lit';return <g>{lit?<circle cx={25} cy={25} r={24} fill={LAMP_GLOW} opacity=".28"/>:null}<rect x={16} y={14} width={18} height={22} fill={P.stone} {...stroke}/><rect x={19} y={17} width={12} height={10} fill={lit?LAMP:DARK_GLASS} {...stroke}/></g>;}
+  case 'standing-stone':return <ellipse cx={25} cy={26} rx={13} ry={10} fill={P.stone} {...stroke}/>;
+  case 'shrine':return <g><rect x={4} y={6} width={142} height={38} fill={P.stone} {...stroke}/><path d="M4 25h142" stroke={P.stoneDark} strokeWidth={1.2}/><circle cx={75} cy={30} r={18} fill={LAMP_GLOW} opacity=".3"/><path d="M65 44V30a10 10 0 0 1 20 0v14" fill={P.ink} stroke={P.stoneLight} strokeWidth={2}/><rect x={71} y={28} width={8} height={9} fill={LAMP}/></g>;
+  case 'road-on':case 'threshold':return null;
+  case 'wolf-eyes':return <g><circle cx={15} cy={20} r={9} fill={P.bark} {...stroke}/><circle cx={36} cy={18} r={9} fill={P.bark} {...stroke}/><circle cx={23} cy={32} r={1.8} fill={LAMP}/><circle cx={28} cy={32} r={1.8} fill={LAMP}/></g>;
  }
 }
 
@@ -173,7 +216,31 @@ export function GroundMarkArt({mark,seed=0}:{mark:GroundMark;seed?:number}){
   case 'deck':return <g stroke={P.bark} strokeOpacity=".7" strokeWidth={1.2}><rect width={50} height={50} fill={P.barkLight}/><path d="M0 12.5h50M0 25h50M0 37.5h50"/><path d={seed%2?'M18 0v12.5M40 12.5v12.5M10 25v12.5M30 37.5v12.5':'M34 0v12.5M12 12.5v12.5M38 25v12.5M20 37.5v12.5'}/></g>;
   case 'loading':return <g stroke={SALT} strokeWidth={3} fill="none" opacity=".85"><path d="M4 14V4h10M36 4h10v10M46 36v10H36M14 46H4V36"/></g>;
   case 'glass':return <g><path d="M20 30l12 -4l-4 -10Z" fill={LENS} stroke={P.stoneDark} strokeWidth={1}/><path d="M24 26l4 -3" stroke={P.metalLight} strokeWidth={1}/></g>;
+  // Low water a step below the ground: an irregular bank, dark water, a thin waterline, flat ripples, ankle-high mist.
+  case 'hollow':return <g>
+   <path d={seed%2?'M4 10Q12 3 26 5Q42 3 47 12Q50 26 45 40Q34 48 22 46Q7 47 3 36Q0 22 4 10Z':'M5 8Q16 2 30 4Q45 5 47 16Q49 30 43 42Q30 48 18 46Q5 44 3 32Q2 18 5 8Z'} fill={P.leafDark} opacity=".85"/>
+   <path d={seed%2?'M8 14Q16 9 27 10Q40 9 43 16Q46 27 41 37Q32 43 22 42Q10 42 7 33Q5 23 8 14Z':'M9 12Q18 7 30 9Q42 10 43 19Q45 30 39 38Q28 43 18 42Q8 40 7 30Q6 20 9 12Z'} fill={P.water}/>
+   <path d={seed%2?'M8 14Q16 9 27 10Q40 9 43 16Q46 27 41 37Q32 43 22 42Q10 42 7 33Q5 23 8 14Z':'M9 12Q18 7 30 9Q42 10 43 19Q45 30 39 38Q28 43 18 42Q8 40 7 30Q6 20 9 12Z'} fill={P.ink} opacity=".38"/>
+   <path d="M11 15Q26 10 41 16" fill="none" stroke={P.waterLight} strokeOpacity=".55" strokeWidth={1.2}/>
+   <path d="M15 24h10M27 31h8M18 36h7" stroke={P.waterLight} strokeOpacity=".3" strokeWidth={1.3} strokeLinecap="round"/>
+   <ellipse cx={25} cy={40} rx={20} ry={3} fill={SALT} opacity=".1"/>
+  </g>;
+  // The shrine's refuge: warm light, a dotted edge and a sun painted on the floor, so it reads without colour.
+  case 'refuge':return <g>
+   <rect width={50} height={50} fill={LAMP_GLOW} opacity=".24"/>
+   <rect x={5} y={5} width={40} height={40} fill="none" stroke={LIGHT_EDGE} strokeWidth={1.4} strokeDasharray="3 4"/>
+   <circle cx={25} cy={25} r={4} fill={LIGHT_EDGE}/>
+   {[0,1,2,3,4,5,6,7].map(i=>{const a=i*Math.PI/4;return <path key={i} d={`M${25+6.5*Math.cos(a)} ${25+6.5*Math.sin(a)}L${25+10*Math.cos(a)} ${25+10*Math.sin(a)}`} stroke={LIGHT_EDGE} strokeWidth={1.6} strokeLinecap="round"/>})}
+  </g>;
+  case 'flagstone':return <g><rect width={50} height={50} fill={P.stone} opacity=".32"/><path d={seed%2?'M0 18h22M22 0v50M22 31h28M37 31v19M8 18v32':'M0 26h30M30 0v50M30 14h20M14 26v24M40 14v-14'} fill="none" stroke={P.stoneDark} strokeOpacity=".5" strokeWidth={1}/></g>;
+  case 'trampled':return <g><path d="M17 0h16l-2 50h-12Z" fill={P.road} opacity=".75"/><path d="M22 12h3M26 30h3M21 40h2" stroke={P.roadDetail} strokeWidth={1.3}/></g>;
  }
+}
+
+/** Where the shrine's light ends, on the ground plane in board units (game/set-pieces.ts refugeEdges). */
+export function RefugeEdges({edges}:{edges:readonly (readonly [number,number,number,number])[]}){
+ if(!edges.length)return null;
+ return <g className="refuge-edges" pointerEvents="none">{edges.map(([x1,y1,x2,y2],i)=><g key={i}><path d={`M${x1} ${y1}L${x2} ${y2}`} stroke={P.ink} strokeWidth={5} strokeLinecap="round" opacity=".7"/><path d={`M${x1} ${y1}L${x2} ${y2}`} stroke="#fff1c2" strokeWidth={2.4} strokeLinecap="round"/></g>)}</g>;
 }
 
 /** Lamps that light the ground around them, as ground-plane glows in tile-local units of their own tile. */
@@ -181,5 +248,9 @@ export function GroundLight({prop}:{prop:SetPieceProp}){
  if(prop==='lamp')return <g><circle cx={45} cy={10} r={80} fill={LAMP_GLOW} opacity=".09"/><circle cx={40} cy={15} r={50} fill={LAMP_GLOW} opacity=".1"/><circle cx={30} cy={20} r={26} fill={LAMP_GLOW} opacity=".12"/></g>;
  if(prop==='cage-lit')return <g><circle cx={25} cy={40} r={46} fill={LENS} opacity=".14"/><circle cx={25} cy={40} r={24} fill={LENS} opacity=".16"/></g>;
  if(prop==='carving')return <circle cx={75} cy={45} r={40} fill={LAMP_GLOW} opacity=".1"/>;
+ if(prop==='waymark-lit')return <g><circle cx={25} cy={45} r={70} fill={LAMP_GLOW} opacity=".08"/><circle cx={25} cy={40} r={40} fill={LAMP_GLOW} opacity=".1"/></g>;
+ if(prop==='shrine')return <g><circle cx={75} cy={70} r={90} fill={LAMP_GLOW} opacity=".08"/><circle cx={75} cy={60} r={52} fill={LAMP_GLOW} opacity=".1"/></g>;
+ // The way on runs out of the board into the dark.
+ if(prop==='road-on'||prop==='threshold')return <g><rect x={10} width={40} height={50} fill={P.ink} opacity=".22"/><rect x={28} width={22} height={50} fill={P.ink} opacity=".3"/><rect x={42} width={8} height={50} fill={P.ink} opacity=".3"/></g>;
  return null;
 }
