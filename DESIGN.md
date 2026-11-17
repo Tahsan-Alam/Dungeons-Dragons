@@ -36,7 +36,7 @@ Use restrained tabletop terms across the product: Camp, Adventures, Solo quest, 
 
 Both art styles share modern, subtly raised controls with soft 9px corners, faint highlights and short shadows. Typography, logo, panel corners, spacing and interface icons stay identical when changing styles, including icon strokes and rounded edges. Paint/Pixel only changes the game viewport and illustrated assets, including character portraits and scenery. Focus and selected rings are contained within control bounds so they cannot overlap adjacent stats or actions. Hover/press movement is small and honors the motion preference. Tooltips explain controls and current shortcuts without becoming persistent UI copy.
 
-The adventure creator inherits Light/Dark/System surfaces and text. Narrator traits supply a dark accent for light surfaces and a lighter accent for dark surfaces; they never override the brightness preference. The unformed creator stays neutral. Dark world palettes cover terrain, portraits, outfits and dice in previews, chapter scenes, play and replay; raster narrator art uses a softer exposure without dimming interface text or game markers.
+The earlier conversation-led adventure creator (Imagine → Your hero → Begin, with the Aether guide and its creation scene) was removed in November 2026; quest setup and the Tale step's Write your own / Talk it through replaced it.
 
 ## Title menu and quick start
 
@@ -44,7 +44,7 @@ Camp is now a game title menu instead of a two-column introduction. The left pan
 
 The shared header stays mounted, but its Camp/Adventures buttons are hidden on Camp because the menu already offers them. They keep their slots, so nothing moves when they return on other screens.
 
-Quick start opens the creator on its review step with one of three ready-made adventures (woodland, ruins or coast), a suggested hero and the default guide. It uses built-in drafts, never calls a provider, and neither reads nor overwrites a saved creator draft. Every earlier step remains reachable from the review, and the review names the terrain.
+Quick start opens quest setup on its Set Out step with the default Game Master, tale and hero, without reading or overwriting the saved setup draft.
 
 ## 2D and 2.5D presentation
 
@@ -89,7 +89,7 @@ The screens are being rebuilt from the team's design canvas ("Wandering Storytel
 
 The three built-in tales share one setting, the Lantern Marches (`SETTING` in `game/presets.ts`). Lanternwood, the Hollow Reach and Saltreach Harbour stay the region names and remain the tales' `story.world`. The setting name is display only: art and enemies follow `biome`, chapters follow `locations` and the adventure length, and saves record the biome and tale title, so no saved field changed. The design reference is the World page on the design canvas (the Threeway Crossing map and one mood board per region), built from the team's World Guide; the Story Bible still owns chapter names, hero histories, Game Master voices and encounter rules.
 
-- **Words.** The Waylantern is the broken lantern at Threeway Crossing. Aether is the current its light follows from waymark to waymark (“Follow Aether’s light to the next waymark”). The creator's default narrator is also named Aether; keep the two readings compatible until the team decides otherwise.
+- **Words.** The Waylantern is the broken lantern at Threeway Crossing. Aether is the current its light follows from waymark to waymark (“Follow Aether’s light to the next waymark”). The live-voice guide is also named Aether; keep the two readings compatible.
 - **Chapter openings.** For the built-in tales, `game/lore.ts` leads each opening with a clue the party can see, in the Game Master's voice: the empty salt stall at Starfall Market, the name chiselled from the arch carving, the lamp cage stripped of its glass on the lantern pier. Short and long runs add the place's clue to the standard shard line. Victory relights the tale's road toward the Waylantern. Custom tales keep their own world and the classic text.
 - **Older saves.** New games carry `lore: 1`. Saves made before it have no marker and keep the openings they were played with, live and in replay.
 - **Display.** The tale list reads “Lanternwood · 3 chapters”; the chosen tale and the chapter card read “The Lantern Marches · Lanternwood”.
