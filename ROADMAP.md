@@ -35,6 +35,17 @@ Keep this as the short checkpoint overview. Use GitHub issues for individual tas
 - [ ] Add optional novel generated image assets that preserve character identity; current AI art uses paired reusable SVG recipes.
 - [ ] Improve encounter variety and balancing using human playtest feedback; longer adventures currently reuse the validated encounter families.
 
+### The Lantern Marches
+
+- [x] Name the shared setting of the built-in tales, keep the region names, and lead chapter openings with each region's visible clue (Waylantern and Aether wording; older saves keep their text).
+- [ ] Between-chapters map: the route relights after each gateway (designed on the canvas, awaiting approval).
+- [ ] Bring the approved chapter I board art into the game: Starfall Market, the broken arch, the lantern pier.
+- [ ] Design and build the remaining six chapter places (forest road, shrine, ridge road, keep, glassmakers' row, vaults).
+- [ ] Replace the chapter card panoramas with the regional day and dusk scenes.
+- [ ] Map button during play, and the full relight at victory.
+- [ ] Decide long runs: revisit the three stops or use the five region scene names.
+- [ ] Decide whether the creator's narrator keeps the name Aether.
+
 These are proposed next tasks, not promises that every feature lands in alpha.2. Choose a small scope together for each checkpoint.
 
 ## Later
