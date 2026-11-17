@@ -7,7 +7,11 @@ export type Narrator = 'warm' | 'dramatic' | 'wry';
 export type Biome = 'woodland' | 'ruins' | 'coast';
 export interface GameOptions { rules: RulesMode; seed: string; narrator: Narrator; biome: Biome; companions: number; storyPrompt?:string; narratorPrompt?:string; characterPrompt?:string; aiEnabled?:boolean; duration?:'short'|'standard'|'long'; creation?:AdventureBlueprint; }
 export interface PlayerSpec { id: string; name: string; heroClass: HeroClass; color: string; bot: boolean; }
-export interface Tile { x: number; y: number; kind: 'grass' | 'path' | 'water' | 'wall'; decoration?: 'tree' | 'rock' | 'flower' | 'mushroom' | 'ruin'; }
+/** Landmark props of an authored chapter (game/set-pieces.ts). They stand on wall tiles; `span` marks the extra tiles a wide prop covers. */
+export type SetPieceProp = 'span' | 'shop' | 'stall' | 'salt-stall' | 'stall-skew' | 'oil-cart' | 'lamp' | 'gate-left' | 'gate-right' | 'gate-rubble' | 'masonry' | 'carving' | 'arch' | 'rubble' | 'cage-empty' | 'cage-lit' | 'crates' | 'bollard' | 'quay' | 'stairs';
+/** Marks painted on walkable ground: cobbles, cart grooves, pier planks, a loading square, a shard of lens glass. */
+export type GroundMark = 'cobble' | 'groove' | 'deck' | 'loading' | 'glass';
+export interface Tile { x: number; y: number; kind: 'grass' | 'path' | 'water' | 'wall'; decoration?: 'tree' | 'rock' | 'flower' | 'mushroom' | 'ruin' | SetPieceProp | GroundMark; }
 export interface Actor { id: string; playerId?: string; name: string; heroClass: HeroClass; color: string; enemy: boolean; bot: boolean; x: number; y: number; hp: number; maxHp: number; ac: number; speed: number; movement: number; actionUsed: boolean; guarding: boolean; potions: number; abilityUses: number; initiative: number; deathSuccesses: number; deathFailures: number; defeated: boolean;
   /** Shield wall: the guardian taking hits for this actor until the guardian's next turn. */ guardedBy?: string;
   /** Inspire: advantage on this actor's next attack roll. */ inspired?: boolean;

@@ -4,6 +4,8 @@ import type {GameState,Tile} from '../../game/types';
 import type {BoardProjection} from './board-projection';
 import {ART_PALETTE as P} from './artPalette';
 import {Tree} from './Art';
+import {DepthSetPiece,GroundLight,GroundMarkArt} from './SetPieceArt';
+import {groundOf,isGroundMark,isSetPieceProp} from '../../game/set-pieces';
 import './depth-art.css';
 
 type Point={x:number;y:number};
@@ -33,12 +35,14 @@ export const DepthTerrain=memo(function DepthTerrain({game,grid,projection}:{gam
   <g transform={projection.groundTransform}>
    <rect width={w} height={h} fill={base}/>
    {game.tiles.map(tile=>{
-    const x=tile.x*50,y=tile.y*50,seed=(tile.x*17+tile.y*31)%11;
+    const x=tile.x*50,y=tile.y*50,seed=(tile.x*17+tile.y*31)%11,ground=groundOf(game,tile);
     return <g key={`${tile.x}-${tile.y}`} transform={`translate(${x} ${y})`}>
-     {tile.kind==='path'?<><rect width="50" height="50" fill={P.road}/><path d={seed%2?'M8 12h10m17 22h6':'M29 10h8M10 38h6'} fill="none" stroke={P.roadDetail} strokeWidth={1.5}/></>:tile.kind==='water'?<><rect width="50" height="50" fill={P.water}/><path d={'M5 14q6-3 12 0t10 0m2 16q6-3 12 0'} fill="none" stroke={P.waterLight} strokeOpacity=".6" strokeWidth={1.5}/></>:seed<3?<path d={'m18 36-3-6m5 6 2-9m0 9 4-4'} fill={'none'} stroke={P.grassDetail} strokeOpacity=".55" strokeWidth="1.4"/>:null}
+     {ground.kind==='path'?<><rect width="50" height="50" fill={P.road}/><path d={seed%2?'M8 12h10m17 22h6':'M29 10h8M10 38h6'} fill="none" stroke={P.roadDetail} strokeWidth={1.5}/></>:ground.kind==='water'?<><rect width="50" height="50" fill={P.water}/><path d={'M5 14q6-3 12 0t10 0m2 16q6-3 12 0'} fill="none" stroke={P.waterLight} strokeOpacity=".6" strokeWidth={1.5}/></>:seed<3?<path d={'m18 36-3-6m5 6 2-9m0 9 4-4'} fill={'none'} stroke={P.grassDetail} strokeOpacity=".55" strokeWidth="1.4"/>:null}
+     {ground.base?<GroundMarkArt mark={ground.base} seed={seed}/>:null}{ground.mark?<GroundMarkArt mark={ground.mark} seed={seed}/>:null}
      {grid?<path d="M0 50V0h50" fill="none" stroke={P.grassDetail} strokeWidth=".8" opacity=".23"/>:null}
     </g>;
    })}
+   {game.tiles.map(tile=>isSetPieceProp(tile.decoration)?<g key={`light-${tile.x}-${tile.y}`} transform={`translate(${tile.x*50} ${tile.y*50})`}><GroundLight prop={tile.decoration}/></g>:null)}
   </g>
   <polyline points={points([corners[3],corners[2],corners[1]])} fill="none" stroke={P.grassDetail} strokeWidth="1" opacity=".65"/>
  </g>;
@@ -46,7 +50,8 @@ export const DepthTerrain=memo(function DepthTerrain({game,grid,projection}:{gam
 
 export const DepthProp=memo(function DepthProp({tile,projection,faded=false}:{tile:Tile;projection:BoardProjection;faded?:boolean}){
  const at=projection.tileCenter(tile.x,tile.y),seed=tile.x*7+tile.y*13,treeSize=.75+(tile.x%3)*.08;
- if(tile.kind!=='wall'&&!tile.decoration)return null;
+ if((tile.kind!=='wall'&&!tile.decoration)||isGroundMark(tile.decoration)||tile.decoration==='span')return null;
+ if(isSetPieceProp(tile.decoration))return <g transform={`translate(${at.x} ${at.y})`} className="depth-prop depth-set-piece" pointerEvents="none" opacity={faded?.46:1}><DepthSetPiece prop={tile.decoration}/></g>;
  return <g transform={`translate(${at.x} ${at.y})`} className={`depth-prop`} pointerEvents="none" opacity={faded?.46:1}>
   {tile.kind==='wall'&&!tile.decoration?<><ellipse cy="5" rx="27" ry="12" fill={P.ink} opacity=".12"/><Prism projection={projection} width={38} depth={35} height={25+(seed%3)*3}/><path d="M-19 0h38M-6 10v-12m13 6v-10" fill="none" stroke={P.stoneDeep} strokeOpacity=".45" strokeWidth={1.2}/></>:tile.decoration==='tree'?<Tree x={0} y={-24*treeSize} size={treeSize} tone={tile.x+tile.y}/>:tile.decoration==='rock'?<><ellipse cy="3" rx="19" ry="8" fill={P.ink} opacity=".13"/><Prism projection={projection} width={25} depth={24} height={10+(seed%3)*3} top={P.stone} left={P.stoneDark} right={P.stoneDeep}/><path d="m-9-13 10-5 7 4-10 5Z" fill={P.stoneLight} opacity=".5"/></>:tile.decoration==='ruin'?<><ellipse cy="5" rx="22" ry="9" fill={P.ink} opacity=".12"/><Prism projection={projection} width={29} depth={25} height={8}/><g transform="translate(-7 -5)"><Prism projection={projection} width={12} depth={15} height={34}/></g><g transform="translate(9 -2)"><Prism projection={projection} width={11} depth={15} height={25}/></g><path d="m-16-15 10 5m8-5 11-5" fill="none" stroke={P.stoneDark} strokeWidth={1.3}/></>:tile.decoration==='flower'?<><ellipse cy="3" rx="11" ry="4" fill={P.ink} opacity=".08"/><path d="M-5 1V-10m11 11V-5" stroke={P.leafDark} strokeWidth="2"/>{<><circle cx="-5" cy="-12" r="4" fill={P.flower}/><circle cx="6" cy="-7" r="3.5" fill={P.flower}/><circle cx="-6" cy="-13" r="1.5" fill={P.flowerLight}/></>}</>:tile.decoration==='mushroom'?<><ellipse cy="3" rx="12" ry="5" fill={P.ink} opacity=".1"/><path d={'M-2 1v-12h5V1Z'} fill={P.barkLight}/><path d={'M-10-10q10-20 20 0Z'} fill={P.mushroom} stroke={P.ink} strokeWidth="1"/><path d={'m-5-13 2-2m6 1 1 1'} fill={P.accentLight} stroke={P.accentLight} strokeWidth="2"/></>:null}
  </g>;
