@@ -4,6 +4,8 @@ import {applySetPiece,setPieceFor} from './set-pieces.ts';
 import { SUPPORT_ABILITY } from './types.ts';
 import {campaignFixture,installCampaign,rememberChapter,storyGoal} from './campaign.ts';
 import {parseBlueprint} from './creation.ts';
+import {armorOf,KEEPER_AC_BONUS,KEEPER_HP_BONUS,KEEPER_PROFILE,KEEPER_STRIKE,keeperFor,onTiles,planBreath,planHunt,planTide,type KeeperBoard} from './keepers.ts';
+import type {KeeperPlan} from './types.ts';
 
 // This module deliberately has no network, clock, browser, or model dependencies.
 // A saved state contains its random generator, so the same action is reproducible.
@@ -170,14 +172,16 @@ function setupScene(game: GameState) {
   const final=game.scene>=storyGoal(game)-1;
   const count = Math.min(8, Math.max(2, Math.ceil(heroes.length * 0.75) + (final ? 1 : 0)));
   const enemySpawn = [{ x: 14, y: 7 }, { x: 15, y: 5 }, { x: 15, y: 9 }, { x: 17, y: 6 }, { x: 17, y: 8 }, { x: 14, y: 4 }, { x: 14, y: 10 }, { x: 16, y: 11 }];
+  const keeperKind = final ? keeperFor(game) : undefined;
   for (let i = 0; i < count; i++) {
-    const boss = final && i === count - 1;
-    const hp = (game.options.rules === 'simple' ? 9 : 12) + game.scene * 3 + (boss ? 8 : 0);
+    const boss = final && i === count - 1, keeper = boss ? keeperKind : undefined, profile = keeper && KEEPER_PROFILE[keeper];
+    const hp = (game.options.rules === 'simple' ? 9 : 12) + game.scene * 3 + (keeper ? KEEPER_HP_BONUS : boss ? 8 : 0);
     const heroClass: HeroClass = i % 3 === 1 ? 'ranger' : 'knight';
-    game.actors.push({ id: `enemy-${game.scene}-${i}`, name: boss ? 'The Hollow Keeper' : `${ENEMIES[game.options.biome][i % 4]} ${i + 1}`,
+    const ac = (game.options.rules === 'simple' ? 10 : 12) + (keeper ? KEEPER_AC_BONUS : 0), speed = profile ? profile.speed : 4;
+    game.actors.push({ id: `enemy-${game.scene}-${i}`, name: profile ? profile.name : boss ? 'The Hollow Keeper' : `${ENEMIES[game.options.biome][i % 4]} ${i + 1}`,
       heroClass, color: boss ? '#ab769d' : '#9ead7e', enemy: true, bot: true, ...enemySpawn[i], hp, maxHp: hp,
-      ac: game.options.rules === 'simple' ? 10 : 12, speed: 4, movement: 4, actionUsed: false, guarding: false, potions: 0,
-      abilityUses: 0, initiative: 0, deathSuccesses: 0, deathFailures: 0, defeated: false });
+      ac, speed, movement: speed, actionUsed: false, guarding: false, potions: 0,
+      abilityUses: 0, initiative: 0, deathSuccesses: 0, deathFailures: 0, defeated: false, ...(keeper ? {keeper} : {}) });
   }
   for (const a of game.actors) a.initiative = die(game, 20) + (a.heroClass === 'ranger' ? 3 : 1);
   // The streamlined mode lets the party act first, avoiding a confusing opening barrage.
@@ -270,6 +274,7 @@ function evaluate(game: GameState) {
 
 function beginTurn(game: GameState, actor: Actor) {
   actor.movement = actor.speed; actor.actionUsed = false; actor.guarding = false;
+  if (actor.exposed) delete actor.exposed;
   // A shield wall lasts until the guardian's next turn; roots hold for one turn.
   for (const a of game.actors) if (a.guardedBy === actor.id) delete a.guardedBy;
   if (actor.rooted) { actor.movement = 0; actor.rooted = false; event(game, 'action', `${actor.name} is held by roots and cannot move this turn.`, actor.id); }
@@ -310,7 +315,10 @@ function flanked(game: GameState, actor: Actor, target: Actor) {
   return game.actors.some(a => a.id !== actor.id && a.enemy === actor.enemy && !a.defeated && a.hp > 0 && manhattan(a, target) === 1);
 }
 
-function strike(game: GameState, actor: Actor, target: Actor, ability: boolean) {
+/** A Keeper's pounce: advantage and an extra damage die on top of its usual strike. */
+interface StrikeExtra { advantage?: boolean; extraDie?: boolean; verb?: string }
+
+function strike(game: GameState, actor: Actor, target: Actor, ability: boolean, extra: StrikeExtra = {}) {
   const stats = CLASS[actor.heroClass];
   // Shield wall: an enemy blow aimed at a guarded ally lands on the guardian while they stand beside them.
   const guardian = actor.enemy && target.guardedBy ? game.actors.find(a => a.id === target.guardedBy && !a.defeated && a.hp > 0 && manhattan(a, target) <= 1) : undefined;
@@ -318,31 +326,38 @@ function strike(game: GameState, actor: Actor, target: Actor, ability: boolean) 
   const inspired = !!actor.inspired;
   if (inspired) { actor.inspired = false; event(game, 'action', `${actor.name} attacks with inspiration (advantage).`, actor.id); }
   const first = die(game, 20);
-  const advantage = (ability && actor.heroClass === 'ranger') || inspired;
+  const advantage = (ability && actor.heroClass === 'ranger') || inspired || !!extra.advantage;
   const disadvantage = target.guarding;
   const second = advantage !== disadvantage ? die(game, 20) : first;
   const roll = advantage && !disadvantage ? Math.max(first, second) : disadvantage && !advantage ? Math.min(first, second) : first;
-  const bonus = actor.enemy ? 3 : stats.bonus;
-  const hit = game.options.rules === 'simple' ? roll !== 1 : roll === 20 || (roll !== 1 && roll + bonus >= target.ac);
+  const bonus = actor.keeper ? KEEPER_STRIKE.bonus : actor.enemy ? 3 : stats.bonus;
+  // A Keeper whose pounce missed is exposed until its next turn.
+  const ac = armorOf(target);
+  const hit = game.options.rules === 'simple' ? roll !== 1 : roll === 20 || (roll !== 1 && roll + bonus >= ac);
   actor.actionUsed = true;
   if (ability) actor.abilityUses--;
   if (!hit) {
-    event(game, 'roll', `${actor.name} rolls ${roll}${game.options.rules === 'classic' ? ` + ${bonus} vs AC ${target.ac}` : ''} and misses ${target.name}.`, actor.id, roll, {targetId:target.id,action:ability?'ability':'attack',hit:false,critical:false,damage:0,bonus,ac:target.ac});
+    event(game, 'roll', `${actor.name} rolls ${roll}${game.options.rules === 'classic' ? ` + ${bonus} vs AC ${target.ac}` : ''} and misses ${target.name}.`, actor.id, roll, {targetId:target.id,action:ability?'ability':'attack',hit:false,critical:false,damage:0,bonus,ac});
     return;
   }
-  const damageDie = actor.enemy ? 4 : stats.die;
-  let damage = die(game, damageDie) + (actor.enemy ? 1 : 3);
+  const damageDie = actor.keeper ? KEEPER_STRIKE.die : actor.enemy ? 4 : stats.die;
+  let damage = die(game, damageDie) + (actor.keeper ? KEEPER_STRIKE.plus : actor.enemy ? 1 : 3);
   if (roll === 20) damage += die(game, damageDie);
+  if (extra.extraDie) damage += die(game, damageDie);
   const sneak = ability && actor.heroClass === 'rogue' && flanked(game, actor, target);
   if (ability) damage += actor.heroClass === 'knight' ? 5 : actor.heroClass === 'rogue' ? (sneak ? 7 : 2) : 4;
   if (game.options.rules === 'simple' && target.guarding) damage = Math.max(1, Math.floor(damage / 2));
   target.hp = Math.max(0, target.hp - damage);
-  event(game, 'roll', `${actor.name} ${sneak ? 'strikes from the flank at' : ability ? 'uses a special attack on' : 'hits'} ${target.name} for ${damage} damage${roll === 20 ? ' — critical hit!' : '.'} (d20: ${roll})`, actor.id, roll, {targetId:target.id,action:ability?'ability':'attack',hit:true,critical:roll===20,damage,bonus,ac:target.ac});
-  if (target.hp === 0) {
-    target.defeated = target.enemy;
-    target.deathSuccesses = 0; target.deathFailures = 0;
-    event(game, 'action', `${target.name} ${target.enemy ? 'is defeated.' : 'is down! Healing light can get them back up.'}`, target.id);
-  }
+  event(game, 'roll', `${actor.name} ${extra.verb ?? (sneak ? 'strikes from the flank at' : ability ? 'uses a special attack on' : 'hits')} ${target.name} for ${damage} damage${roll === 20 ? ' — critical hit!' : '.'} (d20: ${roll})`, actor.id, roll, {targetId:target.id,action:ability?'ability':'attack',hit:true,critical:roll===20,damage,bonus,ac});
+  if (target.hp === 0) fall(game, target);
+}
+
+/** Health reaches zero: enemies are defeated (a Keeper with its own line), heroes go down. */
+function fall(game: GameState, target: Actor) {
+  target.defeated = target.enemy;
+  target.deathSuccesses = 0; target.deathFailures = 0;
+  if (target.keeper) { delete target.plan; delete target.exposed; }
+  event(game, 'action', target.keeper ? KEEPER_PROFILE[target.keeper].defeat : `${target.name} ${target.enemy ? 'is defeated.' : 'is down! Healing light can get them back up.'}`, target.id);
 }
 
 function perform(game: GameState, actor: Actor, action: GameAction) {
@@ -437,6 +452,7 @@ function approach(game: GameState, actor: Actor, target: { x: number; y: number 
 }
 
 function botTurn(game: GameState, actor: Actor, observe?:FrameObserver) {
+  if (actor.keeper && keeperTurn(game, actor, observe)) return;
   if (!actor.enemy && isEncounterClear(game)) {
     const destination = game.chest.opened ? game.exit : game.chest;
     approach(game, actor, destination, 1, observe);
@@ -462,7 +478,88 @@ function botTurn(game: GameState, actor: Actor, observe?:FrameObserver) {
     const special = !actor.enemy && actor.abilityUses > 0 && available[0].hp > 7
       && (cls === 'knight' || cls === 'ranger' || cls === 'mage' || (cls === 'rogue' && flanked(game, actor, available[0])));
     perform(game, actor, { type: special ? 'ability' : 'attack', targetId: available[0].id });
-  } else if (!actor.actionUsed) perform(game, actor, { type: 'guard' });
+  } else if (!actor.actionUsed && !actor.keeper) perform(game, actor, { type: 'guard' });
+}
+
+/* The Hollow Keepers (RULES.md). A Keeper never guards. On one turn it announces its signature attack and the
+   marked tiles are stored on it; on its next turn that stored plan resolves exactly as drawn, and the turn after is
+   an ordinary approach and strike. Heroes who leave the marked tiles in between avoid the attack. */
+function keeperBoard(game: GameState, actor: Actor): KeeperBoard {
+  return { inside: c => c.x >= 0 && c.y >= 0 && c.x < game.width && c.y < game.height,
+    wall: c => game.tiles[c.y * game.width + c.x]?.kind === 'wall',
+    free: c => walkable(game, c.x, c.y) && !occupied(game, c.x, c.y, actor.id) };
+}
+const standing = (game: GameState) => game.actors.filter(a => !a.enemy && a.hp > 0 && !a.defeated);
+
+function keeperPlan(game: GameState, actor: Actor): KeeperPlan | null {
+  const move = KEEPER_PROFILE[actor.keeper!].move, heroes = standing(game), board = keeperBoard(game, actor);
+  return move === 'hunt' ? planHunt(actor, heroes, board, game.round) : move === 'breath' ? planBreath(actor, heroes, board, game.round)
+    : move === 'tide' ? planTide(actor, heroes, board, game.round) : null;
+}
+
+/** Returns true when the Keeper's turn is spent; false hands it to the ordinary approach and strike (without guarding). */
+function keeperTurn(game: GameState, actor: Actor, observe?: FrameObserver): boolean {
+  const profile = KEEPER_PROFILE[actor.keeper!];
+  if (actor.plan) {
+    const plan = actor.plan; delete actor.plan; actor.keeperRest = true;
+    releaseKeeperPlan(game, actor, plan, observe);
+    actor.actionUsed = true; actor.movement = 0;
+    return true;
+  }
+  if (actor.keeperRest || !profile.move) { delete actor.keeperRest; return false; }
+  let plan = keeperPlan(game, actor);
+  if (!plan) {
+    const nearest = standing(game).sort((a, b) => manhattan(actor, a) - manhattan(actor, b) || a.hp - b.hp)[0];
+    if (!nearest) return false;
+    approach(game, actor, nearest, profile.move === 'breath' ? 3 : 1, observe);
+    plan = keeperPlan(game, actor);
+  }
+  if (!plan) return false;
+  actor.plan = plan; actor.actionUsed = true;
+  const target = game.actors.find(a => a.id === plan.targetId);
+  event(game, 'action', plan.move === 'hunt' ? `${actor.name} fixes its eyes on ${target?.name}. Lantern Hunt: on its next turn it pounces along the marked path. Step off the path to escape.`
+    : plan.move === 'breath' ? `${actor.name} draws in a breath of lanternfire. The marked lane burns on its next turn. Leave it, or put a wall between you.`
+    : `${actor.name} raises her glass blade toward ${target?.name}. Breaking Tide: on her next turn the marked arcs break, one after another.`, actor.id);
+  return true;
+}
+
+/** Damage from marked ground: no attack roll. Guarding halves it. */
+function scorch(game: GameState, target: Actor, damage: number, source: string) {
+  if (target.guarding) damage = Math.max(1, Math.floor(damage / 2));
+  target.hp = Math.max(0, target.hp - damage);
+  event(game, 'action', `${source} catches ${target.name} for ${damage} damage${target.guarding ? ' (guarded)' : ''}.`, target.id);
+  if (target.hp === 0) fall(game, target);
+}
+
+function releaseKeeperPlan(game: GameState, actor: Actor, plan: KeeperPlan, observe?: FrameObserver) {
+  const free = (c: { x: number; y: number }) => walkable(game, c.x, c.y) && !occupied(game, c.x, c.y, actor.id);
+  if (plan.move === 'hunt') {
+    // The wolf runs the stored route, stopping short of anything now in the way. It never chooses a new target.
+    for (const c of plan.route ?? []) { if (!free(c)) break; actor.x = c.x; actor.y = c.y; }
+    event(game, 'action', `${actor.name} pounces along the marked path.`, actor.id);
+    observe?.(structuredClone(game));
+    const target = game.actors.find(a => a.id === plan.targetId);
+    if (target && target.hp > 0 && !target.defeated && onTiles(plan.tiles, target) && manhattan(actor, target) <= 1)
+      strike(game, actor, target, false, { advantage: true, extraDie: true, verb: 'pounces on' });
+    else { actor.exposed = true; event(game, 'action', `The pounce lands on empty ground. ${actor.name} is exposed until its next turn.`, actor.id); }
+  } else if (plan.move === 'breath') {
+    event(game, 'action', `${actor.name} breathes lanternfire down the marked lane.`, actor.id);
+    const caught = standing(game).filter(h => onTiles(plan.tiles, h));
+    if (!caught.length) event(game, 'action', 'The flames wash over empty ground.', actor.id);
+    for (const hero of caught) scorch(game, hero, die(game, 6) + die(game, 6) + 3, 'Lanternfire');
+  } else {
+    event(game, 'action', `${actor.name} looses the Breaking Tide.`, actor.id);
+    const arcs = plan.arcs ?? [];
+    for (let i = 0; i < arcs.length; i++) {
+      if (i > 0) {
+        // Each later arc follows a two-tile step; if either tile is now blocked, the tide ends there.
+        const to = plan.route?.[i - 1], mid = to && { x: (actor.x + to.x) / 2, y: (actor.y + to.y) / 2 };
+        if (!to || !mid || !free(mid) || !free(to)) break;
+        actor.x = to.x; actor.y = to.y; observe?.(structuredClone(game));
+      }
+      for (const hero of standing(game).filter(h => onTiles(arcs[i], h))) scorch(game, hero, die(game, 8) + 2, `The ${['first', 'second', 'third'][i]} wave`);
+    }
+  }
 }
 
 /** Scripted use of the guardian, bard and druid abilities. Returns true when the turn's action was spent. */

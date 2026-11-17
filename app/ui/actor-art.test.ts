@@ -20,6 +20,16 @@ test('each tale’s Hollow Keeper uses its own boss art',()=>{
  for(const key of Object.values(KEEPER_BY_BIOME))assert.ok(ENEMY_ART[key]);
  assert.equal(enemyArtKey({name:'A creature from a custom tale'},'woodland'),undefined);
 });
+test('named Keepers take their pose while a signature attack is announced; the Warden yields',()=>{
+ const plan={move:'hunt' as const,tiles:[],round:1};
+ assert.equal(enemyArtKey({name:'The Wolf at the Last Light',keeper:'wolf'},'woodland'),'wolf');
+ assert.equal(enemyArtKey({name:'The Wolf at the Last Light',keeper:'wolf',plan},'woodland'),'wolf-pounce');
+ assert.equal(enemyArtKey({name:'The Crown’s Dragon',keeper:'dragon',plan:{...plan,move:'breath'}},'ruins'),'dragon-roar');
+ assert.equal(enemyArtKey({name:'The Tideglass Warden',keeper:'warden',plan:{...plan,move:'tide'}},'coast'),'warden-windup');
+ assert.equal(enemyArtKey({name:'The Tideglass Warden',keeper:'warden',defeated:true},'coast'),'warden-yield');
+ // A custom tale's Keeper borrows its biome's painting.
+ assert.equal(enemyArtKey({name:KEEPER_NAME,keeper:'hollow'},'ruins'),'dragon');
+});
 test('every art file named in the placement table ships with the game',()=>{
  for(const[key,art]of Object.entries(ENEMY_ART))assert.ok(existsSync(publicFile(art.src)),`${key}: ${art.src}`);
  for(const hero of HEROES)assert.ok(existsSync(publicFile(hero.art)),hero.art);

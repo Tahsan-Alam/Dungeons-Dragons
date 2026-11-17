@@ -207,3 +207,4 @@ html[data-color-mode][data-theme] .ph .ph-board .board-tools i{width:1px;height:
 .hs-ability{margin:0;font:500 13.5px/1.45 Inter,system-ui,sans-serif;color:#d2cbbf}.hs-ability strong{color:#F1E5CF}
 .hs-intro{margin:0;font:400 15.5px/1.45 'EB Garamond',Georgia,serif;color:#c9c3b8}
 @media (max-width:640px){.hs{grid-template-columns:1fr;padding:16px}.hs-art{height:200px}}
+.ph .ph-target dd.ph-threat{color:#f3946a;font-weight:600}

@@ -5,6 +5,7 @@ import {CLASS_INFO,NO_ROLL_ABILITY,SUPPORT_ABILITY} from '../../game/types';
 import {CLASS,encounterCleared,getReachable,getQuestAction,getValidTargets} from '../../game/engine';
 import {currentNarration} from '../../game/ai';
 import {storyGoal} from '../../game/campaign';
+import {KEEPER_PROFILE,armorOf} from '../../game/keepers';
 import {GAME_MASTERS,GAME_MASTER_ART_RATIO} from '../../game/presets';
 import Board,{type Tool,type BoardControls} from './Board';
 import {Icon} from './Art';
@@ -109,7 +110,7 @@ export default function PlayTable({game,room,session,busy,connection,onAction,on
  const foe=target?.enemy&&!target.defeated?target:undefined,stats=mine?CLASS[mine.heroClass]:undefined;
  const inReach=!!(foe&&actor&&myTurn&&getValidTargets(game,actor).some(t=>t.id===foe.id));
  const powerReach=!!(foe&&actor&&myTurn&&!SUPPORT_ABILITY[actor.heroClass]&&actor.abilityUses>0&&getValidTargets(game,actor,true).some(t=>t.id===foe.id));
- const need=foe&&stats?game.options.rules==='simple'?'Anything but a 1':`${Math.max(2,foe.ac-stats.bonus)} or more on the die`:'';
+ const need=foe&&stats?game.options.rules==='simple'?'Anything but a 1':`${Math.max(2,armorOf(foe)-stats.bonus)} or more on the die`:'';
  return <div className={`play-screen ph realm${ownRoll||rollsPending?' rolling':''}`}>
   <div className="ph-board">
    <Board controlsRef={board} focusId={mine?.id} game={game} actor={actor} tool={tool} onTile={(x,y)=>{if(myTurn&&tool==='move')act({type:'move',x,y})}} onActor={clickActor} selectedId={selectedId} myTurn={myTurn&&!locked} onMotionChange={setMoving} autoFrame holdFeedback={(!!ownRoll&&!rollShown)||rollsPending}/>
@@ -151,7 +152,7 @@ export default function PlayTable({game,room,session,busy,connection,onAction,on
   {foe?<section className="ph-target ph-glass ph-ui" aria-label={`Selected: ${foe.name}`}>
    <div className="ph-target-head"><span className="ph-face big"><ActorPortrait actor={foe} biome={game.options.biome}/></span><span><span className="realm-eyebrow">Selected</span><strong>{foe.name}</strong></span><button type="button" className="ph-close" aria-label="Clear selection" onClick={()=>setSelectedId(mine?.id??'')}><Icon name="close" size={14}/></button></div>
    <div className="ph-target-hp"><span>HP</span><span className="ph-bar foe"><span style={{width:`${Math.max(0,foe.hp/foe.maxHp)*100}%`}}/></span><b>{foe.hp}/{foe.maxHp}</b></div>
-   <dl><dt>Armour</dt><dd>AC {foe.ac}</dd>{mine?<><dt>Distance</dt><dd>{tiles(mine,foe)} {tiles(mine,foe)===1?'tile':'tiles'} · {stats&&tiles(mine,foe)<=stats.range?'in range':'out of range'}</dd></>:null}{need?<><dt>To hit</dt><dd>{need}</dd></>:null}{stats?<><dt>Damage</dt><dd>1d{stats.die} + 3</dd></>:null}</dl>
+   <dl><dt>Armour</dt><dd>AC {armorOf(foe)}{foe.exposed?' · exposed':''}</dd>{foe.keeper&&foe.plan?<><dt>Next</dt><dd className="ph-threat">{KEEPER_PROFILE[foe.keeper].moveName} · marked on the ground</dd></>:null}{mine?<><dt>Distance</dt><dd>{tiles(mine,foe)} {tiles(mine,foe)===1?'tile':'tiles'} · {stats&&tiles(mine,foe)<=stats.range?'in range':'out of range'}</dd></>:null}{need?<><dt>To hit</dt><dd>{need}</dd></>:null}{stats?<><dt>Damage</dt><dd>1d{stats.die} + 3</dd></>:null}</dl>
    {inReach||powerReach?<div className="ph-target-actions">{inReach?<button type="button" className="ph-secondary" disabled={locked||!!actor?.actionUsed} onClick={()=>targetWith({type:'attack',targetId:foe.id})}><Icon name="sword" size={15}/>Attack</button>:null}{powerReach&&!NO_ROLL_ABILITY[actor!.heroClass]?<button type="button" className="ph-secondary" disabled={locked||!!actor?.actionUsed} onClick={()=>targetWith({type:'ability',targetId:foe.id})}><Icon name="spark" size={15}/>{CLASS_INFO[actor!.heroClass].ability}</button>:null}</div>:null}
   </section>:null}
 
