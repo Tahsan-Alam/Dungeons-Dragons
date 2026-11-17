@@ -1,32 +1,95 @@
-import type {Actor,Cell,GameState,KeeperKind,KeeperPlan} from './types.ts';
+import type {Actor,Biome,Cell,GameState,KeeperKind,KeeperPlan} from './types.ts';
 import {builtInTale} from './lore.ts';
 
-/* The Hollow Keepers (RULES.md, “Hollow Keepers”). Each built-in tale ends with its own named Keeper and signature
-   attack; a custom tale's final guardian keeps the title. A signature attack is announced on one turn, stored on
-   the Keeper, drawn on the board, and resolved on its next turn exactly as stored: heroes who leave the marked
-   tiles avoid it. This module plans; game/engine.ts resolves with its own movement, dice and damage. */
+/* The Hollow Keepers (RULES.md, “The Hollow Keepers”). Each built-in tale ends with its own named Keeper; a custom
+   tale's final guardian is drawn from its landscape's boss pool and named after the tale's world. Every Keeper has
+   a signature attack that is announced on one turn, stored on the Keeper, drawn on the board, and resolved on its
+   next turn exactly as stored: heroes who leave the marked tiles avoid it. This module plans and words the attacks;
+   game/engine.ts resolves them with its own movement, dice and damage. */
 
 /** Games stamped before this edition keep the earlier untitled Keeper, live and in replay. */
 export const KEEPER_EDITION=2;
+/** From this edition a custom tale draws its boss from the pool and its chapters from the wider enemy groups. */
+export const CUSTOM_BOSS_EDITION=3;
 
-export interface KeeperProfile {name:string;speed:number;move?:KeeperPlan['move'];moveName?:string;defeat:string}
+export interface KeeperProfile {
+ /** The creature, for a custom tale's title: “The Ridge Giant of Cogmere”. */ creature:string;
+ /** A built-in tale's fixed name. */ name?:string;
+ speed:number;move?:KeeperPlan['move'];moveName?:string;
+ /** After the Keeper's name, when the attack is announced. */ announce?:(target:string)=>string;
+ /** After the Keeper's name, when the attack is released. */ release?:string;
+ /** Hunt: the strike's verb. */ verb?:string;
+ /** Lane and arcs: what catches a hero (arc index from 0). */ source?:(arc:number)=>string;
+ /** When a lane catches nobody. */ empty?:string;
+ defeat:(name:string)=>string;
+}
+const ORDINAL=['first','second','third'];
 export const KEEPER_PROFILE:Record<KeeperKind,KeeperProfile>={
- wolf:{name:'The Wolf at the Last Light',speed:6,move:'hunt',moveName:'Lantern Hunt',defeat:'The Wolf at the Last Light slinks back beyond the shrine’s light. The way to the chest is clear.'},
- dragon:{name:'The Crown’s Dragon',speed:4,move:'breath',moveName:'Lanternfire Breath',defeat:'The dragon folds its wings beside the crown and lets the party pass.'},
- warden:{name:'The Tideglass Warden',speed:5,move:'tide',moveName:'Breaking Tide',defeat:'The Tideglass Warden lowers her glass blade and yields. The vault is the party’s.'},
- hollow:{name:'The Hollow Keeper',speed:5,defeat:'The Hollow Keeper falls, and the last shard is free.'},
+ wolf:{creature:'Wolf',name:'The Wolf at the Last Light',speed:6,move:'hunt',moveName:'Lantern Hunt',verb:'pounces on',release:'pounces along the marked path.',
+  announce:t=>`fixes its eyes on ${t}. Lantern Hunt: on its next turn it pounces along the marked path. Step off the path to escape.`,
+  defeat:()=>'The Wolf at the Last Light slinks back beyond the shrine’s light. The way to the chest is clear.'},
+ dragon:{creature:'Dragon',name:'The Crown’s Dragon',speed:4,move:'breath',moveName:'Lanternfire Breath',release:'breathes lanternfire down the marked lane.',source:()=>'Lanternfire',empty:'The flames wash over empty ground.',
+  announce:()=>'draws in a breath of lanternfire. The marked lane burns on its next turn. Leave it, or put a wall between you.',
+  defeat:()=>'The dragon folds its wings beside the crown and lets the party pass.'},
+ warden:{creature:'Warden',name:'The Tideglass Warden',speed:5,move:'tide',moveName:'Breaking Tide',release:'looses the Breaking Tide.',source:i=>`The ${ORDINAL[i]} wave`,
+  announce:t=>`raises her glass blade toward ${t}. Breaking Tide: on her next turn the marked arcs break, one after another.`,
+  defeat:()=>'The Tideglass Warden lowers her glass blade and yields. The vault is the party’s.'},
+ hollow:{creature:'Hollow Keeper',name:'The Hollow Keeper',speed:5,defeat:()=>'The Hollow Keeper falls, and the last shard is free.'},
+ // The custom-tale boss pool: each uses an attack the named Keepers already have, worded for its creature.
+ thornhound:{creature:'Thornhound',speed:6,move:'hunt',moveName:'Thorn Rush',verb:'crashes into',release:'tears along the marked path.',
+  announce:t=>`lowers its thorny head at ${t}. Thorn Rush: on its next turn it charges along the marked path. Step off the path to escape.`,
+  defeat:n=>`${n} crashes into the brambles and does not rise. The last shard is free.`},
+ 'grey-wolf':{creature:'Grey Wolf',speed:6,move:'hunt',moveName:'The Hunt',verb:'pounces on',release:'pounces along the marked path.',
+  announce:t=>`fixes its eyes on ${t}. The Hunt: on its next turn it pounces along the marked path. Step off the path to escape.`,
+  defeat:n=>`${n} limps away into the trees. The last shard is free.`},
+ giant:{creature:'Ridge Giant',speed:4,move:'tide',moveName:'Rockfall',release:'brings the stone down.',source:i=>`The ${ORDINAL[i]} blow`,
+  announce:t=>`raises both fists over ${t}. Rockfall: on its next turn the marked arcs come down, one after another.`,
+  defeat:n=>`${n} sinks to its knees and lets the stone settle. The last shard is free.`},
+ drake:{creature:'Old Drake',speed:4,move:'breath',moveName:'Fire Breath',release:'breathes fire down the marked lane.',source:()=>'Drakefire',empty:'The flames wash over empty ground.',
+  announce:()=>'draws in a long breath. The marked lane burns on its next turn. Leave it, or put a wall between you.',
+  defeat:n=>`${n} curls up among the ruins and lets the party pass. The last shard is free.`},
+ eye:{creature:'Glass Eye',speed:4,move:'breath',moveName:'Glaring Gaze',release:'turns its glare down the marked lane.',source:()=>'The glare',empty:'The glare finds only empty ground.',
+  announce:()=>'gathers light behind its lens. Glaring Gaze: the marked lane burns on its next turn. Leave it, or put a wall between you.',
+  defeat:n=>`${n} cracks and goes dark. The last shard is free.`},
+ 'tide-warden':{creature:'Tide Warden',speed:5,move:'tide',moveName:'Breaking Tide',release:'looses the Breaking Tide.',source:i=>`The ${ORDINAL[i]} wave`,
+  announce:t=>`raises her glass blade toward ${t}. Breaking Tide: on her next turn the marked arcs break, one after another.`,
+  defeat:n=>`${n} lowers her blade and yields. The last shard is free.`},
 };
+/** A custom tale's boss is drawn from its landscape's pool by the adventure seed. */
+export const BOSS_POOL:Record<Biome,readonly KeeperKind[]>={woodland:['thornhound','grey-wolf'],ruins:['giant','drake'],coast:['eye','tide-warden']};
 /** On top of an ordinary guardian of the same chapter. */
 export const KEEPER_HP_BONUS=16,KEEPER_AC_BONUS=2;
 /** Keeper strikes: +5 to hit and 1d8 + 2 damage (ordinary guardians: +3 and 1d4 + 1). */
 export const KEEPER_STRIKE={bonus:5,die:8,plus:2};
 export const HUNT_REACH=8,BREATH_LENGTH=6,TIDE_REACH=5;
 
-/** Which Keeper guards this game's final shard, or undefined for games stamped before the Keepers. */
-export function keeperFor(game:GameState):KeeperKind|undefined {
+/** Which Keeper guards this game's final shard, or undefined for games stamped before the Keepers.
+    `pick` is a seeded whole number that chooses from a custom tale's boss pool. */
+export function keeperFor(game:GameState,pick=0):KeeperKind|undefined {
  if((game.lore??0)<KEEPER_EDITION)return undefined;
  const tale=builtInTale(game.options.creation?.story);
- return tale==='lantern'?'wolf':tale==='crown'?'dragon':tale==='salt'?'warden':'hollow';
+ if(tale)return tale==='lantern'?'wolf':tale==='crown'?'dragon':'warden';
+ if((game.lore??0)<CUSTOM_BOSS_EDITION)return 'hollow';
+ const pool=BOSS_POOL[game.options.biome];return pool[pick%pool.length];
+}
+
+/** A built-in Keeper's own name; a pool boss is named after the tale's world when that name is short enough. */
+export function keeperName(kind:KeeperKind,world:string|undefined):string {
+ const profile=KEEPER_PROFILE[kind];
+ if(profile.name)return profile.name;
+ const place=world?.trim();
+ return place&&place.length<=24?`The ${profile.creature} of ${place}`:`The ${profile.creature}`;
+}
+
+/** The wider enemy groups a custom tale's chapters draw from, on top of the landscape's four guardians. */
+export const WIDER_ENEMIES:Record<Biome,readonly string[]>={woodland:['Thornhound','Dawn sentinel'],ruins:['Oathbound guard','Sealwax ooze'],coast:['Glass eye']};
+/** Four enemies for one chapter of a custom tale, shuffled by `pick(n)` (a seeded whole number below n).
+    The boss's own creature is left out. */
+export function chapterEnemies(base:readonly string[],biome:Biome,boss:KeeperKind|undefined,pick:(n:number)=>number):string[] {
+ const bossCreature=boss?KEEPER_PROFILE[boss].creature.toLowerCase():'';
+ const pool=[...base,...WIDER_ENEMIES[biome].filter(n=>n.toLowerCase()!==bossCreature)];
+ for(let i=pool.length-1;i>0;i--){const j=pick(i+1);[pool[i],pool[j]]=[pool[j],pool[i]]}
+ return pool.slice(0,4);
 }
 
 /** A Keeper whose pounce missed is exposed: −3 Armor Class until its next turn. */

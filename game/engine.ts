@@ -1,10 +1,10 @@
 import type { Actor, GameAction, GameEvent, GameOptions, GameState, HeroClass, PlayerSpec, Tile } from './types';
-import {LORE_EDITION,loreOpening} from './lore.ts';
+import {LORE_EDITION,builtInTale,loreOpening} from './lore.ts';
 import {applySetPiece,setPieceFor} from './set-pieces.ts';
 import { SUPPORT_ABILITY } from './types.ts';
 import {campaignFixture,installCampaign,rememberChapter,storyGoal} from './campaign.ts';
 import {parseBlueprint} from './creation.ts';
-import {armorOf,KEEPER_AC_BONUS,KEEPER_HP_BONUS,KEEPER_PROFILE,KEEPER_STRIKE,keeperFor,onTiles,planBreath,planHunt,planTide,type KeeperBoard} from './keepers.ts';
+import {armorOf,chapterEnemies,CUSTOM_BOSS_EDITION,KEEPER_AC_BONUS,KEEPER_HP_BONUS,KEEPER_PROFILE,KEEPER_STRIKE,keeperFor,keeperName,onTiles,planBreath,planHunt,planTide,type KeeperBoard} from './keepers.ts';
 import type {KeeperPlan} from './types.ts';
 
 // This module deliberately has no network, clock, browser, or model dependencies.
@@ -51,6 +51,12 @@ function random(game: GameState): number {
 }
 
 function die(game: GameState, sides: number) { return Math.floor(random(game) * sides) + 1; }
+
+/** Whole numbers below n from a fixed seed, separate from the dice: choosing a roster never shifts a roll. */
+function seededPick(seed: string) {
+  let x = hash(seed);
+  return (n: number) => { x ^= x << 13; x ^= x >>> 17; x ^= x << 5; x >>>= 0; x ||= 1; return x % n; };
+}
 
 function event(game: GameState, kind: GameEvent['kind'], text: string, actorId?: string, roll?: number, attack?: GameEvent['attack']) {
   game.events.push({ id: ++game.eventSequence, kind, text, ...(actorId ? { actorId } : {}), ...(roll !== undefined ? { roll } : {}), ...(attack ? {attack} : {}) });
@@ -172,13 +178,17 @@ function setupScene(game: GameState) {
   const final=game.scene>=storyGoal(game)-1;
   const count = Math.min(8, Math.max(2, Math.ceil(heroes.length * 0.75) + (final ? 1 : 0)));
   const enemySpawn = [{ x: 14, y: 7 }, { x: 15, y: 5 }, { x: 15, y: 9 }, { x: 17, y: 6 }, { x: 17, y: 8 }, { x: 14, y: 4 }, { x: 14, y: 10 }, { x: 16, y: 11 }];
-  const keeperKind = final ? keeperFor(game) : undefined;
+  // A custom tale (from the boss-pool edition) draws its boss from the landscape's pool and each chapter's enemies
+  // from the wider group, both by seed. Built-in tales and older games keep their fixed guardians.
+  const bossKind = keeperFor(game, hash(`${game.options.seed}|boss`)), keeperKind = final ? bossKind : undefined;
+  const widened = (game.lore ?? 0) >= CUSTOM_BOSS_EDITION && !builtInTale(game.options.creation?.story);
+  const roster = widened ? chapterEnemies(ENEMIES[game.options.biome], game.options.biome, bossKind, seededPick(`${game.options.seed}|enemies|${game.scene}`)) : ENEMIES[game.options.biome];
   for (let i = 0; i < count; i++) {
     const boss = final && i === count - 1, keeper = boss ? keeperKind : undefined, profile = keeper && KEEPER_PROFILE[keeper];
     const hp = (game.options.rules === 'simple' ? 9 : 12) + game.scene * 3 + (keeper ? KEEPER_HP_BONUS : boss ? 8 : 0);
     const heroClass: HeroClass = i % 3 === 1 ? 'ranger' : 'knight';
     const ac = (game.options.rules === 'simple' ? 10 : 12) + (keeper ? KEEPER_AC_BONUS : 0), speed = profile ? profile.speed : 4;
-    game.actors.push({ id: `enemy-${game.scene}-${i}`, name: profile ? profile.name : boss ? 'The Hollow Keeper' : `${ENEMIES[game.options.biome][i % 4]} ${i + 1}`,
+    game.actors.push({ id: `enemy-${game.scene}-${i}`, name: keeper ? keeperName(keeper, game.options.creation?.story.world) : boss ? 'The Hollow Keeper' : `${roster[i % 4]} ${i + 1}`,
       heroClass, color: boss ? '#ab769d' : '#9ead7e', enemy: true, bot: true, ...enemySpawn[i], hp, maxHp: hp,
       ac, speed, movement: speed, actionUsed: false, guarding: false, potions: 0,
       abilityUses: 0, initiative: 0, deathSuccesses: 0, deathFailures: 0, defeated: false, ...(keeper ? {keeper} : {}) });
@@ -208,8 +218,14 @@ function setupScene(game: GameState) {
   };
   const standard=!game.options.duration||game.options.duration==='standard';
   const opening=loreOpening(game,standard,final,storyGoal(game))??(standard?openings[game.options.narrator][game.scene]:`${game.sceneName}. ${game.relics} of ${storyGoal(game)} lantern shards recovered. ${final?'The final shard is here. Face the Hollow Keeper and bring the lantern home.':'Defeat the guardians, recover this shard, and follow its light onward.'}`);
-  event(game, 'story', opening);
+  event(game, 'story', bossWords(game, opening));
   if (game.options.rules === 'classic') event(game, 'system', 'Initiative rolled. Each turn: move up to your speed, take one action, then end your turn.');
+}
+
+/** The classic text says “the Hollow Keeper”; a custom tale's pool boss has its own name. */
+function bossWords(game: GameState, text: string) {
+  const boss = game.actors.find(a => a.keeper && !KEEPER_PROFILE[a.keeper].name);
+  return boss ? text.replace(/The Hollow Keeper/g, boss.name).replace(/the Hollow Keeper/g, boss.name.replace(/^The /, 'the ')) : text;
 }
 
 export function createGame(players: PlayerSpec[], options: GameOptions): GameState {
@@ -357,7 +373,7 @@ function fall(game: GameState, target: Actor) {
   target.defeated = target.enemy;
   target.deathSuccesses = 0; target.deathFailures = 0;
   if (target.keeper) { delete target.plan; delete target.exposed; }
-  event(game, 'action', target.keeper ? KEEPER_PROFILE[target.keeper].defeat : `${target.name} ${target.enemy ? 'is defeated.' : 'is down! Healing light can get them back up.'}`, target.id);
+  event(game, 'action', target.keeper ? KEEPER_PROFILE[target.keeper].defeat(target.name) : `${target.name} ${target.enemy ? 'is defeated.' : 'is down! Healing light can get them back up.'}`, target.id);
 }
 
 function perform(game: GameState, actor: Actor, action: GameAction) {
@@ -416,7 +432,7 @@ function perform(game: GameState, actor: Actor, action: GameAction) {
       const plannedChapters=game.options.duration==='short'?1:game.options.duration==='long'?5:3;
       const endingEarly=!!game.story?.direction?.endAfterChapter&&game.relics<plannedChapters;
       game.objective = endingEarly?'The gathered light is safe. Adventure complete!':'The lantern is whole. Adventure complete!';
-      event(game, 'story', game.story?.direction?.endAfterChapter?'Your party brings the gathered light home. The remaining paths can wait: tonight, the friends you protected have a beacon again. Adventure complete!':storyGoal(game)===3?'Three shards become one warm light. The Hollow Keeper fades, the paths bloom again, and your party carries a new story home. Adventure complete!':`${game.relics===1?'One recovered shard shines':`${game.relics} shards shine`} with warm light. The Hollow Keeper fades, the paths bloom again, and your party carries a new story home. Adventure complete!`);
+      event(game, 'story', bossWords(game, game.story?.direction?.endAfterChapter?'Your party brings the gathered light home. The remaining paths can wait: tonight, the friends you protected have a beacon again. Adventure complete!':storyGoal(game)===3?'Three shards become one warm light. The Hollow Keeper fades, the paths bloom again, and your party carries a new story home. Adventure complete!':`${game.relics===1?'One recovered shard shines':`${game.relics} shards shine`} with warm light. The Hollow Keeper fades, the paths bloom again, and your party carries a new story home. Adventure complete!`));
       // A planned story payoff becomes an outcome only after legal victory.
       if(!endingEarly&&game.story?.campaign.resolution)event(game,'story',game.story.campaign.resolution);
     } else {
@@ -517,9 +533,7 @@ function keeperTurn(game: GameState, actor: Actor, observe?: FrameObserver): boo
   if (!plan) return false;
   actor.plan = plan; actor.actionUsed = true;
   const target = game.actors.find(a => a.id === plan.targetId);
-  event(game, 'action', plan.move === 'hunt' ? `${actor.name} fixes its eyes on ${target?.name}. Lantern Hunt: on its next turn it pounces along the marked path. Step off the path to escape.`
-    : plan.move === 'breath' ? `${actor.name} draws in a breath of lanternfire. The marked lane burns on its next turn. Leave it, or put a wall between you.`
-    : `${actor.name} raises her glass blade toward ${target?.name}. Breaking Tide: on her next turn the marked arcs break, one after another.`, actor.id);
+  event(game, 'action', `${actor.name} ${profile.announce!(target?.name ?? 'the party')}`, actor.id);
   return true;
 }
 
@@ -532,23 +546,24 @@ function scorch(game: GameState, target: Actor, damage: number, source: string) 
 }
 
 function releaseKeeperPlan(game: GameState, actor: Actor, plan: KeeperPlan, observe?: FrameObserver) {
+  const profile = KEEPER_PROFILE[actor.keeper!];
   const free = (c: { x: number; y: number }) => walkable(game, c.x, c.y) && !occupied(game, c.x, c.y, actor.id);
   if (plan.move === 'hunt') {
     // The wolf runs the stored route, stopping short of anything now in the way. It never chooses a new target.
     for (const c of plan.route ?? []) { if (!free(c)) break; actor.x = c.x; actor.y = c.y; }
-    event(game, 'action', `${actor.name} pounces along the marked path.`, actor.id);
+    event(game, 'action', `${actor.name} ${profile.release}`, actor.id);
     observe?.(structuredClone(game));
     const target = game.actors.find(a => a.id === plan.targetId);
     if (target && target.hp > 0 && !target.defeated && onTiles(plan.tiles, target) && manhattan(actor, target) <= 1)
-      strike(game, actor, target, false, { advantage: true, extraDie: true, verb: 'pounces on' });
+      strike(game, actor, target, false, { advantage: true, extraDie: true, verb: profile.verb });
     else { actor.exposed = true; event(game, 'action', `The pounce lands on empty ground. ${actor.name} is exposed until its next turn.`, actor.id); }
   } else if (plan.move === 'breath') {
-    event(game, 'action', `${actor.name} breathes lanternfire down the marked lane.`, actor.id);
+    event(game, 'action', `${actor.name} ${profile.release}`, actor.id);
     const caught = standing(game).filter(h => onTiles(plan.tiles, h));
-    if (!caught.length) event(game, 'action', 'The flames wash over empty ground.', actor.id);
-    for (const hero of caught) scorch(game, hero, die(game, 6) + die(game, 6) + 3, 'Lanternfire');
+    if (!caught.length) event(game, 'action', profile.empty!, actor.id);
+    for (const hero of caught) scorch(game, hero, die(game, 6) + die(game, 6) + 3, profile.source!(0));
   } else {
-    event(game, 'action', `${actor.name} looses the Breaking Tide.`, actor.id);
+    event(game, 'action', `${actor.name} ${profile.release}`, actor.id);
     const arcs = plan.arcs ?? [];
     for (let i = 0; i < arcs.length; i++) {
       if (i > 0) {
@@ -557,7 +572,7 @@ function releaseKeeperPlan(game: GameState, actor: Actor, plan: KeeperPlan, obse
         if (!to || !mid || !free(mid) || !free(to)) break;
         actor.x = to.x; actor.y = to.y; observe?.(structuredClone(game));
       }
-      for (const hero of standing(game).filter(h => onTiles(arcs[i], h))) scorch(game, hero, die(game, 8) + 2, `The ${['first', 'second', 'third'][i]} wave`);
+      for (const hero of standing(game).filter(h => onTiles(arcs[i], h))) scorch(game, hero, die(game, 8) + 2, profile.source!(i));
     }
   }
 }

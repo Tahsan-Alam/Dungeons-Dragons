@@ -3,7 +3,9 @@ import assert from 'node:assert/strict';
 import {applyAction,createGame,runBots} from './engine.ts';
 import {GAME_MASTERS,HEROES,TALES} from './presets.ts';
 import {LORE_EDITION} from './lore.ts';
-import {KEEPER_EDITION,KEEPER_PROFILE,planBreath,type KeeperBoard} from './keepers.ts';
+import {BOSS_POOL,CUSTOM_BOSS_EDITION,KEEPER_EDITION,KEEPER_PROFILE,WIDER_ENEMIES,planBreath,type KeeperBoard} from './keepers.ts';
+import {ENEMIES} from './engine.ts';
+import {enemyArtKey} from '../app/ui/actor-art.ts';
 import type {Actor,GameOptions,GameState} from './types.ts';
 import type {StoryBlueprint} from './creation.ts';
 
@@ -16,8 +18,9 @@ const keeperOf=(g:GameState)=>g.actors.find(a=>a.keeper)!;
 const heroOf=(g:GameState)=>g.actors.find(a=>!a.enemy)!;
 
 /** A one-chapter tale reduced to an open field: the hero, the Keeper, nothing else; the Keeper is about to act. */
-function arena(tale:number,at:{x:number;y:number},keeperAt={x:14,y:7}):GameState{
- const game=structuredClone(createGame([player],optionsFor(TALES[tale].story)));
+function arena(tale:number|StoryBlueprint,at:{x:number;y:number},keeperAt={x:14,y:7},seed?:string):GameState{
+ const options=optionsFor(typeof tale==='number'?TALES[tale].story:tale);
+ const game=structuredClone(createGame([player],seed?{...options,seed}:options));
  for(const t of game.tiles)if(t.x>0&&t.y>0&&t.x<game.width-1&&t.y<game.height-1){t.kind='grass';delete t.decoration;}
  game.actors=game.actors.filter(a=>!a.enemy||a.keeper);
  const keeper=keeperOf(game),you=heroOf(game);
@@ -31,7 +34,7 @@ function keeperActs(game:GameState):GameState{
 }
 const move=(game:GameState,to:{x:number;y:number})=>{Object.assign(heroOf(game),to);return game;};
 
-test('each built-in tale ends with its own named Keeper; custom tales keep the Hollow Keeper',()=>{
+test('each built-in tale ends with its own named Keeper; a custom tale draws a named boss from its pool',()=>{
  assert.ok(LORE_EDITION>=KEEPER_EDITION);
  const expected=['The Wolf at the Last Light','The Crown’s Dragon','The Tideglass Warden'];
  TALES.forEach((tale,i)=>{
@@ -42,8 +45,8 @@ test('each built-in tale ends with its own named Keeper; custom tales keep the H
   assert.equal(keeper.speed,KEEPER_PROFILE[keeper.keeper!].speed);
   assert.equal(game.actors.filter(a=>a.keeper).length,1);
  });
- const hollow=keeperOf(createGame([player],optionsFor(custom)));
- assert.equal(hollow.name,'The Hollow Keeper');assert.equal(hollow.keeper,'hollow');
+ const boss=keeperOf(createGame([player],optionsFor(custom)));
+ assert.ok(BOSS_POOL.woodland.includes(boss.keeper!));assert.match(boss.name,/^The (Thornhound|Grey Wolf) of Cogmere$/);
  // Earlier chapters have no Keeper.
  assert.ok(!createGame([player],optionsFor(TALES[0].story,'standard')).actors.some(a=>a.keeper));
 });
@@ -154,4 +157,102 @@ test('games stamped before the Keepers keep the untitled Keeper',()=>{
 test('Keeper fights are deterministic',()=>{
  const run=()=>JSON.stringify(runBots(createGame([{...player,bot:true}],optionsFor(TALES[0].story))));
  assert.equal(run(),run());
+});
+
+const party=[player,{...player,id:'p2',name:'Second',bot:true},{...player,id:'p3',name:'Third',bot:true},{...player,id:'p4',name:'Fourth',bot:true}];
+const baseName=(a:Actor)=>a.name.replace(/\s+\d+$/,'');
+
+/** For each boss in a landscape's pool, a seed whose custom tale draws it. */
+function bossesBySeed(biome:StoryBlueprint['biome']){
+ const seen=new Map<string,string>();
+ for(let i=0;i<40&&seen.size<BOSS_POOL[biome].length;i++){
+  const seed='pool-'+i,kind=keeperOf(createGame([player],{...optionsFor({...custom,biome}),seed})).keeper!;
+  if(!seen.has(kind))seen.set(kind,seed);
+ }
+ return seen;
+}
+
+test('every landscape’s boss pool is reachable by seed, and each boss has its painting and a signature attack',()=>{
+ assert.ok(LORE_EDITION>=CUSTOM_BOSS_EDITION);
+ for(const biome of ['woodland','ruins','coast'] as const){
+  assert.deepEqual([...bossesBySeed(biome).keys()].sort(),[...BOSS_POOL[biome]].sort(),biome);
+  for(const kind of BOSS_POOL[biome]){
+   const profile=KEEPER_PROFILE[kind];
+   assert.ok(profile.move&&profile.moveName&&profile.announce&&profile.release,kind);
+   const rest=enemyArtKey({name:'x',keeper:kind},biome),attack=enemyArtKey({name:'x',keeper:kind,plan:{move:profile.move!,tiles:[],round:1}},biome);
+   assert.ok(rest&&attack&&rest!==attack,`${kind}: ${rest} / ${attack}`);
+  }
+ }
+ const again=()=>keeperOf(createGame([player],optionsFor({...custom,biome:'ruins'}))).keeper;
+ assert.equal(again(),again(),'the same seed always draws the same boss');
+});
+
+test('a pool boss takes the world’s name only when it is short enough',()=>{
+ const long=keeperOf(createGame([player],optionsFor({...custom,world:'The Very Long and Winding Clockwork Realm'})));
+ assert.match(long.name,/^The (Thornhound|Grey Wolf)$/);
+});
+
+test('the classic opening and victory name the custom tale’s boss',()=>{
+ let game=createGame([player],{...optionsFor(custom,'short'),narrator:'dramatic'});
+ const boss=keeperOf(game),opening=game.events.find(e=>e.kind==='story')!.text;
+ assert.ok(!/Hollow Keeper/.test(opening),opening);assert.ok(opening.includes(boss.name.replace(/^The /,'the ')),opening);
+ for(const a of game.actors.filter(a=>a.enemy)){a.hp=0;a.defeated=true;}
+ heroOf(game).x=game.chest.x-1;heroOf(game).y=game.chest.y;game.activeActorId=heroOf(game).id;
+ game=applyAction(game,player.id,{type:'interact'});
+ heroOf(game).x=game.exit.x-1;heroOf(game).y=game.exit.y;
+ game=applyAction(game,player.id,{type:'advance'});
+ assert.equal(game.status,'victory');
+ const ending=game.events.filter(e=>e.kind==='story').map(e=>e.text).join(' ');
+ assert.ok(!/Hollow Keeper/.test(ending));assert.ok(ending.includes(boss.name),ending);
+});
+
+test('pool bosses use their attacks: the ridge giant’s rockfall and the glass eye’s gaze',()=>{
+ const giantSeed=bossesBySeed('ruins').get('giant')!,eyeSeed=bossesBySeed('coast').get('eye')!;
+ let game=runBots(arena({...custom,biome:'ruins'},{x:11,y:7},undefined,giantSeed));
+ assert.equal(keeperOf(game).plan?.move,'tide');assert.ok(game.events.some(e=>/Rockfall/.test(e.text)));
+ game=runBots(keeperActs(game));
+ assert.ok(heroOf(game).hp<heroOf(game).maxHp);assert.ok(game.events.some(e=>/blow catches/.test(e.text)));
+ game=runBots(arena({...custom,biome:'coast'},{x:11,y:7},undefined,eyeSeed));
+ assert.equal(keeperOf(game).plan?.move,'breath');
+ game=runBots(keeperActs(game));
+ assert.ok(game.events.some(e=>/The glare catches/.test(e.text)));
+ // Defeat uses the boss's own line.
+ const eye=keeperOf(game);eye.hp=1;delete eye.plan;
+ Object.assign(heroOf(game),{x:eye.x-1,y:eye.y,actionUsed:false});game.activeActorId=heroOf(game).id;
+ for(let i=0;i<5&&keeperOf(game).hp>0;i++){game=applyAction(game,player.id,{type:'attack',targetId:eye.id});heroOf(game).actionUsed=false;}
+ assert.ok(game.events.some(e=>/cracks and goes dark/.test(e.text)));
+});
+
+test('custom tale chapters draw from the wider enemy groups; built-in tales keep theirs',()=>{
+ for(const biome of ['woodland','ruins','coast'] as const){
+  const names=new Set<string>();
+  for(let i=0;i<12;i++){
+   const options={...optionsFor({...custom,biome},'standard'),seed:'wide-'+i},game=createGame(party,options);
+   const boss=KEEPER_PROFILE[keeperOf(createGame([player],{...options,duration:'short'})).keeper!].creature.toLowerCase();
+   for(const a of game.actors.filter(a=>a.enemy)){
+    names.add(baseName(a));
+    assert.notEqual(baseName(a).toLowerCase(),boss,'the boss creature is never an ordinary enemy');
+    assert.ok(enemyArtKey(a,biome),`${a.name} has art`);
+   }
+  }
+  for(const extra of WIDER_ENEMIES[biome])assert.ok(names.has(extra),`${biome}: ${extra} appears`);
+ }
+ for(const tale of TALES){
+  const game=createGame(party,optionsFor(tale.story,'standard'));
+  assert.deepEqual(game.actors.filter(a=>a.enemy).map(baseName),ENEMIES[tale.story.biome].slice(0,3),tale.id);
+ }
+});
+
+test('custom tales stamped before the boss pool keep the Hollow Keeper and the four guardians',()=>{
+ let game=createGame([player],optionsFor(custom,'standard'));game.lore=2;
+ for(let chapter=0;chapter<2;chapter++){
+  for(const a of game.actors.filter(a=>a.enemy)){a.hp=0;a.defeated=true;}
+  const you=heroOf(game);game.activeActorId=you.id;you.x=game.chest.x-1;you.y=game.chest.y;
+  game=applyAction(game,player.id,{type:'interact'});
+  heroOf(game).x=game.exit.x-1;heroOf(game).y=game.exit.y;
+  game=applyAction(game,player.id,{type:'advance'});
+ }
+ const boss=keeperOf(game);
+ assert.equal(boss.keeper,'hollow');assert.equal(boss.name,'The Hollow Keeper');
+ assert.ok(game.actors.filter(a=>a.enemy&&!a.keeper).every(a=>(ENEMIES.woodland as readonly string[]).includes(baseName(a))));
 });

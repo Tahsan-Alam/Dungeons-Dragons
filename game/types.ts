@@ -11,8 +11,8 @@ export interface PlayerSpec { id: string; name: string; heroClass: HeroClass; co
 export type SetPieceProp = 'span' | 'shop' | 'stall' | 'salt-stall' | 'stall-skew' | 'oil-cart' | 'lamp' | 'gate-left' | 'gate-right' | 'gate-rubble' | 'masonry' | 'carving' | 'arch' | 'rubble' | 'cage-empty' | 'cage-lit' | 'crates' | 'bollard' | 'quay' | 'stairs';
 /** Marks painted on walkable ground: cobbles, cart grooves, pier planks, a loading square, a shard of lens glass. */
 export type GroundMark = 'cobble' | 'groove' | 'deck' | 'loading' | 'glass';
-/** The Hollow Keepers: the three built-in tales' named finales, and the untitled Keeper of a custom tale. */
-export type KeeperKind = 'wolf' | 'dragon' | 'warden' | 'hollow';
+/** The Hollow Keepers: the built-in tales' named finales, the custom-tale boss pool, and the untitled Keeper of edition-2 custom tales. */
+export type KeeperKind = 'wolf' | 'dragon' | 'warden' | 'hollow' | 'thornhound' | 'grey-wolf' | 'giant' | 'drake' | 'eye' | 'tide-warden';
 export interface Cell { x: number; y: number; }
 /** A signature attack announced on one turn and resolved, exactly as stored, on the Keeper's next turn. */
 export interface KeeperPlan { move: 'hunt' | 'breath' | 'tide'; targetId?: string; tiles: Cell[]; route?: Cell[]; landing?: Cell; arcs?: Cell[][]; round: number; }
