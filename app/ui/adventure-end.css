@@ -1,0 +1,39 @@
+/* The end of an adventure: the relit road (or the Game Master in the tale's place) beside the recap. */
+.adventure-end{position:fixed;inset:0;width:100vw;height:100dvh;max-width:none;max-height:none;margin:0;padding:0;border:0;overflow:auto;color:#F1E5CF;background:radial-gradient(ellipse at 35% 45%,#1a222c,#0b0f14 80%);font-family:Inter,system-ui,sans-serif}
+.adventure-end::backdrop{background:rgba(5,8,12,.8)}
+.adventure-end button{font:inherit;color:inherit;cursor:pointer}
+.adventure-end :focus-visible{outline:1.5px solid #F1E5CF;outline-offset:4px}
+.ae-layout{box-sizing:border-box;min-height:100%;max-width:1320px;margin:0 auto;padding:28px 32px;display:grid;grid-template-columns:minmax(0,1fr) 420px;gap:28px;align-items:stretch}
+.ae-visual{position:relative;min-height:420px;border:1px solid #435263;border-radius:3px;overflow:hidden;background:#10151a}
+.ae-scene{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.ae-wash{position:absolute;inset:0;background:linear-gradient(180deg,rgba(8,11,16,.2),rgba(8,11,16,.7))}
+.adventure-end.lost .ae-scene{filter:saturate(.5) brightness(.75)}
+.ae-figure{position:absolute;left:50%;bottom:6%;transform:translateX(-50%);height:70%;aspect-ratio:400/520;display:flex;align-items:flex-end;justify-content:center}
+.ae-figure img{width:100%;height:100%;object-fit:contain;filter:drop-shadow(0 8px 20px rgba(0,0,0,.55))}
+.ae-panel{display:flex;flex-direction:column;gap:14px;padding:24px;background:rgba(13,17,23,.96);border:1px solid #435263;border-radius:3px}
+.ae-panel .realm-eyebrow{text-align:left}
+.ae-panel h1{margin:-4px 0 0;font:600 28px/1.15 Cinzel,'EB Garamond',Georgia,serif;letter-spacing:.02em;color:#F1E5CF}
+.adventure-end.won .ae-panel h1{color:#f2c26a}
+.ae-line{display:flex;gap:12px;align-items:flex-start}
+.ae-line p{margin:0;font:400 18px/1.45 'EB Garamond',Georgia,serif;color:#e6dfd2}
+.ae-stats{margin:0;display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.ae-stats div{padding:8px 10px;border:1px solid #2a3340;border-radius:2px;background:#11161e}
+.ae-stats dt{font:600 11px Inter,system-ui,sans-serif;letter-spacing:.06em;color:#a9b3be}
+.ae-stats dd{margin:2px 0 0;font:600 18px Cinzel,'EB Garamond',Georgia,serif;color:#F1E5CF}
+.ae-party{margin:0;padding:0;list-style:none;display:flex;flex-wrap:wrap;gap:6px}
+.ae-party li{display:inline-flex;gap:8px;align-items:baseline;padding:4px 10px;border:1px solid #2a3340;border-radius:2px;font:500 12.5px Inter,system-ui,sans-serif;color:#c9c3b8}
+.ae-party strong{color:#F1E5CF}.ae-party li.fallen{border-color:#8a5a52}.ae-party li.fallen span{color:#e3a08c}
+.ae-note{margin:0;font:400 15px/1.4 'EB Garamond',Georgia,serif;color:#c9c3b8}
+.ae-actions{margin-top:auto;display:flex;flex-wrap:wrap;gap:10px;justify-content:flex-end}
+.adventure-end .ae-secondary{min-height:44px;padding:0 18px;border:1px solid #435263;border-radius:2px;background:#1a212b;font:600 14px Inter,system-ui,sans-serif;color:#F1E5CF}
+.adventure-end .ae-secondary:hover{border-color:#6a7d92;background:#212a36}
+.adventure-end .ae-primary{display:inline-flex;align-items:center;gap:10px;min-height:48px;min-width:170px;justify-content:center;padding:0 24px;border:0;background-color:#284B68;background-image:linear-gradient(180deg,#4b739a 0,#4b739a 1px,transparent 1px);font:700 15px Inter,system-ui,sans-serif;letter-spacing:.05em;text-transform:uppercase;color:#F1E5CF;
+ clip-path:polygon(10px 0,calc(100% - 10px) 0,100% 10px,100% calc(100% - 10px),calc(100% - 10px) 100%,10px 100%,0 calc(100% - 10px),0 10px)}
+.adventure-end .ae-primary:hover{background-color:#30587a}
+@media (max-width:860px){
+ .ae-layout{grid-template-columns:minmax(0,1fr);padding:16px 12px 24px;gap:14px}
+ .ae-visual{min-height:0;aspect-ratio:5/4}
+ .ae-panel{padding:16px}.ae-panel h1{font-size:22px}
+ .ae-stats{grid-template-columns:repeat(3,1fr)}.ae-stats dd{font-size:16px}
+ .ae-actions{justify-content:stretch}.adventure-end .ae-primary{flex-basis:100%}
+}

@@ -189,3 +189,20 @@ html[data-color-mode][data-theme] .ph .ph-board .board-tools i{width:1px;height:
  .ph .ph-end{width:100%;margin-left:0;height:52px}
  .ph-journal{left:0;width:100%;bottom:0;border-left:0}
 }
+
+/* The hero sheet (in the shared realm dialog). */
+.hs{display:grid;grid-template-columns:220px minmax(0,1fr);gap:24px;padding:22px 24px 26px}
+.hs-art{height:286px;display:flex;align-items:flex-end;justify-content:center;border:1px solid #2a3340;border-radius:3px;background:radial-gradient(circle at 50% 35%,#2c3440,#11161e 75%);overflow:hidden}
+.hs-art img{height:96%;width:auto;object-fit:contain;filter:drop-shadow(0 6px 14px rgba(0,0,0,.5))}
+.hs-art svg{width:70%;height:auto}
+.hs-info{display:flex;flex-direction:column;gap:12px;min-width:0}
+.hs-info .realm-eyebrow{text-align:left}
+.hs-epithet{margin:0;font:italic 400 18px/1.35 'EB Garamond',Georgia,serif;color:#e6dfd2}
+.hs-hp{display:flex;align-items:center;gap:10px;font:600 12.5px Inter,system-ui,sans-serif;color:#d2cbbf}.hs-hp b{color:#F1E5CF}
+.hs-stats{margin:0;display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.hs-stats div{padding:8px 10px;border:1px solid #2a3340;border-radius:2px;background:#11161e}
+.hs-stats dt{font:600 11px Inter,system-ui,sans-serif;letter-spacing:.06em;color:#a9b3be}
+.hs-stats dd{margin:2px 0 0;font:600 17px Cinzel,'EB Garamond',Georgia,serif;color:#F1E5CF}
+.hs-ability{margin:0;font:500 13.5px/1.45 Inter,system-ui,sans-serif;color:#d2cbbf}.hs-ability strong{color:#F1E5CF}
+.hs-intro{margin:0;font:400 15.5px/1.45 'EB Garamond',Georgia,serif;color:#c9c3b8}
+@media (max-width:640px){.hs{grid-template-columns:1fr;padding:16px}.hs-art{height:200px}}
