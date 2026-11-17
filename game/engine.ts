@@ -1,6 +1,6 @@
 import type { Actor, GameAction, GameEvent, GameOptions, GameState, HeroClass, PlayerSpec, Tile } from './types';
 import {LORE_EDITION,builtInTale,loreOpening} from './lore.ts';
-import {applySetPiece,setPieceFor} from './set-pieces.ts';
+import {applySetPiece,isRefuge,setPieceFor} from './set-pieces.ts';
 import { SUPPORT_ABILITY } from './types.ts';
 import {campaignFixture,installCampaign,rememberChapter,storyGoal} from './campaign.ts';
 import {parseBlueprint} from './creation.ts';
@@ -181,6 +181,7 @@ function setupScene(game: GameState) {
   // A custom tale (from the boss-pool edition) draws its boss from the landscape's pool and each chapter's enemies
   // from the wider group, both by seed. Built-in tales and older games keep their fixed guardians.
   const bossKind = keeperFor(game, hash(`${game.options.seed}|boss`)), keeperKind = final ? bossKind : undefined;
+  const piece = setPieceFor(game);   // an authored chapter may place its Keeper
   const widened = (game.lore ?? 0) >= CUSTOM_BOSS_EDITION && !builtInTale(game.options.creation?.story);
   const roster = widened ? chapterEnemies(ENEMIES[game.options.biome], game.options.biome, bossKind, seededPick(`${game.options.seed}|enemies|${game.scene}`)) : ENEMIES[game.options.biome];
   for (let i = 0; i < count; i++) {
@@ -188,8 +189,9 @@ function setupScene(game: GameState) {
     const hp = (game.options.rules === 'simple' ? 9 : 12) + game.scene * 3 + (keeper ? KEEPER_HP_BONUS : boss ? 8 : 0);
     const heroClass: HeroClass = i % 3 === 1 ? 'ranger' : 'knight';
     const ac = (game.options.rules === 'simple' ? 10 : 12) + (keeper ? KEEPER_AC_BONUS : 0), speed = profile ? profile.speed : 4;
+    const start = keeper && piece?.keeper ? piece.keeper : enemySpawn[i];
     game.actors.push({ id: `enemy-${game.scene}-${i}`, name: keeper ? keeperName(keeper, game.options.creation?.story.world) : boss ? 'The Hollow Keeper' : `${roster[i % 4]} ${i + 1}`,
-      heroClass, color: boss ? '#ab769d' : '#9ead7e', enemy: true, bot: true, ...enemySpawn[i], hp, maxHp: hp,
+      heroClass, color: boss ? '#ab769d' : '#9ead7e', enemy: true, bot: true, x: start.x, y: start.y, hp, maxHp: hp,
       ac, speed, movement: speed, actionUsed: false, guarding: false, potions: 0,
       abilityUses: 0, initiative: 0, deathSuccesses: 0, deathFailures: 0, defeated: false, ...(keeper ? {keeper} : {}) });
   }
@@ -503,7 +505,7 @@ function botTurn(game: GameState, actor: Actor, observe?:FrameObserver) {
 function keeperBoard(game: GameState, actor: Actor): KeeperBoard {
   return { inside: c => c.x >= 0 && c.y >= 0 && c.x < game.width && c.y < game.height,
     wall: c => game.tiles[c.y * game.width + c.x]?.kind === 'wall',
-    free: c => walkable(game, c.x, c.y) && !occupied(game, c.x, c.y, actor.id) };
+    free: c => walkable(game, c.x, c.y) && !occupied(game, c.x, c.y, actor.id), refuge: c => isRefuge(game, c.x, c.y) };
 }
 const standing = (game: GameState) => game.actors.filter(a => !a.enemy && a.hp > 0 && !a.defeated);
 
@@ -550,13 +552,18 @@ function releaseKeeperPlan(game: GameState, actor: Actor, plan: KeeperPlan, obse
   const free = (c: { x: number; y: number }) => walkable(game, c.x, c.y) && !occupied(game, c.x, c.y, actor.id);
   if (plan.move === 'hunt') {
     // The wolf runs the stored route, stopping short of anything now in the way. It never chooses a new target.
-    for (const c of plan.route ?? []) { if (!free(c)) break; actor.x = c.x; actor.y = c.y; }
+    for (const c of plan.route ?? []) { if (!free(c) || isRefuge(game, c.x, c.y)) break; actor.x = c.x; actor.y = c.y; }
     event(game, 'action', `${actor.name} ${profile.release}`, actor.id);
     observe?.(structuredClone(game));
     const target = game.actors.find(a => a.id === plan.targetId);
     if (target && target.hp > 0 && !target.defeated && onTiles(plan.tiles, target) && manhattan(actor, target) <= 1)
       strike(game, actor, target, false, { advantage: true, extraDie: true, verb: profile.verb });
-    else { actor.exposed = true; event(game, 'action', `The pounce lands on empty ground. ${actor.name} is exposed until its next turn.`, actor.id); }
+    else {
+      actor.exposed = true;
+      const sheltered = target && target.hp > 0 && !target.defeated && isRefuge(game, target.x, target.y);
+      event(game, 'action', sheltered ? `${target.name} reaches the shrine’s light. ${actor.name} skids to a halt at its edge and is exposed until its next turn.`
+        : `The pounce lands on empty ground. ${actor.name} is exposed until its next turn.`, actor.id);
+    }
   } else if (plan.move === 'breath') {
     event(game, 'action', `${actor.name} ${profile.release}`, actor.id);
     const caught = standing(game).filter(h => onTiles(plan.tiles, h));

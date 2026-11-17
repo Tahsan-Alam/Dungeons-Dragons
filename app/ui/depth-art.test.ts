@@ -9,7 +9,7 @@ import {renderToStaticMarkup} from 'react-dom/server';
 import {createGame} from '../../game/engine.ts';
 import {createBoardProjection} from './board-projection.ts';
 import {ART_PALETTE,TREE_TONES,worldPigment} from './artPalette.ts';
-import {groundOf,isGroundMark,isSetPieceProp,SET_PIECE_PROPS,GROUND_MARKS} from '../../game/set-pieces.ts';
+import {groundOf,isGroundMark,isSetPieceProp,refugeEdges,SET_PIECE_PROPS,GROUND_MARKS} from '../../game/set-pieces.ts';
 import {GAME_MASTERS,HEROES,TALES} from '../../game/presets.ts';
 import type {Biome,HeroClass,Tile} from '../../game/types';
 
@@ -24,7 +24,7 @@ function load(file:string,overrides:Record<string,unknown>){
  return exports;
 }
 const shared={'./Theme':{useTheme:()=>presentation},'./artPalette':{ART_PALETTE,TREE_TONES,worldPigment}};
-const pieces=load('./SetPieceArt.tsx',shared),setPieces={isGroundMark,isSetPieceProp,groundOf};
+const pieces=load('./SetPieceArt.tsx',shared),setPieces={isGroundMark,isSetPieceProp,groundOf,refugeEdges};
 const art=load('./Art.tsx',shared),depth=load('./DepthArt.tsx',{...shared,'./Art':art,'./SetPieceArt':pieces,'../../game/set-pieces':setPieces});
 function render(component:React.ElementType,props:Record<string,unknown>){const html=renderToStaticMarkup(React.createElement(component,props));assert.doesNotMatch(html,/NaN|Infinity|<image|<filter/);return html}
 const player={id:'you',name:'Hero',heroClass:'knight' as const,color:'#ef997c',bot:false};
@@ -108,6 +108,8 @@ test('the first chapters of the built-in tales draw every landmark in both views
   for(const tile of game.tiles.filter(t=>isGroundMark(t.decoration)))assert.equal(render(depth.DepthProp,{tile,projection}),'','ground marks stay on the ground plane');
   assert.ok(ground.length>0);assert.equal(JSON.stringify(game),before,tale.id);
  }
- for(const prop of SET_PIECE_PROPS){const flat=render(pieces.FlatSetPiece,{prop}),dimensional=render(pieces.DepthSetPiece,{prop});if(prop==='span'){assert.equal(flat,'');assert.equal(dimensional,'')}else{assert.ok(flat.length>20,prop);assert.ok(dimensional.length>20,prop)}}
+ // The way on is drawn on the ground only: cobbles or a threshold running out into the dark.
+ for(const prop of ['road-on','threshold'] as const)assert.ok(render(pieces.GroundLight,{prop}).length>20,prop);
+ for(const prop of SET_PIECE_PROPS){const flat=render(pieces.FlatSetPiece,{prop}),dimensional=render(pieces.DepthSetPiece,{prop});if(prop==='span'||prop==='road-on'||prop==='threshold'){assert.equal(flat,'');assert.equal(dimensional,'')}else{assert.ok(flat.length>20,prop);assert.ok(dimensional.length>20,prop)}}
  for(const mark of GROUND_MARKS)assert.ok(render(pieces.GroundMarkArt,{mark,seed:3}).length>20,mark);
 });

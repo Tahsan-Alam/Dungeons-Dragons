@@ -107,13 +107,16 @@ const same=(a:Cell,b:Cell)=>a.x===b.x&&a.y===b.y;
 export const onTiles=(cells:readonly Cell[],c:Cell)=>cells.some(t=>same(t,c));
 
 /** What the planner may ask of the board. `wall` blocks fire and arcs; `free` is a legal tile to move through or land on. */
-export interface KeeperBoard {inside:(c:Cell)=>boolean;wall:(c:Cell)=>boolean;free:(c:Cell)=>boolean}
+export interface KeeperBoard {inside:(c:Cell)=>boolean;wall:(c:Cell)=>boolean;free:(c:Cell)=>boolean;
+ /** The shrine's light (RULES.md): Lantern Hunt never enters it and never marks a hero standing in it. */ refuge?:(c:Cell)=>boolean}
 
-/** Lantern Hunt: mark the nearest hero the wolf can reach and the whole route to the tile beside them. */
-export function planHunt(keeper:Actor,heroes:readonly Actor[],board:KeeperBoard,round:number):KeeperPlan|null {
+/** Lantern Hunt: mark the nearest hero the wolf can reach and the whole route to the tile beside them. The route
+    and the landing stay out of the shrine's light, and a hero standing in the light cannot be marked. */
+export function planHunt(keeper:Actor,allHeroes:readonly Actor[],board:KeeperBoard,round:number):KeeperPlan|null {
+ const lit=board.refuge??(()=>false),heroes=allHeroes.filter(h=>!lit(h));
  const start={x:keeper.x,y:keeper.y},key=(c:Cell)=>`${c.x},${c.y}`,prev=new Map<string,Cell|null>([[key(start),null]]),queue=[start],depth=new Map([[key(start),0]]);
  for(let i=0;i<queue.length;i++){const c=queue[i],d=depth.get(key(c))!;if(d>=HUNT_REACH)continue;
-  for(const dir of DIRS){const n=add(c,dir),k=key(n);if(prev.has(k)||!board.inside(n)||!board.free(n))continue;prev.set(k,c);depth.set(k,d+1);queue.push(n)}}
+  for(const dir of DIRS){const n=add(c,dir),k=key(n);if(prev.has(k)||!board.inside(n)||!board.free(n)||lit(n))continue;prev.set(k,c);depth.set(k,d+1);queue.push(n)}}
  let best:{target:Actor;landing:Cell;steps:number}|null=null;
  for(const hero of heroes){
   const landings=DIRS.map(d=>add(hero,d)).filter(c=>prev.has(key(c))||same(c,start));
