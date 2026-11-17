@@ -9,6 +9,7 @@ import {GAME_MASTERS,GAME_MASTER_ART_RATIO} from '../../game/presets';
 import Board,{type Tool,type BoardControls} from './Board';
 import {Icon} from './Art';
 import {ActorPortrait} from './ActorArt';
+import {heroArtFor} from './actor-art';
 import Modal from './Modal';
 import {Portrait} from './RealmKit';
 import NarratorAvatar from './NarratorAvatar';
@@ -30,10 +31,12 @@ const tiles=(a:{x:number;y:number},b:{x:number;y:number})=>Math.abs(a.x-b.x)+Mat
 
 type Props={game:GameState;room:RoomView|null;session:Session|null;busy:boolean;connection:string;onAction:(a:GameAction)=>unknown;onMenu:()=>void;onHelp:()=>void;onAI:()=>void;onSettings:()=>void;onTableDialogChange:(open:boolean)=>void;
  voice:boolean;speaking?:boolean;onVoice:()=>void;music:boolean;onMusic:()=>void;onSkip:()=>void;rollsPending?:boolean;
- thread?:Exchange[];onListen?:(line:string)=>void;onNarrate?:()=>unknown;onSteer?:(text:string)=>Promise<unknown>};
+ thread?:Exchange[];onListen?:(line:string)=>void;onNarrate?:()=>unknown;onSteer?:(text:string)=>Promise<unknown>;
+ /** Opens the Journal on a tab from outside, for example Ask’s Dialogue Log. */
+ journalRequest?:{tab:JournalTab;at:number}|null};
 
 /** The play screen: the board fills the window and the controls float over the scene (design canvas, Play screen page). */
-export default function PlayTable({game,room,session,busy,connection,onAction,onMenu,onHelp,onAI,onSettings,onTableDialogChange,voice,speaking=false,onVoice,music,onMusic,onSkip,rollsPending=false,thread=[],onListen,onNarrate,onSteer}:Props){
+export default function PlayTable({game,room,session,busy,connection,onAction,onMenu,onHelp,onAI,onSettings,onTableDialogChange,voice,speaking=false,onVoice,music,onMusic,onSkip,rollsPending=false,thread=[],onListen,onNarrate,onSteer,journalRequest}:Props){
  const {preferences}=useControls();const board=useRef<BoardControls>(null),journalOpener=useRef<HTMLElement|null>(null),actionPending=useRef(false);
  const[confirmEnd,setConfirmEnd]=useState(false),[moving,setMoving]=useState(false),[tool,setTool]=useState<Tool>('move'),[selectedId,setSelectedId]=useState(''),[detailId,setDetailId]=useState<string|null>(null);
  const[ownRoll,setOwnRoll]=useState<{request:AttackRollRequest;label:string}|null>(null),[journal,setJournal]=useState<JournalTab|null>(null),[sideTab,setSideTab]=useState<'party'|'foes'>('party'),[soundOpen,setSoundOpen]=useState(false),[sideOpen,setSideOpen]=useState(false),[seen,setSeen]=useState(game.eventSequence),[rollShown,setRollShown]=useState(false);
@@ -44,6 +47,8 @@ export default function PlayTable({game,room,session,busy,connection,onAction,on
  const myTurn=!!actor&&!actor.bot&&actor.playerId===me&&game.status==='playing';
  const clear=encounterCleared(game),quest=getQuestAction(game,actor),target=game.actors.find(a=>a.id===selectedId);
  useEffect(()=>{setTool('move')},[game.activeActorId,game.round,game.scene]);
+ // eslint-disable-next-line react-hooks/set-state-in-effect -- an outside request (Ask’s Dialogue Log) opens the drawer once
+ useEffect(()=>{if(journalRequest)setJournal(journalRequest.tab)},[journalRequest]);
  useEffect(()=>{if(!selectedId&&mine)setSelectedId(mine.id)},[selectedId,mine]);
  function act(a:GameAction){
   if(busy||!myTurn||actionPending.current||board.current?.isInteracting()||board.current?.isMoving())return;
@@ -172,6 +177,17 @@ export default function PlayTable({game,room,session,busy,connection,onAction,on
   <div className={`game-connection ${connection==='reconnecting'?'connection-warning':''}`} aria-live="polite">{connection==='reconnecting'?'Reconnecting… Your game is saved.':null}</div>
 
   {confirmEnd?<Modal title="End this turn?" onClose={()=>setConfirmEnd(false)}><div className="confirm-turn"><p>You still have an action available.</p><div><button className="button paper" onClick={()=>setConfirmEnd(false)}>Keep playing</button><button className="button primary" onClick={()=>{setConfirmEnd(false);act({type:'end'})}}>End turn</button></div></div></Modal>:null}
-  {detail?<Modal title={detail.name} onClose={()=>setDetailId(null)}><div className="character-detail"><div className="detail-portrait" style={{background:detail.color+'30'}}><ActorPortrait actor={detail} biome={game.options.biome}/></div><div><h3>{CLASS_INFO[detail.heroClass].name}</h3><p>{CLASS_INFO[detail.heroClass].description}</p><dl className="stats-grid"><div><dt>Health</dt><dd>{detail.hp}/{detail.maxHp}</dd></div><div><dt>Armor</dt><dd>{detail.ac}</dd></div><div><dt>Speed</dt><dd>{detail.speed*5} ft</dd></div><div><dt>Potions</dt><dd>{detail.potions}</dd></div><div><dt>Power uses</dt><dd>{detail.abilityUses}</dd></div><div><dt>Initiative</dt><dd>{detail.initiative}</dd></div></dl><p><strong>{CLASS_INFO[detail.heroClass].ability}</strong> · {detail.abilityUses} uses left this encounter.</p></div></div></Modal>:null}
+  {detail?<Modal title={detail.name} onClose={()=>setDetailId(null)} wide>{(()=>{const preset=heroArtFor(detail),named=!!preset&&(preset.name.toLowerCase()===detail.name.toLowerCase()||preset.short.toLowerCase()===detail.name.toLowerCase());const info=CLASS_INFO[detail.heroClass];
+   return <div className="hs">
+    <div className="hs-art">{preset?<img src={preset.art} alt=""/>:<ActorPortrait actor={detail} biome={game.options.biome}/>}</div>
+    <div className="hs-info">
+     <span className="realm-eyebrow">{named?`${preset!.className} · ${preset!.subclass}`:info.name}{detail.bot?' · companion':detail.id===mine?.id?' · you':''}</span>
+     {named?<p className="hs-epithet">{preset!.epithet}</p>:<p className="hs-epithet">{info.description}</p>}
+     <div className="hs-hp"><span>Health</span><span className={`ph-bar health-${healthLevel(detail.hp,detail.maxHp)}`}><span style={{width:`${Math.max(0,detail.hp/detail.maxHp)*100}%`}}/></span><b>{detail.hp}/{detail.maxHp}</b></div>
+     <dl className="hs-stats"><div><dt>Armour</dt><dd>{detail.ac}</dd></div><div><dt>Speed</dt><dd>{detail.speed} tiles</dd></div><div><dt>Initiative</dt><dd>{detail.initiative}</dd></div><div><dt>Potions</dt><dd>{detail.potions}</dd></div><div><dt>Power uses</dt><dd>{detail.abilityUses}</dd></div><div><dt>Reach</dt><dd>{info.range} {info.range===1?'tile':'tiles'}</dd></div></dl>
+     <p className="hs-ability"><strong>{info.ability}</strong> · {detail.abilityUses} {detail.abilityUses===1?'use':'uses'} left this encounter.</p>
+     {named?<p className="hs-intro">{preset!.intro}</p>:null}
+    </div>
+   </div>})()}</Modal>:null}
  </div>;
 }

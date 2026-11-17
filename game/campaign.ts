@@ -57,12 +57,22 @@ export function guidanceFixture(game:GameState,text:string,playerId:string):stri
  if(/\b(end|finish|wrap|ending|stop\s+soon)\b/i.test(text))return game.story?.direction?.endAfterChapter?'We’ll end at this chapter’s gateway, after you defeat its guardians and collect the shard.':'The host can choose “End after this chapter”. You’ll still finish this encounter and collect its shard before a short closing scene.';
  if(/\b(faster|hurry|quicker|speed\s*up|brisk|pace)\b/i.test(text))return game.story?.direction?.pace==='brisk'?'I’ll keep narration brief and guide you toward the next objective. Turns and dice still follow the game rules.':'The host can choose “Quicker pace” for shorter narration and direct guidance. Turns and dice still follow the game rules.';
  const active=game.actors.find(a=>a.id===game.activeActorId),mine=game.actors.find(a=>a.playerId===playerId);
+ const foes=game.actors.filter(a=>a.enemy&&a.hp>0&&!a.defeated),near=(a:{x:number;y:number})=>mine?Math.abs(a.x-mine.x)+Math.abs(a.y-mine.y):0;
+ // Questions about the place itself are answered whoever's turn it is.
+ if(/\b(guardians?|enem(y|ies)|foes?|monsters?|keeper)\b/i.test(text)){
+  if(!foes.length)return 'No guardians stand here now. The chest is yours to open.';
+  const nearest=[...foes].sort((a,b)=>near(a)-near(b))[0];
+  return `${foes.length===1?'One guardian stands':`${foes.length} guardians stand`} between you and the chest: ${foes.map(f=>`${f.name} (${f.hp} of ${f.maxHp} health)`).join(', ')}. ${mine?`The nearest is ${nearest.name}, ${near(nearest)} ${near(nearest)===1?'tile':'tiles'} away. `:''}Select one to see its armour and what you need to hit.`;
+ }
+ if(/\bchest\b/i.test(text))return game.chest.opened?'The chest is open and its lantern shard is safe with the party. Make for the gateway.':foes.length?'The chest holds this chapter’s lantern shard. Its guardians must fall first; then stand beside it and choose Loot chest.':'The guardians are gone. Stand beside the chest and choose Loot chest to take the lantern shard.';
+ if(/\b(gateway|gate|exit|way out|way on)\b/i.test(text))return game.chest.opened?`The gateway is open to you. Stand beside it and choose ${game.scene>=storyGoal(game)-1?'Finish adventure':'Next chapter'}.`:'The gateway leads on once this chapter’s shard is taken from the chest. Until then it will not carry you anywhere.';
+ if(/\bhow (do|can) i play\b|\brules\b/i.test(text))return 'On your turn, move to a highlighted tile, then take one action: select a foe and attack from its card, use your power, Guard, or drink a Potion. End turn lets the others act. Defeat the guardians, loot the chest for the lantern shard, then reach the gateway.';
  if(active?.playerId!==playerId)return `It’s ${active?.name??'another hero'}’s turn. You can inspect the board and plan your next move. ${game.objective}`;
  if(mine&&mine.hp<=0)return 'Your hero is down. Your companions can heal you; use End turn when it is your turn to let them act.';
  const clear=!game.actors.some(a=>a.enemy&&a.hp>0&&!a.defeated);
  if(clear)return game.chest.opened?`Move beside the glowing gateway, then choose ${game.scene>=storyGoal(game)-1?'Finish adventure':'Next chapter'}.`:'Move beside the chest, then choose Loot chest to collect the shard.';
  if(mine?.actionUsed)return 'Your action is spent. You can use any remaining movement, then choose End turn so your companions can act.';
- return 'Move onto a highlighted tile, choose Attack or your class power, then select a reachable target. Roll d20 to confirm. Guard protects you when no target is in range; End turn lets your companions act.';
+ return 'Move onto a highlighted tile, then select a foe in reach and attack from its card, or use your power. Guard protects you when no foe is in reach; End turn lets your companions act.';
 }
 
 export function rememberChapter(game:GameState):void {

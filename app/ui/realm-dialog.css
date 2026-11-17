@@ -1,0 +1,26 @@
+/* Every dialog in the game wears the realm style: dark slate glass, ivory text, Cinzel titles, pale-blue
+   selection and the steel-blue primary action. The shared theme variables are reset on the dialog, so the
+   controls inside (toggles, fields, buttons) follow without their own rules. */
+html[data-color-mode][data-theme] dialog.modal{
+ --canvas:#0a0e14;--paper:#0d1218;--surface:#11161e;--surface-raised:#171e28;--subtle:#1f2833;
+ --ink:#F1E5CF;--muted:#a9b3be;--line:#2a3340;--line-strong:#435263;
+ --accent:#284B68;--accent-hover:#30587a;--accent-ink:#F1E5CF;--accent-soft:rgba(156,201,234,.14);
+ --sage:#1a222d;--forest:#9CC9EA;--apricot:rgba(156,201,234,.14);--success:#8FD18B;--warning:#e8c060;--danger:#e3a08c;--danger-fill:#8a3a32;
+ --control-focus:#F1E5CF;--button-radius:2px;--button-top:#ffffff08;--button-bottom:#00000014;--button-edge:#ffffff10;
+ --shadow:0 2px 6px #00000080;--panel-shadow:0 18px 60px #000000c0;
+ color-scheme:dark;color:var(--ink);background:linear-gradient(180deg,#121a24,#0d1218 140px);
+ border:1px solid #435263;border-radius:3px;box-shadow:var(--panel-shadow);font-family:Inter,system-ui,sans-serif
+}
+html[data-color-mode][data-theme] dialog.modal::backdrop{background:rgba(5,8,12,.72);backdrop-filter:blur(2px)}
+html[data-color-mode][data-theme] dialog.modal .modal-head{background:transparent;border-bottom:1px solid #2a3340;padding:20px 24px}
+html[data-color-mode][data-theme] dialog.modal .modal-head h2{font:600 24px/1.15 Cinzel,'EB Garamond',Georgia,serif;letter-spacing:.03em;color:var(--ink)}
+html[data-color-mode][data-theme] dialog.modal .modal-tools .icon-button{width:40px;height:40px;border-radius:2px;border:1px solid #435263;background:#141a23;box-shadow:none;color:var(--ink)}
+html[data-color-mode][data-theme] dialog.modal .modal-tools .icon-button:hover:not(:disabled){border-color:#6a7d92;background:#1a222d}
+html[data-color-mode][data-theme] dialog.modal :is(h3,h4){font-family:Cinzel,'EB Garamond',Georgia,serif;font-weight:600;letter-spacing:.02em;color:var(--ink)}
+html[data-color-mode][data-theme] dialog.modal :is(p,li,dd,dt,small){color:inherit}
+html[data-color-mode][data-theme] dialog.modal .button.primary{clip-path:polygon(8px 0,calc(100% - 8px) 0,100% 8px,100% calc(100% - 8px),calc(100% - 8px) 100%,8px 100%,0 calc(100% - 8px),0 8px);text-transform:uppercase;letter-spacing:.05em;font-weight:700;background-image:linear-gradient(180deg,#4b739a 0,#4b739a 1px,transparent 1px)}
+html[data-color-mode][data-theme] dialog.modal kbd{border-color:#435263;background:#141a23;color:var(--ink)}
+html[data-color-mode][data-theme] dialog.modal details>summary{color:var(--ink);font-weight:600}
+html[data-color-mode][data-theme] dialog.modal a{color:var(--ink);text-decoration-color:#6a7d92}
+html[data-color-mode][data-theme] dialog.modal hr,html[data-color-mode][data-theme] dialog.modal .settings-row{border-color:#2a3340}
+html[data-color-mode][data-theme] dialog.modal [aria-pressed=true],html[data-color-mode][data-theme] dialog.modal [aria-selected=true],html[data-color-mode][data-theme] dialog.modal [aria-current=true]{--button-rim:#9CC9EA}

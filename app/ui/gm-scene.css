@@ -1,0 +1,76 @@
+/* The chapter opening and Ask the Game Master (design canvas: Chapter, Ask and their phone boards). */
+.gm-scene{position:fixed;inset:0;width:100vw;height:100dvh;max-width:none;max-height:none;margin:0;padding:0;border:0;overflow:hidden;background:#0d1218;color:#F1E5CF;font-family:Inter,system-ui,sans-serif}
+.gm-scene::backdrop{background:#05080c}
+.gm-backdrop{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center 40%}
+.gm-wash{position:absolute;inset:0;background:linear-gradient(180deg,rgba(8,11,16,.55),rgba(8,11,16,.28) 40%,rgba(8,11,16,.7) 70%,rgba(8,11,16,.95))}
+.gm-figure{position:absolute;left:clamp(24px,9vw,140px);bottom:clamp(220px,36vh,300px);height:min(54vh,400px);aspect-ratio:400/520;display:flex;align-items:flex-end;justify-content:center}
+.gm-figure img{width:100%;height:100%;object-fit:contain;filter:drop-shadow(0 8px 20px rgba(0,0,0,.55))}
+.gm-shadow{position:absolute;left:18%;right:18%;bottom:-6px;height:12px;border-radius:50%;background:rgba(3,5,8,.75);z-index:-1}
+.gm-title{position:absolute;left:48px;top:36px;right:48px}
+.gm-eyebrow{margin:0;font:600 13px Inter,system-ui,sans-serif;letter-spacing:.3em;text-transform:uppercase;color:#b9c9d8}
+.gm-title h1{margin:4px 0 0;font:600 clamp(28px,4vw,44px)/1.1 Cinzel,'EB Garamond',Georgia,serif;letter-spacing:.03em;color:#F1E5CF;text-shadow:0 2px 14px rgba(0,0,0,.8)}
+.gm-panel{position:absolute;left:48px;right:48px;bottom:32px;box-sizing:border-box;padding:20px 28px;display:flex;flex-direction:column;gap:10px;background:rgba(13,17,23,.96);border:1px solid #435263;
+ clip-path:polygon(14px 0,calc(100% - 14px) 0,100% 14px,100% calc(100% - 14px),calc(100% - 14px) 100%,14px 100%,0 calc(100% - 14px),0 14px);max-height:60vh;overflow:auto}
+.gm-speaker{font:600 11.5px Inter,system-ui,sans-serif;letter-spacing:.16em;text-transform:uppercase;color:#b9c9d8}
+.gm-speaker span{letter-spacing:.08em;color:#8d99a6;text-transform:none}
+.gm-line{margin:0;max-width:1060px;font:400 21px/1.45 'EB Garamond',Georgia,serif;color:#F1E5CF}
+.gm-rule{height:1px;margin-top:6px;background:#2a3340}
+.gm-foot{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}
+.gm-objective{margin:0;display:flex;align-items:center;gap:9px;font:500 14px/1.4 Inter,system-ui,sans-serif;color:#d2cbbf}
+.gm-objective svg{flex:none;color:#9CC9EA}.gm-objective strong{color:#F1E5CF}
+.gm-actions{display:flex;align-items:center;justify-content:flex-end;gap:12px;flex-wrap:wrap}
+.gm-actions.left{justify-content:flex-start}
+.gm-scene button{font:inherit;color:inherit;cursor:pointer}
+.gm-scene :focus-visible{outline:1.5px solid #F1E5CF;outline-offset:4px}
+.gm-scene .gm-primary{display:inline-flex;align-items:center;justify-content:center;gap:10px;min-height:48px;min-width:210px;padding:0 26px;border:0;background-color:#284B68;background-image:linear-gradient(180deg,#4b739a 0,#4b739a 1px,transparent 1px);color:#F1E5CF;font:700 15px Inter,system-ui,sans-serif;letter-spacing:.05em;text-transform:uppercase;
+ clip-path:polygon(10px 0,calc(100% - 10px) 0,100% 10px,100% calc(100% - 10px),calc(100% - 10px) 100%,10px 100%,0 calc(100% - 10px),0 10px)}
+.gm-scene .gm-primary:hover:not(:disabled){background-color:#30587a}
+.gm-scene .gm-primary:disabled{opacity:.45;cursor:default}
+.gm-scene .gm-primary.small{min-width:120px;min-height:44px}
+.gm-scene .gm-secondary{display:inline-flex;align-items:center;gap:9px;min-height:44px;padding:0 20px;border:1px solid #435263;border-radius:2px;background:#1a212b;color:#F1E5CF;font:600 14px Inter,system-ui,sans-serif;letter-spacing:.03em}
+.gm-scene .gm-secondary.small{min-height:32px;padding:0 14px;font-size:13px}
+.gm-scene .gm-secondary:hover{border-color:#6a7d92;background:#212a36}
+.gm-scene .gm-link{align-self:flex-start;display:inline-flex;align-items:center;gap:6px;padding:4px 0;border:0;background:none;font:600 13.5px Inter,system-ui,sans-serif;color:#F1E5CF;text-decoration:underline;text-decoration-color:#6a7d92;text-underline-offset:4px}
+
+/* Ask the Game Master */
+.gm-ask .gm-figure{bottom:clamp(250px,40vh,330px)}
+.gm-ask-grid{display:flex;gap:32px;min-height:0}
+.gm-ask-reply{flex:1;min-width:0;display:flex;flex-direction:column;gap:8px}
+.gm-ask-head{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.gm-ask-status{display:flex;flex-direction:column;gap:8px}
+.gm-asked{margin:0;font:500 13.5px Inter,system-ui,sans-serif;color:#a9b3be}.gm-asked span{color:#d2cbbf}
+.gm-ask .gm-line{font-size:20px}
+.gm-note{font:500 12px Inter,system-ui,sans-serif;color:#a9b3be}
+.gm-waiting{margin:0;display:flex;align-items:center;gap:6px;font:italic 400 19px 'EB Garamond',Georgia,serif;color:#c9c3b8}
+.gm-waiting i{width:6px;height:6px;border-radius:50%;background:#9CC9EA;animation:gm-pulse 1.2s ease-in-out infinite}
+.gm-waiting i:nth-child(2){animation-delay:.2s}.gm-waiting i:nth-child(3){animation-delay:.4s;margin-right:6px}
+@keyframes gm-pulse{50%{opacity:.25}}
+.gm-failed{display:flex;align-items:center;gap:12px;flex-wrap:wrap}.gm-failed p{margin:0;font:500 14.5px Inter,system-ui,sans-serif;color:#e3c4bd}
+.gm-ask-choices{flex:none;width:min(470px,42%);display:flex;flex-direction:column;gap:8px;padding-left:32px;border-left:1px solid #2a3340}
+.gm-choices{display:flex;flex-direction:column;gap:7px}
+.gm-scene .gm-choice{display:flex;align-items:center;gap:12px;width:100%;min-height:42px;padding:6px 12px;text-align:left;background:#141a22;border:1px solid #2c3644;border-radius:2px;font:500 14.5px Inter,system-ui,sans-serif;color:#F1E5CF}
+.gm-scene .gm-choice span{flex:none;width:20px;font-weight:700;color:#9aa6b4}
+.gm-scene .gm-choice:hover:not(:disabled){background:#212a36;border-color:#6a7d92}
+.gm-scene .gm-choice.picked{background:rgba(156,201,234,.12);border-color:#9CC9EA;box-shadow:inset 3px 0 0 #9CC9EA}
+.gm-scene .gm-choice:disabled{opacity:.6;cursor:default}
+.gm-custom{display:flex;flex-direction:column;gap:8px}
+.gm-custom label{font:600 13px Inter,system-ui,sans-serif}
+.gm-custom input{min-height:44px;box-sizing:border-box;padding:8px 12px;border:1px solid #9CC9EA;border-radius:2px;background:#0f141b;color:#F1E5CF;font:500 14.5px Inter,system-ui,sans-serif}
+.gm-ask-choices>.gm-actions:last-child{margin-top:auto;padding-top:6px}
+
+@media (prefers-reduced-motion:reduce){.gm-waiting i{animation:none}}
+@media (max-width:760px){
+ .gm-title{left:16px;right:16px;top:18px}.gm-eyebrow{font-size:11px;letter-spacing:.24em}.gm-title h1{font-size:26px}
+ .gm-figure{left:50%;transform:translateX(-50%);bottom:auto;top:70px;height:min(36vh,300px)}
+ .gm-ask .gm-figure{top:64px;height:min(28vh,240px)}
+ .gm-panel{left:12px;right:12px;bottom:96px;padding:16px 18px;max-height:calc(100dvh - 120px - min(36vh,300px));clip-path:none;border-radius:3px}
+ .gm-line{font-size:18px}.gm-ask .gm-line{font-size:17px}
+ .gm-foot{flex-direction:column;align-items:stretch}
+ .gm-opening .gm-foot .gm-actions{position:fixed;left:12px;right:12px;bottom:28px;justify-content:stretch}
+ .gm-opening .gm-foot .gm-primary{flex:1;min-height:52px}
+ .gm-opening .gm-foot .gm-secondary{display:none}
+ .gm-ask-grid{flex-direction:column;gap:12px}
+ .gm-ask-choices{width:auto;padding-left:0;border-left:0;border-top:1px solid #2a3340;padding-top:12px}
+ .gm-ask-choices>.gm-actions:last-child{position:fixed;left:12px;right:12px;bottom:28px}
+ .gm-ask-choices>.gm-actions:last-child .gm-primary{flex:1;min-height:52px}
+}

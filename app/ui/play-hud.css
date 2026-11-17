@@ -3,7 +3,7 @@
 .ph{--ph-glass:rgba(12,16,22,.88);--ph-edge:#3a4655;--ph-edge-hi:#6a7d92;--ph-ink:#F1E5CF;--ph-dim:#c9c3b8;--ph-muted:#a9b3be;--ph-select:#9CC9EA;
  position:relative;height:100%;min-height:0;overflow:hidden;background:#0a0e14;color:var(--ph-ink);font-family:Inter,system-ui,sans-serif;isolation:isolate}
 .ph button{font:inherit;color:inherit}
-.ph-board{position:absolute;inset:0;z-index:0}
+.ph-board{position:absolute;left:0;right:0;top:92px;bottom:96px;z-index:0}
 .ph .ph-board .board-container{position:absolute;inset:0;min-height:0;height:100%;border-radius:0;border:0;box-shadow:none;background:transparent}
 .ph .ph-board .board-viewport{height:100%}
 .ph-shade{position:absolute;left:0;right:0;z-index:1;pointer-events:none}
@@ -96,10 +96,11 @@
 
 /* hint, camera and the action bar */
 .ph-hint{position:absolute;left:50%;bottom:104px;transform:translateX(-50%);z-index:4;margin:0;padding:7px 16px;max-width:calc(100% - 520px);font:500 13px/1.35 Inter,system-ui,sans-serif;color:var(--ph-ink);text-align:center}
-html[data-color-mode][data-theme] .ph .ph-board .board-tools{position:absolute;right:16px;bottom:104px;left:auto;top:auto;z-index:4;display:flex;align-items:center;gap:4px;padding:4px;background:var(--ph-glass);border:1px solid var(--ph-edge);border-radius:3px;color:var(--ph-ink)}
+html[data-color-mode][data-theme] .ph .ph-board .board-tools{position:absolute;right:16px;bottom:8px;left:auto;top:auto;z-index:4;display:flex;align-items:center;gap:4px;padding:4px;background:var(--ph-glass);border:1px solid var(--ph-edge);border-radius:3px;color:var(--ph-ink)}
 html[data-color-mode][data-theme] .ph .ph-board .board-tools button{display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;padding:0;border:1px solid #435263;border-radius:2px;background:#141a23;color:var(--ph-ink);cursor:pointer}
 html[data-color-mode][data-theme] .ph .ph-board .board-tools button:hover{border-color:var(--ph-edge-hi);background:#1a222d}
 html[data-color-mode][data-theme] .ph .ph-board .board-tools button[aria-pressed=true]{border-color:var(--ph-select)}
+html[data-color-mode][data-theme] .ph .ph-board .board-tools button.view-toggle{width:auto;min-width:56px;padding:0 12px;font:600 12.5px Inter,system-ui,sans-serif;letter-spacing:.04em}
 html[data-color-mode][data-theme] .ph .ph-board .board-tools span{min-width:42px;text-align:center;font:600 12px Inter,system-ui,sans-serif;color:var(--ph-dim)}
 html[data-color-mode][data-theme] .ph .ph-board .board-tools i{width:1px;height:22px;background:#2a3340}
 .ph-dock{position:absolute;left:16px;right:16px;bottom:16px;z-index:5;display:flex;align-items:center;gap:18px}
@@ -163,10 +164,12 @@ html[data-color-mode][data-theme] .ph .ph-board .board-tools i{width:1px;height:
 }
 @media (max-width:760px){
  .ph-shade.top{height:230px}.ph-shade.bottom{height:290px}
+ .ph-board{top:238px;bottom:232px}
  .ph-top{left:12px;right:12px;top:10px;flex-wrap:wrap;gap:6px 10px}
  .ph-title{flex:1}.ph-title h1{font-size:20px}.ph-title .realm-eyebrow{font-size:10px;letter-spacing:.12em}
  .ph-tools{order:2}.ph .ph-tool.wide{width:40px;padding:0;font-size:0;gap:0}.ph .ph-tool.wide svg{width:17px;height:17px}
- .ph-tools>.ph-tool[aria-label="Adventurer’s guide"],.ph-tools>.ph-tool[aria-label="Leave the table"],.ph-sound{display:none}
+ .ph-tools>.ph-tool[aria-label="Leave the table"],.ph-sound{display:none}
+ .ph-tools{gap:4px}.ph .ph-tools .ph-tool{min-width:38px;width:38px;height:38px;padding:0}
  .ph-objective{order:3;flex-basis:100%;font-size:12px}
  .ph-turns{top:106px;left:12px;transform:none;max-width:calc(100% - 24px);overflow-x:auto;padding-bottom:2px}
  .ph .ph-turn.now{width:40px;height:40px}.ph-turn-label{display:none}
@@ -174,16 +177,33 @@ html[data-color-mode][data-theme] .ph .ph-board .board-tools i{width:1px;height:
  .ph-side{display:none}
  .ph-side.open{display:block;left:12px;right:12px;top:160px;width:auto;max-height:50%;z-index:6}
  .ph .ph-tool.phone-only{display:inline-flex}
- .ph-title{max-width:calc(100% - 150px)}.ph-title h1{font-size:18px}
+ .ph-title{max-width:calc(100% - 180px)}.ph-title h1{font-size:18px}
  .ph .ph-action small.tiles{display:none}
  .ph-target{left:12px;right:12px;top:248px;width:auto;padding:10px 12px;gap:7px}
  .ph.rolling .ph-target{display:none}
  .ph-target dl{grid-template-columns:auto 1fr}
  .ph-hint{bottom:252px;max-width:calc(100% - 24px);width:calc(100% - 24px);box-sizing:border-box;font-size:12.5px}
- html[data-color-mode][data-theme] .ph .ph-board .board-tools{bottom:300px;right:12px}
+ html[data-color-mode][data-theme] .ph .ph-board .board-tools{top:6px;bottom:auto;right:8px;left:8px;justify-content:center;flex-wrap:wrap}
  .ph-dock{left:10px;right:10px;bottom:12px;flex-wrap:wrap;gap:10px}
  .ph-hero{width:100%}.ph .ph-hero-face{width:48px;height:48px}.ph-hero-info strong{font-size:17px}
  .ph-actions{width:100%;gap:6px}.ph .ph-action{flex:1;width:auto;min-width:0;height:62px;font-size:12px}.ph .ph-action kbd{display:none}
  .ph .ph-end{width:100%;margin-left:0;height:52px}
  .ph-journal{left:0;width:100%;bottom:0;border-left:0}
 }
+
+/* The hero sheet (in the shared realm dialog). */
+.hs{display:grid;grid-template-columns:220px minmax(0,1fr);gap:24px;padding:22px 24px 26px}
+.hs-art{height:286px;display:flex;align-items:flex-end;justify-content:center;border:1px solid #2a3340;border-radius:3px;background:radial-gradient(circle at 50% 35%,#2c3440,#11161e 75%);overflow:hidden}
+.hs-art img{height:96%;width:auto;object-fit:contain;filter:drop-shadow(0 6px 14px rgba(0,0,0,.5))}
+.hs-art svg{width:70%;height:auto}
+.hs-info{display:flex;flex-direction:column;gap:12px;min-width:0}
+.hs-info .realm-eyebrow{text-align:left}
+.hs-epithet{margin:0;font:italic 400 18px/1.35 'EB Garamond',Georgia,serif;color:#e6dfd2}
+.hs-hp{display:flex;align-items:center;gap:10px;font:600 12.5px Inter,system-ui,sans-serif;color:#d2cbbf}.hs-hp b{color:#F1E5CF}
+.hs-stats{margin:0;display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.hs-stats div{padding:8px 10px;border:1px solid #2a3340;border-radius:2px;background:#11161e}
+.hs-stats dt{font:600 11px Inter,system-ui,sans-serif;letter-spacing:.06em;color:#a9b3be}
+.hs-stats dd{margin:2px 0 0;font:600 17px Cinzel,'EB Garamond',Georgia,serif;color:#F1E5CF}
+.hs-ability{margin:0;font:500 13.5px/1.45 Inter,system-ui,sans-serif;color:#d2cbbf}.hs-ability strong{color:#F1E5CF}
+.hs-intro{margin:0;font:400 15.5px/1.45 'EB Garamond',Georgia,serif;color:#c9c3b8}
+@media (max-width:640px){.hs{grid-template-columns:1fr;padding:16px}.hs-art{height:200px}}

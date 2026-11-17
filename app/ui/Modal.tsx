@@ -2,6 +2,7 @@
 import {useCallback,useLayoutEffect,useId,useRef,useState,type ReactNode,type RefObject} from 'react';
 import {Icon} from './Art';
 import {useTheme} from './Theme';
+import './realm-dialog.css';
 
 /** A supplied action runs after dismissal; useful for leaving a multi-step dialog. */
 export type ModalDismiss=(afterClose?:()=>void)=>void;
