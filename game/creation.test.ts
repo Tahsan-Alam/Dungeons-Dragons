@@ -2,7 +2,6 @@ import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {AETHER,creationFixture,parseCreationRequest,parseCreationResult,parseBlueprint,parseNarrator} from './creation.ts';
 import type {CreationRequest} from './creation.ts';
-import {applyCreatorProposal,editCreatorDraft,emptyCreatorDraft} from './creator-state.ts';
 import {createGame,applyAction} from './engine.ts';
 import {DEFAULT_OPTIONS} from './types.ts';
 import {narrationFixture} from './campaign.ts';
@@ -69,8 +68,6 @@ test('guide can start with the story, asks focused questions and never applies i
  assert.ok(parseCreationRequest(start));assert.equal(creationFixture(start).guide!.proposal,null);
  const result=creationFixture({...start,message:'An island whose lighthouse has forgotten the sea. No spiders.'});
  assert.equal(result.source,'fixture');assert.equal(result.guide!.proposal!.narrator,null);assert.match(result.guide!.proposal!.story!.synopsis,/No spiders/);
- const draft=emptyCreatorDraft();assert.equal(draft.story,null);
- const confirmed=applyCreatorProposal(draft,result.guide!.proposal!)!;assert.equal(confirmed.version,1);assert.ok(confirmed.story);assert.equal(confirmed.narrator,null);
  assert.equal(creationFixture({...start,focus:'hero',message:'A gentle healer'}).guide!.proposal,null);
 });
 
@@ -112,22 +109,13 @@ test('existing narrator traits do not turn fixture help questions into replaceme
  assert.equal(renamed.name,'Nimbus');assert.deepEqual(renamed.personality,current.personality);
 });
 
-test('direct edits and confirmations reject late proposals and preserve unrelated entities',()=>{
- const made=blueprint(),draft={version:5,...made};
- const proposal={baseVersion:5,narrator:{...AETHER,name:'Nyx'},story:null,hero:null};
- const edited=editCreatorDraft(draft,{story:{...made.story,title:'A title I chose'}})!;
- assert.equal(edited.version,6);assert.equal(applyCreatorProposal(edited,proposal),null);assert.equal(edited.story!.title,'A title I chose');
- const confirmed=applyCreatorProposal(draft,proposal)!;assert.equal(confirmed.narrator!.name,'Nyx');assert.deepEqual(confirmed.hero,made.hero);assert.deepEqual(confirmed.story,made.story);
- assert.equal(applyCreatorProposal(confirmed,proposal),null);
- confirmed.hero!.name='Changed after confirmation';assert.equal(draft.hero.name,made.hero.name);
- const unfinished=editCreatorDraft(draft,{narrator:{...draft.narrator,name:'',persona:'',personality:[]}})!;
- assert.equal(unfinished.narrator!.name,'');assert.equal(parseBlueprint({narrator:unfinished.narrator,story:unfinished.story,hero:unfinished.hero}),null);
- assert.ok(parseCreationRequest({...request,action:'guide',focus:'narrator',draftVersion:unfinished.version,narrator:unfinished.narrator}));
- const typing=editCreatorDraft(draft,{narrator:{...draft.narrator,name:'Morrow '},story:{...draft.story,synopsis:'First sentence.\n\nSecond sentence. '},hero:{...draft.hero,name:'Mira '}})!;
- assert.equal(typing.narrator!.name,'Morrow ');assert.equal(typing.hero!.name,'Mira ');assert.equal(typing.story!.synopsis,'First sentence.\n\nSecond sentence. ');
- const submitted=parseCreationRequest({...request,action:'guide',focus:'narrator',draftVersion:typing.version,narrator:typing.narrator,story:typing.story,hero:typing.hero})!;
+test('unfinished drafts can be discussed but never start a game, and typed names are trimmed on the way in',()=>{
+ const made=blueprint();
+ const unfinished={...made,narrator:{...made.narrator,name:'',persona:'',personality:[]}};
+ assert.equal(parseBlueprint({narrator:unfinished.narrator,story:unfinished.story,hero:unfinished.hero}),null);
+ assert.ok(parseCreationRequest({...request,action:'guide',focus:'narrator',draftVersion:6,narrator:unfinished.narrator}));
+ const submitted=parseCreationRequest({...request,action:'guide',focus:'narrator',draftVersion:7,narrator:{...made.narrator,name:'Morrow '},story:{...made.story,synopsis:'First sentence.\n\nSecond sentence. '},hero:{...made.hero,name:'Mira '}})!;
  assert.equal(submitted.narrator!.name,'Morrow');assert.equal(submitted.story!.synopsis,'First sentence. Second sentence.');
- assert.equal(editCreatorDraft(draft,{narrator:{...draft.narrator,name:'<script>'}}),null);
 });
 
 test('guide request and response validators reject missing versions, empty changes and injected rules',()=>{
