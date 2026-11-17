@@ -4,6 +4,7 @@ Record user-visible changes at version checkpoints. Git history and pull request
 
 ## Unreleased
 
+- The Hollow Keepers are real. Each built-in tale ends with its own named Keeper: the Wolf at the Last Light, the Crown’s Dragon and the Tideglass Warden. Keepers are tougher, hit harder and never stall by guarding. Each announces a signature attack (Lantern Hunt, Lanternfire Breath, Breaking Tide) that is marked on the ground and lands on its next turn; step off the marked tiles to avoid it. A missed pounce leaves the wolf exposed, and the Warden yields when beaten. See RULES.md. Games saved before this keep the untitled Keeper.
 - The play screen is rebuilt around the board: the scene fills the window and the controls float over it (chapter and objective, turn order, Party and Foes, the Game Master's latest line, the selected foe's card, the hero and action bar). The Journal drawer holds the log, the dialogue with the Game Master and the story's pace. A Scene / Map switch sits beside the zoom buttons.
 - Dice no longer cover the board: your attack rolls from the foe's card in a small card above the action bar, the table's rolls queue in the same card with Pause and Next, and the board shows the hit or miss.
 - Each chapter opens with the Game Master standing in the tale's place, after the route map in the built-in tales. Ask the Game Master is a full-screen scene with questions that fit the moment, and the game's own guidance now answers questions about the guardians, the chest and the gateway.

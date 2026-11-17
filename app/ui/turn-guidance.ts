@@ -1,11 +1,14 @@
 import type {Actor,GameState} from '../../game/types';
 import {getQuestAction,getValidTargets} from '../../game/engine.ts';
 import {CLASS_INFO,SUPPORT_ABILITY} from '../../game/types.ts';
+import {KEEPER_PROFILE,threatsAt} from '../../game/keepers.ts';
 
 /** Presentation copy derives availability from the same rules as the board. */
 export function turnGuidance(game:GameState,actor:Actor|undefined,myTurn:boolean,tool:'move'|'attack'|'ability'):string {
  if(game.status!=='playing')return game.status==='victory'?'Adventure complete. The lantern is restored.':'The party has fallen. Your adventure is saved.';
  if(!myTurn||!actor)return `Waiting for ${actor?.name??'the party'}. You can inspect characters or read the log.`;
+ const danger=threatsAt(game,actor)[0];
+ if(danger)return keeperWarning(danger,actor);
  const quest=getQuestAction(game,actor);
  if(quest){
   if(!quest.available&&actor.movement===0)return `End your turn to recover movement, then reach the ${game.chest.opened?'gateway':'chest'}.`;
@@ -25,4 +28,11 @@ export function turnGuidance(game:GameState,actor:Actor|undefined,myTurn:boolean
   return `${tool==='ability'?CLASS_INFO[actor.heroClass].ability:'Attack'}: ${count}. Select a highlighted ${support?'ally':'enemy'}.`;
  }
  return actor.movement>0?'Select a highlighted tile to move, or an enemy to attack.':'Movement used. Attack, use a power, or guard; then end turn.';
+}
+
+/** Standing on a Keeper's marked tiles: the one thing worth saying before anything else. */
+function keeperWarning(keeper:Actor,actor:Actor):string {
+ const move=KEEPER_PROFILE[keeper.keeper!].moveName??'its attack';
+ if(actor.movement>0)return `You stand on ${keeper.name}’s marked ground. Move off it before ${move} lands.`;
+ return actor.actionUsed?`${move} will catch you here. End your turn and hold on.`:`${move} will catch you here. Guard to soften the blow.`;
 }

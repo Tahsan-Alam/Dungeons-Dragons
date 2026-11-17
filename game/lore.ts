@@ -5,8 +5,9 @@ import type {TaleId} from './presets.ts';
 
 /* The Lantern Marches (World Guide): chapter openings that lead with a clue the party can see, and the
    branch-specific victory line. Only the three built-in tales use this text; custom tales keep their own world.
-   `LORE_EDITION` is stamped on new games so saves made before it replay with the openings they were played with. */
-export const LORE_EDITION=1;
+   `LORE_EDITION` is stamped on new games so saves replay with the text and rules they were played with:
+   edition 1 added these openings and the opening set pieces, edition 2 the named Keepers (game/keepers.ts). */
+export const LORE_EDITION=2;
 
 type Lines=Record<Narrator,readonly [string,string,string]>;
 interface TaleLore {road:string;clues:readonly [string,string,string];openings:Lines;}
@@ -64,7 +65,7 @@ export function settingLine(story:StoryBlueprint|undefined):string|undefined {
 
 /** The chapter opening for a built-in tale in a game stamped with the current edition, or undefined to keep the classic text. */
 export function loreOpening(game:GameState,standard:boolean,final:boolean,goal:number):string|undefined {
- if(game.lore!==LORE_EDITION)return undefined;
+ if((game.lore??0)<1)return undefined;
  const id=builtInTale(game.options.creation?.story);if(!id)return undefined;
  const lore=LORE[id],place=game.scene%3;
  if(standard)return lore.openings[game.options.narrator][place];

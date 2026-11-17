@@ -4,7 +4,7 @@ import {ENEMY_ART,type EnemyArtKey} from './enemy-art-data.ts';
 
 /* Which artwork stands for an actor. Presentation only: nothing here reads or changes the rules. */
 
-/** The final chapter's guardian is titled "The Hollow Keeper"; each built-in tale has its own. */
+/** Before the named Keepers (game/keepers.ts), every final guardian was titled "The Hollow Keeper". */
 export const KEEPER_NAME='The Hollow Keeper';
 export const KEEPER_BY_BIOME:Record<Biome,EnemyArtKey>={woodland:'wolf',ruins:'dragon',coast:'warden'};
 /** Board units per tile. Every figure shares this scale. */
@@ -14,8 +14,19 @@ const HERO_TILES=1.78;
 /** Paintings carry transparent margins; this is where each figure's head or wings begin. */
 const PAINTING_TOP:Partial<Record<EnemyArtKey,number>>={wolf:182,'wolf-pounce':172,dragon:90,'dragon-roar':98};
 
-/** "Bramble imp 2" → bramble-imp. Unknown names fall back to the generic token. */
-export function enemyArtKey(actor:Pick<Actor,'name'>,biome:Biome):EnemyArtKey|undefined{
+/** Each named Keeper's painting, with its pose while a signature attack is announced (and the Warden's yield). */
+function keeperPose(actor:KeeperArtActor,biome:Biome):EnemyArtKey{
+ const kind=actor.keeper==='hollow'?KEEPER_BY_BIOME[biome]:actor.keeper!;
+ if(kind==='warden'&&actor.defeated)return 'warden-yield';
+ if(!actor.plan)return kind;
+ return kind==='wolf'?'wolf-pounce':kind==='dragon'?'dragon-roar':'warden-windup';
+}
+type KeeperArtActor=Pick<Actor,'name'>&Partial<Pick<Actor,'keeper'|'plan'|'defeated'>>;
+
+/** "Bramble imp 2" → bramble-imp. Unknown names fall back to the generic token. Keepers use their own paintings;
+    saves from before the named Keepers match the untitled Keeper by name. */
+export function enemyArtKey(actor:KeeperArtActor,biome:Biome):EnemyArtKey|undefined{
+ if(actor.keeper)return keeperPose(actor,biome);
  if(actor.name===KEEPER_NAME)return KEEPER_BY_BIOME[biome];
  const key=actor.name.replace(/\s+\d+$/,'').trim().toLowerCase().replace(/\s+/g,'-');
  return Object.hasOwn(ENEMY_ART,key)?key as EnemyArtKey:undefined;

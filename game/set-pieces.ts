@@ -1,5 +1,5 @@
 import type {GameState,GroundMark,SetPieceProp,Tile} from './types.ts';
-import {LORE_EDITION,builtInTale} from './lore.ts';
+import {builtInTale} from './lore.ts';
 import type {TaleId} from './presets.ts';
 
 /* Authored first chapters of the three built-in tales, from the approved World page samples (design canvas,
@@ -69,7 +69,7 @@ export function groundOf(game:GameState,tile:Tile):{kind:Tile['kind'];base?:Grou
 
 /** The authored layout for this chapter, if it has one: chapter I of a built-in tale in a current game. */
 export function setPieceFor(game:GameState):TaleId|undefined {
- if(game.lore!==LORE_EDITION||game.scene!==0)return undefined;
+ if((game.lore??0)<1||game.scene!==0)return undefined;
  return builtInTale(game.options.creation?.story);
 }
 

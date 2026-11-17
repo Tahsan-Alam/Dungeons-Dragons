@@ -21,3 +21,10 @@
  .board-tools>span{min-width:30px;padding:0 2px}
 }
 @container board-surface (max-width:600px){.board-route-cost{bottom:66px;left:8px;font-size:11px;padding:6px 8px}}
+
+/* A Keeper's announced attack (KeeperMarks): the marked edge breathes so the danger reads at a glance. */
+.keeper-plan .keeper-edge{animation:keeper-mark 1.1s ease-in-out infinite alternate}
+.keeper-plan .keeper-quarry{animation:keeper-mark .8s ease-in-out infinite alternate}
+@keyframes keeper-mark{from{stroke-opacity:.45}to{stroke-opacity:1}}
+@media (prefers-reduced-motion:reduce){.keeper-plan .keeper-edge,.keeper-plan .keeper-quarry{animation:none}}
+.game-board .board-actor.defeated.yielded{opacity:.85}

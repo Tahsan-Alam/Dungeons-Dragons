@@ -11,11 +11,20 @@ export interface PlayerSpec { id: string; name: string; heroClass: HeroClass; co
 export type SetPieceProp = 'span' | 'shop' | 'stall' | 'salt-stall' | 'stall-skew' | 'oil-cart' | 'lamp' | 'gate-left' | 'gate-right' | 'gate-rubble' | 'masonry' | 'carving' | 'arch' | 'rubble' | 'cage-empty' | 'cage-lit' | 'crates' | 'bollard' | 'quay' | 'stairs';
 /** Marks painted on walkable ground: cobbles, cart grooves, pier planks, a loading square, a shard of lens glass. */
 export type GroundMark = 'cobble' | 'groove' | 'deck' | 'loading' | 'glass';
+/** The Hollow Keepers: the three built-in tales' named finales, and the untitled Keeper of a custom tale. */
+export type KeeperKind = 'wolf' | 'dragon' | 'warden' | 'hollow';
+export interface Cell { x: number; y: number; }
+/** A signature attack announced on one turn and resolved, exactly as stored, on the Keeper's next turn. */
+export interface KeeperPlan { move: 'hunt' | 'breath' | 'tide'; targetId?: string; tiles: Cell[]; route?: Cell[]; landing?: Cell; arcs?: Cell[][]; round: number; }
 export interface Tile { x: number; y: number; kind: 'grass' | 'path' | 'water' | 'wall'; decoration?: 'tree' | 'rock' | 'flower' | 'mushroom' | 'ruin' | SetPieceProp | GroundMark; }
 export interface Actor { id: string; playerId?: string; name: string; heroClass: HeroClass; color: string; enemy: boolean; bot: boolean; x: number; y: number; hp: number; maxHp: number; ac: number; speed: number; movement: number; actionUsed: boolean; guarding: boolean; potions: number; abilityUses: number; initiative: number; deathSuccesses: number; deathFailures: number; defeated: boolean;
   /** Shield wall: the guardian taking hits for this actor until the guardian's next turn. */ guardedBy?: string;
   /** Inspire: advantage on this actor's next attack roll. */ inspired?: boolean;
-  /** Entangle: this actor cannot move on its next turn. */ rooted?: boolean; }
+  /** Entangle: this actor cannot move on its next turn. */ rooted?: boolean;
+  /** The final guardian of a chapter (game/keepers.ts). Absent on every other actor and on older saves. */ keeper?: KeeperKind;
+  /** The Keeper's announced signature attack, resolved on its next turn exactly as stored. */ plan?: KeeperPlan;
+  /** True after a signature attack resolves: the next turn is an ordinary one. */ keeperRest?: boolean;
+  /** A Keeper whose pounce missed is open to attack (−3 Armor Class) until its next turn. */ exposed?: boolean; }
 /** `bonus` and `ac` describe the roll for display (roll + bonus against AC); events recorded before they existed lack them. */
 export interface AttackResult { targetId: string; action: 'attack' | 'ability'; hit: boolean; critical: boolean; damage: number; bonus?: number; ac?: number; }
 export interface GameEvent { id: number; kind: 'story' | 'action' | 'roll' | 'system'; text: string; actorId?: string; roll?: number; attack?: AttackResult; }
