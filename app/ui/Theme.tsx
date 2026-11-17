@@ -7,12 +7,12 @@ export type {ViewMode,ColorMode,ResolvedColorMode,Accent,MotionPreference} from 
 export {VIEW_MODE_STORAGE_KEY,COLOR_MODE_STORAGE_KEY,ACCENT_STORAGE_KEY,MOTION_STORAGE_KEY} from './appearance';
 
 type ThemeValue={viewMode:ViewMode;setViewMode:(mode:ViewMode)=>void;colorMode:ColorMode;setColorMode:(mode:ColorMode)=>void;resolvedColorMode:ResolvedColorMode;accent:Accent;setAccent:(accent:Accent)=>void;motion:MotionPreference;setMotion:(motion:MotionPreference)=>void;reducedMotion:boolean};
-const ThemeContext=createContext<ThemeValue>({viewMode:'2d',setViewMode:()=>{},colorMode:'system',setColorMode:()=>{},resolvedColorMode:'light',accent:'blue',setAccent:()=>{},motion:'system',setMotion:()=>{},reducedMotion:false});
+const ThemeContext=createContext<ThemeValue>({viewMode:'2.5d',setViewMode:()=>{},colorMode:'system',setColorMode:()=>{},resolvedColorMode:'light',accent:'blue',setAccent:()=>{},motion:'system',setMotion:()=>{},reducedMotion:false});
 function persist(key:string,value:string){try{localStorage.setItem(key,value)}catch{/* Preferences still work when browser storage is disabled. */}}
 
 /** World view and color are local presentation; neither touches a saved game. */
 export function ThemeProvider({children}:{children:ReactNode}) {
- const[viewMode,updateViewMode]=useState<ViewMode>('2d'),[colorMode,updateColorMode]=useState<ColorMode>('system'),[resolvedColorMode,updateResolved]=useState<ResolvedColorMode>('light'),[accent,updateAccent]=useState<Accent>('blue'),[motion,updateMotion]=useState<MotionPreference>('system'),[reducedMotion,updateReducedMotion]=useState(false);
+ const[viewMode,updateViewMode]=useState<ViewMode>('2.5d'),[colorMode,updateColorMode]=useState<ColorMode>('system'),[resolvedColorMode,updateResolved]=useState<ResolvedColorMode>('light'),[accent,updateAccent]=useState<Accent>('blue'),[motion,updateMotion]=useState<MotionPreference>('system'),[reducedMotion,updateReducedMotion]=useState(false);
  const modeRef=useRef<ColorMode>('system'),media=useRef<MediaQueryList|null>(null),motionRef=useRef<MotionPreference>('system'),motionMedia=useRef<MediaQueryList|null>(null);
  const applyViewMode=useCallback((next:ViewMode)=>{updateViewMode(next);document.documentElement.dataset.viewMode=next},[]);
  const applyColor=useCallback((next:ColorMode)=>{

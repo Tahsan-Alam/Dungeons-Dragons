@@ -9,6 +9,7 @@ import {findBoardPath,isBoardDiscontinuity,planActorMotions,boardPathKeyframes,s
 import {createBoardProjection,type BoardProjection} from './board-projection';
 import {collectBoardFeedback,type BoardFeedback} from './board-feedback';
 import {DepthTerrain,DepthProp,DepthChest,DepthGateway} from './DepthArt';
+import {ActorSprite,spriteTop} from './ActorArt';
 import {healthLevel} from './readability';
 import {sameBoardTerrain,rovingBoardTile,nextBoardTile,resizedBoardPan,revealedBoardPan,type BoardDirection} from './board-interaction';
 import './board-motion.css';
@@ -163,22 +164,23 @@ export default function Board({game,actor,tool,onTile,onActor,selectedId,myTurn,
   return()=>{window.removeEventListener('pointerup',release);window.removeEventListener('pointercancel',release);window.removeEventListener('blur',cancel)};
  },[releasePointer]);
  function renderActor(a:Actor){
-  const point=projection.tileCenter(a.x,a.y),targeted=targets.has(a.id),attackable=quickTargets.has(a.id),dimmed=targets.size>0&&!targeted&&!a.defeated&&a.id!==actor?.id,hit=struck.get(a.id),depth=viewMode==='2.5d';return <g key={a.id} data-x={a.x} data-y={a.y} ref={node=>{if(node)motion.nodes.current.set(a.id,node);else motion.nodes.current.delete(a.id)}} className={`board-actor ${a.hp<=0?'downed':''} ${a.defeated?'defeated':''} ${targeted?'targeted':''} ${attackable?'attackable':''} ${dimmed?'out-of-range':''}`} style={{transform:`translate(${point.x}px, ${point.y}px)`}} pointerEvents={a.defeated?'none':undefined} role={a.defeated?undefined:'button'} aria-label={`${a.name}, ${a.hp} of ${a.maxHp} health${a.enemy?', enemy':''}${attackable?', select to attack':targeted?', valid target':''}`} tabIndex={a.defeated?undefined:0} onClick={e=>{e.stopPropagation();if(!motion.isMoving()&&Date.now()>suppressClick.current)onActor(a)}} onKeyDown={e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();e.stopPropagation();if(!motion.isMoving())onActor(a)}}}>
+  const point=projection.tileCenter(a.x,a.y),targeted=targets.has(a.id),attackable=quickTargets.has(a.id),dimmed=targets.size>0&&!targeted&&!a.defeated&&a.id!==actor?.id,hit=struck.get(a.id),depth=viewMode==='2.5d',top=depth?spriteTop(a,game.options.biome):-45;return <g key={a.id} data-x={a.x} data-y={a.y} ref={node=>{if(node)motion.nodes.current.set(a.id,node);else motion.nodes.current.delete(a.id)}} className={`board-actor ${a.hp<=0?'downed':''} ${a.defeated?'defeated':''} ${targeted?'targeted':''} ${attackable?'attackable':''} ${dimmed?'out-of-range':''}`} style={{transform:`translate(${point.x}px, ${point.y}px)`}} pointerEvents={a.defeated?'none':undefined} role={a.defeated?undefined:'button'} aria-label={`${a.name}, ${a.hp} of ${a.maxHp} health${a.enemy?', enemy':''}${attackable?', select to attack':targeted?', valid target':''}`} tabIndex={a.defeated?undefined:0} onClick={e=>{e.stopPropagation();if(!motion.isMoving()&&Date.now()>suppressClick.current)onActor(a)}} onKeyDown={e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();e.stopPropagation();if(!motion.isMoving())onActor(a)}}}>
  {attackable?<title>{`Attack ${a.name}`}</title>:null}
  {!a.defeated?<ellipse className="actor-floor-marker" cy={viewMode==='2.5d'?5:11} rx="22" ry={viewMode==='2.5d'?11:15} fill={targets.has(a.id)?P.target:a.id===game.activeActorId?P.active:a.color} stroke={a.id===selectedId?P.marker:a.enemy?P.enemyHealth:P.health} strokeWidth={a.id===selectedId?2.6:1.2} fillOpacity=".65"/>:null}
  {!a.defeated&&(targeted||attackable)?<ellipse className={`actor-target-ring ${targeted?'pulse':''}`} cy={depth?5:11} rx="27" ry={depth?15:20} stroke={P.target} strokeWidth={targeted?3:2} strokeDasharray={targeted?undefined:'4 4'}/>:null}
- {!a.defeated&&a.id===game.activeActorId?<path d="m-4-43 8 0-4 5Z" fill={P.marker}/>:null}
- <g className={hit?`actor-body ${hit.kind}`:'actor-body'} style={hit?{animationDelay:`${hit.delay}ms`}:undefined}><g transform={a.defeated?'translate(-3 9) rotate(-75) scale(.55)':undefined}><svg x="-25" y="-45" width="50" height="58" viewBox="0 0 80 90"><HeroArt heroClass={a.heroClass} color={a.color} enemy={a.enemy}/></svg></g></g>
+ {!a.defeated&&a.id===game.activeActorId?<path d={`M-4 ${top-8}h8l-4 5Z`} fill={P.marker}/>:null}
+ <g className={hit?`actor-body ${hit.kind}`:'actor-body'} style={hit?{animationDelay:`${hit.delay}ms`}:undefined}>{depth?<g opacity={a.defeated?.3:undefined}><ActorSprite actor={a} biome={game.options.biome}/></g>:<g transform={a.defeated?'translate(-3 9) rotate(-75) scale(.55)':undefined}><svg x="-25" y="-45" width="50" height="58" viewBox="0 0 80 90"><HeroArt heroClass={a.heroClass} color={a.color} enemy={a.enemy}/></svg></g>}</g>
  {!a.defeated?<><rect x="-16" y="20" width="32" height="4" rx="2" fill={P.healthTrack} opacity=".2"/><rect x="-16" y="20" width={32*Math.max(0,a.hp/a.maxHp)} height="4" rx="2" fill={a.enemy?P.enemyHealth:{ok:P.health,low:'var(--warning)',critical:'var(--danger)',down:'var(--danger)'}[healthLevel(a.hp,a.maxHp)]}/></>:null}
- {!a.defeated&&a.guarding?<path d="m15-33 10 0v7l-5 4-5-4Z" fill={P.accent} stroke={P.leafDark}/>:null}
+ {!a.defeated&&a.guarding?<path transform={`translate(15 ${top+12})`} d="M0 0h10v7l-5 4-5-4Z" fill={P.accent} stroke={P.leafDark}/>:null}
  </g>;
  }
- const scenery=useMemo(()=>game.tiles.filter(tile=>tile.kind==='wall'||tile.decoration).map(tile=>({key:`prop-${tile.x}-${tile.y}`,depth:tile.x+tile.y,x:tile.x,order:0,kind:'prop' as const,tile})),[game.tiles]);
+ // The scene camera faces the board from the front, so nearer rows (larger y) draw over farther ones.
+ const scenery=useMemo(()=>game.tiles.filter(tile=>tile.kind==='wall'||tile.decoration).map(tile=>({key:`prop-${tile.x}-${tile.y}`,depth:tile.y,x:tile.x,order:0,kind:'prop' as const,tile})),[game.tiles]);
  const depthItems=useMemo(()=>viewMode==='2.5d'?[
-  ...scenery.map(item=>({...item,faded:game.actors.some(a=>{const position=motion.depthPositions[a.id]||a;return !a.defeated&&Math.abs(position.x-item.tile.x)+Math.abs(position.y-item.tile.y)<=2})})),
-  {key:'gateway',depth:game.exit.x+game.exit.y,x:game.exit.x,order:1,kind:'gateway' as const},
-  {key:'chest',depth:game.chest.x+game.chest.y,x:game.chest.x,order:1,kind:'chest' as const},
-  ...game.actors.map(a=>{const position=motion.depthPositions[a.id]||a;return {key:a.id,depth:position.x+position.y,x:position.x,order:a.defeated?1.5:2,kind:'actor' as const,actor:a}}),
+  ...scenery.map(item=>({...item,faded:game.actors.some(a=>{const position=motion.depthPositions[a.id]||a;return !a.defeated&&Math.abs(position.x-item.tile.x)<=1&&item.tile.y-position.y>=0&&item.tile.y-position.y<=2})})),
+  {key:'gateway',depth:game.exit.y,x:game.exit.x,order:1,kind:'gateway' as const},
+  {key:'chest',depth:game.chest.y,x:game.chest.x,order:1,kind:'chest' as const},
+  ...game.actors.map(a=>{const position=motion.depthPositions[a.id]||a;return {key:a.id,depth:position.y,x:position.x,order:a.defeated?1.5:2,kind:'actor' as const,actor:a}}),
  ].sort((a,b)=>a.depth-b.depth||a.x-b.x||a.order-b.order):[],[viewMode,scenery,game.actors,game.exit,game.chest,motion.depthPositions]);
  return <div className="board-container" data-board-view={viewMode}>
  {caption?<div className="board-caption"><span>{caption}</span></div>:null}
@@ -208,7 +210,7 @@ export default function Board({game,actor,tool,onTile,onActor,selectedId,myTurn,
  <span id={keyboardHelpId} className="sr-only">Arrow keys preview a destination. Enter or Space moves. Tab leaves the tiles.</span>
  <div className="board-keyboard-help" aria-hidden="true">Arrows preview · Enter moves · Tab leaves tiles</div>
  {route&&route.length>1?<div className="board-route-cost">{route.length-1} {route.length===2?'tile':'tiles'} · {(route.length-1)*5} ft</div>:null}
- <div className="map-compass" title={viewMode==='2.5d'?'North: upper right':'North'}><span>N</span><svg viewBox="0 0 30 40" style={viewMode==='2.5d'?{transform:'rotate(63.435deg)'}:undefined}><path d="m15 5 8 25-8-6-8 6Z" fill={P.stoneDark}/><path d="m15 5 0 19-8 6Z" fill={P.stoneLight}/></svg></div>
+ <div className="map-compass" title={viewMode==='2.5d'?'North: away from you':'North'}><span>N</span><svg viewBox="0 0 30 40"><path d="m15 5 8 25-8-6-8 6Z" fill={P.stoneDark}/><path d="m15 5 0 19-8 6Z" fill={P.stoneLight}/></svg></div>
  <div className="board-tools"><button title={grid?'Hide grid':'Show grid'} aria-label="Toggle grid" aria-pressed={grid} onClick={()=>setGrid(!grid)}><Icon name="eye" size={16}/></button><i/><button title="Zoom out" aria-label="Zoom out" onClick={()=>zoomBy(-.15)}><Icon name="minus" size={16}/></button><span>{Math.round(zoom*100)}%</span><button title="Zoom in" aria-label="Zoom in" onClick={()=>zoomBy(.15)}><Icon name="plus" size={16}/></button><i/><button title="Center on your hero" aria-label="Center on your hero" onClick={focusActor}><Icon name="people" size={16}/></button><button title="Fit board" aria-label="Fit board" onClick={reset}><Icon name="fit" size={16}/></button></div>
  {children}
  </div></div>
