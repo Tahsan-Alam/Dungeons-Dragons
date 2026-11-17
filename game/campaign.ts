@@ -1,5 +1,7 @@
 import type {GameOptions, GameState, PlayerSpec, HeroClass} from './types.ts';
 import {HERO_COLORS} from './types.ts';
+import {builtInTale,loreResolution} from './lore.ts';
+import {SETTING} from './presets.ts';
 export const NARRATION_LIMIT=400;
 export interface CharacterRecipe {id:string; name:string; heroClass:HeroClass; color:string; personality:string;}
 export interface Campaign {title:string; premise:string; resolution?:string; facts:string[]; chapters:string[]; characters:CharacterRecipe[]; source:'fixture'|'openai';}
@@ -15,8 +17,8 @@ export function campaignFixture(options:GameOptions,players:PlayerSpec[]):Campai
  const created=options.creation;
  return {title:created?.story.title??pick(options.seed+'title',['The Lantern Promise','Letters by Moonlight','The Last Beacon']),
   premise:created?.story.synopsis??`In the ${options.biome}, ${motif} needs the ${shards} lantern shards restored. ${cleanPrompt(options.storyPrompt)}`.trim(),
-  ...(created?{resolution:`The recovered shards light the gateway of ${created.story.world}. ${created.hero.name} and the party have brought the lantern home. ${created.narrator.name} closes this chapter, leaving its next unwritten page to you.`.slice(0,400)}:{}),
-  facts:[`The party cooperates to recover ${shards} lantern shards.`,'Each chapter has one chest and one gateway.','Only committed game events establish outcomes.',...(created?[`World: ${created.story.world}. Timeline: ${created.story.timeline}.`,`Key locations: ${created.story.locations.join(', ')}.`,`Narrator: ${created.narrator.name}, ${created.narrator.persona}`]:[])],
+  ...(created?{resolution:loreResolution(created.story,created.hero.name,created.narrator.name)??`The recovered shards light the gateway of ${created.story.world}. ${created.hero.name} and the party have brought the lantern home. ${created.narrator.name} closes this chapter, leaving its next unwritten page to you.`.slice(0,400)}:{}),
+  facts:[`The party cooperates to recover ${shards} lantern shards.`,'Each chapter has one chest and one gateway.','Only committed game events establish outcomes.',...(created?[...(builtInTale(created.story)?[`Setting: ${SETTING}, the roads joined at Threeway Crossing where the Waylantern stood. Aether is the current its light follows from waymark to waymark.`]:[]),`World: ${created.story.world}. Timeline: ${created.story.timeline}.`,`Key locations: ${created.story.locations.join(', ')}.`,`Narrator: ${created.narrator.name}, ${created.narrator.persona}`]:[])],
   chapters:Array.from({length:count},(_,i)=>i===count-1?'Restore the lantern with the final shard.':i===0?'Find the first shard.':i===1?'Recover the second shard.':`Recover shard ${i+1}.`),
   characters:players.map(p=>({id:p.id,name:p.bot?pick(options.seed+p.id,['Rowan','Fern','Wren','Clover','Bramble'])+' '+(players.indexOf(p)+1):p.name,heroClass:p.heroClass,color:p.color,
    personality:!p.bot&&created?`${created.hero.personality.join(', ')}. ${created.hero.background}`.slice(0,160):cleanPrompt(options.characterPrompt)||pick(options.seed+p.id+'trait',['Curious and careful','Loyal and wry','Quietly courageous'])})),source:'fixture'};

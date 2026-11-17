@@ -120,3 +120,4 @@
 .chapter-copy.results-copy>p.results-note{font:12px/1.6 var(--body);margin-bottom:18px}
 .chapter-copy.results-copy>.results-row{justify-content:flex-end}
 @media(max-width:600px){.results-recap{grid-template-columns:repeat(2,minmax(0,1fr))}.results-recap dd{font-size:18px}}
+.chapter-copy>.chapter-setting{display:block;margin-bottom:9px;font-size:11px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:#7b8b6e}

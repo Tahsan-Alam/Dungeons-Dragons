@@ -34,7 +34,7 @@ Not implemented: full character creation, races/species, official classes and sp
 
 ## What is scripted now
 
-Adventure openings have three narrator personalities. Seeded map details, initiative, and dice rolls are reproducible. Bots select legal actions, heal, attack, move, and collect objectives using fixed rules. No model API is called. The server validates human actions and owns the shared state and random generator. Future narration or action-parsing models should request actions through these same checks; they must not directly set health, dice results, turns, or inventory.
+Adventure openings have three narrator personalities. In the three built-in tales each chapter opening leads with a clue the party can see (game/lore.ts); custom tales use the general openings. Seeded map details, initiative, and dice rolls are reproducible. Bots select legal actions, heal, attack, move, and collect objectives using fixed rules. No model API is called. The server validates human actions and owns the shared state and random generator. Future narration or action-parsing models should request actions through these same checks; they must not directly set health, dice results, turns, or inventory.
 
 ## Rules reference
 

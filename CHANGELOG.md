@@ -4,6 +4,8 @@ Record user-visible changes at version checkpoints. Git history and pull request
 
 ## Unreleased
 
+- The three built-in tales share one setting, the Lantern Marches. The tale list and chapter card name it beside the region (Lanternwood, the Hollow Reach, Saltreach Harbour). Each chapter opens on a clue the party can see: the empty salt stall, the erased name under the arch carving, the stripped lamp cage. Victory relights the tale's road toward the Waylantern at Threeway Crossing. Quick-start stories follow Aether's light from waymark to waymark. Saves from earlier versions keep their original chapter text.
+- In the built-in tales each chapter now opens on the map of the Lantern Marches: the stretch of road you just cleared relights, its waymark fills, and the Game Master's opening sits beside the map. Select the map to skip the animation; with reduced motion it shows the result directly. Custom tales keep the chapter card.
 - The main menu shows a ruined castle above a misty valley, framed by a broken arch, with the title in Cinzel; it replaces the daytime woodland panorama.
 - Headings throughout the game, and the title screen's logo and menu, use the EB Garamond typeface in place of Georgia. Interface text stays in Inter.
 - Camp is a full-screen title menu: the scene fills the screen, the logo sits top left and the menu is a plain text list at the lower left with a highlight bar. Camp no longer shows the app header.

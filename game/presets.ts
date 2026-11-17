@@ -38,17 +38,20 @@ export const GAME_MASTERS:readonly GameMasterPreset[]=[
 ];
 
 export type TaleId='lantern'|'crown'|'salt';
+/** The shared setting of the three built-in tales (World Guide). Display only: `story.world` keeps the region name. */
+export const SETTING='The Lantern Marches';
+/** `region` is the region's display name; the tale's art and enemies follow `biome`. */
 export interface TalePreset {id:TaleId;title:string;premise:string;region:string;chapters:number;biome:Biome;story:StoryBlueprint}
 /** Scene art for a biome; custom tales use the built-in tale that shares their biome. */
 export const SCENE_FOR_BIOME:Record<Biome,{scene:string;thumb:string}>={woodland:{scene:'/art/scenes/tale-lantern.svg',thumb:'/art/scenes/tale-lantern-thumb.svg'},ruins:{scene:'/art/scenes/tale-crown.svg',thumb:'/art/scenes/tale-crown-thumb.svg'},coast:{scene:'/art/scenes/tale-salt.svg',thumb:'/art/scenes/tale-salt-thumb.svg'}};
 export const TALES:readonly TalePreset[]=[
- {id:'lantern',title:'The Lantern Road',region:'Woodland',chapters:3,biome:'woodland',
+ {id:'lantern',title:'The Lantern Road',region:'Lanternwood',chapters:3,biome:'woodland',
   premise:'Three lantern shards lie along a forest road. Bring the light home before the paths between villages vanish.',
   story:{title:'The Lantern Road',synopsis:'Three lantern shards lie along a forest road. Bring the light home before the paths between villages vanish.',timeline:'Before the last lantern goes out',world:'Lanternwood',locations:['Starfall Market','The forest road','The lantern shrine'],biome:'woodland'}},
- {id:'crown',title:'The Hollow Crown',region:'Ruins',chapters:3,biome:'ruins',
+ {id:'crown',title:'The Hollow Crown',region:'The Hollow Reach',chapters:3,biome:'ruins',
   premise:'A ruined keep holds the crown of a king nobody remembers. Something in the ruins remembers him.',
   story:{title:'The Hollow Crown',synopsis:'A ruined keep holds the crown of a king nobody remembers. Something in the ruins remembers him.',timeline:'Long after the last coronation',world:'The Hollow Reach',locations:['The broken arch','The ridge road','The hollow keep'],biome:'ruins'}},
- {id:'salt',title:'Salt and Silver',region:'Coast',chapters:3,biome:'coast',
+ {id:'salt',title:'Salt and Silver',region:'Saltreach Harbour',chapters:3,biome:'coast',
   premise:'A harbour town trades in secrets and lantern glass. Someone is paying to keep the docks dark.',
   story:{title:'Salt and Silver',synopsis:'A harbour town trades in secrets and lantern glass. Someone is paying to keep the docks dark.',timeline:'The night the docks went dark',world:'Saltreach Harbour',locations:['The lantern pier','The glassmakers’ row','The harbour vaults'],biome:'coast'}},
 ];

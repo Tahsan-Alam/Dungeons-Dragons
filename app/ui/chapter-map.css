@@ -1,0 +1,56 @@
+/* Between chapters: the route map beside the next chapter's opening. Dark realm surfaces; amber only from the light itself. */
+.chapter-map{position:fixed;inset:0;width:100vw;height:100dvh;max-width:none;max-height:none;margin:0;padding:0;border:0;overflow:auto;color:var(--realm-ink);background:radial-gradient(ellipse at 40% 45%,#1a222c,#0b0f14 80%)}
+.chapter-map::backdrop{background:rgba(5,8,12,.72)}
+.cm-layout{box-sizing:border-box;min-height:100%;max-width:1320px;margin:0 auto;padding:26px 32px 28px;display:grid;grid-template-columns:minmax(0,1fr) 364px;grid-template-rows:auto minmax(320px,1fr) auto;grid-template-areas:"head head" "map chapter" "foot actions";gap:14px 32px}
+.cm-head{grid-area:head;display:flex;flex-direction:column;gap:4px}
+.cm-head h1{margin:0;font:600 26px/1.15 var(--realm-serif);color:var(--realm-ink)}
+.cm-map{grid-area:map;position:relative;min-height:0;border:1px solid var(--realm-edge);border-radius:3px;overflow:hidden;background:#10151a;cursor:pointer}
+.cm-map.is-settled{cursor:default}
+.cm-foot{grid-area:foot;display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px 24px}
+.cm-key{display:flex;flex-wrap:wrap;gap:6px 18px;font:500 11.5px/1.3 Inter,system-ui,sans-serif;color:var(--realm-muted)}
+.cm-key span{display:inline-flex;align-items:center;gap:7px}
+.cm-swatch{display:inline-block;width:26px;height:4px;border-radius:2px}
+.cm-swatch.lit{height:5px;background:#e8a840;box-shadow:0 0 0 2px #0b0f14}
+.cm-swatch.dark{height:2px;background:#d6cfc2}
+.cm-swatch.here{width:12px;height:12px;border-radius:50%;border:2px solid var(--realm-select);background:none}
+.cm-swatch.shard,.cm-shards i{width:10px;height:10px;border-radius:1px;transform:rotate(45deg);background:#e8a840}
+.cm-shards{display:inline-flex;align-items:center;gap:9px;margin:0;font:600 12.5px Inter,system-ui,sans-serif;color:var(--realm-dim)}
+.cm-shards i{display:inline-block;background:none;border:1.6px solid #6b7685}
+.cm-shards i.on{background:#e8a840;border-color:#e8a840}
+.cm-shards span{margin-left:4px}
+.cm-chapter{grid-area:chapter;box-sizing:border-box;padding:22px;display:flex;flex-direction:column;gap:14px;min-height:0;overflow:auto}
+.cm-chapter h2{margin:-6px 0 0;font:600 28px/1.1 var(--realm-serif);color:var(--realm-ink)}
+.cm-gm{display:flex;align-items:center;gap:12px}
+.cm-gm strong{display:block;font:600 13px var(--realm-serif);color:var(--realm-ink)}
+.cm-gm span{font:500 11.5px Inter,system-ui,sans-serif;color:#8d99a6}
+.cm-opening{margin:0;font:400 18px/1.5 var(--realm-prose);color:#e6dfd2}
+.cm-objective{margin:auto 0 0;padding-top:12px;border-top:1px solid #2c3644;font:500 12px/1.45 Inter,system-ui,sans-serif;color:var(--realm-muted)}
+.cm-actions{grid-area:actions;display:flex;flex-direction:column;align-items:stretch;gap:8px}
+.cm-actions .realm-btn{width:100%}
+.cm-skip{text-align:center;font:500 11.5px Inter,system-ui,sans-serif;color:#7d8896}
+.route-map{position:absolute;inset:0}
+.route-map svg{display:block;width:100%;height:100%}
+.route-map text{paint-order:stroke;stroke:#151a1f;stroke-width:3.5px;stroke-linejoin:round}
+.route-place{font-family:var(--realm-serif);font-weight:600}
+.route-note{font-family:Inter,system-ui,sans-serif;font-weight:500}
+.route-road{font-family:Inter,system-ui,sans-serif;font-weight:700;letter-spacing:2px}
+.route-region{font-family:var(--realm-serif);font-weight:600;letter-spacing:3px}
+.route-map .route-numeral{font-family:var(--realm-serif);font-weight:700;stroke:none}
+.route-draw{stroke-dasharray:1;stroke-dashoffset:1;animation:route-draw 1.2s ease-in-out forwards;animation-delay:calc(.35s + var(--route-delay,0s))}
+.route-way{opacity:0;animation:route-way .3s ease-out 1.5s forwards}
+.route-here{animation:route-here 1.8s ease-in-out infinite}
+@keyframes route-draw{to{stroke-dashoffset:0}}
+@keyframes route-way{to{opacity:1}}
+@keyframes route-here{50%{opacity:.35}}
+@media (prefers-reduced-motion:reduce){.route-draw,.route-way,.route-here{animation:none;stroke-dashoffset:0;opacity:1}}
+@media (max-width:760px){
+ .cm-layout{grid-template-columns:minmax(0,1fr);grid-template-rows:none;grid-template-areas:"head" "map" "foot" "chapter" "actions";padding:18px 16px 0;gap:12px}
+ .cm-head h1{font-size:21px;line-height:1.2}
+ .cm-map{aspect-ratio:5/4}
+ .cm-key{display:none}
+ .cm-chapter{padding:16px;gap:10px;overflow:visible}
+ .cm-chapter h2{font-size:23px}
+ .cm-opening{font-size:16.5px}
+ .cm-actions{position:sticky;bottom:0;padding:12px 0 calc(16px + env(safe-area-inset-bottom));background:linear-gradient(transparent,#0b0f14 30%)}
+}
+.chapter-map .cm-actions .realm-btn-face{width:100%}

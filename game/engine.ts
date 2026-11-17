@@ -1,4 +1,5 @@
 import type { Actor, GameAction, GameEvent, GameOptions, GameState, HeroClass, PlayerSpec, Tile } from './types';
+import {LORE_EDITION,loreOpening} from './lore.ts';
 import { SUPPORT_ABILITY } from './types.ts';
 import {campaignFixture,installCampaign,rememberChapter,storyGoal} from './campaign.ts';
 import {parseBlueprint} from './creation.ts';
@@ -193,7 +194,7 @@ function setupScene(game: GameState) {
     ],
   };
   const standard=!game.options.duration||game.options.duration==='standard';
-  const opening=standard?openings[game.options.narrator][game.scene]:`${game.sceneName}. ${game.relics} of ${storyGoal(game)} lantern shards recovered. ${final?'The final shard is here. Face the Hollow Keeper and bring the lantern home.':'Defeat the guardians, recover this shard, and follow its light onward.'}`;
+  const opening=loreOpening(game,standard,final,storyGoal(game))??(standard?openings[game.options.narrator][game.scene]:`${game.sceneName}. ${game.relics} of ${storyGoal(game)} lantern shards recovered. ${final?'The final shard is here. Face the Hollow Keeper and bring the lantern home.':'Defeat the guardians, recover this shard, and follow its light onward.'}`);
   event(game, 'story', opening);
   if (game.options.rules === 'classic') event(game, 'system', 'Initiative rolled. Each turn: move up to your speed, take one action, then end your turn.');
 }
@@ -206,7 +207,7 @@ export function createGame(players: PlayerSpec[], options: GameOptions): GameSta
   if(options.duration!==undefined&&!['short','standard','long'].includes(options.duration))throw new Error('Choose a supported adventure length.');
   if(options.aiEnabled!==undefined&&typeof options.aiEnabled!=='boolean')throw new Error('Choose whether to use AI.');
   if(options.creation&&(!parseBlueprint(options.creation)||players[0].name!==options.creation.hero.name||players[0].heroClass!==options.creation.hero.heroClass))throw new Error('Review the selected story and character.');
-  const game: GameState = { schemaVersion: 1, options: { ...options }, rng: hash(`${options.seed}|${options.biome}`), status: 'playing', width: WIDTH, height: HEIGHT,
+  const game: GameState = { schemaVersion: 1, lore: LORE_EDITION, options: { ...options }, rng: hash(`${options.seed}|${options.biome}`), status: 'playing', width: WIDTH, height: HEIGHT,
     tiles: [], actors: [], activeActorId: '', turnOrder: [], round: 1, scene: 0, sceneName: '', objective: '', relics: 0,
     exit: { x: 18, y: 7 }, chest: { x: 10, y: 7, opened: false }, events: [], eventSequence: 0 };
   for (const p of players) {

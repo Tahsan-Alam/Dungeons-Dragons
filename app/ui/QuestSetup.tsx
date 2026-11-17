@@ -2,7 +2,8 @@
 import {useEffect,useRef,useState} from 'react';
 import {DEFAULT_OPTIONS} from '../../game/types';
 import type {GameOptions,HeroClass} from '../../game/types';
-import {GAME_MASTERS,TALES,HEROES,HERO_ART_RATIO,GAME_MASTER_ART_RATIO,SCENE_FOR_BIOME} from '../../game/presets';
+import {GAME_MASTERS,TALES,HEROES,HERO_ART_RATIO,GAME_MASTER_ART_RATIO,SCENE_FOR_BIOME,SETTING} from '../../game/presets';
+import {settingLine} from '../../game/lore';
 import type {GameMasterPreset,HeroPreset,Role} from '../../game/presets';
 import {narratorTone,parseStory} from '../../game/creation';
 import type {StoryBlueprint} from '../../game/creation';
@@ -131,7 +132,7 @@ function TaleStep({s,gm,story,art,pick,idea,setIdea,shape,tellAnother,pending,er
     {(['woodland','ruins','coast'] as const).map(b=><img key={b} className="realm-fade" src={SCENE_FOR_BIOME[b].scene} alt="" style={{opacity:SCENE_FOR_BIOME[b].scene===art?1:0}}/>)}
    </div>
    <div className="qs-tale-caption" aria-live="polite">
-    <div className="qs-tale-title"><h2>{story.title}</h2><span>{preset?`${preset.region} · ${preset.chapters} chapters`:story.world}</span></div>
+    <div className="qs-tale-title"><h2>{story.title}</h2><span>{preset?`${SETTING} · ${preset.region} · ${preset.chapters} chapters`:story.world}</span></div>
     <p>{story.synopsis}</p>
    </div>
   </section>
@@ -231,7 +232,7 @@ function SetOutStep({s,gm,hero,story,art,thumb,update,advanced,setAdvanced,mode}
   <section className="qs-summary realm-panel" aria-label="Your quest">
    <div className="qs-summary-rows">
     <div className="qs-summary-row"><Portrait art={gm.art} face={gm.face} ratio={GAME_MASTER_ART_RATIO} width={44} height={44} scale={2.4} eye={0.4}/><div><span className="realm-eyebrow">Game Master</span><strong>{gm.title}</strong><span>{gm.mood}</span></div></div>
-    <div className="qs-summary-row"><img src={thumb} alt="" className="qs-summary-thumb"/><div><span className="realm-eyebrow">Tale</span><strong>{story.title}</strong><span>{story.world}</span></div></div>
+    <div className="qs-summary-row"><img src={thumb} alt="" className="qs-summary-thumb"/><div><span className="realm-eyebrow">Tale</span><strong>{story.title}</strong><span>{settingLine(story)}</span></div></div>
     <div className="qs-summary-row"><Portrait art={hero.art} face={hero.face} ratio={HERO_ART_RATIO} width={44} height={44} scale={1.6}/><div><span className="realm-eyebrow">Hero</span><strong>{hero.name}</strong><span>{hero.className} · {hero.subclass}</span></div></div>
    </div>
    {seg('Length',s.length,LENGTHS,v=>update({length:v}))}
