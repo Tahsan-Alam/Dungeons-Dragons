@@ -3,6 +3,7 @@ import {useLayoutEffect,useRef,type ReactNode} from 'react';
 import {Brand} from './Menu';
 import {Icon} from './Art';
 import './navigation.css';
+import './realm-shell.css';
 export interface AppHeaderProps {active:'home'|'games'|null;onHome:()=>void;onGames:()=>void;onHelp:()=>void;onSettings:()=>void;inert?:boolean;children?:ReactNode;}
 export default function AppHeader({active,onHome,onGames,onHelp,onSettings,inert=false,children}:AppHeaderProps){
  const ref=useRef<HTMLElement>(null);

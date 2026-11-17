@@ -8,6 +8,7 @@ import {useHeaderInert} from './AppHeader';
 import {useControls} from './useControls';
 import {actionForKey,eventBinding} from './controls';
 import './replay.css';
+import './realm-shell.css';
 export default function Replay({archive,title,onBack,onSettings,suspended=false}:{archive:ReplayArchive;title:string;onBack:()=>void;onSettings:()=>void;suspended?:boolean}){
  const {preferences}=useControls();
  const[result,setResult]=useState<{frames:GameState[];error:string;loading:boolean}>({frames:[],error:'',loading:true});
