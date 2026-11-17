@@ -88,7 +88,7 @@ function useBoardFeedback(game:GameState,enabled:boolean,resetKey:string|number|
  return shown;
 }
 export default function Board({game,actor,tool,onTile,onActor,selectedId,myTurn,controlsRef,focusId,caption,onMotionChange,animateMovement=true,motionResetKey,autoFrame=false,holdFeedback=false,children}:{game:GameState;actor?:Actor;tool:Tool;onTile:(x:number,y:number)=>void;onActor:(a:Actor)=>void;selectedId:string;myTurn:boolean;controlsRef?:Ref<BoardControls>;focusId?:string;caption?:string;onMotionChange?:(moving:boolean)=>void;animateMovement?:boolean;motionResetKey?:string|number;autoFrame?:boolean;holdFeedback?:boolean;children?:ReactNode}){
- const {reducedMotion,viewMode}=useTheme();
+ const {reducedMotion,viewMode,setViewMode}=useTheme();
  const projection=useMemo(()=>createBoardProjection(viewMode,game.width,game.height),[viewMode,game.width,game.height]);
  const motion=useActorMotion(game,projection,focusId??actor?.id,animateMovement,motionResetKey,reducedMotion,onMotionChange);
  const feedback=useBoardFeedback(game,animateMovement,motionResetKey,holdFeedback);
@@ -216,7 +216,7 @@ export default function Board({game,actor,tool,onTile,onActor,selectedId,myTurn,
  <div className="board-keyboard-help" aria-hidden="true">Arrows preview · Enter moves · Tab leaves tiles</div>
  {route&&route.length>1?<div className="board-route-cost">{route.length-1} {route.length===2?'tile':'tiles'} · {(route.length-1)*5} ft</div>:null}
  <div className="map-compass" title={viewMode==='2.5d'?'North: away from you':'North'}><span>N</span><svg viewBox="0 0 30 40"><path d="m15 5 8 25-8-6-8 6Z" fill={P.stoneDark}/><path d="m15 5 0 19-8 6Z" fill={P.stoneLight}/></svg></div>
- <div className="board-tools"><button title={grid?'Hide grid':'Show grid'} aria-label="Toggle grid" aria-pressed={grid} onClick={()=>setGrid(!grid)}><Icon name="eye" size={16}/></button><i/><button title="Zoom out" aria-label="Zoom out" onClick={()=>zoomBy(-.15)}><Icon name="minus" size={16}/></button><span>{Math.round(zoom*100)}%</span><button title="Zoom in" aria-label="Zoom in" onClick={()=>zoomBy(.15)}><Icon name="plus" size={16}/></button><i/><button title="Center on your hero" aria-label="Center on your hero" onClick={focusActor}><Icon name="people" size={16}/></button><button title="Fit board" aria-label="Fit board" onClick={reset}><Icon name="fit" size={16}/></button></div>
+ <div className="board-tools"><button title={grid?'Hide grid':'Show grid'} aria-label="Toggle grid" aria-pressed={grid} onClick={()=>setGrid(!grid)}><Icon name="eye" size={16}/></button><i/><button title="Zoom out" aria-label="Zoom out" onClick={()=>zoomBy(-.15)}><Icon name="minus" size={16}/></button><span>{Math.round(zoom*100)}%</span><button title="Zoom in" aria-label="Zoom in" onClick={()=>zoomBy(.15)}><Icon name="plus" size={16}/></button><i/><button title="Center on your hero" aria-label="Center on your hero" onClick={focusActor}><Icon name="people" size={16}/></button><button title="Fit board" aria-label="Fit board" onClick={reset}><Icon name="fit" size={16}/></button><i/><button className="view-toggle" title={viewMode==='2.5d'?'Show the tactical map (from above)':'Show the scene'} aria-label={viewMode==='2.5d'?'Show the tactical map':'Show the scene'} onClick={()=>setViewMode(viewMode==='2.5d'?'2d':'2.5d')}>{viewMode==='2.5d'?'Map':'Scene'}</button></div>
  {children}
  </div></div>
 }
