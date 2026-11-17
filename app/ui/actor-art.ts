@@ -1,4 +1,4 @@
-import type {Actor,Biome} from '../../game/types.ts';
+import type {Actor,Biome,KeeperKind} from '../../game/types.ts';
 import {HEROES,HERO_ART_RATIO,HERO_FEET,type HeroPreset} from '../../game/presets.ts';
 import {ENEMY_ART,type EnemyArtKey} from './enemy-art-data.ts';
 
@@ -14,12 +14,20 @@ const HERO_TILES=1.78;
 /** Paintings carry transparent margins; this is where each figure's head or wings begin. */
 const PAINTING_TOP:Partial<Record<EnemyArtKey,number>>={wolf:182,'wolf-pounce':172,dragon:90,'dragon-roar':98};
 
-/** Each named Keeper's painting, with its pose while a signature attack is announced (and the Warden's yield). */
+/** Each Keeper's painting, its pose while a signature attack is announced, and (for the wardens) its yield. */
+export const KEEPER_ART:Record<Exclude<KeeperKind,'hollow'>,{rest:EnemyArtKey;attack:EnemyArtKey;yielded?:EnemyArtKey}>={
+ wolf:{rest:'wolf',attack:'wolf-pounce'},'grey-wolf':{rest:'wolf',attack:'wolf-pounce'},
+ dragon:{rest:'dragon',attack:'dragon-roar'},drake:{rest:'dragon',attack:'dragon-roar'},
+ warden:{rest:'warden',attack:'warden-windup',yielded:'warden-yield'},'tide-warden':{rest:'warden',attack:'warden-windup',yielded:'warden-yield'},
+ thornhound:{rest:'thornhound',attack:'thornhound-rush'},giant:{rest:'ridge-giant',attack:'ridge-giant-slam'},eye:{rest:'glass-eye',attack:'glass-eye-gaze'},
+};
+/** A beaten Keeper that stays on the board in its yield pose. */
+export const keeperYields=(kind:KeeperKind|undefined)=>!!kind&&kind!=='hollow'&&!!KEEPER_ART[kind].yielded;
 function keeperPose(actor:KeeperArtActor,biome:Biome):EnemyArtKey{
- const kind=actor.keeper==='hollow'?KEEPER_BY_BIOME[biome]:actor.keeper!;
- if(kind==='warden'&&actor.defeated)return 'warden-yield';
- if(!actor.plan)return kind;
- return kind==='wolf'?'wolf-pounce':kind==='dragon'?'dragon-roar':'warden-windup';
+ if(actor.keeper==='hollow')return KEEPER_BY_BIOME[biome];
+ const art=KEEPER_ART[actor.keeper!];
+ if(actor.defeated&&art.yielded)return art.yielded;
+ return actor.plan?art.attack:art.rest;
 }
 type KeeperArtActor=Pick<Actor,'name'>&Partial<Pick<Actor,'keeper'|'plan'|'defeated'>>;
 
