@@ -9,6 +9,8 @@ import {findBoardPath,isBoardDiscontinuity,planActorMotions,boardPathKeyframes,s
 import {createBoardProjection,type BoardProjection} from './board-projection';
 import {collectBoardFeedback,type BoardFeedback} from './board-feedback';
 import {DepthTerrain,DepthProp,DepthChest,DepthGateway} from './DepthArt';
+import {FlatSetPiece,GroundLight,GroundMarkArt} from './SetPieceArt';
+import {groundOf,isGroundMark,isSetPieceProp} from '../../game/set-pieces';
 import {ActorSprite,spriteTop} from './ActorArt';
 import {healthLevel} from './readability';
 import {sameBoardTerrain,rovingBoardTile,nextBoardTile,resizedBoardPan,revealedBoardPan,type BoardDirection} from './board-interaction';
@@ -20,9 +22,12 @@ const Terrain=memo(function Terrain({game,grid}:{game:GameState;grid:boolean}){r
  <defs><pattern id="board-dots" width="50" height="50" patternUnits="userSpaceOnUse"><circle cx="0" cy="0" r="1.4" fill={P.grassDetail} opacity=".26"/></pattern><pattern id="water-lines" width="35" height="20" patternUnits="userSpaceOnUse"><path d="M2 10q5-3 11 0t11 0" stroke={P.waterLight} strokeWidth="1" fill="none"/></pattern></defs>
  <rect width={game.width*50} height={game.height*50} rx="18" fill={game.options.biome==='ruins'?P.ruinGrass:P.grass}/>
  {game.tiles.map(t=><g key={`${t.x},${t.y}`} transform={`translate(${t.x*50} ${t.y*50})`}>
- {t.kind==='path'?<rect x="-1" y="-1" width="52" height="52" rx="10" fill={P.road}/>:t.kind==='water'?<><rect width="51" height="51" rx="8" fill={P.water}/><rect width="50" height="50" fill="url(#water-lines)"/></>:t.kind==='wall'?<path d="m5 7 32-4 10 9-3 28-33 3-8-11Z" fill={P.stone} stroke={P.stoneDark} strokeWidth="1.5"/>:((t.x*7+t.y*3)%11===0)?<path d="m20 35-4-6m4 6 4-9m0 9 4-4" fill="none" stroke={P.grassDetail} strokeWidth="1.5"/>:null}
+ {isGroundMark(t.decoration)||isSetPieceProp(t.decoration)?(g=>g.kind==='path'?<><rect x="-1" y="-1" width="52" height="52" rx="10" fill={P.road}/>{g.base?<GroundMarkArt mark={g.base} seed={t.x*17+t.y*31}/>:null}{g.mark?<GroundMarkArt mark={g.mark} seed={t.x*17+t.y*31}/>:null}</>:null)(groundOf(game,t)):null}
+ {isSetPieceProp(t.decoration)||isGroundMark(t.decoration)?null:t.kind==='path'?<rect x="-1" y="-1" width="52" height="52" rx="10" fill={P.road}/>:t.kind==='water'?<><rect width="51" height="51" rx="8" fill={P.water}/><rect width="50" height="50" fill="url(#water-lines)"/></>:t.kind==='wall'?<path d="m5 7 32-4 10 9-3 28-33 3-8-11Z" fill={P.stone} stroke={P.stoneDark} strokeWidth="1.5"/>:((t.x*7+t.y*3)%11===0)?<path d="m20 35-4-6m4 6 4-9m0 9 4-4" fill="none" stroke={P.grassDetail} strokeWidth="1.5"/>:null}
  {t.decoration==='flower'?<g fill={P.flower}><circle cx="18" cy="24" r="3"/><circle cx="32" cy="37" r="2.5"/></g>:t.decoration==='mushroom'?<g stroke={P.bark} strokeWidth="1.3"><path d="M27 37v-7m-8-1q8-18 16 0Z" fill={P.mushroom}/></g>:t.decoration==='rock'?<path d="m14 31 6-13 16 3 4 13-17 5Z" fill={P.stone} stroke={P.stoneDark} strokeWidth="1.5"/>:t.decoration==='ruin'?<g fill={P.stoneLight} stroke={P.stoneDark} strokeWidth="1.5"><path d="m13 39 2-30 8 3 10-5 4 32Z"/><path d="m15 22 12 1m-5 9 14-1"/></g>:null}
  </g>)}
+ {game.tiles.map(t=>isSetPieceProp(t.decoration)?<g key={`light${t.x},${t.y}`} transform={`translate(${t.x*50} ${t.y*50})`}><GroundLight prop={t.decoration}/></g>:null)}
+ {game.tiles.map(t=>isSetPieceProp(t.decoration)?<g key={`piece${t.x},${t.y}`} transform={`translate(${t.x*50} ${t.y*50})`}><FlatSetPiece prop={t.decoration}/></g>:null)}
  {grid?<rect width={game.width*50} height={game.height*50} fill="url(#board-dots)"/>:null}
  {game.tiles.filter(t=>t.decoration==='tree').map(t=><Tree key={`tree${t.x}-${t.y}`} x={t.x*50+25} y={t.y*50+32} size={.75+(t.x%3)*.08} tone={t.x+t.y}/>)}
  </>});
@@ -175,7 +180,7 @@ export default function Board({game,actor,tool,onTile,onActor,selectedId,myTurn,
  </g>;
  }
  // The scene camera faces the board from the front, so nearer rows (larger y) draw over farther ones.
- const scenery=useMemo(()=>game.tiles.filter(tile=>tile.kind==='wall'||tile.decoration).map(tile=>({key:`prop-${tile.x}-${tile.y}`,depth:tile.y,x:tile.x,order:0,kind:'prop' as const,tile})),[game.tiles]);
+ const scenery=useMemo(()=>game.tiles.filter(tile=>(tile.kind==='wall'||tile.decoration)&&!isGroundMark(tile.decoration)&&tile.decoration!=='span').map(tile=>({key:`prop-${tile.x}-${tile.y}`,depth:tile.y,x:tile.x,order:0,kind:'prop' as const,tile})),[game.tiles]);
  const depthItems=useMemo(()=>viewMode==='2.5d'?[
   ...scenery.map(item=>({...item,faded:game.actors.some(a=>{const position=motion.depthPositions[a.id]||a;return !a.defeated&&Math.abs(position.x-item.tile.x)<=1&&item.tile.y-position.y>=0&&item.tile.y-position.y<=2})})),
   {key:'gateway',depth:game.exit.y,x:game.exit.x,order:1,kind:'gateway' as const},

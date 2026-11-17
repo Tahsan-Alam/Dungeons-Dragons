@@ -90,3 +90,28 @@ test('the built-in tales share the Lantern Marches as their setting and keep the
  const facts=runBots(createGame([player],optionsFor(TALES[2].story,'standard'))).story!.campaign.facts.join(' ');
  assert.match(facts,/The Lantern Marches.*Waylantern.*Aether/);
 });
+
+test('chapter I of each built-in tale is its authored landmark scene, legal and connected; other chapters stay generated',async()=>{
+ const {SET_PIECES,isSetPieceProp}=await import('./set-pieces.ts');
+ const {getReachable}=await import('./engine.ts');
+ for(const tale of TALES){
+  const game=runBots(createGame([player],optionsFor(tale.story,'standard')));const piece=SET_PIECES[tale.id];
+  assert.deepEqual(game.exit,piece.exit,tale.id);assert.deepEqual({x:game.chest.x,y:game.chest.y},piece.chest,tale.id);
+  for(const p of piece.props){const t=game.tiles[p.at[1]*game.width+p.at[0]];assert.equal(t.kind,'wall');assert.equal(t.decoration,p.prop,`${tale.id} ${p.prop}`);}
+  // Every open tile is reachable, and every spawn, the chest and the exit stand on open ground.
+  const solo=structuredClone(game);solo.actors=[solo.actors.find(a=>!a.enemy)!];solo.actors[0].movement=1000;solo.status='playing';
+  const open=game.tiles.filter(t=>t.kind==='grass'||t.kind==='path');
+  assert.equal(getReachable(solo,solo.actors[0]).length+1,open.length,tale.id);
+  for(const at of [...game.actors,game.chest,game.exit])assert.ok(open.some(t=>t.x===at.x&&t.y===at.y),`${tale.id} ${JSON.stringify(at)}`);
+  // The next chapter is generated as before.
+  const {chapters}=playThrough(structuredClone(game));assert.equal(chapters.length,4);
+  const later=structuredClone(game);for(const a of later.actors.filter(a=>a.enemy)){a.hp=0;a.defeated=true;}
+  active(later).x=later.chest.x-1;active(later).y=later.chest.y;let next=applyAction(later,player.id,{type:'interact'});
+  active(next).x=next.exit.x-1;active(next).y=next.exit.y;if(next.tiles[next.exit.y*next.width+next.exit.x-1].kind==='wall'){active(next).x=next.exit.x;active(next).y=next.exit.y+1;}
+  next=runBots(applyAction(next,player.id,{type:'advance'}));
+  assert.equal(next.scene,1);assert.ok(!next.tiles.some(t=>isSetPieceProp(t.decoration)),tale.id);
+ }
+ // A custom tale keeps its generated map.
+ const custom:StoryBlueprint={title:'The Clockwork Orchard',synopsis:'Gears grow on the trees.',timeline:'Harvest',world:'Cogmere',locations:['The gear gate','The oil well','The spring tower'],biome:'woodland'};
+ const generated=createGame([player],optionsFor(custom,'standard'));assert.ok(!generated.tiles.some(t=>isSetPieceProp(t.decoration)));assert.deepEqual(generated.exit,{x:18,y:7});
+});

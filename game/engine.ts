@@ -1,5 +1,6 @@
 import type { Actor, GameAction, GameEvent, GameOptions, GameState, HeroClass, PlayerSpec, Tile } from './types';
 import {LORE_EDITION,loreOpening} from './lore.ts';
+import {applySetPiece,setPieceFor} from './set-pieces.ts';
 import { SUPPORT_ABILITY } from './types.ts';
 import {campaignFixture,installCampaign,rememberChapter,storyGoal} from './campaign.ts';
 import {parseBlueprint} from './creation.ts';
@@ -131,7 +132,14 @@ function makeMap(game: GameState) {
   }
   game.exit = { x: 18, y: 7 };
   game.chest = { x: 10, y: 7 + bend, opened: false };
-  // Remove isolated decorative pockets, preserving a single connected playing area.
+  const piece = setPieceFor(game);
+  if (piece) applySetPiece(game, piece);
+  sealPockets(game);
+}
+
+/** Remove isolated decorative pockets, preserving a single connected playing area. */
+function sealPockets(game: GameState) {
+  const { biome } = game.options;
   const visited = new Set<string>();
   const queue = [{ x: 2, y: 7 }];
   for (let i = 0; i < queue.length; i++) {

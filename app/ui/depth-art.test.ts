@@ -9,6 +9,8 @@ import {renderToStaticMarkup} from 'react-dom/server';
 import {createGame} from '../../game/engine.ts';
 import {createBoardProjection} from './board-projection.ts';
 import {ART_PALETTE,TREE_TONES,worldPigment} from './artPalette.ts';
+import {groundOf,isGroundMark,isSetPieceProp,SET_PIECE_PROPS,GROUND_MARKS} from '../../game/set-pieces.ts';
+import {GAME_MASTERS,HEROES,TALES} from '../../game/presets.ts';
 import type {Biome,HeroClass,Tile} from '../../game/types';
 
 // Render the actual TSX in Node without a browser or CSS loader. The theme is the
@@ -22,7 +24,8 @@ function load(file:string,overrides:Record<string,unknown>){
  return exports;
 }
 const shared={'./Theme':{useTheme:()=>presentation},'./artPalette':{ART_PALETTE,TREE_TONES,worldPigment}};
-const art=load('./Art.tsx',shared),depth=load('./DepthArt.tsx',{...shared,'./Art':art});
+const pieces=load('./SetPieceArt.tsx',shared),setPieces={isGroundMark,isSetPieceProp,groundOf};
+const art=load('./Art.tsx',shared),depth=load('./DepthArt.tsx',{...shared,'./Art':art,'./SetPieceArt':pieces,'../../game/set-pieces':setPieces});
 function render(component:React.ElementType,props:Record<string,unknown>){const html=renderToStaticMarkup(React.createElement(component,props));assert.doesNotMatch(html,/NaN|Infinity|<image|<filter/);return html}
 const player={id:'you',name:'Hero',heroClass:'knight' as const,color:'#ef997c',bot:false};
 
@@ -91,4 +94,20 @@ test('chapter panoramas match the biome and actual party in either view',()=>{
   assert.equal((render(art.Panorama,{biome,characters:[...characters,...characters]}).match(/data-panorama-hero=/g)??[]).length,4);
  }
  assert.equal(JSON.stringify(characters),original,'rendering must not mutate party identities');
+});
+
+test('the first chapters of the built-in tales draw every landmark in both views without changing the game',()=>{
+ for(const tale of TALES){
+  const hero=HEROES[0],me={id:'you',name:hero.profile.name,heroClass:hero.profile.heroClass,color:'#ef997c',bot:false};
+  const game=createGame([me],{rules:'simple',seed:'set-piece-art',narrator:'warm',biome:tale.biome,companions:0,creation:{narrator:GAME_MASTERS[0].profile,story:tale.story,hero:hero.profile}});
+  const before=JSON.stringify(game);presentation={viewMode:'2.5d'};
+  const projection=createBoardProjection('2.5d',game.width,game.height);
+  const ground=render(depth.DepthTerrain,{game,grid:false,projection});
+  const props=game.tiles.filter(t=>isSetPieceProp(t.decoration));assert.ok(props.length>=6,tale.id);
+  for(const tile of props){const html=render(depth.DepthProp,{tile,projection});if(tile.decoration==='span')assert.equal(html,'');else assert.ok(html.includes('depth-set-piece'),`${tale.id} ${tile.decoration}`);}
+  for(const tile of game.tiles.filter(t=>isGroundMark(t.decoration)))assert.equal(render(depth.DepthProp,{tile,projection}),'','ground marks stay on the ground plane');
+  assert.ok(ground.length>0);assert.equal(JSON.stringify(game),before,tale.id);
+ }
+ for(const prop of SET_PIECE_PROPS){const flat=render(pieces.FlatSetPiece,{prop}),dimensional=render(pieces.DepthSetPiece,{prop});if(prop==='span'){assert.equal(flat,'');assert.equal(dimensional,'')}else{assert.ok(flat.length>20,prop);assert.ok(dimensional.length>20,prop)}}
+ for(const mark of GROUND_MARKS)assert.ok(render(pieces.GroundMarkArt,{mark,seed:3}).length>20,mark);
 });
