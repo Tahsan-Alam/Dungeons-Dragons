@@ -1,0 +1,37 @@
+/* The dice card: above the action bar, never over the board's middle. */
+.roll-dock{position:fixed;left:50%;bottom:104px;transform:translateX(-50%);z-index:30;pointer-events:none;max-width:calc(100vw - 24px)}
+.roll-dock>*{pointer-events:auto}
+.roll-card{display:flex;align-items:center;gap:14px;width:380px;max-width:100%;box-sizing:border-box;padding:10px 16px;background:rgba(12,16,22,.94);border:1px solid #9CC9EA;border-radius:3px;box-shadow:0 6px 24px rgba(0,0,0,.55);color:#F1E5CF;font-family:Inter,system-ui,sans-serif}
+.roll-card.foe{border-color:#e3a08c}
+.roll-card.big{width:420px;padding:14px 18px}
+.roll-card.crit{border-color:#f2b45a}
+.roll-lines{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px}
+.roll-label{font:600 11px/1.3 Inter,system-ui,sans-serif;letter-spacing:.14em;text-transform:uppercase;color:#b9c9d8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.roll-moment{font:700 20px/1.15 Cinzel,'EB Garamond',Georgia,serif;letter-spacing:.02em;color:#f2b45a}
+.roll-sum{font:600 15px Inter,system-ui,sans-serif;color:#F1E5CF}
+.roll-dim{color:#a9b3be}
+.roll-outcome{font:700 13px Inter,system-ui,sans-serif}
+.roll-outcome.hit{color:#8FD18B}.roll-card.foe .roll-outcome.hit,.roll-card.foe .roll-outcome.crit{color:#f2a65a}.roll-outcome.miss{color:#a9b3be}.roll-outcome.crit{color:#f2b45a}.roll-outcome.plain{color:#d2cbbf;font-weight:500}
+.roll-queue{display:flex;align-items:center;gap:10px;margin-top:6px;padding-top:7px;border-top:1px solid #2a3340;font:600 12px Inter,system-ui,sans-serif;color:#c9c3b8}
+.roll-queue>span{margin-right:auto}
+.roll-queue button{padding:3px 10px;border:1px solid #435263;border-radius:2px;background:transparent;color:#F1E5CF;font:inherit;cursor:pointer}
+.roll-queue button.next{border-color:#9CC9EA}
+.roll-queue button:focus-visible{outline:1.5px solid #F1E5CF;outline-offset:3px}
+.roll-card .rc-die{flex:none;overflow:visible;width:48px;height:48px}
+.roll-card.big .rc-die{width:68px;height:68px}
+.rc-die-face{fill:#1d2633;stroke:#9CC9EA;stroke-width:2}
+.rc-die-edges{fill:none;stroke:#9CC9EA;stroke-opacity:.45;stroke-width:1.3}
+.rc-die.foe .rc-die-face,.rc-die.foe .rc-die-edges{stroke:#e3a08c}
+.rc-die.crit .rc-die-face,.rc-die.crit .rc-die-edges{stroke:#f2b45a}
+.rc-die-glow{fill:#f2b45a;opacity:.28}
+.rc-die text{font:700 15px Cinzel,Georgia,serif;fill:#F1E5CF}
+.rc-die-body{transform-origin:27px 27px}
+.rc-die.rolling .rc-die-body{animation:roll-spin .45s linear infinite}
+@keyframes roll-spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion:reduce){.rc-die.rolling .rc-die-body{animation:none}}
+@media (max-width:760px){
+ .roll-dock{left:10px;right:10px;transform:none;bottom:252px;max-width:none}
+ .roll-card,.roll-card.big{width:100%;gap:10px;padding:7px 12px}
+ .roll-card .rc-die{width:36px;height:36px}.roll-card.big .rc-die{width:48px;height:48px}
+ .roll-label{font-size:10px}.roll-sum{font-size:13.5px}.roll-moment{font-size:16px}
+}

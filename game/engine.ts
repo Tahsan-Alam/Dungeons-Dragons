@@ -10,7 +10,8 @@ import {parseBlueprint} from './creation.ts';
 const WIDTH = 20;
 const HEIGHT = 14;
 const MAX_EVENTS = 180;
-const CLASS = {
+/** Rules stats per class: health, armour, attack bonus, damage die, reach and speed. */
+export const CLASS = {
   knight: { hp: 28, ac: 16, bonus: 5, die: 8, range: 1, speed: 6 },
   ranger: { hp: 23, ac: 14, bonus: 5, die: 6, range: 5, speed: 7 },
   mage: { hp: 20, ac: 12, bonus: 5, die: 8, range: 4, speed: 6 },
@@ -326,7 +327,7 @@ function strike(game: GameState, actor: Actor, target: Actor, ability: boolean) 
   actor.actionUsed = true;
   if (ability) actor.abilityUses--;
   if (!hit) {
-    event(game, 'roll', `${actor.name} rolls ${roll}${game.options.rules === 'classic' ? ` + ${bonus} vs AC ${target.ac}` : ''} and misses ${target.name}.`, actor.id, roll, {targetId:target.id,action:ability?'ability':'attack',hit:false,critical:false,damage:0});
+    event(game, 'roll', `${actor.name} rolls ${roll}${game.options.rules === 'classic' ? ` + ${bonus} vs AC ${target.ac}` : ''} and misses ${target.name}.`, actor.id, roll, {targetId:target.id,action:ability?'ability':'attack',hit:false,critical:false,damage:0,bonus,ac:target.ac});
     return;
   }
   const damageDie = actor.enemy ? 4 : stats.die;
@@ -336,7 +337,7 @@ function strike(game: GameState, actor: Actor, target: Actor, ability: boolean) 
   if (ability) damage += actor.heroClass === 'knight' ? 5 : actor.heroClass === 'rogue' ? (sneak ? 7 : 2) : 4;
   if (game.options.rules === 'simple' && target.guarding) damage = Math.max(1, Math.floor(damage / 2));
   target.hp = Math.max(0, target.hp - damage);
-  event(game, 'roll', `${actor.name} ${sneak ? 'strikes from the flank at' : ability ? 'uses a special attack on' : 'hits'} ${target.name} for ${damage} damage${roll === 20 ? ' — critical hit!' : '.'} (d20: ${roll})`, actor.id, roll, {targetId:target.id,action:ability?'ability':'attack',hit:true,critical:roll===20,damage});
+  event(game, 'roll', `${actor.name} ${sneak ? 'strikes from the flank at' : ability ? 'uses a special attack on' : 'hits'} ${target.name} for ${damage} damage${roll === 20 ? ' — critical hit!' : '.'} (d20: ${roll})`, actor.id, roll, {targetId:target.id,action:ability?'ability':'attack',hit:true,critical:roll===20,damage,bonus,ac:target.ac});
   if (target.hp === 0) {
     target.defeated = target.enemy;
     target.deathSuccesses = 0; target.deathFailures = 0;

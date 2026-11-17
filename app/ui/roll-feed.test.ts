@@ -51,8 +51,8 @@ test('a batch of real companion and enemy turns queues every roll in event order
  const expected=next.events.filter(e=>e.id>game.eventSequence&&e.kind==='roll'&&e.roll!==undefined);
  const collected=collectSharedRolls(feed,'game-a',next,'you');
  assert.ok(expected.length>=3);assert.deepEqual(collected.queue.map(r=>r.event),expected);
- assert.ok(collected.queue.some(r=>r.description.startsWith('Companion')));
- assert.ok(collected.queue.some(r=>r.description.startsWith('Enemy')));
+ assert.ok(collected.queue.some(r=>!r.foe));
+ assert.ok(collected.queue.some(r=>r.foe));
  assert.deepEqual(game,before);
 });
 
@@ -86,7 +86,7 @@ test('scene changes preserve names for removed enemies and switching tables clea
  const game=fixture(),feed=startRollFeed('game-a',game),enemy=game.actors[3];
  addRoll(game,enemy.id,game.actors[0].id);game.actors=game.actors.filter(a=>a.id!==enemy.id);game.scene++;
  const collected=collectSharedRolls(feed,'game-a',game,'you');
- assert.equal(collected.queue[0].actorName,enemy.name);assert.ok(collected.queue[0].description.startsWith('Enemy'));
+ assert.equal(collected.queue[0].actorName,enemy.name);assert.ok(collected.queue[0].foe);
  assert.equal(collectSharedRolls(collected,'game-b',fixture(),'you').queue.length,0);
  assert.equal(collectSharedRolls(collected,null,null,'you').queue.length,0);
 });

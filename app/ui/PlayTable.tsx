@@ -1,37 +1,48 @@
 'use client';
 import {useEffect,useMemo,useRef,useState} from 'react';
-import type {Actor,GameAction,GameEvent,GameState,RoomView,Session} from '../../game/types';
-import {CLASS_INFO} from '../../game/types';
-import {encounterCleared,getReachable,getQuestAction,getValidTargets} from '../../game/engine';
+import type {Actor,GameAction,GameState,RoomView,Session} from '../../game/types';
+import {CLASS_INFO,NO_ROLL_ABILITY,SUPPORT_ABILITY} from '../../game/types';
+import {CLASS,encounterCleared,getReachable,getQuestAction,getValidTargets} from '../../game/engine';
+import {currentNarration} from '../../game/ai';
+import {storyGoal} from '../../game/campaign';
+import {GAME_MASTERS,GAME_MASTER_ART_RATIO} from '../../game/presets';
 import Board,{type Tool,type BoardControls} from './Board';
 import {Icon} from './Art';
 import {ActorPortrait} from './ActorArt';
 import Modal from './Modal';
-import AttackRoll from './AttackRoll';
-import {prepareAttackRoll,type AttackRollRequest} from './attack-roll';
-import {useHeaderInert} from './AppHeader';
+import {Portrait} from './RealmKit';
+import NarratorAvatar from './NarratorAvatar';
+import JournalDrawer,{type JournalEntry,type JournalTab} from './JournalDrawer';
+import {OwnRoll} from './RollCard';
+import {prepareAttackRoll,findAttackRollResult,type AttackRollRequest} from './attack-roll';
 import {useControls} from './useControls';
-import {usePanels} from './usePanels';
-import {actionForKey,bindingLabel,eventBinding,createEdgeRevealGate,type ControlAction} from './controls';
+import {actionForKey,bindingLabel,eventBinding,type ControlAction} from './controls';
 import {turnGuidance} from './turn-guidance';
 import {upcomingTurns} from './turn-order';
 import {healthLevel} from './readability';
-import NarratorAvatar from './NarratorAvatar';
-import {storyGoal} from '../../game/campaign';
+import type {Exchange} from './narrator-thread';
 import './controls.css';
-import './play-screen.css';
-type Narration=NonNullable<GameState['story']>['narrations'][number];
-type JournalEntry={key:string;at:number;event?:GameEvent;narration?:Narration};
-export default function PlayTable({game,room,session,busy,connection,onAction,onMenu,onHelp,onAI,onSettings,onTableDialogChange,voice,speaking=false,onVoice,music,onMusic,onSkip,rollsPending=false}:{game:GameState;room:RoomView|null;session:Session|null;busy:boolean;connection:string;onAction:(a:GameAction)=>unknown;onMenu:()=>void;onHelp:()=>void;onAI:()=>void;onSettings:()=>void;onTableDialogChange:(open:boolean)=>void;voice:boolean;speaking?:boolean;onVoice:()=>void;music:boolean;onMusic:()=>void;onSkip:()=>void;rollsPending?:boolean}){
- const {preferences}=useControls(),panels=usePanels();const board=useRef<BoardControls>(null),drawerPanel=useRef<HTMLElement>(null),drawerOpener=useRef<HTMLElement|null>(null),hoverDrawer=useRef(false),edgeGate=useRef(createEdgeRevealGate());const[confirmEnd,setConfirmEnd]=useState(false),[moving,setMoving]=useState(false);const actionPending=useRef(false);
- const[tool,setTool]=useState<Tool>('move'),[selectedId,setSelectedId]=useState(''),[drawer,setDrawer]=useState<'party'|'story'|null>(null),[detailId,setDetailId]=useState<string|null>(null);
- const[pendingRoll,setPendingRoll]=useState<AttackRollRequest|null>(null);
- useHeaderInert(!!drawer&&panels.compact);
+import './realm-kit.css';
+import './play-hud.css';
+
+const ROMAN=['I','II','III','IV','V'];
+const tiles=(a:{x:number;y:number},b:{x:number;y:number})=>Math.abs(a.x-b.x)+Math.abs(a.y-b.y);
+
+type Props={game:GameState;room:RoomView|null;session:Session|null;busy:boolean;connection:string;onAction:(a:GameAction)=>unknown;onMenu:()=>void;onHelp:()=>void;onAI:()=>void;onSettings:()=>void;onTableDialogChange:(open:boolean)=>void;
+ voice:boolean;speaking?:boolean;onVoice:()=>void;music:boolean;onMusic:()=>void;onSkip:()=>void;rollsPending?:boolean;
+ thread?:Exchange[];onListen?:(line:string)=>void;onNarrate?:()=>unknown;onSteer?:(text:string)=>Promise<unknown>};
+
+/** The play screen: the board fills the window and the controls float over the scene (design canvas, Play screen page). */
+export default function PlayTable({game,room,session,busy,connection,onAction,onMenu,onHelp,onAI,onSettings,onTableDialogChange,voice,speaking=false,onVoice,music,onMusic,onSkip,rollsPending=false,thread=[],onListen,onNarrate,onSteer}:Props){
+ const {preferences}=useControls();const board=useRef<BoardControls>(null),journalOpener=useRef<HTMLElement|null>(null),actionPending=useRef(false);
+ const[confirmEnd,setConfirmEnd]=useState(false),[moving,setMoving]=useState(false),[tool,setTool]=useState<Tool>('move'),[selectedId,setSelectedId]=useState(''),[detailId,setDetailId]=useState<string|null>(null);
+ const[ownRoll,setOwnRoll]=useState<{request:AttackRollRequest;label:string}|null>(null),[journal,setJournal]=useState<JournalTab|null>(null),[sideTab,setSideTab]=useState<'party'|'foes'>('party'),[soundOpen,setSoundOpen]=useState(false),[sideOpen,setSideOpen]=useState(false),[seen,setSeen]=useState(game.eventSequence),[rollShown,setRollShown]=useState(false);
  const detail=game.actors.find(a=>a.id===detailId);
- const tableDialogOpen=!!pendingRoll||!!detail||confirmEnd||(!!drawer&&panels.compact);
+ const tableDialogOpen=!!detail||confirmEnd;
  useEffect(()=>{onTableDialogChange(tableDialogOpen);return()=>onTableDialogChange(false)},[tableDialogOpen,onTableDialogChange]);
- const actor=game.actors.find(a=>a.id===game.activeActorId),mine=game.actors.find(a=>a.playerId===(session?.playerId||'you'));const myTurn=!!actor&&!actor.bot&&actor.playerId===(session?.playerId||'you')&&game.status==='playing';
- const clear=encounterCleared(game),quest=getQuestAction(game,actor);const target=game.actors.find(a=>a.id===selectedId);
+ const me=session?.playerId||'you',actor=game.actors.find(a=>a.id===game.activeActorId),mine=game.actors.find(a=>a.playerId===me);
+ const myTurn=!!actor&&!actor.bot&&actor.playerId===me&&game.status==='playing';
+ const clear=encounterCleared(game),quest=getQuestAction(game,actor),target=game.actors.find(a=>a.id===selectedId);
  useEffect(()=>{setTool('move')},[game.activeActorId,game.round,game.scene]);
  useEffect(()=>{if(!selectedId&&mine)setSelectedId(mine.id)},[selectedId,mine]);
  function act(a:GameAction){
@@ -44,67 +55,123 @@ export default function PlayTable({game,room,session,busy,connection,onAction,on
   const x=actor.x+dx,y=actor.y+dy;
   if(getReachable(game,actor).some(tile=>tile.x===x&&tile.y===y)){setTool('move');act({type:'move',x,y})}
  }
- const locked=busy||moving;
+ const locked=busy||moving||!!ownRoll;
  const shortcut=(action:ControlAction)=>bindingLabel(preferences.bindings[action][0]||preferences.bindings[action][1]);
  function actionTip(action:'move'|'attack'|'ability'|'guard'|'potion'|'end'){
-  const descriptions={move:'Choose a reachable tile, or use your movement keys.',attack:'Choose an enemy within range, then roll the dice to attack.',ability:mine?`${CLASS_INFO[mine.heroClass].ability}. ${mine.abilityUses} uses left.`:'Use your class power.',guard:'Defend yourself until your next turn.',potion:'Drink a potion to restore health.',end:'Finish your turn and let the next character act.'};
+  const descriptions={move:'Choose a reachable tile, or use your movement keys.',attack:'Choose an enemy within range, then attack from its card.',ability:mine?`${CLASS_INFO[mine.heroClass].ability}. ${mine.abilityUses} uses left.`:'Use your class power.',guard:'Defend yourself until your next turn.',potion:'Drink a potion to restore health.',end:'Finish your turn and let the next character act.'};
   const reason=!myTurn?'Wait for your turn.':busy?'Saving your action.':moving?'Movement is in progress.':action!=='move'&&action!=='end'&&actor?.actionUsed?'You have used your action.':action==='potion'&&!actor?.potions?'No potions remaining.':action==='potion'&&actor&&actor.hp>=actor.maxHp?'Your health is full.':action==='ability'&&!actor?.abilityUses?'No power uses remaining.':'';
   return `${descriptions[action]}${reason?' '+reason:''}`;
  }
-
- function closeDrawer(){edgeGate.current.dismiss();setDrawer(null);requestAnimationFrame(()=>{if(drawerOpener.current?.isConnected)drawerOpener.current.focus()})}
- function openDrawer(next:'party'|'story'|null,hover=false){if(hover&&(!edgeGate.current.canOpen()||document.querySelector('dialog[open]')))return;if(!panels.compact&&next){(document.querySelector(next==='party'?'.party-rail .party-member':'.story-rail .rail-heading button:not(.drawer-close)') as HTMLElement|null)?.focus();return}if(drawer===next&&!hover){closeDrawer();return}drawerOpener.current=document.activeElement as HTMLElement;hoverDrawer.current=hover;setDrawer(next)}
+ function openJournal(tab:JournalTab='log'){if(journal===tab){closeJournal();return}if(!journal)journalOpener.current=document.activeElement as HTMLElement;setSeen(game.eventSequence);setJournal(tab)}
+ function closeJournal(){setJournal(null);setSeen(game.eventSequence);requestAnimationFrame(()=>{if(journalOpener.current?.isConnected)journalOpener.current.focus()})}
  function endTurn(){if(!myTurn||locked||board.current?.isMoving())return;if(preferences.confirmEnd&&!actor?.actionUsed&&!clear)setConfirmEnd(true);else act({type:'end'})}
- useEffect(()=>{if(!panels.compact)setDrawer(null)},[panels.compact]);
- useEffect(()=>{const move=(e:PointerEvent)=>{if(e.pointerType==='mouse')edgeGate.current.pointerMoved(e.clientX,e.clientY,window.innerWidth,window.innerHeight)};window.addEventListener('pointermove',move,{passive:true});return()=>window.removeEventListener('pointermove',move)},[]);
- useEffect(()=>{if(!drawer||!panels.compact)return;const selector=drawer==='party'?'.party-rail':'.story-rail';drawerPanel.current=document.querySelector(selector);(drawerPanel.current?.querySelector('.drawer-close') as HTMLElement|null)?.focus()},[drawer,panels.compact]);
- useEffect(()=>{const handler=(e:KeyboardEvent)=>{
- if(panels.dragging||board.current?.isInteracting()||e.defaultPrevented||e.isComposing||document.querySelector('dialog[open]'))return;const target=e.target as HTMLElement;if(target?.closest('input,textarea,select,[contenteditable=true]'))return;
- if(drawer&&panels.compact&&e.key==='Tab'){const focusable=Array.from(drawerPanel.current?.querySelectorAll<HTMLElement>('button:not([disabled]),a[href],[tabindex="0"]')||[]);const first=focusable[0],last=focusable.at(-1);if(e.shiftKey&&(document.activeElement===first||!drawerPanel.current?.contains(document.activeElement))){e.preventDefault();last?.focus()}else if(!e.shiftKey&&(document.activeElement===last||!drawerPanel.current?.contains(document.activeElement))){e.preventDefault();first?.focus()}return}
- if(drawer&&e.key==='Escape'){e.preventDefault();closeDrawer();return}
- if(target?.closest('[role=separator],[role=tablist]'))return;if((e.key==='Enter'||e.key===' ')&&target?.closest('button,a,[role=button]'))return;
- const action=actionForKey(preferences.bindings,eventBinding(e));if(!action)return;if(e.repeat&&!['moveUp','moveDown','moveLeft','moveRight','panUp','panDown','panLeft','panRight','zoomIn','zoomOut'].includes(action))return;
- const boardActions:Partial<Record<ControlAction,()=>void>>={fit:()=>board.current?.fit(),focus:()=>board.current?.focusActor(),zoomIn:()=>board.current?.zoomIn(),zoomOut:()=>board.current?.zoomOut(),grid:()=>board.current?.toggleGrid(),panUp:()=>board.current?.pan(0,50),panDown:()=>board.current?.pan(0,-50),panLeft:()=>board.current?.pan(50,0),panRight:()=>board.current?.pan(-50,0),party:()=>openDrawer('party'),story:()=>openDrawer('story'),settings:onSettings,menu:onMenu};
- if(drawer&&panels.compact)return;if(boardActions[action]){e.preventDefault();boardActions[action]!();return}if(!myTurn||locked)return;
- const direction:Partial<Record<ControlAction,[number,number]>>={moveUp:[0,-1],moveDown:[0,1],moveLeft:[-1,0],moveRight:[1,0]};if(direction[action]){e.preventDefault();step(...direction[action]!);return;}
- if(action==='move'){e.preventDefault();setTool('move')}else if(action==='attack'&&!actor?.actionUsed){e.preventDefault();setTool('attack')}else if(action==='ability'&&!actor?.actionUsed&&actor?.abilityUses){e.preventDefault();setTool('ability')}else if(action==='end'){e.preventDefault();endTurn()}else if(action==='guard'&&!actor?.actionUsed){e.preventDefault();act({type:'guard'})}else if(action==='potion'&&!actor?.actionUsed&&actor?.potions&&actor.hp<actor.maxHp){e.preventDefault();act({type:'potion'})}else if(action==='interact'&&quest?.available){e.preventDefault();act({type:quest.type})}
- };window.addEventListener('keydown',handler);return()=>window.removeEventListener('keydown',handler)},[preferences.bindings,preferences.confirmEnd,myTurn,busy,moving,actor,game.chest.opened,clear,drawer,panels.compact,panels.dragging,onMenu,onSettings,onAction]);
- function chooseTarget(action:Extract<GameAction,{targetId:string}>){
+ /** Attacks and attacking powers roll straight away; healing and support powers act without a roll. */
+ function targetWith(action:Extract<GameAction,{targetId:string}>){
   if(!actor||!myTurn||locked||actionPending.current||board.current?.isInteracting()||board.current?.isMoving())return;
-  // Healing keeps its existing flow. Invalid targets still use the engine's error messages.
   const request=prepareAttackRoll(game,actor,action);
   if(!request){act(action);return}
-  setPendingRoll(request);
+  setRollShown(false);setOwnRoll({request,label:`${request.title} · ${actor.name} → ${request.targetName}`});
+  void act(action);
  }
- function clickActor(a:Actor){setSelectedId(a.id);if(myTurn&&(tool==='attack'||tool==='ability')){chooseTarget({type:tool,targetId:a.id})}else if(myTurn&&a.enemy&&actor&&getValidTargets(game,actor).some(t=>t.id===a.id)){chooseTarget({type:'attack',targetId:a.id})}else{setDetailId(a.id)}}
+ useEffect(()=>{const handler=(e:KeyboardEvent)=>{
+  if(board.current?.isInteracting()||e.defaultPrevented||e.isComposing||document.querySelector('dialog[open]'))return;const el=e.target as HTMLElement;if(el?.closest('input,textarea,select,[contenteditable=true]'))return;
+  if(e.key==='Escape'&&(journal||soundOpen)){e.preventDefault();if(soundOpen)setSoundOpen(false);else closeJournal();return}
+  if(el?.closest('[role=tablist]'))return;if((e.key==='Enter'||e.key===' ')&&el?.closest('button,a,[role=button]'))return;
+  const action=actionForKey(preferences.bindings,eventBinding(e));if(!action)return;if(e.repeat&&!['moveUp','moveDown','moveLeft','moveRight','panUp','panDown','panLeft','panRight','zoomIn','zoomOut'].includes(action))return;
+  const boardActions:Partial<Record<ControlAction,()=>void>>={fit:()=>board.current?.fit(),focus:()=>board.current?.focusActor(),zoomIn:()=>board.current?.zoomIn(),zoomOut:()=>board.current?.zoomOut(),grid:()=>board.current?.toggleGrid(),panUp:()=>board.current?.pan(0,50),panDown:()=>board.current?.pan(0,-50),panLeft:()=>board.current?.pan(50,0),panRight:()=>board.current?.pan(-50,0),
+   party:()=>(document.querySelector('.ph-side [role=tab][aria-selected=true]') as HTMLElement|null)?.focus(),story:()=>openJournal('log'),settings:onSettings,menu:onMenu};
+  if(boardActions[action]){e.preventDefault();boardActions[action]!();return}if(!myTurn||locked)return;
+  const direction:Partial<Record<ControlAction,[number,number]>>={moveUp:[0,-1],moveDown:[0,1],moveLeft:[-1,0],moveRight:[1,0]};if(direction[action]){e.preventDefault();step(...direction[action]!);return;}
+  if(action==='move'){e.preventDefault();setTool('move')}else if(action==='attack'&&!actor?.actionUsed){e.preventDefault();setTool('attack')}else if(action==='ability'&&!actor?.actionUsed&&actor?.abilityUses){e.preventDefault();setTool('ability')}else if(action==='end'){e.preventDefault();endTurn()}else if(action==='guard'&&!actor?.actionUsed){e.preventDefault();act({type:'guard'})}else if(action==='potion'&&!actor?.actionUsed&&actor?.potions&&actor.hp<actor.maxHp){e.preventDefault();act({type:'potion'})}else if(action==='interact'&&quest?.available){e.preventDefault();act({type:quest.type})}
+ };window.addEventListener('keydown',handler);return()=>window.removeEventListener('keydown',handler)},[preferences.bindings,preferences.confirmEnd,myTurn,busy,moving,ownRoll,actor,game.chest.opened,clear,journal,soundOpen,onMenu,onSettings,onAction]);
+ /** Choosing a character selects it; with Attack or Power chosen, a valid target is used at once. */
+ function clickActor(a:Actor){
+  setSelectedId(a.id);if(a.enemy)setSideTab('foes');
+  if(myTurn&&(tool==='attack'||tool==='ability')&&actor&&getValidTargets(game,actor,tool==='ability').some(t=>t.id===a.id)){targetWith({type:tool,targetId:a.id});return}
+  if(!a.enemy&&a.id!==mine?.id)setDetailId(a.id);
+ }
  const party=game.actors.filter(a=>!a.enemy),foes=game.actors.filter(a=>a.enemy&&!a.defeated&&a.hp>0);const turns=useMemo(()=>upcomingTurns(game),[game]);
- // Each telling sits directly above the event it describes; newest first.
- const journal=useMemo(()=>{const entries:JournalEntry[]=[...game.events.slice(-45).map(event=>({key:`event-${event.id}`,at:event.id,event})),...(game.story?.narrations.slice(-10)??[]).map(narration=>({key:`narration-${narration.eventId}`,at:narration.eventId,narration}))];return entries.sort((a,b)=>b.at-a.at||Number(!!b.narration)-Number(!!a.narration))},[game.events,game.story?.narrations]);
- const narratorName=game.options.creation?.narrator.name??'Storyteller';
- const inspect=(id:string)=>{setSelectedId(id);setDetailId(id)};
+ const entries=useMemo(()=>{const list:JournalEntry[]=[...game.events.slice(-45).map(event=>({key:`event-${event.id}`,at:event.id,event})),...(game.story?.narrations.slice(-10)??[]).map(narration=>({key:`narration-${narration.eventId}`,at:narration.eventId,narration}))];return list.sort((a,b)=>b.at-a.at||Number(!!b.narration)-Number(!!a.narration))},[game.events,game.story?.narrations]);
+ const narrator=game.options.creation?.narrator,narratorName=narrator?.name??'Storyteller',gm=GAME_MASTERS.find(g=>g.profile.name===narrator?.name);
+ const caption=currentNarration(game),host=!room||room.hostId===session?.playerId;
  const turnRole=(a:Actor)=>a.enemy?'Enemy':a.id===mine?.id?'You':a.bot?'Companion':'Player';
  const turnWhen=(index:number)=>index===0?'acting now':index===1?'up next':`in ${index} turns`;
- const currentPlayer=room?.players.find(p=>p.id===actor?.playerId);const canSkip=room&&room.hostId===session?.playerId&&currentPlayer&&!currentPlayer.bot&&Date.now()-currentPlayer.lastSeen>45000;
+ const currentPlayer=room?.players.find(p=>p.id===actor?.playerId);const canSkip=!!room&&room.hostId===session?.playerId&&!!currentPlayer&&!currentPlayer.bot&&Date.now()-currentPlayer.lastSeen>45000;
  const hint=busy?'Saving your action…':moving?'Moving…':turnGuidance(game,actor,myTurn,tool);
- return <div className="play-screen game-layout-screen play-refined">
- <div ref={panels.container} className={`play-layout resizable-layout ${panels.dragging?'panels-resizing':''}`} style={panels.style}>{drawer&&panels.compact?<button className="drawer-backdrop" aria-label="Close panel" onClick={closeDrawer}/>:null}{preferences.edgeReveal&&panels.compact?<><div className="panel-edge left" onPointerEnter={e=>{if(e.pointerType==='mouse')openDrawer('party',true)}}/><div className="panel-edge right" onPointerEnter={e=>{if(e.pointerType==='mouse')openDrawer('story',true)}}/></>:null}<aside onPointerLeave={e=>{if(e.pointerType==='mouse'&&hoverDrawer.current&&!document.querySelector('dialog[open]'))closeDrawer()}} role={drawer==='party'&&panels.compact?'dialog':undefined} aria-modal={drawer==='party'&&panels.compact?true:undefined} aria-label="Party" inert={drawer==='story'&&panels.compact} className={`party-rail ${drawer==='party'?'drawer-open':''}`}><div className="rail-heading"><h2>Party</h2><span>{party.length}</span><button className="drawer-close icon-button" onClick={closeDrawer} aria-label="Close party"><Icon name="close"/></button></div><div className="party-list">{party.map(p=><button className={`party-member ${p.id===game.activeActorId?'active':''} ${p.hp<=0?'fallen':''}`} key={p.id} onClick={()=>{setSelectedId(p.id);setDetailId(p.id)}}><div className="party-avatar" style={{background:p.color+'40'}}><ActorPortrait actor={p} biome={game.options.biome}/></div><div className="party-info"><strong>{p.name}{p.id===mine?.id?<span className="you-mark">you</span>:null}</strong><small>{CLASS_INFO[p.heroClass].name}{p.bot?' · companion':''}{p.hp<=0?' · down':''}</small><div className="health-row"><div className={`health-track health-${healthLevel(p.hp,p.maxHp)}`}><span style={{width:`${Math.max(0,p.hp/p.maxHp)*100}%`}}/></div><span>{p.hp}<i>/{p.maxHp}</i></span></div></div>{p.id===game.activeActorId?<span className="turn-marker"/>:null}</button>)}{foes.length?<><h3 className="rail-subheading">Enemies<span>{foes.length}</span></h3>{foes.map(f=><button className={`party-member foe ${f.id===game.activeActorId?'active':''}`} key={f.id} onClick={()=>inspect(f.id)}><div className="party-avatar"><ActorPortrait actor={f} biome={game.options.biome}/></div><div className="party-info"><strong>{f.name}</strong>{f.guarding?<small>Guarding</small>:null}<div className="health-row"><div className="health-track"><span style={{width:`${Math.max(0,f.hp/f.maxHp)*100}%`}}/></div><span>{f.hp}<i>/{f.maxHp}</i></span></div></div>{f.id===game.activeActorId?<span className="turn-marker"/>:null}</button>)}</>:null}</div>
- <div className="party-objective"><h3>Quest</h3><p>{game.objective}</p><div className="shard-progress">{Array.from({length:storyGoal(game)},(_,n)=>n).map(n=><span key={n} className={game.relics>n?'collected':''}><Icon name="spark" size={20}/></span>)}<small>{game.relics}/{storyGoal(game)} shards</small></div></div>
- </aside>{panels.separator('left')}
- <main className="table-main" inert={!!drawer&&panels.compact}>
- <div className="scene-heading"><div className="scene-title"><h1>{game.sceneName}</h1><span>Chapter {game.scene+1} · Round {game.round}</span></div><div className="scene-controls"><button className="button paper compact ask-pip-trigger" onClick={onAI}><NarratorAvatar profile={game.options.creation?.narrator} size={26} talking={speaking}/><span>Ask {game.options.creation?.narrator.name??'Pip'}</span></button><span className="rules-label">{game.options.rules==='simple'?'Streamlined':'Classic'}</span><button className="panel-toggle" onClick={()=>openDrawer('party')} aria-label="Open party"><Icon name="people" size={17}/><span>Party</span></button><button className="panel-toggle" onClick={()=>openDrawer('story')} aria-label="Open adventure log"><Icon name="book" size={17}/><span>Log</span></button></div></div>
+ const goal=storyGoal(game),fresh=journal===null&&(entries.find(e=>e.narration||e.event?.kind==='story')?.at??0)>seen;
+ const ownResult=ownRoll?findAttackRollResult(game,ownRoll.request):undefined;
+ // The selected foe's card: what an attack needs, and the action that uses it.
+ const foe=target?.enemy&&!target.defeated?target:undefined,stats=mine?CLASS[mine.heroClass]:undefined;
+ const inReach=!!(foe&&actor&&myTurn&&getValidTargets(game,actor).some(t=>t.id===foe.id));
+ const powerReach=!!(foe&&actor&&myTurn&&!SUPPORT_ABILITY[actor.heroClass]&&actor.abilityUses>0&&getValidTargets(game,actor,true).some(t=>t.id===foe.id));
+ const need=foe&&stats?game.options.rules==='simple'?'Anything but a 1':`${Math.max(2,foe.ac-stats.bonus)} or more on the die`:'';
+ return <div className={`play-screen ph realm${ownRoll||rollsPending?' rolling':''}`}>
+  <div className="ph-board">
+   <Board controlsRef={board} focusId={mine?.id} game={game} actor={actor} tool={tool} onTile={(x,y)=>{if(myTurn&&tool==='move')act({type:'move',x,y})}} onActor={clickActor} selectedId={selectedId} myTurn={myTurn&&!locked} onMotionChange={setMoving} autoFrame holdFeedback={(!!ownRoll&&!rollShown)||rollsPending}/>
+  </div>
+  <div className="ph-shade top" aria-hidden="true"/><div className="ph-shade bottom" aria-hidden="true"/>
 
- <Board controlsRef={board} focusId={mine?.id} game={game} actor={actor} tool={tool} onTile={(x,y)=>{if(myTurn&&tool==='move')act({type:'move',x,y})}} onActor={clickActor} selectedId={selectedId} myTurn={myTurn&&!locked} onMotionChange={setMoving} autoFrame holdFeedback={!!pendingRoll||rollsPending}>
- <div className="board-hud">{turns.length>1?<ol className="turn-order" aria-label="Turn order">{turns.map((slot,index)=><li key={slot.actor.id}>{slot.nextRound?<span className="turn-order-round" title={`Round ${game.round+1}`}>R{game.round+1}</span>:null}<button className={`turn-chip ${slot.current?'current':''} ${slot.actor.enemy?'foe':'ally'}`} aria-current={slot.current?'true':undefined} aria-label={`${slot.actor.name}, ${turnRole(slot.actor)}, ${turnWhen(index)}`} data-tooltip={`${slot.actor.name} · ${turnRole(slot.actor)} · ${turnWhen(index)}`} onClick={()=>inspect(slot.actor.id)}><span className="turn-chip-art"><ActorPortrait actor={slot.actor} biome={game.options.biome}/></span>{slot.current?<strong>{slot.actor.id===mine?.id?'You':slot.actor.name}</strong>:null}</button></li>)}</ol>:null}<p id="turn-guidance" className="board-hint" role="status" aria-live="polite">{hint}</p></div>
- </Board>
- <div className="action-dock">
- <div className="turn-summary"><div className="player-vitals">{mine?<><button className="hero-inspect" onClick={()=>setDetailId(mine.id)} title="Your character" aria-label={`Inspect ${mine.name}`}><ActorPortrait actor={mine} biome={game.options.biome}/><strong>{mine.name}</strong></button><span className={`vital-health health-${healthLevel(mine.hp,mine.maxHp)}`} title="Health"><span className="vital-label">HP</span><b>{mine.hp}</b><span>/{mine.maxHp}</span><i><span style={{width:`${Math.max(0,mine.hp/mine.maxHp)*100}%`}}/></i></span><span className="vital-armor" title="Armor class"><Icon name="shield" size={14}/>{mine.ac}</span></>:null}</div><div className="turn-vitals"><strong className="turn-label"><span className={`live-dot ${myTurn?'':'waiting'}`}/>{moving?'Moving…':myTurn?'Your turn':`${actor?.name||'Party'}’s turn`}</strong>{myTurn?<><span title="Remaining movement" aria-label={`${actor?.movement??0} movement tiles remaining`}><Icon name="move" size={14}/><b>{actor?.movement??0}</b><span className="stat-label"> tiles</span></span><span className={actor?.actionUsed?'spent':''} title="Actions remaining" aria-label={`${actor?.actionUsed?0:1} actions remaining`}><Icon name="sword" size={14}/><b>{actor?.actionUsed?0:1}</b><span className="stat-label"> action</span></span></>:null}</div></div>
+  <header className="ph-top ph-ui">
+   <div className="ph-title"><span className="realm-eyebrow">Chapter {ROMAN[game.scene]??game.scene+1} of {ROMAN[goal-1]??goal} · Round {game.round} · {game.options.rules==='simple'?'Streamlined':'Classic'}</span><h1>{game.sceneName}</h1></div>
+   <p className="ph-objective"><Icon name="flag" size={15}/><span><strong>Objective</strong> · {game.objective}</span><span className="ph-shards" aria-label={`${game.relics} of ${goal} lantern shards`}>{Array.from({length:goal},(_,i)=><i key={i} className={i<game.relics?'on':''}/>)}</span></p>
+   <div className="ph-tools" role="group" aria-label="Journal, sound, guide, settings and leave">
+    <button type="button" className="ph-tool phone-only" aria-label="Party and foes" data-tooltip="Party and foes" aria-expanded={sideOpen} onClick={()=>setSideOpen(!sideOpen)}><Icon name="people" size={17}/></button>
+    <button type="button" className="ph-tool wide" aria-expanded={!!journal} onClick={()=>openJournal('log')}><Icon name="book" size={16}/>Journal{fresh?<span className="ph-dot" aria-label="New entries"/>:null}</button>
+    <div className="ph-sound"><button type="button" className="ph-tool" aria-label="Music and voice" data-tooltip="Music and voice" aria-expanded={soundOpen} onClick={()=>setSoundOpen(!soundOpen)}><Icon name={music||voice?'sound':'mute'} size={17}/></button>
+     {soundOpen?<div className="ph-popover" role="group" aria-label="Sound"><label><input type="checkbox" checked={music} onChange={onMusic}/>Music</label><label><input type="checkbox" checked={voice} onChange={onVoice}/>{narratorName}’s voice</label></div>:null}</div>
+    <button type="button" className="ph-tool" aria-label="Adventurer’s guide" data-tooltip="Adventurer’s guide" onClick={onHelp}><Icon name="book" size={17}/></button>
+    <button type="button" className="ph-tool" aria-label="Table settings" data-tooltip="Table settings" onClick={onSettings}><Icon name="gear" size={17}/></button>
+    <button type="button" className="ph-tool" aria-label="Leave the table" data-tooltip="Leave the table · your game is saved" onClick={onMenu}><Icon name="back" size={17}/></button>
+   </div>
+  </header>
 
- <div className="action-buttons"><button className={`action-button ${tool==='move'?'chosen':''}`} disabled={!myTurn||locked} onClick={()=>setTool('move')} aria-pressed={tool==='move'} data-tooltip={actionTip('move')}><Icon name="move"/><span>Move</span><kbd>{shortcut('move')}</kbd></button><button className={`action-button ${tool==='attack'?'chosen':''}`} disabled={!myTurn||locked||actor?.actionUsed} onClick={()=>setTool('attack')} aria-pressed={tool==='attack'} data-tooltip={actionTip('attack')}><Icon name="sword"/><span>Attack</span><kbd>{shortcut('attack')}</kbd></button><button className={`action-button ${tool==='ability'?'chosen':''}`} disabled={!myTurn||locked||actor?.actionUsed||!actor?.abilityUses} onClick={()=>setTool('ability')} aria-pressed={tool==='ability'} data-tooltip={actionTip('ability')}><Icon name="spark"/><span>{mine?.heroClass==='cleric'?'Heal':'Power'}</span><small>{mine?.abilityUses??0}</small><kbd>{shortcut('ability')}</kbd></button><button className="action-button" disabled={!myTurn||locked||actor?.actionUsed} data-tooltip={actionTip('guard')} onClick={()=>act({type:'guard'})}><Icon name="shield"/><span>Guard</span><kbd>{shortcut('guard')}</kbd></button><button className="action-button" disabled={!myTurn||locked||actor?.actionUsed||!actor?.potions||actor.hp>=actor.maxHp} data-tooltip={actionTip('potion')} onClick={()=>act({type:'potion'})}><Icon name="potion"/><span>Potion</span><small>{mine?.potions??0}</small><kbd>{shortcut('potion')}</kbd></button>{quest?<button className="action-button quest-action" disabled={!myTurn||locked||!quest.available} aria-describedby="turn-guidance" onClick={()=>act({type:quest.type})}><Icon name={game.chest.opened?'flag':'chest'}/><span>{quest.label}</span></button>:null}{canSkip?<button className="text-button" disabled={busy} onClick={onSkip}>Skip offline player</button>:null}</div><button className="end-turn button primary" disabled={!myTurn||locked} onClick={endTurn} data-tooltip={actionTip('end')}>{busy?'Saving…':'End turn'}<kbd>{shortcut('end')}</kbd><Icon name="arrow" size={18}/></button></div>
- </main>{panels.separator('right')}<aside onPointerLeave={e=>{if(e.pointerType==='mouse'&&hoverDrawer.current&&!document.querySelector('dialog[open]'))closeDrawer()}} role={drawer==='story'&&panels.compact?'dialog':undefined} aria-modal={drawer==='story'&&panels.compact?true:undefined} aria-label="Adventure log" inert={drawer==='party'&&panels.compact} className={`story-rail ${drawer==='story'?'drawer-open':''}`}><div className="rail-heading"><h2>Adventure log</h2><button className="icon-button" title={voice?'Mute narration':'Enable device narration'} aria-label={voice?'Mute narration':'Enable device narration'} aria-pressed={voice} onClick={onVoice}><Icon name={voice?'sound':'mute'} size={18}/></button><button className="drawer-close icon-button" onClick={closeDrawer} aria-label="Close story"><Icon name="close"/></button></div><div className="story-log" aria-label="Adventure journal">{journal.map(entry=>{if(entry.narration)return <article key={entry.key} className="journal-entry story"><div className="entry-symbol"><Icon name="book" size={15}/></div><div><small>{narratorName}</small><p>{entry.narration.caption}</p></div></article>;const e=entry.event!,by=game.actors.find(a=>a.id===e.actorId);return <article key={entry.key} className={`journal-entry ${e.kind} ${by?by.enemy?'foe':'ally':''}`}><div className="entry-symbol">{e.roll!==undefined?<span className="roll-die">{e.roll}</span>:<Icon name={e.kind==='story'?'book':e.kind==='system'?'flag':'sword'} size={15}/>}</div><div><p>{e.text}</p></div>{e.attack?<span className={`entry-result ${e.attack.hit?e.attack.critical?'critical':'damage':'miss'}`}>{e.attack.hit?`−${e.attack.damage}`:'Miss'}</span>:null}</article>})}</div><footer className="story-footer"><button className="text-button" onClick={onMusic}><Icon name="music" size={16}/>{music?'Music on':'Music off'}</button></footer></aside></div>
- <div className={`game-connection ${connection==='reconnecting'?'connection-warning':''}`} aria-live="polite">{connection==='reconnecting'?'Reconnecting… Your game is saved.':null}</div>
+  {turns.length>1?<ol className="ph-turns ph-ui" aria-label={`Turn order · round ${game.round}`}>{turns.map((slot,index)=><li key={slot.actor.id} className={slot.nextRound?'round-break':undefined}>{slot.nextRound?<span className="ph-round" title={`Round ${game.round+1}`}>R{game.round+1}</span>:null}
+   <button type="button" className={`ph-turn ${slot.current?'now':''} ${slot.actor.enemy?'foe':'ally'}`} aria-current={slot.current?'true':undefined} aria-label={`${slot.actor.name}, ${turnRole(slot.actor)}, ${turnWhen(index)}`} data-tooltip={`${slot.actor.name} · ${turnRole(slot.actor)} · ${turnWhen(index)}`} onClick={()=>{setSelectedId(slot.actor.id);if(slot.actor.enemy)setSideTab('foes')}}><ActorPortrait actor={slot.actor} biome={game.options.biome}/></button>
+   {index===0?<span className="ph-turn-label">Now</span>:index===1?<span className="ph-turn-label">Next</span>:null}
+   {slot.current&&canSkip?<button type="button" className="ph-skip" disabled={busy} onClick={onSkip}>Away · Skip</button>:null}</li>)}</ol>:null}
 
- {pendingRoll?<AttackRoll key={`${pendingRoll.actorId}-${pendingRoll.eventSequence}`} request={pendingRoll} game={game} busy={locked} onRoll={()=>act(pendingRoll.action)} onClose={()=>setPendingRoll(null)}/>:null}
- {confirmEnd?<Modal title="End this turn?" onClose={()=>setConfirmEnd(false)}><div className="confirm-turn"><p>You still have an action available.</p><div><button className="button paper" onClick={()=>setConfirmEnd(false)}>Keep playing</button><button className="button primary" onClick={()=>{setConfirmEnd(false);act({type:'end'})}}>End turn</button></div></div></Modal>:null}
- {detail?<Modal title={detail.name} onClose={()=>setDetailId(null)}><div className="character-detail"><div className="detail-portrait" style={{background:detail.color+'30'}}><ActorPortrait actor={detail} biome={game.options.biome}/></div><div><h3>{CLASS_INFO[detail.heroClass].name}</h3><p>{CLASS_INFO[detail.heroClass].description}</p><dl className="stats-grid"><div><dt>Health</dt><dd>{detail.hp}/{detail.maxHp}</dd></div><div><dt>Armor</dt><dd>{detail.ac}</dd></div><div><dt>Speed</dt><dd>{detail.speed*5} ft</dd></div><div><dt>Potions</dt><dd>{detail.potions}</dd></div><div><dt>Power uses</dt><dd>{detail.abilityUses}</dd></div><div><dt>Initiative</dt><dd>{detail.initiative}</dd></div></dl><p><strong>{CLASS_INFO[detail.heroClass].ability}</strong> · {detail.abilityUses} uses left this encounter.</p></div></div></Modal>:null}
- </div>
+  <section className={`ph-side ph-glass ph-ui${sideOpen?' open':''}`} aria-label="Party and foes">
+   <div role="tablist" className="ph-tabs small"><button type="button" role="tab" aria-selected={sideTab==='party'} tabIndex={sideTab==='party'?0:-1} onClick={()=>setSideTab('party')}>Party</button><button type="button" role="tab" aria-selected={sideTab==='foes'} tabIndex={sideTab==='foes'?0:-1} onClick={()=>setSideTab('foes')}>Foes · {foes.length}</button></div>
+   <ul role="tabpanel">{(sideTab==='party'?party:foes).map(a=><li key={a.id}><button type="button" className={`ph-member ${a.id===game.activeActorId?'active':''} ${a.id===selectedId?'selected':''} ${a.hp<=0?'fallen':''}`} onClick={()=>{setSelectedId(a.id);if(!a.enemy)setDetailId(a.id)}}>
+    <span className="ph-face"><ActorPortrait actor={a} biome={game.options.biome}/></span>
+    <span className="ph-member-info"><span className="ph-member-name">{a.name}{a.id===mine?.id?<i> · you</i>:null}<b>{a.hp}/{a.maxHp}</b></span><span className={`ph-bar ${a.enemy?'foe':''} health-${healthLevel(a.hp,a.maxHp)}`}><span style={{width:`${Math.max(0,a.hp/a.maxHp)*100}%`}}/></span>{a.hp<=0?<small>Down</small>:a.guarding?<small>Guarding</small>:null}</span>
+   </button></li>)}{sideTab==='foes'&&!foes.length?<li className="ph-note">No foes stand.</li>:null}</ul>
+  </section>
+
+  <section className="ph-gm ph-glass ph-ui" aria-label={narratorName}>
+   {gm?<Portrait art={gm.art} face={gm.face} ratio={GAME_MASTER_ART_RATIO} width={44} height={44} scale={2.4} eye={0.4}/>:<NarratorAvatar profile={narrator} size={44} talking={speaking}/>}
+   <div><p>“{caption}”</p><span className="ph-row">{onListen?<button type="button" className="ph-link" onClick={()=>onListen(caption)}><Icon name="sound" size={13}/>Listen</button>:null}<button type="button" className="ph-link" onClick={onAI}><Icon name="book" size={13}/>Ask {narratorName}</button></span></div>
+  </section>
+
+  {foe?<section className="ph-target ph-glass ph-ui" aria-label={`Selected: ${foe.name}`}>
+   <div className="ph-target-head"><span className="ph-face big"><ActorPortrait actor={foe} biome={game.options.biome}/></span><span><span className="realm-eyebrow">Selected</span><strong>{foe.name}</strong></span><button type="button" className="ph-close" aria-label="Clear selection" onClick={()=>setSelectedId(mine?.id??'')}><Icon name="close" size={14}/></button></div>
+   <div className="ph-target-hp"><span>HP</span><span className="ph-bar foe"><span style={{width:`${Math.max(0,foe.hp/foe.maxHp)*100}%`}}/></span><b>{foe.hp}/{foe.maxHp}</b></div>
+   <dl><dt>Armour</dt><dd>AC {foe.ac}</dd>{mine?<><dt>Distance</dt><dd>{tiles(mine,foe)} {tiles(mine,foe)===1?'tile':'tiles'} · {stats&&tiles(mine,foe)<=stats.range?'in range':'out of range'}</dd></>:null}{need?<><dt>To hit</dt><dd>{need}</dd></>:null}{stats?<><dt>Damage</dt><dd>1d{stats.die} + 3</dd></>:null}</dl>
+   {inReach||powerReach?<div className="ph-target-actions">{inReach?<button type="button" className="ph-secondary" disabled={locked||!!actor?.actionUsed} onClick={()=>targetWith({type:'attack',targetId:foe.id})}><Icon name="sword" size={15}/>Attack</button>:null}{powerReach&&!NO_ROLL_ABILITY[actor!.heroClass]?<button type="button" className="ph-secondary" disabled={locked||!!actor?.actionUsed} onClick={()=>targetWith({type:'ability',targetId:foe.id})}><Icon name="spark" size={15}/>{CLASS_INFO[actor!.heroClass].ability}</button>:null}</div>:null}
+  </section>:null}
+
+  {!ownRoll&&!rollsPending?<p id="turn-guidance" className="ph-hint ph-glass" role="status" aria-live="polite">{hint}</p>:null}
+  {ownRoll?<div className="roll-dock ph-ui"><OwnRoll key={ownRoll.request.eventSequence} label={ownRoll.label} result={ownResult} onShown={()=>setRollShown(true)} onDone={()=>setOwnRoll(null)}/></div>:null}
+
+  <footer className="ph-dock ph-ui">
+   {mine?<div className="ph-hero"><button type="button" className="ph-hero-face" aria-label={`Inspect ${mine.name}`} data-tooltip="Your character" onClick={()=>setDetailId(mine.id)}><ActorPortrait actor={mine} biome={game.options.biome}/></button>
+    <div className="ph-hero-info"><strong>{mine.name}</strong><span className="ph-hero-hp"><span>HP</span><span className={`ph-bar health-${healthLevel(mine.hp,mine.maxHp)}`}><span style={{width:`${Math.max(0,mine.hp/mine.maxHp)*100}%`}}/></span><b>{mine.hp}/{mine.maxHp}</b></span>
+    <span className="ph-hero-stats">AC {mine.ac}{myTurn?<> · <b>{actor?.movement??0}</b> tiles · <b>{actor?.actionUsed?0:1}</b> action</>:<> · {actor?`${actor.name}’s turn`:'Waiting'}</>}</span></div></div>:null}
+   <div className="ph-actions" role="group" aria-label="Actions">
+    <button type="button" className={`ph-action ${tool==='move'?'chosen':''}`} disabled={!myTurn||locked} onClick={()=>setTool('move')} aria-pressed={tool==='move'} data-tooltip={actionTip('move')}><kbd>{shortcut('move')}</kbd>{myTurn?<small className="tiles">{actor?.movement??0} tiles</small>:null}<Icon name="move"/><span>Move</span></button>
+    <button type="button" className={`ph-action ${tool==='attack'?'chosen':''}`} disabled={!myTurn||locked||actor?.actionUsed} onClick={()=>setTool('attack')} aria-pressed={tool==='attack'} data-tooltip={actionTip('attack')}><kbd>{shortcut('attack')}</kbd><Icon name="sword"/><span>Attack</span></button>
+    <button type="button" className={`ph-action ${tool==='ability'?'chosen':''}`} disabled={!myTurn||locked||actor?.actionUsed||!actor?.abilityUses} onClick={()=>setTool('ability')} aria-pressed={tool==='ability'} data-tooltip={actionTip('ability')}><kbd>{shortcut('ability')}</kbd><small>×{mine?.abilityUses??0}</small><Icon name="spark"/><span>{mine?CLASS_INFO[mine.heroClass].ability:'Power'}</span></button>
+    <button type="button" className="ph-action" disabled={!myTurn||locked||actor?.actionUsed} data-tooltip={actionTip('guard')} onClick={()=>act({type:'guard'})}><kbd>{shortcut('guard')}</kbd><Icon name="shield"/><span>Guard</span></button>
+    <button type="button" className="ph-action" disabled={!myTurn||locked||actor?.actionUsed||!actor?.potions||actor.hp>=actor.maxHp} data-tooltip={actionTip('potion')} onClick={()=>act({type:'potion'})}><kbd>{shortcut('potion')}</kbd><small>×{mine?.potions??0}</small><Icon name="potion"/><span>Potion</span></button>
+    {quest?<button type="button" className="ph-action quest" disabled={!myTurn||locked||!quest.available} aria-describedby="turn-guidance" onClick={()=>act({type:quest.type})}><Icon name={game.chest.opened?'flag':'chest'}/><span>{quest.label}</span></button>:null}
+   </div>
+   <button type="button" className="ph-end" disabled={!myTurn||locked} onClick={endTurn} data-tooltip={actionTip('end')}><span>{busy?'Saving…':'End turn'}</span><kbd>{shortcut('end')}</kbd></button>
+  </footer>
+
+  {journal?<JournalDrawer game={game} entries={entries} thread={thread} narratorName={narratorName} host={host} tab={journal} onTab={setJournal} onClose={closeJournal} onAsk={onAI} onNarrate={onNarrate} onSteer={onSteer} busy={busy}/>:null}
+  <div className={`game-connection ${connection==='reconnecting'?'connection-warning':''}`} aria-live="polite">{connection==='reconnecting'?'Reconnecting… Your game is saved.':null}</div>
+
+  {confirmEnd?<Modal title="End this turn?" onClose={()=>setConfirmEnd(false)}><div className="confirm-turn"><p>You still have an action available.</p><div><button className="button paper" onClick={()=>setConfirmEnd(false)}>Keep playing</button><button className="button primary" onClick={()=>{setConfirmEnd(false);act({type:'end'})}}>End turn</button></div></div></Modal>:null}
+  {detail?<Modal title={detail.name} onClose={()=>setDetailId(null)}><div className="character-detail"><div className="detail-portrait" style={{background:detail.color+'30'}}><ActorPortrait actor={detail} biome={game.options.biome}/></div><div><h3>{CLASS_INFO[detail.heroClass].name}</h3><p>{CLASS_INFO[detail.heroClass].description}</p><dl className="stats-grid"><div><dt>Health</dt><dd>{detail.hp}/{detail.maxHp}</dd></div><div><dt>Armor</dt><dd>{detail.ac}</dd></div><div><dt>Speed</dt><dd>{detail.speed*5} ft</dd></div><div><dt>Potions</dt><dd>{detail.potions}</dd></div><div><dt>Power uses</dt><dd>{detail.abilityUses}</dd></div><div><dt>Initiative</dt><dd>{detail.initiative}</dd></div></dl><p><strong>{CLASS_INFO[detail.heroClass].ability}</strong> · {detail.abilityUses} uses left this encounter.</p></div></div></Modal>:null}
+ </div>;
 }

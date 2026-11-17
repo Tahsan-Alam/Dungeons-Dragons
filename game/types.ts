@@ -16,7 +16,8 @@ export interface Actor { id: string; playerId?: string; name: string; heroClass:
   /** Shield wall: the guardian taking hits for this actor until the guardian's next turn. */ guardedBy?: string;
   /** Inspire: advantage on this actor's next attack roll. */ inspired?: boolean;
   /** Entangle: this actor cannot move on its next turn. */ rooted?: boolean; }
-export interface AttackResult { targetId: string; action: 'attack' | 'ability'; hit: boolean; critical: boolean; damage: number; }
+/** `bonus` and `ac` describe the roll for display (roll + bonus against AC); events recorded before they existed lack them. */
+export interface AttackResult { targetId: string; action: 'attack' | 'ability'; hit: boolean; critical: boolean; damage: number; bonus?: number; ac?: number; }
 export interface GameEvent { id: number; kind: 'story' | 'action' | 'roll' | 'system'; text: string; actorId?: string; roll?: number; attack?: AttackResult; }
 export interface GameState { story?:StoryState; schemaVersion: 1; /** Narration edition (game/lore.ts); absent on saves made before it. */ lore?: number; options: GameOptions; rng: number; status: 'playing' | 'victory' | 'defeat'; width: number; height: number; tiles: Tile[]; actors: Actor[]; activeActorId: string; turnOrder: string[]; round: number; scene: number; sceneName: string; objective: string; relics: number; exit: {x:number;y:number}; chest: {x:number;y:number;opened:boolean}; events: GameEvent[]; eventSequence: number; }
 export type GameAction = { type: 'move'; x: number; y: number } | { type: 'attack' | 'ability'; targetId: string } | { type: 'guard' | 'potion' | 'end' | 'interact' | 'advance' };
