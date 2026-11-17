@@ -6,6 +6,8 @@ export interface SharedRoll {
  actorName:string;
  targetName?:string;
  description:string;
+ /** Enemy rolls get the foe tint on the roll card. */
+ foe:boolean;
 }
 export interface RollFeed {
  gameId:string|null;
@@ -33,7 +35,7 @@ export function collectSharedRolls(feed:RollFeed,gameId:string|null,game:GameSta
   if(event.attack&&actor?.playerId===playerId&&!actor.bot)continue;
   const source=actor?.enemy?'Enemy':actor?.bot?'Companion':'Player';
   const action=event.attack?.action==='ability'&&actor?CLASS_INFO[actor.heroClass].ability:event.attack?'Attack':'d20 roll';
-  queue.push({event,actorName:actor?.name??'Character',targetName:event.attack?actors[event.attack.targetId]?.name:undefined,description:`${source} · ${action}`});
+  queue.push({event,actorName:actor?.name??'Character',targetName:event.attack?actors[event.attack.targetId]?.name:undefined,description:action,foe:!!actor?.enemy});
  }
  return {gameId,seen:game.eventSequence,actors,queue};
 }
