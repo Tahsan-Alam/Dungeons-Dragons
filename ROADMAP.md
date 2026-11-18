@@ -40,7 +40,8 @@ Keep this as the short checkpoint overview. Use GitHub issues for individual tas
 - [x] Name the shared setting of the built-in tales, keep the region names, and lead chapter openings with each region's visible clue (Waylantern and Aether wording; older saves keep their text).
 - [x] Between-chapters map: the route relights after each gateway, and the next chapter opens beside it.
 - [x] Bring the approved chapter I board art into the game: Starfall Market, the broken arch, the lantern pier.
-- [ ] Design and build the remaining six chapter places (forest road, shrine, ridge road, keep, glassmakers' row, vaults).
+- [x] Design and build the remaining six chapter places (forest road, shrine, ridge road, keep, glassmakers' row, vaults).
+- [ ] Design the boards at night (lit lanterns, torches and windows over darker ground).
 - [ ] Replace the chapter card panoramas with the regional day and dusk scenes.
 - [ ] Map button during play, and the full relight at victory.
 - [ ] Decide long runs: revisit the three stops or use the five region scene names.

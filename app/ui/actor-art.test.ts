@@ -24,7 +24,11 @@ test('named Keepers take their pose while a signature attack is announced; the W
  const plan={move:'hunt' as const,tiles:[],round:1};
  assert.equal(enemyArtKey({name:'The Wolf at the Last Light',keeper:'wolf'},'woodland'),'wolf');
  assert.equal(enemyArtKey({name:'The Wolf at the Last Light',keeper:'wolf',plan},'woodland'),'wolf-pounce');
- assert.equal(enemyArtKey({name:'The Crown’s Dragon',keeper:'dragon',plan:{...plan,move:'breath'}},'ruins'),'dragon-roar');
+ assert.equal(enemyArtKey({name:'The Crown’s Dragon',keeper:'dragon',plan:{...plan,move:'breath'}},'ruins'),'dragon-warn');
+ // The turn after the attack resolves: the dragon's jaw open and head forward, the Warden where she landed.
+ assert.equal(enemyArtKey({name:'The Crown’s Dragon',keeper:'dragon',keeperRest:true},'ruins'),'dragon-roar');
+ assert.equal(enemyArtKey({name:'The Tideglass Warden',keeper:'warden',keeperRest:true},'coast'),'warden-landing');
+ assert.equal(enemyArtKey({name:'The Wolf at the Last Light',keeper:'wolf',keeperRest:true},'woodland'),'wolf');
  assert.equal(enemyArtKey({name:'The Tideglass Warden',keeper:'warden',plan:{...plan,move:'tide'}},'coast'),'warden-windup');
  assert.equal(enemyArtKey({name:'The Tideglass Warden',keeper:'warden',defeated:true},'coast'),'warden-yield');
  // A custom tale's Keeper borrows its biome's painting.

@@ -8,8 +8,8 @@ import type {TaleId} from './presets.ts';
    `LORE_EDITION` is stamped on new games so saves replay with the text and rules they were played with:
    edition 1 added these openings and the opening set pieces, edition 2 the named Keepers, edition 3 the custom-tale
    boss pool and wider enemy groups (game/keepers.ts), edition 4 the Lantern Road's authored later chapters and the
-   shrine's light (game/set-pieces.ts). */
-export const LORE_EDITION=4;
+   shrine's light (game/set-pieces.ts), edition 5 the Hollow Reach's and Saltreach Harbour's authored later chapters. */
+export const LORE_EDITION=5;
 
 type Lines=Record<Narrator,readonly [string,string,string]>;
 interface TaleLore {road:string;clues:readonly [string,string,string];openings:Lines;}

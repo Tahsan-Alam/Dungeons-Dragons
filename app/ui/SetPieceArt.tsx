@@ -1,6 +1,7 @@
 'use client';
 import type {GroundMark,SetPieceProp} from '../../game/types';
 import {ART_PALETTE as P} from './artPalette';
+import {DepthPlace,FlatPlace,PlaceLight,PlaceMark} from './PlaceArt';
 
 /* The authored landmarks of the built-in tales (game/set-pieces.ts), redrawn from the approved World page
    samples in the board's own palette. Depth props are drawn upright from the centre of their left tile, at the
@@ -177,6 +178,7 @@ export function DepthSetPiece({prop}:{prop:SetPieceProp}){
    <path d="M-6 -20l1 -7l3 6M1 -21l3 -7l2 7" fill={P.ink} opacity=".9"/>
    <circle cx={-3.5} cy={-15} r={1.4} fill={LAMP}/><circle cx={3} cy={-15.5} r={1.4} fill={LAMP}/>
   </g>;
+  default:return <DepthPlace prop={prop}/>;
  }
 }
 
@@ -205,6 +207,7 @@ export function FlatSetPiece({prop}:{prop:SetPieceProp}){
   case 'shrine':return <g><rect x={4} y={6} width={142} height={38} fill={P.stone} {...stroke}/><path d="M4 25h142" stroke={P.stoneDark} strokeWidth={1.2}/><circle cx={75} cy={30} r={18} fill={LAMP_GLOW} opacity=".3"/><path d="M65 44V30a10 10 0 0 1 20 0v14" fill={P.ink} stroke={P.stoneLight} strokeWidth={2}/><rect x={71} y={28} width={8} height={9} fill={LAMP}/></g>;
   case 'road-on':case 'threshold':return null;
   case 'wolf-eyes':return <g><circle cx={15} cy={20} r={9} fill={P.bark} {...stroke}/><circle cx={36} cy={18} r={9} fill={P.bark} {...stroke}/><circle cx={23} cy={32} r={1.8} fill={LAMP}/><circle cx={28} cy={32} r={1.8} fill={LAMP}/></g>;
+  default:return <FlatPlace prop={prop}/>;
  }
 }
 
@@ -234,6 +237,7 @@ export function GroundMarkArt({mark,seed=0}:{mark:GroundMark;seed?:number}){
   </g>;
   case 'flagstone':return <g><rect width={50} height={50} fill={P.stone} opacity=".32"/><path d={seed%2?'M0 18h22M22 0v50M22 31h28M37 31v19M8 18v32':'M0 26h30M30 0v50M30 14h20M14 26v24M40 14v-14'} fill="none" stroke={P.stoneDark} strokeOpacity=".5" strokeWidth={1}/></g>;
   case 'trampled':return <g><path d="M17 0h16l-2 50h-12Z" fill={P.road} opacity=".75"/><path d="M22 12h3M26 30h3M21 40h2" stroke={P.roadDetail} strokeWidth={1.3}/></g>;
+  default:return <PlaceMark mark={mark} seed={seed}/>;
  }
 }
 
@@ -252,5 +256,5 @@ export function GroundLight({prop}:{prop:SetPieceProp}){
  if(prop==='shrine')return <g><circle cx={75} cy={70} r={90} fill={LAMP_GLOW} opacity=".08"/><circle cx={75} cy={60} r={52} fill={LAMP_GLOW} opacity=".1"/></g>;
  // The way on runs out of the board into the dark.
  if(prop==='road-on'||prop==='threshold')return <g><rect x={10} width={40} height={50} fill={P.ink} opacity=".22"/><rect x={28} width={22} height={50} fill={P.ink} opacity=".3"/><rect x={42} width={8} height={50} fill={P.ink} opacity=".3"/></g>;
- return null;
+ return <PlaceLight prop={prop}/>;
 }
