@@ -183,7 +183,11 @@ html[data-color-mode][data-theme] .ph .ph-board .board-tools i{width:1px;height:
  .ph.rolling .ph-target{display:none}
  .ph-target dl{grid-template-columns:auto 1fr}
  .ph-hint{bottom:252px;max-width:calc(100% - 24px);width:calc(100% - 24px);box-sizing:border-box;font-size:12.5px}
- html[data-color-mode][data-theme] .ph .ph-board .board-tools{top:6px;bottom:auto;right:8px;left:8px;justify-content:center;flex-wrap:wrap}
+ /* One compact row in the board's top-right corner: the zoom readout and dividers give way so the tools never wrap
+    across the board. Pinch zoom still works, and the buttons keep their 44px touch size. */
+ html[data-color-mode][data-theme] .ph .ph-board .board-tools{top:6px;bottom:auto;right:6px;left:auto;max-width:calc(100% - 12px);flex-wrap:nowrap;gap:3px;padding:3px}
+ html[data-color-mode][data-theme] .ph .ph-board .board-tools>:is(span,i){display:none}
+ html[data-color-mode][data-theme] .ph .ph-board .board-tools button.view-toggle{min-width:52px;padding:0 10px}
  .ph-dock{left:10px;right:10px;bottom:12px;flex-wrap:wrap;gap:10px}
  .ph-hero{width:100%}.ph .ph-hero-face{width:48px;height:48px}.ph-hero-info strong{font-size:17px}
  .ph-actions{width:100%;gap:6px}.ph .ph-action{flex:1;width:auto;min-width:0;height:62px;font-size:12px}.ph .ph-action kbd{display:none}
