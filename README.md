@@ -46,7 +46,7 @@ npm run local:setup
 npm run dev -- --port 5347 --hostname 127.0.0.1
 ```
 
-Setup builds the app, creates a fixture-only ignored `.dev.vars` if missing, and applies missing local schema changes. It is safe to rerun: existing settings, adventures and spending receipts are preserved. Stop running servers before setup/building on Windows. Each checkout owns its local database. `npm start -- --port 5347` runs the production build and loads the root `.dev.vars`.
+Setup builds the app, creates a fixture-only ignored `.dev.vars` if missing, and applies missing local schema changes. It is safe to rerun: existing settings, adventures and spending receipts are preserved. Stop running servers before setup/building on Windows. Each checkout owns its local database. If `npm run dev` reports that another vinext dev server is already running but nothing answers at its address, the server was stopped without cleaning up: delete `.vinext/dev/lock.json` and start again. `npm start -- --port 5347` runs the production build and loads the root `.dev.vars`.
 
 Follow [Team development](TEAM-DEVELOPMENT.md) for individual server keys, AI opt-in, shared billing and the GitHub review workflow. [AI setup](AI-SETUP.md) documents server access modes. Local development does not require publishing to ChatGPT Sites.
 
