@@ -8,14 +8,21 @@ import type {TaleId} from './presets.ts';
    any other wall. Seeded generation still runs first, so dice and the random sequence are unchanged. */
 
 export const SET_PIECE_PROPS:readonly SetPieceProp[]=['span','shop','stall','salt-stall','stall-skew','oil-cart','lamp','gate-left','gate-right','gate-rubble','masonry','carving','arch','rubble','cage-empty','cage-lit','crates','bollard','quay','stairs',
- 'fence','waymark-lit','waymark-dark','standing-stone','shrine','road-on','threshold','wolf-eyes'];
-export const GROUND_MARKS:readonly GroundMark[]=['cobble','groove','deck','loading','glass','hollow','refuge','flagstone','trampled'];
+ 'fence','waymark-lit','waymark-dark','standing-stone','shrine','road-on','threshold','wolf-eyes',
+ 'parapet','banner','retaining','slope','pillar','treasury','crown','wall-torch','wall-banner','gatepost',
+ 'workshop','workshop-wide','workshop-narrow','workshop-counter','worktable','worktable-invoice','sandbin','rack','rack-marked','stairs-down',
+ 'pier','pier-repaired','pier-stump','niche','vault-door','sea-door','stairs-up'];
+export const GROUND_MARKS:readonly GroundMark[]=['cobble','groove','deck','loading','glass','hollow','refuge','flagstone','trampled','drop','rut','wind','ashlar','slate','tally','vault','grate'];
 export const isSetPieceProp=(d:Tile['decoration']):d is SetPieceProp=>!!d&&(SET_PIECE_PROPS as readonly string[]).includes(d);
 export const isGroundMark=(d:Tile['decoration']):d is GroundMark=>!!d&&(GROUND_MARKS as readonly string[]).includes(d);
 /** How many tiles wide a prop is drawn, from its left tile. The arch's middle tile is its open, walkable gateway. */
-export const PROP_WIDTH:Partial<Record<SetPieceProp,number>>={shop:2,stall:2,'stall-skew':2,'oil-cart':2,carving:2,arch:3,shrine:3};
+export const PROP_WIDTH:Partial<Record<SetPieceProp,number>>={shop:2,stall:2,'stall-skew':2,'oil-cart':2,carving:2,arch:3,shrine:3,treasury:3,
+ workshop:2,'workshop-wide':2,'workshop-narrow':2,'workshop-counter':2,'vault-door':2};
 /** Props that stand on the forest floor or flagstones, not on the ground in front of them. */
 const STANDS_ON_OWN_GROUND:readonly SetPieceProp[]=['fence','waymark-lit','waymark-dark','standing-stone','shrine'];
+/** The ground each way-on, stair and wall-foot prop shows, whatever is in front of it. */
+const OWN_GROUND:Partial<Record<SetPieceProp,{kind:Tile['kind'];base?:GroundMark}>>={'road-on':{kind:'path',base:'cobble'},threshold:{kind:'grass',base:'flagstone'},
+ 'stairs-down':{kind:'path',base:'slate'},'sea-door':{kind:'path',base:'vault'},'stairs-up':{kind:'path',base:'vault'},retaining:{kind:'grass'},slope:{kind:'grass'}};
 
 type Cell=[x:number,y:number];
 export interface SetPiece {
@@ -86,9 +93,61 @@ export const LATER_PIECES:Partial<Record<TaleId,Record<number,SetPiece>>>={
     {at:[19,6],prop:'threshold'},{at:[19,7],prop:'threshold'},{at:[19,8],prop:'threshold'}],
    exit:{x:18,y:7},chest:{x:16,y:2},keeper:{x:13,y:5}},
  },
+ // Chapters II and III of the Hollow Reach and Saltreach Harbour, from the approved World page boards (design
+ // canvas, version 132), checked there against the game's movement and the Keepers' own attack rules.
+ crown:{
+  // The ridge road: the trail runs along the drop behind a patched parapet with two gaps (8 and 10), above a
+  // retaining wall, then opens into the turn where the guardians wait. Cart ruts run its full length.
+  1:{clear:{x0:1,y0:1,x1:18,y1:12,kind:'path'},
+   walls:[{cells:[...rect(6,9,12,9),...rect(1,12,5,12),...rect(13,12,18,12)],decoration:'retaining'},{cells:[...rect(6,10,12,12)],decoration:'slope'}],
+   ground:[{cells:[...rect(1,1,18,2),...rect(6,3,12,5)],kind:'water',mark:'drop'},{cells:rect(1,7,18,7),kind:'path',mark:'rut'},
+    {cells:[[2,9],[3,10],[14,3],[17,4],[15,11],[4,3],[18,9]],kind:'path',mark:'wind'}],
+   props:[{at:[6,5],prop:'parapet'},{at:[7,5],prop:'parapet'},{at:[9,5],prop:'parapet'},{at:[11,5],prop:'parapet'},{at:[12,5],prop:'parapet'},
+    {at:[13,3],prop:'banner'},{at:[5,9],prop:'banner'},{at:[16,3],prop:'rubble'},{at:[13,10],prop:'rubble'},{at:[18,10],prop:'rubble'},
+    {at:[19,6],prop:'road-on'},{at:[19,7],prop:'road-on'},{at:[19,8],prop:'road-on'}],
+   exit:{x:18,y:7},chest:{x:10,y:7}},
+  // The hollow keep: through the broken west wall into an ashlar courtyard; two pairs of pillars frame the aisle
+  // to the dragon; the treasury under the worn royal seal, the crown on its plinth, the postern out on the right.
+  2:{clear:{x0:1,y0:1,x1:18,y1:12,kind:'path',decoration:'ashlar'},
+   walls:[{cells:[...rect(1,1,18,1),...rect(1,12,18,12),[5,2],...rect(18,2,18,5),...rect(18,9,18,11)],decoration:'masonry'}],
+   ground:[{cells:rect(1,2,4,11),kind:'path'},{cells:rect(1,6,7,8),kind:'path',mark:'rut'}],
+   props:[...wide(13,1,'treasury'),{at:[16,3],prop:'crown'},{at:[8,7],prop:'pillar'},{at:[8,9],prop:'pillar'},{at:[11,7],prop:'pillar'},{at:[11,9],prop:'pillar'},
+    {at:[9,1],prop:'wall-torch'},{at:[17,1],prop:'wall-torch'},{at:[7,1],prop:'wall-banner'},{at:[11,1],prop:'wall-banner'},{at:[5,3],prop:'gatepost'},{at:[5,11],prop:'gatepost'},
+    {at:[19,6],prop:'road-on'},{at:[19,7],prop:'road-on'},{at:[19,8],prop:'road-on'}],
+   exit:{x:18,y:7},chest:{x:14,y:3},keeper:{x:14,y:8}},
+ },
+ salt:{
+  // Glassmakers' row: six shuttered workshops (three fronts differ), worktables, sand bins and empty racks for
+  // cover, the matching mark chalked toward the stairs down, a timber quay over the harbour and a short jetty.
+  1:{clear:{x0:1,y0:1,x1:18,y1:12,kind:'path',decoration:'slate'},
+   walls:[{cells:rect(1,1,18,1),decoration:'masonry'}],
+   ground:[{cells:[...rect(1,10,18,10),...rect(15,11,17,11)],kind:'path',mark:'deck'},{cells:[...rect(1,11,14,12),...rect(18,11,18,12),...rect(15,12,17,12)],kind:'water'},
+    {cells:[[8,7],[11,7],[14,8],[17,7]],kind:'path',mark:'tally'}],
+   props:[...wide(1,2,'workshop'),...wide(4,2,'workshop-wide'),...wide(7,2,'workshop'),...wide(10,2,'workshop-narrow'),...wide(13,2,'workshop-counter'),...wide(16,2,'workshop'),
+    {at:[6,3],prop:'worktable'},{at:[7,3],prop:'worktable'},{at:[10,3],prop:'sandbin'},{at:[9,4],prop:'rack'},{at:[12,3],prop:'rack-marked'},{at:[13,4],prop:'rack'},
+    {at:[16,3],prop:'worktable-invoice'},{at:[17,3],prop:'sandbin'},{at:[5,10],prop:'bollard'},{at:[11,10],prop:'bollard'},
+    // The two gaps between shops boxed in by the worktable and the marked rack hold stacked crates, not a stray pocket.
+    {at:[6,2],prop:'crates'},{at:[12,2],prop:'crates'},
+    {at:[19,6],prop:'stairs-down'},{at:[19,7],prop:'stairs-down'},{at:[19,8],prop:'stairs-down'}],
+   exit:{x:18,y:7},chest:{x:10,y:7}},
+  // The harbour vaults: arch piers (one repaired) and the stumps of a fallen arcade frame a three-tile aisle with
+  // side exits between them; crates in niches and bays; the barred rear door with the chest before it; the party
+  // arrives down the stairs at the left and leaves by the sea door at the right.
+  2:{clear:{x0:1,y0:1,x1:18,y1:12,kind:'path',decoration:'vault'},
+   walls:[{cells:[...rect(1,1,18,1),...rect(1,12,18,12)],decoration:'masonry'}],
+   ground:[{cells:[[7,7],[10,7],[13,7],[9,3],[11,11]],kind:'path',mark:'grate'}],
+   props:[{at:[6,5],prop:'pier'},{at:[8,5],prop:'pier'},{at:[10,5],prop:'pier-repaired'},{at:[12,5],prop:'pier'},{at:[14,5],prop:'pier'},
+    ...[6,8,10,12,14].map(x=>({at:[x,9] as Cell,prop:'pier-stump' as const})),
+    {at:[7,3],prop:'crates'},{at:[11,3],prop:'crates'},{at:[9,11],prop:'crates'},{at:[12,10],prop:'crates'},{at:[3,3],prop:'crates'},
+    {at:[3,1],prop:'niche'},{at:[7,1],prop:'niche'},{at:[11,1],prop:'niche'},...wide(16,1,'vault-door'),
+    {at:[19,6],prop:'sea-door'},{at:[19,7],prop:'sea-door'},{at:[19,8],prop:'sea-door'},{at:[0,6],prop:'stairs-up'},{at:[0,7],prop:'stairs-up'},{at:[0,8],prop:'stairs-up'}],
+   exit:{x:18,y:7},chest:{x:16,y:3},keeper:{x:13,y:7}},
+ },
 };
-/** Games stamped from this edition get the authored later chapters (and the shrine's light in Lantern Hunt). */
+/** Games stamped from this edition get the Lantern Road's authored later chapters (and the shrine's light in Lantern Hunt). */
 export const LATER_PIECES_EDITION=4;
+/** The lore edition from which each tale's later chapters are authored. Older saves keep their generated maps. */
+export const LATER_PIECES_SINCE:Record<TaleId,number>={lantern:LATER_PIECES_EDITION,crown:5,salt:5};
 
 /** The shrine's refuge: lit tiles where Lantern Hunt cannot go. */
 export const isRefuge=(game:GameState,x:number,y:number)=>game.tiles[y*game.width+x]?.decoration==='refuge';
@@ -110,8 +169,10 @@ export function refugeEdges(game:GameState):[number,number,number,number][]{
 export function groundOf(game:GameState,tile:Tile):{kind:Tile['kind'];base?:GroundMark;mark?:GroundMark}{
  // Low water sits in the forest floor: its own art draws the bank and the water. Movement still treats it as water.
  if(tile.decoration==='hollow')return {kind:'grass',base:'hollow'};
- if(tile.decoration==='road-on')return {kind:'path',base:'cobble'};
- if(tile.decoration==='threshold')return {kind:'grass',base:'flagstone'};
+ if(isSetPieceProp(tile.decoration)&&OWN_GROUND[tile.decoration])return OWN_GROUND[tile.decoration]!;
+ // Marks that lie on a paved floor: the chalked tally on wet slate, a grate in the vault floor.
+ if(tile.decoration==='tally')return {kind:tile.kind,base:'slate',mark:'tally'};
+ if(tile.decoration==='grate')return {kind:tile.kind,base:'vault',mark:'grate'};
  if(isSetPieceProp(tile.decoration)&&STANDS_ON_OWN_GROUND.includes(tile.decoration)){
   // Stand on flagstones where the clearing has them, otherwise on the forest floor.
   const near=[[0,1],[1,0],[-1,0],[0,-1]].map(([dx,dy])=>game.tiles[(tile.y+dy)*game.width+tile.x+dx]?.decoration);
@@ -127,12 +188,12 @@ export function groundOf(game:GameState,tile:Tile):{kind:Tile['kind'];base?:Grou
 }
 
 /** The authored layout for this chapter, if it has one. Chapter I of each built-in tale from lore edition 1; the
-    Lantern Road's later chapters from LATER_PIECES_EDITION, so saves made before them keep their generated maps. */
+    later chapters from the edition each tale's were authored in (LATER_PIECES_SINCE), so older saves keep their generated maps. */
 export function setPieceFor(game:GameState):SetPiece|undefined {
  const tale=builtInTale(game.options.creation?.story),lore=game.lore??0;
  if(!tale)return undefined;
  if(game.scene===0)return lore>=1?SET_PIECES[tale]:undefined;
- return lore>=LATER_PIECES_EDITION?LATER_PIECES[tale]?.[game.scene]:undefined;
+ return lore>=LATER_PIECES_SINCE[tale]?LATER_PIECES[tale]?.[game.scene]:undefined;
 }
 
 export function applySetPiece(game:GameState,piece:SetPiece){

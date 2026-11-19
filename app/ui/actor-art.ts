@@ -12,13 +12,14 @@ export const TILE=50;
 /** Hero figures stand about 1.78 tiles tall in the art, with boots at HERO_FEET of the height. */
 const HERO_TILES=1.78;
 /** Paintings carry transparent margins; this is where each figure's head or wings begin. */
-const PAINTING_TOP:Partial<Record<EnemyArtKey,number>>={wolf:182,'wolf-pounce':172,dragon:90,'dragon-roar':98};
+const PAINTING_TOP:Partial<Record<EnemyArtKey,number>>={wolf:182,'wolf-pounce':172,dragon:90,'dragon-warn':90,'dragon-roar':98};
 
-/** Each Keeper's painting, its pose while a signature attack is announced, and (for the wardens) its yield. */
-export const KEEPER_ART:Record<Exclude<KeeperKind,'hollow'>,{rest:EnemyArtKey;attack:EnemyArtKey;yielded?:EnemyArtKey}>={
+/** Each Keeper's painting, its pose while a signature attack is announced (the warning), its pose on the turn
+    after the attack resolves (the release: the dragon's open jaws, the Warden's landing) and, for the wardens, its yield. */
+export const KEEPER_ART:Record<Exclude<KeeperKind,'hollow'>,{rest:EnemyArtKey;attack:EnemyArtKey;release?:EnemyArtKey;yielded?:EnemyArtKey}>={
  wolf:{rest:'wolf',attack:'wolf-pounce'},'grey-wolf':{rest:'wolf',attack:'wolf-pounce'},
- dragon:{rest:'dragon',attack:'dragon-roar'},drake:{rest:'dragon',attack:'dragon-roar'},
- warden:{rest:'warden',attack:'warden-windup',yielded:'warden-yield'},'tide-warden':{rest:'warden',attack:'warden-windup',yielded:'warden-yield'},
+ dragon:{rest:'dragon',attack:'dragon-warn',release:'dragon-roar'},drake:{rest:'dragon',attack:'dragon-warn',release:'dragon-roar'},
+ warden:{rest:'warden',attack:'warden-windup',release:'warden-landing',yielded:'warden-yield'},'tide-warden':{rest:'warden',attack:'warden-windup',release:'warden-landing',yielded:'warden-yield'},
  thornhound:{rest:'thornhound',attack:'thornhound-rush'},giant:{rest:'ridge-giant',attack:'ridge-giant-slam'},eye:{rest:'glass-eye',attack:'glass-eye-gaze'},
 };
 /** A beaten Keeper that stays on the board in its yield pose. */
@@ -27,9 +28,9 @@ function keeperPose(actor:KeeperArtActor,biome:Biome):EnemyArtKey{
  if(actor.keeper==='hollow')return KEEPER_BY_BIOME[biome];
  const art=KEEPER_ART[actor.keeper!];
  if(actor.defeated&&art.yielded)return art.yielded;
- return actor.plan?art.attack:art.rest;
+ return actor.plan?art.attack:actor.keeperRest&&art.release?art.release:art.rest;
 }
-type KeeperArtActor=Pick<Actor,'name'>&Partial<Pick<Actor,'keeper'|'plan'|'defeated'>>;
+type KeeperArtActor=Pick<Actor,'name'>&Partial<Pick<Actor,'keeper'|'plan'|'defeated'|'keeperRest'>>;
 
 /** "Bramble imp 2" → bramble-imp. Unknown names fall back to the generic token. Keepers use their own paintings;
     saves from before the named Keepers match the untitled Keeper by name. */

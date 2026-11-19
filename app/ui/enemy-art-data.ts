@@ -28,7 +28,7 @@ export const ENEMY_ART={
  'glass-eye-gaze':{src:'/art/enemies/glass-eye-gaze.svg',viewBox:[14,26,145,203.4],anchor:[94,220],unitsPerTile:160,floats:true,portrait:[14,38,146]},
  'tide-imp':{src:'/art/enemies/tide-imp.svg',viewBox:[18,42,154,128.2],anchor:[104,160],unitsPerTile:120,floats:false,portrait:[86,38,80]},
  'warden':{src:'/art/enemies/warden.svg',viewBox:[30,12.6,241.5,308.6],anchor:[118,306],unitsPerTile:160,floats:false,portrait:[68,6,124]},
- 'warden-windup':{src:'/art/enemies/warden-windup.svg',viewBox:[-26.2,8.7,236.2,312.5],anchor:[118,306],unitsPerTile:160,floats:false,portrait:[68,6,124]},
+ 'warden-windup':{src:'/art/enemies/warden-windup.svg',viewBox:[20,21.9,208,299.3],anchor:[118,306],unitsPerTile:160,floats:false,portrait:[68,6,124]},
  'warden-cut-1':{src:'/art/enemies/warden-cut-1.svg',viewBox:[-12,10.6,342,310.6],anchor:[118,306],unitsPerTile:160,floats:false,portrait:[68,6,124]},
  'warden-cut-2':{src:'/art/enemies/warden-cut-2.svg',viewBox:[30,-28.1,244.4,349.3],anchor:[118,306],unitsPerTile:160,floats:false,portrait:[68,6,124]},
  'warden-landing':{src:'/art/enemies/warden-landing.svg',viewBox:[-20,34,355.7,287.2],anchor:[118,306],unitsPerTile:160,floats:false,portrait:[68,6,124]},
@@ -36,6 +36,7 @@ export const ENEMY_ART={
  'wolf':{src:'/art/enemies/wolf.webp',viewBox:[0,0,1774,887],anchor:[1200,728],unitsPerTile:320,floats:false,portrait:[1110,170,360]},
  'wolf-pounce':{src:'/art/enemies/wolf-pounce.webp',viewBox:[0,0,1774,887],anchor:[1150,860],unitsPerTile:320,floats:false,portrait:[1180,170,360]},
  'dragon':{src:'/art/enemies/dragon.webp',viewBox:[0,0,1774,887],anchor:[1000,832],unitsPerTile:312,floats:false,portrait:[1250,380,420]},
+ 'dragon-warn':{src:'/art/enemies/dragon-warn.webp',viewBox:[0,0,1774,887],anchor:[1000,832],unitsPerTile:312,floats:false,portrait:[1260,300,420]},
  'dragon-roar':{src:'/art/enemies/dragon-roar.webp',viewBox:[0,0,1774,887],anchor:[1000,832],unitsPerTile:312,floats:false,portrait:[1290,300,430]},
 } as const satisfies Record<string,EnemyArt>;
 export type EnemyArtKey=keyof typeof ENEMY_ART;
