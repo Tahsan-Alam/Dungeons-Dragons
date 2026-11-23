@@ -42,6 +42,7 @@ Keep this as the short checkpoint overview. Use GitHub issues for individual tas
 - [x] Bring the approved chapter I board art into the game: Starfall Market, the broken arch, the lantern pier.
 - [x] Design and build the remaining six chapter places (forest road, shrine, ridge road, keep, glassmakers' row, vaults).
 - [ ] Design the boards at night (lit lanterns, torches and windows over darker ground).
+- [x] Sealed notes: each built-in hero's secret with the chosen Game Master, opened privately as the quest begins and kept in the hero sheet.
 - [ ] Replace the chapter card panoramas with the regional day and dusk scenes.
 - [ ] Map button during play, and the full relight at victory.
 - [ ] Decide long runs: revisit the three stops or use the five region scene names.

@@ -212,3 +212,13 @@ html[data-color-mode][data-theme] .ph .ph-board .board-tools i{width:1px;height:
 .hs-intro{margin:0;font:400 15.5px/1.45 'EB Garamond',Georgia,serif;color:#c9c3b8}
 @media (max-width:640px){.hs{grid-template-columns:1fr;padding:16px}.hs-art{height:200px}}
 .ph .ph-target dd.ph-threat{color:#f3946a;font-weight:600}
+
+/* The sealed note in your hero sheet. */
+.hs-sealed{display:flex;gap:14px;align-items:flex-start;margin-top:6px;padding:14px 16px;color:#3a2c1e;background:radial-gradient(ellipse at 30% 20%,#f4ead3,#e3d2ae 70%);border-radius:2px;box-shadow:inset 0 0 24px rgba(120,84,40,.22)}
+.hs-sealed-seal{flex:none;display:grid;place-items:center;width:44px;height:44px;border-radius:47% 53% 50% 48%;background:radial-gradient(circle at 38% 32%,#d0563f,#9a2f20 60%,#6e1f15);color:#f0b9a4;box-shadow:inset 0 0 0 4px rgba(110,30,20,.55)}
+.hs-sealed-seal .sn-sigil{width:24px;height:24px}
+.hs-sealed.open .hs-sealed-seal{opacity:.55;clip-path:polygon(0 0,46% 0,54% 40%,44% 100%,0 100%)}
+.hs-sealed-kicker{margin:0 0 4px;font:600 11px Inter,system-ui,sans-serif;letter-spacing:.14em;text-transform:uppercase;color:#8a3a2a}
+.hs-sealed-text{margin:0;font:italic 400 16px/1.45 'EB Garamond',Georgia,serif;color:#2e2216}
+.hs-sealed-text strong{font-style:normal;font-weight:600}
+.hs-sealed-open{margin-top:2px;padding:6px 0;border:0;background:none;font:700 13px Inter,system-ui,sans-serif;letter-spacing:.05em;text-transform:uppercase;color:#7a2a20;text-decoration:underline;text-underline-offset:4px;cursor:pointer}

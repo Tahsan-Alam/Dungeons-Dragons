@@ -21,7 +21,8 @@ export default function TooltipLayer(){
 
   function buttonAt(target:EventTarget|null){
    const element=target instanceof Element?target:null,button=element?.closest('button');
-   return button instanceof HTMLButtonElement&&button.closest('.app-root,dialog.modal,.toast')?button:null;
+   // data-tooltip="none": the button's own large label already says it all.
+   return button instanceof HTMLButtonElement&&button.dataset.tooltip!=='none'&&button.closest('.app-root,dialog.modal,.toast')?button:null;
   }
   function nativeTitle(button:HTMLButtonElement){
    const current=button.getAttribute('title');
