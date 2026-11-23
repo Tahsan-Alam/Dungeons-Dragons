@@ -88,6 +88,7 @@
 .ph-target-hp{display:flex;align-items:center;gap:8px;font:600 12.5px Inter,system-ui,sans-serif;color:#d2cbbf}
 .ph-target-hp b{color:var(--ph-ink)}
 .ph-target dl{margin:0;display:grid;grid-template-columns:auto 1fr;gap:3px 12px;font:500 12.5px Inter,system-ui,sans-serif}
+.ph-target dl>.ph-fact{display:contents}
 .ph-target dt{color:var(--ph-muted)}.ph-target dd{margin:0;color:var(--ph-ink)}
 .ph-target-actions{display:flex;flex-direction:column;gap:6px}
 .ph .ph-secondary{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:38px;padding:0 16px;border:1px solid #435263;border-radius:2px;background:#1a212b;cursor:pointer;font:600 13px Inter,system-ui,sans-serif;color:var(--ph-ink)}
@@ -179,9 +180,30 @@ html[data-color-mode][data-theme] .ph .ph-board .board-tools i{width:1px;height:
  .ph .ph-tool.phone-only{display:inline-flex}
  .ph-title{max-width:calc(100% - 180px)}.ph-title h1{font-size:18px}
  .ph .ph-action small.tiles{display:none}
- .ph-target{left:12px;right:12px;top:248px;width:auto;padding:10px 12px;gap:7px}
+ /* The selected foe on a phone: two rows in the Game Master's slot, so the fight and the board tools stay in view.
+    Row one: face, name, health and the actions; row two: the facts as chips on one line that scrolls sideways. */
+ .ph-target{left:12px;right:12px;top:160px;width:auto;padding:6px 8px;gap:5px;display:grid;grid-template-columns:34px minmax(0,1fr) auto;grid-template-areas:"face head act" "facts facts facts";column-gap:8px;row-gap:5px}
+ .ph.foe-open .ph-gm{visibility:hidden}
  .ph.rolling .ph-target{display:none}
- .ph-target dl{grid-template-columns:auto 1fr}
+ .ph-target-head{display:contents}
+ .ph-target-head .ph-face.big{grid-area:face;width:34px;height:34px}
+ .ph-target-head>span:nth-child(2){grid-area:head;align-self:start}
+ .ph-target-head strong{font-size:14px;line-height:1.15;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+ .ph-target-head .realm-eyebrow{display:none}
+ .ph-target-hp{grid-area:head;align-self:end;font-size:11px;gap:6px}.ph-target-hp>span:first-child{display:none}
+ .ph-target-actions{grid-area:act;flex-direction:row;align-items:center;gap:6px;margin-right:42px}
+ .ph-target-head .ph-close{grid-area:act;justify-self:end}
+ .ph .ph-target-actions>button{width:36px;min-height:36px;padding:0;justify-content:center}.ph .ph-target-actions>button>span{display:none}
+ .ph .ph-close{width:36px;height:36px}
+ .ph-target dl{grid-area:facts;display:flex;flex-wrap:nowrap;gap:4px;overflow-x:auto;scrollbar-width:none;-webkit-mask-image:linear-gradient(90deg,#000 88%,transparent);mask-image:linear-gradient(90deg,#000 88%,transparent);padding-right:18px}
+ .ph-target dl::-webkit-scrollbar{display:none}
+ .ph-target dl>.ph-fact{flex:none;display:inline-flex;align-items:baseline;gap:5px;padding:2px 7px;border:1px solid #2f3a48;border-radius:2px;background:rgba(10,14,20,.55);font-size:12px;white-space:nowrap}
+ .ph-target .ph-fact dt{font:600 9.5px Inter,system-ui,sans-serif;letter-spacing:.08em;text-transform:uppercase}
+ .ph-target .ph-fact.threat{border-color:#8a5330;background:rgba(60,30,14,.6)}
+ .ph-target .ph-fact.far dd{color:#e9a48a}
+ /* What decides an attack first: the Keeper's warning, then range, to hit, damage, armour. */
+ .ph-target .ph-fact.threat{order:0}.ph-target .ph-fact:is(.near,.far){order:1}.ph-target .ph-fact.hit{order:2}.ph-target .ph-fact.damage{order:3}.ph-target .ph-fact.armour{order:4}
+ .ph-target .ph-fact-more{display:none}
  .ph-hint{bottom:252px;max-width:calc(100% - 24px);width:calc(100% - 24px);box-sizing:border-box;font-size:12.5px}
  /* One compact row in the board's top-right corner: the zoom readout and dividers give way so the tools never wrap
     across the board. Pinch zoom still works, and the buttons keep their 44px touch size. */
