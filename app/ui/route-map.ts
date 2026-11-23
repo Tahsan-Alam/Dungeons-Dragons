@@ -1,5 +1,5 @@
 import {MAP_SIZE,ROADS,WAYMARKS,type Point,type RoadId,type Segment} from './route-map-data.ts';
-import {builtInTale} from '../../game/lore.ts';
+import {builtInTale,chapterPlace} from '../../game/lore.ts';
 import {storyGoal} from '../../game/campaign.ts';
 import type {GameState} from '../../game/types.ts';
 import type {TaleId} from '../../game/presets.ts';
@@ -32,34 +32,41 @@ export interface RouteView {
  /** Stops whose shard has been recovered. */
  recovered:number;
  victory:boolean;
+ /** This chapter's place by name (a long tale's middle places lie on the road between two stops). */
+ place?:string;
+ /** True when the party has passed this stop before (an older long run circling back). */
+ back?:boolean;
 }
 
 export function routeView(game:GameState):RouteView|null {
  const tale=builtInTale(game.options.creation?.story);if(!tale)return null;
  const route=ROUTES[tale],total=storyGoal(game),victory=game.status==='victory';
  const cleared=victory?total:Math.min(game.scene,total);
- const before=Math.min(Math.max(cleared-1,0),2),now=victory?2:Math.min(cleared,2);
- const lit:RoadId[]=[...route.legs.slice(0,now),...(victory?route.home:[])];
- // A leg relights when the party first crosses it; a long run that circles back relights nothing new.
- const fresh:RoadId[]=victory?[...route.legs.slice(before),...route.home]:cleared>=1&&cleared<=2?[route.legs[cleared-1]]:[];
- return {tale,total,cleared,here:victory?null:game.scene%3,lit,fresh,recovered:Math.min(game.relics,3),victory};
+ // The stop each chapter stands at: a long tale's two middle places are on the road beyond the second stop.
+ const stopOf=(scene:number)=>{const place=chapterPlace({...game,scene});return place>=3?1:place};
+ const last=victory?game.scene:Math.min(game.scene,total-1),before=Math.max(0,...Array.from({length:last},(_,s)=>stopOf(s)));
+ const here=stopOf(last),reached=victory?2:Math.max(before,here);
+ const lit:RoadId[]=[...route.legs.slice(0,reached),...(victory?route.home:[])];
+ // A leg relights when the party first crosses it; a run that stays on a road or circles back relights nothing new.
+ const fresh:RoadId[]=victory?[...route.legs.slice(Math.max(before,here)),...route.home]:here>before?[route.legs[here-1]]:[];
+ return {tale,total,cleared,here:victory?null:here,lit,fresh,recovered:Math.min(game.relics,3),victory,place:victory?undefined:game.sceneName,back:here<before};
 }
 
 /** One line that carries the same state for screen readers. */
 export function describeRoute(view:RouteView,places:readonly string[]):string {
- const route=ROUTES[view.tale],name=(i:number)=>lower(places[i]??'');
+ const route=ROUTES[view.tale],name=(i:number)=>lower(places[i]??''),next=lower(view.place??places[view.here??0]??'');
  const lit=view.victory?`The ${route.road} is lit all the way to the Waylantern at Threeway Crossing.`:
   view.lit.length?`The ${route.road} is lit from ${name(0)} to ${name(view.lit.length)}.`:`The ${route.road} is still dark.`;
- return view.here===null?lit:`${lit} Next: ${name(view.here)}, chapter ${view.cleared+1} of ${view.total}.`;
+ return view.here===null?lit:`${lit} Next: ${next}, chapter ${view.cleared+1} of ${view.total}.`;
 }
 
 /** The screen's headline, in the same words the map shows. */
 export function routeHeadline(view:RouteView,places:readonly string[]):string {
- const road=ROUTES[view.tale].road,next=view.here===null?'':lower(places[view.here]??'');
+ const road=ROUTES[view.tale].road,next=view.here===null?'':lower(view.place??places[view.here]??'');
  if(view.victory)return `The ${road} is lit to the Waylantern`;
  if(view.fresh.length)return `The ${road} is lit to ${next}`;
  if(!view.cleared)return `The ${road} is still dark`;
- return `Back along the ${road} to ${next}`;
+ return view.back?`Back along the ${road} to ${next}`:`On along the ${road} to ${next}`;
 }
 
 /** “The forest road” → “the forest road”; proper names stay as they are. */

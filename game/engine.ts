@@ -1,5 +1,5 @@
 import type { Actor, GameAction, GameEvent, GameOptions, GameState, HeroClass, PlayerSpec, Tile } from './types';
-import {LORE_EDITION,builtInTale,loreOpening} from './lore.ts';
+import {LORE_EDITION,builtInTale,chapterPlace,loreOpening,placeName} from './lore.ts';
 import {applySetPiece,isRefuge,setPieceFor} from './set-pieces.ts';
 import { SUPPORT_ABILITY } from './types.ts';
 import {campaignFixture,installCampaign,rememberChapter,storyGoal} from './campaign.ts';
@@ -33,6 +33,8 @@ export const ENEMIES = {
   ruins: ['Ink wisp', 'Clay sentinel', 'Vault imp', 'Paper golem'],
   coast: ['Shell bandit', 'Tide imp', 'Crab knight', 'Salt wisp'],
 };
+/** The new creature of each region, met in a long built-in tale's two middle places (lore edition 6). */
+export const LONG_CREATURE = {woodland: 'Mirewisp', ruins: 'Star moth', coast: 'Mist eel'} as const;
 const manhattan = (a: { x: number; y: number }, b: { x: number; y: number }) => Math.abs(a.x - b.x) + Math.abs(a.y - b.y);
 const key = (x: number, y: number) => `${x},${y}`;
 const neighbors = (x: number, y: number) => [{ x: x + 1, y }, { x: x - 1, y }, { x, y: y + 1 }, { x, y: y - 1 }];
@@ -164,7 +166,7 @@ function sealPockets(game: GameState) {
 
 function setupScene(game: GameState) {
   makeMap(game);
-  game.sceneName = game.options.creation?.story.locations[game.scene % game.options.creation.story.locations.length] ?? SCENES[game.options.biome][game.scene];
+  game.sceneName = placeName(game) ?? game.options.creation?.story.locations[game.scene % game.options.creation.story.locations.length] ?? SCENES[game.options.biome][game.scene];
   game.objective = 'Defeat the guardians, collect the lantern shard, then reach the gateway.';
   const heroes = game.actors.filter(a => !a.enemy);
   const spawn = [{ x: 3, y: 7 }, { x: 2, y: 6 }, { x: 2, y: 8 }, { x: 3, y: 5 }, { x: 3, y: 9 }, { x: 2, y: 4 }, { x: 2, y: 10 }, { x: 4, y: 6 }, { x: 4, y: 8 }, { x: 4, y: 4 }];
@@ -183,7 +185,9 @@ function setupScene(game: GameState) {
   const bossKind = keeperFor(game, hash(`${game.options.seed}|boss`)), keeperKind = final ? bossKind : undefined;
   const piece = setPieceFor(game);   // an authored chapter may place its Keeper
   const widened = (game.lore ?? 0) >= CUSTOM_BOSS_EDITION && !builtInTale(game.options.creation?.story);
-  const roster = widened ? chapterEnemies(ENEMIES[game.options.biome], game.options.biome, bossKind, seededPick(`${game.options.seed}|enemies|${game.scene}`)) : ENEMIES[game.options.biome];
+  // A long built-in tale's middle places bring the region's new creature to the front of the usual four.
+  const roster = widened ? chapterEnemies(ENEMIES[game.options.biome], game.options.biome, bossKind, seededPick(`${game.options.seed}|enemies|${game.scene}`))
+    : chapterPlace(game) >= 3 ? [LONG_CREATURE[game.options.biome], ...ENEMIES[game.options.biome].slice(0, 3)] : ENEMIES[game.options.biome];
   for (let i = 0; i < count; i++) {
     const boss = final && i === count - 1, keeper = boss ? keeperKind : undefined, profile = keeper && KEEPER_PROFILE[keeper];
     const hp = (game.options.rules === 'simple' ? 9 : 12) + game.scene * 3 + (keeper ? KEEPER_HP_BONUS : boss ? 8 : 0);

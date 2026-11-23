@@ -45,6 +45,7 @@ Keep this as the short checkpoint overview. Use GitHub issues for individual tas
 - [x] The board at night: in dark colour mode the board is moonlit and lit only by the lights already on it (lamps, torches, the shrine, the crown, the district lamp, the sea door).
 - [ ] Replace the chapter card panoramas with the regional day and dusk scenes.
 - [ ] Map button during play, and the full relight at victory.
+- [x] Long runs: five distinct places per built-in tale (two new middle places per region) with a new creature each.
 - [ ] Decide whether the creator's narrator keeps the name Aether.
 - [x] Create your own Game Master: the fourth card on the Game Master step.
 

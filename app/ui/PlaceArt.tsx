@@ -1,6 +1,7 @@
 'use client';
 import type {GroundMark,SetPieceProp} from '../../game/types';
 import {ART_PALETTE as P} from './artPalette';
+import {DepthLong,FlatLong,LongLight,LongMark} from './LongPlaceArt';
 
 /* The Hollow Reach's and Saltreach Harbour's later chapters (game/set-pieces.ts), redrawn from the approved World
    page boards in the board's own palette. Same conventions as SetPieceArt.tsx: depth props stand upright from the
@@ -88,7 +89,7 @@ export function DepthPlace({prop}:{prop:SetPieceProp}){
    {saltLine(-25,100,-10)}<circle cx={25} cy={-78} r={4.5} fill={BRASS} {...stroke}/></g>;
   case 'sea-door':return <g><rect x={-12} y={-82} width={38} height={84} fill={SEA} opacity=".9"/><rect x={-12} y={-82} width={38} height={84} fill={TEAL} opacity=".25"/><rect x={-16} y={-90} width={46} height={9} fill={P.stoneDark} {...stroke}/><rect x={-20} y={-2} width={8} height={5} fill={SALT} {...stroke}/></g>;
   case 'stairs-up':return <g>{[0,1,2].map(i=><rect key={i} x={13-(i+1)*12} y={-6-i*7} width={12} height={8+i*7} fill={[P.stoneDark,P.stone,P.stoneLight][i]} {...stroke}/>)}<rect x={13} y={-3} width={6} height={5} fill={P.stoneLight} {...stroke}/></g>;
-  default:return null;
+  default:return <DepthLong prop={prop}/>;
  }
 }
 
@@ -119,7 +120,7 @@ export function FlatPlace({prop}:{prop:SetPieceProp}){
   case 'vault-door':return <g><rect x={4} y={6} width={92} height={38} fill={P.stoneLight} {...stroke}/><rect x={16} y={14} width={68} height={30} fill={P.stoneDeep} {...stroke}/><path d="M16 22h68M16 34h68" stroke={P.stoneDark} strokeWidth={4}/><circle cx={50} cy={10} r={3} fill={BRASS}/></g>;
   case 'sea-door':return <g><rect x={8} y={0} width={42} height={50} fill={SEA}/><rect x={2} y={0} width={8} height={50} fill={SALT} {...stroke}/></g>;
   case 'stairs-up':return <g>{[0,1,2].map(i=><rect key={i} x={32-i*12} y={0} width={12} height={50} fill={[P.stoneDark,P.stone,P.stoneLight][i]} {...stroke}/>)}<rect x={44} y={0} width={6} height={50} fill={P.stoneLight} {...stroke}/></g>;
-  default:return null;
+  default:return <FlatLong prop={prop}/>;
  }
 }
 
@@ -135,7 +136,7 @@ export function PlaceMark({mark,seed=0}:{mark:GroundMark;seed?:number}){
   case 'tally':return <Tally x={25} y={23} s={30} color={SALT}/>;
   case 'vault':return <g><rect width={50} height={50} fill={P.stoneDark} opacity=".22"/><path d={seed%2?'M0 25h50M18 0v25M32 25v25':'M0 25h50M32 0v25M18 25v25'} fill="none" stroke={P.stoneDeep} strokeOpacity=".4" strokeWidth={1}/>{seed%3===0?<path d="M10 46h28" stroke={SALT} strokeWidth={1.4} opacity=".6"/>:null}</g>;
   case 'grate':return <g><rect x={13} y={16} width={24} height={18} fill={P.stoneDeep} stroke={P.stoneDark} strokeWidth={1.4}/>{[19,25,31].map(x=><path key={x} d={`M${x} 16v18`} stroke={P.stoneDark} strokeWidth={1.2}/>)}</g>;
-  default:return null;
+  default:return <LongMark mark={mark} seed={seed}/>;
  }
 }
 
@@ -148,5 +149,5 @@ export function PlaceLight({prop}:{prop:SetPieceProp}){
  if(prop==='sea-door')return <g><circle cx={0} cy={25} r={60} fill={SEA} opacity=".16"/><circle cx={10} cy={25} r={30} fill={TEAL} opacity=".14"/></g>;
  if(prop==='stairs-up')return <rect width={30} height={50} fill={P.ink} opacity=".2"/>;
  if(prop==='vault-door')return <circle cx={50} cy={95} r={44} fill={LAMP_GLOW} opacity=".1"/>;
- return null;
+ return <LongLight prop={prop}/>;
 }

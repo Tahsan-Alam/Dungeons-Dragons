@@ -1,5 +1,5 @@
 import type {GameState,GroundMark,SetPieceProp,Tile} from './types.ts';
-import {builtInTale} from './lore.ts';
+import {builtInTale,chapterPlace,LONG_PLACES_EDITION} from './lore.ts';
 import type {TaleId} from './presets.ts';
 
 /* Authored first chapters of the three built-in tales, from the approved World page samples (design canvas,
@@ -11,13 +11,14 @@ export const SET_PIECE_PROPS:readonly SetPieceProp[]=['span','shop','stall','sal
  'fence','waymark-lit','waymark-dark','standing-stone','shrine','road-on','threshold','wolf-eyes',
  'parapet','banner','retaining','slope','pillar','treasury','crown','wall-torch','wall-banner','gatepost',
  'workshop','workshop-wide','workshop-narrow','workshop-counter','worktable','worktable-invoice','sandbin','rack','rack-marked','stairs-down',
- 'pier','pier-repaired','pier-stump','niche','vault-door','sea-door','stairs-up'];
-export const GROUND_MARKS:readonly GroundMark[]=['cobble','groove','deck','loading','glass','hollow','refuge','flagstone','trampled','drop','rut','wind','ashlar','slate','tally','vault','grate'];
+ 'pier','pier-repaired','pier-stump','niche','vault-door','sea-door','stairs-up',
+ 'bramble','moonwell','shelf','shelf-empty','lectern','orrery','wreck'];
+export const GROUND_MARKS:readonly GroundMark[]=['cobble','groove','deck','loading','glass','hollow','refuge','flagstone','trampled','drop','rut','wind','ashlar','slate','tally','vault','grate','stones','pages','stars','steps','sand','bridge'];
 export const isSetPieceProp=(d:Tile['decoration']):d is SetPieceProp=>!!d&&(SET_PIECE_PROPS as readonly string[]).includes(d);
 export const isGroundMark=(d:Tile['decoration']):d is GroundMark=>!!d&&(GROUND_MARKS as readonly string[]).includes(d);
 /** How many tiles wide a prop is drawn, from its left tile. The arch's middle tile is its open, walkable gateway. */
 export const PROP_WIDTH:Partial<Record<SetPieceProp,number>>={shop:2,stall:2,'stall-skew':2,'oil-cart':2,carving:2,arch:3,shrine:3,treasury:3,
- workshop:2,'workshop-wide':2,'workshop-narrow':2,'workshop-counter':2,'vault-door':2};
+ workshop:2,'workshop-wide':2,'workshop-narrow':2,'workshop-counter':2,'vault-door':2,moonwell:2,orrery:2,wreck:3};
 /** Props that stand on the forest floor or flagstones, not on the ground in front of them. */
 const STANDS_ON_OWN_GROUND:readonly SetPieceProp[]=['fence','waymark-lit','waymark-dark','standing-stone','shrine'];
 /** The ground each way-on, stair and wall-foot prop shows, whatever is in front of it. */
@@ -144,6 +145,74 @@ export const LATER_PIECES:Partial<Record<TaleId,Record<number,SetPiece>>>={
    exit:{x:18,y:7},chest:{x:16,y:3},keeper:{x:13,y:7}},
  },
 };
+/** A long built-in tale's two middle places per region (lore edition 6): III and IV between the road and the Keeper.
+    The party arrives on the left and leaves on the right like every chapter; the guardians' starts stay open. */
+export const LONG_PIECES:Record<TaleId,Record<3|4,SetPiece>>={
+ lantern:{
+  // Bramble Crossing: a stream runs the board top to bottom. A new plank bridge carries the path over it, and two
+  // rows of stepping stones cross higher and lower. Brambles crowd the west bank; on the east bank they are cut back.
+  3:{clear:{x0:1,y0:1,x1:18,y1:12,kind:'grass'},
+   walls:[trees([...rect(1,1,7,1),...rect(12,1,18,1),[1,2],[2,2],[17,2],[18,2],[1,12],[2,12],[5,12],[13,12],[17,12],[18,12],[18,11]])],
+   ground:[{cells:[...rect(9,1,10,5),...rect(9,9,10,12)],kind:'water'},{cells:[[9,3],[10,3],[9,11],[10,11]],kind:'path',mark:'stones'},
+    {cells:rect(9,6,10,8),kind:'path',mark:'bridge'},{cells:[...rect(1,7,8,7),...rect(11,7,18,7)],kind:'path'},
+    {cells:[[5,3],[6,3],[14,11],[15,11]],kind:'water',mark:'hollow'}],
+   props:[{at:[8,2],prop:'bramble'},{at:[8,4],prop:'bramble'},{at:[8,5],prop:'bramble'},{at:[7,5],prop:'bramble'},{at:[8,9],prop:'bramble'},{at:[8,10],prop:'bramble'},{at:[7,10],prop:'bramble'},
+    {at:[11,2],prop:'bramble'},{at:[11,12],prop:'bramble'},{at:[12,12],prop:'bramble'},
+    {at:[19,6],prop:'road-on'},{at:[19,7],prop:'road-on'},{at:[19,8],prop:'road-on'}],
+   exit:{x:18,y:7},chest:{x:13,y:3}},
+  // The Moonwell: a clearing among the trees. The well shines at its centre inside a ring of standing stones on old
+  // flagstones; the lantern hook above it is empty. Flowers and mushrooms grow where the light falls.
+  4:{clear:{x0:1,y0:1,x1:18,y1:12,kind:'grass'},
+   walls:[trees([...rect(1,1,18,1),[1,2],[2,2],[5,2],[13,2],[17,2],[18,2],[18,3],[1,11],[1,12],[2,12],[6,12],[7,12],[12,12],[16,12],[17,12],[18,12],[18,11]])],
+   ground:[{cells:rect(7,4,12,9),kind:'grass',mark:'flagstone'},
+    {cells:[[15,3],[16,3],[4,11],[5,11]],kind:'water',mark:'hollow'}],
+   props:[...wide(9,6,'moonwell'),{at:[7,4],prop:'standing-stone'},{at:[12,4],prop:'standing-stone'},{at:[7,9],prop:'standing-stone'},{at:[12,9],prop:'standing-stone'},
+    {at:[19,6],prop:'road-on'},{at:[19,7],prop:'road-on'},{at:[19,8],prop:'road-on'}],
+   exit:{x:18,y:7},chest:{x:10,y:8}},
+ },
+ crown:{
+  // The Sunken Archive: a reading hall gone under. Shelves line the walls above two flooded channels, each with a
+  // dry crossing in the middle; the one emptied shelf stands dry; a lectern and fallen pages in the aisle.
+  3:{clear:{x0:1,y0:1,x1:18,y1:12,kind:'path',decoration:'ashlar'},
+   walls:[{cells:[...rect(1,1,18,1),...rect(1,12,18,12)],decoration:'masonry'}],
+   ground:[{cells:[...rect(5,4,8,4),...rect(11,4,13,4),...rect(5,10,8,10),...rect(11,10,13,10)],kind:'water'},
+    {cells:[[7,7],[11,6],[12,8],[5,8],[10,9],[15,3]],kind:'path',mark:'pages'}],
+   props:[...[5,6,7,8,11,13].map(x=>({at:[x,2] as Cell,prop:'shelf' as const})),{at:[12,2],prop:'shelf-empty'},...[5,6,7,8,11,12,13].map(x=>({at:[x,11] as Cell,prop:'shelf' as const})),
+    {at:[9,7],prop:'lectern'},{at:[3,1],prop:'wall-torch'},{at:[16,1],prop:'wall-torch'},
+    {at:[19,6],prop:'road-on'},{at:[19,7],prop:'road-on'},{at:[19,8],prop:'road-on'}],
+   exit:{x:18,y:7},chest:{x:16,y:3}},
+  // The Star Chamber: a round observatory floor inlaid with the stars. The brass orrery turns at its centre with
+  // one star missing; four pillars hold the dome; torches and banners on the far wall.
+  4:{clear:{x0:1,y0:1,x1:18,y1:12,kind:'path',decoration:'ashlar'},
+   walls:[{cells:[...rect(1,1,18,1),...rect(1,12,18,12),[1,2],[18,2],[1,11],[18,11]],decoration:'masonry'}],
+   // The inlaid floor is round: the corners of its square stay plain ashlar.
+   ground:[{cells:([...rect(7,5,12,9),[8,4],[9,4],[10,4],[11,4],[8,10],[9,10],[10,10],[11,10]] as Cell[]).filter(([x,y])=>!(y===7&&(x===9||x===10))&&!((x===7||x===12)&&(y===5||y===9))),kind:'path',mark:'stars'}],
+   props:[...wide(9,7,'orrery'),{at:[6,4],prop:'pillar'},{at:[13,4],prop:'pillar'},{at:[6,10],prop:'pillar'},{at:[13,10],prop:'pillar'},
+    {at:[4,1],prop:'wall-torch'},{at:[15,1],prop:'wall-torch'},{at:[8,1],prop:'wall-banner'},{at:[11,1],prop:'wall-banner'},
+    {at:[19,6],prop:'road-on'},{at:[19,7],prop:'road-on'},{at:[19,8],prop:'road-on'}],
+   exit:{x:18,y:7},chest:{x:10,y:3}},
+ },
+ salt:{
+  // The Tideglass Steps: three terraces down to the harbour. Low walls edge the upper terrace with a flight through
+  // the middle; a broad flight runs down to the landing; fresh glass glitters on every step.
+  3:{clear:{x0:1,y0:1,x1:18,y1:12,kind:'path',decoration:'slate'},
+   walls:[{cells:rect(1,1,18,1),decoration:'masonry'}],
+   ground:[{cells:[[9,5],[10,5],...rect(5,9,15,10)],kind:'path',mark:'steps'},{cells:rect(1,11,18,11),kind:'path',mark:'deck'},
+    {cells:rect(1,12,18,12),kind:'water'}],
+   props:[...[6,7,8,11,12,13].map(x=>({at:[x,5] as Cell,prop:'retaining' as const})),{at:[9,2],prop:'cage-lit'},{at:[12,2],prop:'crates'},{at:[17,2],prop:'crates'},
+    {at:[4,11],prop:'bollard'},{at:[15,11],prop:'bollard'},
+    {at:[19,6],prop:'road-on'},{at:[19,7],prop:'road-on'},{at:[19,8],prop:'road-on'}],
+   exit:{x:18,y:7},chest:{x:16,y:4}},
+  // The Mistwater Cove: a sandy cove under the cliffs. The smugglers' boat lies beached with its lantern hooded,
+  // their cargo stacked behind rocks; the harbour laps along the bottom.
+  4:{clear:{x0:1,y0:1,x1:18,y1:12,kind:'path',decoration:'sand'},
+   walls:[{cells:[...rect(1,1,18,1),[1,2],[2,2],[6,2],[7,2],[12,2],[17,2],[18,2],[18,3],[6,4],[12,3],[15,10],[4,11]],decoration:'rock'}],
+   ground:[{cells:[...rect(1,12,18,12),...rect(5,11,12,11)],kind:'water'}],
+   props:[...wide(8,9,'wreck'),{at:[11,5],prop:'crates'},{at:[12,5],prop:'crates'},{at:[12,6],prop:'crates'},{at:[3,11],prop:'bollard'},
+    {at:[19,6],prop:'road-on'},{at:[19,7],prop:'road-on'},{at:[19,8],prop:'road-on'}],
+   exit:{x:18,y:7},chest:{x:12,y:9}},
+ },
+};
 /** Games stamped from this edition get the Lantern Road's authored later chapters (and the shrine's light in Lantern Hunt). */
 export const LATER_PIECES_EDITION=4;
 /** The lore edition from which each tale's later chapters are authored. Older saves keep their generated maps. */
@@ -173,6 +242,8 @@ export function groundOf(game:GameState,tile:Tile):{kind:Tile['kind'];base?:Grou
  // Marks that lie on a paved floor: the chalked tally on wet slate, a grate in the vault floor.
  if(tile.decoration==='tally')return {kind:tile.kind,base:'slate',mark:'tally'};
  if(tile.decoration==='grate')return {kind:tile.kind,base:'vault',mark:'grate'};
+ // The Sunken Archive's fallen pages lie on its ashlar floor.
+ if(tile.decoration==='pages')return {kind:tile.kind,base:'ashlar',mark:'pages'};
  if(isSetPieceProp(tile.decoration)&&STANDS_ON_OWN_GROUND.includes(tile.decoration)){
   // Stand on flagstones where the clearing has them, otherwise on the forest floor.
   const near=[[0,1],[1,0],[-1,0],[0,-1]].map(([dx,dy])=>game.tiles[(tile.y+dy)*game.width+tile.x+dx]?.decoration);
@@ -192,8 +263,10 @@ export function groundOf(game:GameState,tile:Tile):{kind:Tile['kind'];base?:Grou
 export function setPieceFor(game:GameState):SetPiece|undefined {
  const tale=builtInTale(game.options.creation?.story),lore=game.lore??0;
  if(!tale)return undefined;
- if(game.scene===0)return lore>=1?SET_PIECES[tale]:undefined;
- return lore>=LATER_PIECES_SINCE[tale]?LATER_PIECES[tale]?.[game.scene]:undefined;
+ const place=chapterPlace(game);
+ if(place===0)return lore>=1?SET_PIECES[tale]:undefined;
+ if(place>=3)return lore>=LONG_PLACES_EDITION?LONG_PIECES[tale][place as 3|4]:undefined;
+ return lore>=LATER_PIECES_SINCE[tale]?LATER_PIECES[tale]?.[place]:undefined;
 }
 
 export function applySetPiece(game:GameState,piece:SetPiece){
