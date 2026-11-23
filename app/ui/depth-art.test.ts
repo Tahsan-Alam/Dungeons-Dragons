@@ -12,6 +12,7 @@ import {ART_PALETTE,TREE_TONES,worldPigment} from './artPalette.ts';
 import {groundOf,isGroundMark,isSetPieceProp,refugeEdges,SET_PIECE_PROPS,GROUND_MARKS} from '../../game/set-pieces.ts';
 import {GAME_MASTERS,HEROES,TALES} from '../../game/presets.ts';
 import type {Biome,HeroClass,Tile} from '../../game/types';
+import * as nightLight from './night-light.ts';
 
 // Render the actual TSX in Node without a browser or CSS loader. The theme is the
 // sole mocked dependency, so every asset branch and generated game fixture runs.
@@ -25,7 +26,7 @@ function load(file:string,overrides:Record<string,unknown>){
 }
 const shared={'./Theme':{useTheme:()=>presentation},'./artPalette':{ART_PALETTE,TREE_TONES,worldPigment}};
 const place=load('./PlaceArt.tsx',shared),pieces=load('./SetPieceArt.tsx',{...shared,'./PlaceArt':place}),setPieces={isGroundMark,isSetPieceProp,groundOf,refugeEdges};
-const art=load('./Art.tsx',shared),depth=load('./DepthArt.tsx',{...shared,'./Art':art,'./SetPieceArt':pieces,'../../game/set-pieces':setPieces});
+const art=load('./Art.tsx',shared),veil=load('./NightVeil.tsx',{...shared,'./night-light':nightLight}),depth=load('./DepthArt.tsx',{...shared,'./Art':art,'./SetPieceArt':pieces,'./NightVeil':veil,'../../game/set-pieces':setPieces});
 function render(component:React.ElementType,props:Record<string,unknown>){const html=renderToStaticMarkup(React.createElement(component,props));assert.doesNotMatch(html,/NaN|Infinity|<image|<filter/);return html}
 const player={id:'you',name:'Hero',heroClass:'knight' as const,color:'#ef997c',bot:false};
 
