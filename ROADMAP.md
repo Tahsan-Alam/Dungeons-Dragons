@@ -46,6 +46,7 @@ Keep this as the short checkpoint overview. Use GitHub issues for individual tas
 - [ ] Replace the chapter card panoramas with the regional day and dusk scenes.
 - [ ] Map button during play, and the full relight at victory.
 - [ ] Decide whether the creator's narrator keeps the name Aether.
+- [x] Create your own Game Master: the fourth card on the Game Master step.
 
 These are proposed next tasks, not promises that every feature lands in alpha.2. Choose a small scope together for each checkpoint.
 

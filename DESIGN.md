@@ -112,6 +112,7 @@ Built from the design canvas (Play screen page and the Chapter and Ask boards); 
 - **Ending** (`AdventureEnd.tsx`): victory in a built-in tale shows the whole road lit on the route map; otherwise the Game Master in the tale’s place.
 - **Dialogs and shell** (`realm-dialog.css`, `realm-shell.css`): the shared theme variables are reset to the realm palette on dialogs, the header, replay, notices and loading, so their existing controls follow.
 
+- **Your own Game Master.** `game/own-game-master.ts` turns the player's choices (name, who they are, Hopeful/Wry/Grave, shape, accessory, colour) into a narrator profile checked by `parseNarrator`, the same boundary as AI-made Game Masters. The tone sets the narration voice (`narratorTone`); the shape and accessory use the existing narrator avatar atlas, so no new art is generated. Built-in Game Master names are reserved because the game recognises them by name.
 - **Sealed note.** `game/secrets.ts` holds each built-in hero's secret per built-in Game Master; `sealedNoteFor` gives a player only their own, never a companion's. The play screen offers it once, after chapter I's opening (`SealedNote`, a full-screen scene with the Game Master beside a wax-sealed envelope; breaking the seal unfolds the note, signed with the Game Master's name). Which notes were opened is a per-browser convenience in local storage; the note is always in the player's own hero sheet. The note changes no rule.
 
 ## Styles
