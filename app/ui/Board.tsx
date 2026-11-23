@@ -14,10 +14,13 @@ import {groundOf,isGroundMark,isSetPieceProp,refugeEdges} from '../../game/set-p
 import {ActorSprite,spriteTop} from './ActorArt';
 import {keeperYields} from './actor-art';
 import {KeeperMarks} from './KeeperMarks';
+import {NightVeil} from './NightVeil';
+import {nightLights,nightLitTiles,nightRim} from './night-light';
 import {healthLevel} from './readability';
 import {sameBoardTerrain,rovingBoardTile,nextBoardTile,resizedBoardPan,revealedBoardPan,type BoardDirection} from './board-interaction';
 import './board-motion.css';
 import './board-view.css';
+import './night.css';
 export type Tool='move'|'attack'|'ability';
 export type BoardControls={fit:()=>void;focusActor:()=>void;zoomIn:()=>void;zoomOut:()=>void;toggleGrid:()=>void;pan:(dx:number,dy:number)=>void;isMoving:()=>boolean;isInteracting:()=>boolean};
 const Terrain=memo(function Terrain({game,grid}:{game:GameState;grid:boolean}){return <>
@@ -28,7 +31,8 @@ const Terrain=memo(function Terrain({game,grid}:{game:GameState;grid:boolean}){r
  {isSetPieceProp(t.decoration)||isGroundMark(t.decoration)?null:t.kind==='path'?<rect x="-1" y="-1" width="52" height="52" rx="10" fill={P.road}/>:t.kind==='water'?<><rect width="51" height="51" rx="8" fill={P.water}/><rect width="50" height="50" fill="url(#water-lines)"/></>:t.kind==='wall'?<path d="m5 7 32-4 10 9-3 28-33 3-8-11Z" fill={P.stone} stroke={P.stoneDark} strokeWidth="1.5"/>:((t.x*7+t.y*3)%11===0)?<path d="m20 35-4-6m4 6 4-9m0 9 4-4" fill="none" stroke={P.grassDetail} strokeWidth="1.5"/>:null}
  {t.decoration==='flower'?<g fill={P.flower}><circle cx="18" cy="24" r="3"/><circle cx="32" cy="37" r="2.5"/></g>:t.decoration==='mushroom'?<g stroke={P.bark} strokeWidth="1.3"><path d="M27 37v-7m-8-1q8-18 16 0Z" fill={P.mushroom}/></g>:t.decoration==='rock'?<path d="m14 31 6-13 16 3 4 13-17 5Z" fill={P.stone} stroke={P.stoneDark} strokeWidth="1.5"/>:t.decoration==='ruin'?<g fill={P.stoneLight} stroke={P.stoneDark} strokeWidth="1.5"><path d="m13 39 2-30 8 3 10-5 4 32Z"/><path d="m15 22 12 1m-5 9 14-1"/></g>:null}
  </g>)}
- {game.tiles.map(t=>isSetPieceProp(t.decoration)?<g key={`light${t.x},${t.y}`} transform={`translate(${t.x*50} ${t.y*50})`}><GroundLight prop={t.decoration}/></g>:null)}
+ {game.tiles.map(t=>isSetPieceProp(t.decoration)?<g key={`light${t.x},${t.y}`} className="ground-light" transform={`translate(${t.x*50} ${t.y*50})`}><GroundLight prop={t.decoration}/></g>:null)}
+ <NightVeil game={game}/>
  <RefugeEdges edges={refugeEdges(game)}/>
  {game.tiles.map(t=>isSetPieceProp(t.decoration)?<g key={`piece${t.x},${t.y}`} transform={`translate(${t.x*50} ${t.y*50})`}><FlatSetPiece prop={t.decoration}/></g>:null)}
  {grid?<rect width={game.width*50} height={game.height*50} fill="url(#board-dots)"/>:null}
@@ -172,7 +176,7 @@ export default function Board({game,actor,tool,onTile,onActor,selectedId,myTurn,
   return()=>{window.removeEventListener('pointerup',release);window.removeEventListener('pointercancel',release);window.removeEventListener('blur',cancel)};
  },[releasePointer]);
  function renderActor(a:Actor){
-  const point=projection.tileCenter(a.x,a.y),targeted=targets.has(a.id),attackable=quickTargets.has(a.id),dimmed=targets.size>0&&!targeted&&!a.defeated&&a.id!==actor?.id,hit=struck.get(a.id),depth=viewMode==='2.5d',top=depth?spriteTop(a,game.options.biome):-45;return <g key={a.id} data-x={a.x} data-y={a.y} ref={node=>{if(node)motion.nodes.current.set(a.id,node);else motion.nodes.current.delete(a.id)}} className={`board-actor ${a.hp<=0?'downed':''} ${a.defeated?keeperYields(a.keeper)?'defeated yielded':'defeated':''} ${targeted?'targeted':''} ${attackable?'attackable':''} ${dimmed?'out-of-range':''}`} style={{transform:`translate(${point.x}px, ${point.y}px)`}} pointerEvents={a.defeated?'none':undefined} role={a.defeated?undefined:'button'} aria-label={`${a.name}, ${a.hp} of ${a.maxHp} health${a.enemy?', enemy':''}${attackable?', select to attack':targeted?', valid target':''}`} tabIndex={a.defeated?undefined:0} onClick={e=>{e.stopPropagation();if(!motion.isMoving()&&Date.now()>suppressClick.current)onActor(a)}} onKeyDown={e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();e.stopPropagation();if(!motion.isMoving())onActor(a)}}}>
+  const rim=nightRim(lights,a.x,a.y),point=projection.tileCenter(a.x,a.y),targeted=targets.has(a.id),attackable=quickTargets.has(a.id),dimmed=targets.size>0&&!targeted&&!a.defeated&&a.id!==actor?.id,hit=struck.get(a.id),depth=viewMode==='2.5d',top=depth?spriteTop(a,game.options.biome):-45;return <g key={a.id} data-x={a.x} data-y={a.y} ref={node=>{if(node)motion.nodes.current.set(a.id,node);else motion.nodes.current.delete(a.id)}} className={`board-actor ${a.hp<=0?'downed':''} ${a.defeated?keeperYields(a.keeper)?'defeated yielded':'defeated':''} ${targeted?'targeted':''} ${attackable?'attackable':''} ${dimmed?'out-of-range':''} ${rim?`night-${rim.tone}`:''}`} style={{transform:`translate(${point.x}px, ${point.y}px)`,...(rim?{'--night-side':rim.side}:{})}} pointerEvents={a.defeated?'none':undefined} role={a.defeated?undefined:'button'} aria-label={`${a.name}, ${a.hp} of ${a.maxHp} health${a.enemy?', enemy':''}${attackable?', select to attack':targeted?', valid target':''}`} tabIndex={a.defeated?undefined:0} onClick={e=>{e.stopPropagation();if(!motion.isMoving()&&Date.now()>suppressClick.current)onActor(a)}} onKeyDown={e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();e.stopPropagation();if(!motion.isMoving())onActor(a)}}}>
  {attackable?<title>{`Attack ${a.name}`}</title>:null}
  {!a.defeated?<ellipse className="actor-floor-marker" cy={viewMode==='2.5d'?5:11} rx="22" ry={viewMode==='2.5d'?11:15} fill={targets.has(a.id)?P.target:a.id===game.activeActorId?P.active:a.color} stroke={a.id===selectedId?P.marker:a.enemy?P.enemyHealth:P.health} strokeWidth={a.id===selectedId?2.6:1.2} fillOpacity=".65"/>:null}
  {!a.defeated&&(targeted||attackable)?<ellipse className={`actor-target-ring ${targeted?'pulse':''}`} cy={depth?5:11} rx="27" ry={depth?15:20} stroke={P.target} strokeWidth={targeted?3:2} strokeDasharray={targeted?undefined:'4 4'}/>:null}
@@ -184,6 +188,7 @@ export default function Board({game,actor,tool,onTile,onActor,selectedId,myTurn,
  }
  // The scene camera faces the board from the front, so nearer rows (larger y) draw over farther ones.
  const scenery=useMemo(()=>game.tiles.filter(tile=>(tile.kind==='wall'||tile.decoration)&&!isGroundMark(tile.decoration)&&tile.decoration!=='span').map(tile=>({key:`prop-${tile.x}-${tile.y}`,depth:tile.y,x:tile.x,order:0,kind:'prop' as const,tile})),[game.tiles]);
+ const lights=useMemo(()=>nightLights(game),[game.tiles]),nightLit=useMemo(()=>nightLitTiles(game,lights),[game.tiles,lights]);
  const depthItems=useMemo(()=>viewMode==='2.5d'?[
   ...scenery.map(item=>({...item,faded:game.actors.some(a=>{const position=motion.depthPositions[a.id]||a;return !a.defeated&&Math.abs(position.x-item.tile.x)<=1&&item.tile.y-position.y>=0&&item.tile.y-position.y<=2})})),
   {key:'gateway',depth:game.exit.y,x:game.exit.x,order:1,kind:'gateway' as const},
@@ -213,7 +218,7 @@ export default function Board({game,actor,tool,onTile,onActor,selectedId,myTurn,
   }else if(e.key==='Enter'||e.key===' '){e.preventDefault();e.stopPropagation();if(!motion.isMoving()&&canMove)onTile(t.x,t.y)}
  }}/>})}
  </g>
- {viewMode==='2.5d'?depthItems.map(item=><g key={item.key} data-depth={item.depth}>{item.kind==='prop'?<DepthProp tile={item.tile} projection={projection} faded={item.faded}/>:item.kind==='gateway'?<DepthGateway {...game.exit} active={game.chest.opened} projection={projection}/>:item.kind==='chest'?<DepthChest {...game.chest} projection={projection}/>:renderActor(item.actor)}</g>):[...game.actors].sort((a,b)=>a.y-b.y||Number(b.defeated)-Number(a.defeated)).map(renderActor)}
+ {viewMode==='2.5d'?depthItems.map(item=><g key={item.key} data-depth={item.depth}>{item.kind==='prop'?<DepthProp tile={item.tile} projection={projection} faded={item.faded} lit={nightLit.has(`${item.tile.x},${item.tile.y}`)}/>:item.kind==='gateway'?<DepthGateway {...game.exit} active={game.chest.opened} projection={projection}/>:item.kind==='chest'?<DepthChest {...game.chest} projection={projection}/>:renderActor(item.actor)}</g>):[...game.actors].sort((a,b)=>a.y-b.y||Number(b.defeated)-Number(a.defeated)).map(renderActor)}
  {feedback.length?<g className="board-feedback" aria-hidden="true">{feedback.map(item=>{const point=projection.tileCenter(item.x,item.y);return <g key={item.key} transform={`translate(${point.x} ${point.y-36})`}><text className={`board-float ${item.kind}`} textAnchor="middle" style={{animationDelay:`${item.delay}ms`}}>{item.text}</text></g>})}</g>:null}
  </g></svg>
  <span id={keyboardHelpId} className="sr-only">Arrow keys preview a destination. Enter or Space moves. Tab leaves the tiles.</span>

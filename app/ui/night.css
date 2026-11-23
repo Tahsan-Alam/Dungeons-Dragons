@@ -1,0 +1,33 @@
+/* The board at night: dark colour mode. Light mode never shows any of this. */
+.night-veil{display:none}
+html[data-color-mode="dark"] .night-veil{display:inline}
+html[data-color-mode="dark"] .night-pools{mix-blend-mode:screen}
+
+/* A moonlit palette for the board only: cool, a little lighter than the interface's dark so open ground reads. */
+html[data-color-mode="dark"] .board-viewport{
+ --board-world:#0a121b;
+ --art-exposure:1;--world-pigment-strength:84%;
+ --world-ink:#0a1116;--world-dark:#2b3b3c;--world-grass:#1d2b2d;--world-ruin-grass:#232c34;--world-coast-grass:#1b2930;--world-grass-detail:#3c5658;
+ --world-road:#323d49;--world-road-detail:#485566;--world-water:#11283a;--world-water-light:#4c738c;--world-shore:#2d4756;
+ --world-leaf:#2b4a46;--world-leaf-light:#41635c;--world-leaf-dark:#152e2c;--world-leaf-alternate:#34574f;--world-leaf-third:#22403a;
+ --world-bark:#4a514f;--world-bark-light:#69726d;--world-stone:#5a6977;--world-stone-light:#7d8c9a;--world-stone-dark:#344250;--world-stone-deep:#202c38;
+ --world-chest:#8f87c4;--world-chest-trim:#d4d0f2;--world-reachable:#9fd3bd;--world-route:#b4dcc6;--world-marker:#d8e6ff;--world-health-track:#c6dbd5;
+}
+
+/* The day's flat glow discs give way to the night's pools. */
+html[data-color-mode="dark"] .ground-light circle{opacity:0}
+
+/* Each light keeps a soft halo at its own height. */
+html[data-color-mode="dark"] .game-board .depth-prop :is(circle[fill="#e8a840"],circle[fill="#a6e6dc"],circle[fill="#d5ecea"]){opacity:.7;mix-blend-mode:screen;filter:blur(5px)}
+
+/* Props out of the light sit in moonlight; props in a pool stay bright. */
+html[data-color-mode="dark"] .game-board .depth-prop:not(.night-lit){filter:brightness(.78) saturate(.82) hue-rotate(-6deg)}
+html[data-color-mode="dark"] .game-board .depth-prop.night-lit{filter:brightness(1.02) saturate(.95)}
+html[data-color-mode="dark"] .game-board :is(.depth-chest,.depth-gateway){filter:brightness(.9)}
+
+/* Figures never sink into the dark: a pale moon rim, or the colour of the light they stand in, on the side facing it. */
+html[data-color-mode="dark"] .game-board .board-actor>.actor-body{filter:drop-shadow(0 0 1.6px rgba(214,228,255,.6)) drop-shadow(0 2px 3px rgba(0,0,0,.55))}
+html[data-color-mode="dark"] .game-board .board-actor.night-warm>.actor-body{filter:drop-shadow(calc(var(--night-side,1) * 2px) -1px 2px rgba(255,190,110,.9)) drop-shadow(0 2px 3px rgba(0,0,0,.5))}
+html[data-color-mode="dark"] .game-board .board-actor.night-teal>.actor-body{filter:drop-shadow(calc(var(--night-side,1) * 2px) -1px 2px rgba(110,230,215,.85)) drop-shadow(0 2px 3px rgba(0,0,0,.5))}
+html[data-color-mode="dark"] .game-board .board-actor.night-sea>.actor-body{filter:drop-shadow(calc(var(--night-side,1) * 2px) -1px 2px rgba(200,236,255,.8)) drop-shadow(0 2px 3px rgba(0,0,0,.5))}
+@media (forced-colors:active){html[data-color-mode="dark"] .night-veil{display:none}}
