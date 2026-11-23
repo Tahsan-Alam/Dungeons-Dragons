@@ -8,8 +8,11 @@ import type {TaleId} from './presets.ts';
    `LORE_EDITION` is stamped on new games so saves replay with the text and rules they were played with:
    edition 1 added these openings and the opening set pieces, edition 2 the named Keepers, edition 3 the custom-tale
    boss pool and wider enemy groups (game/keepers.ts), edition 4 the Lantern Road's authored later chapters and the
-   shrine's light (game/set-pieces.ts), edition 5 the Hollow Reach's and Saltreach Harbour's authored later chapters. */
-export const LORE_EDITION=5;
+   shrine's light (game/set-pieces.ts), edition 5 the Hollow Reach's and Saltreach Harbour's authored later chapters,
+   edition 6 five distinct places for long built-in tales (two new middle places per region) and their new creatures. */
+export const LORE_EDITION=6;
+/** From this edition a long built-in tale plays five places: I, II, the region's two long places, then the Keeper's. */
+export const LONG_PLACES_EDITION=6;
 
 type Lines=Record<Narrator,readonly [string,string,string]>;
 interface TaleLore {road:string;clues:readonly [string,string,string];openings:Lines;}
@@ -53,6 +56,28 @@ const LORE:Record<TaleId,TaleLore>={
     'The Hollow Keeper of the vaults draws her glass blade. She sealed the shard to keep it safe. Show her you are not what she guards against.']}},
 };
 
+/** The two places a long built-in tale adds between chapter II and the Keeper's place (Story Bible, section 5). */
+export const LONG_PLACES:Record<TaleId,readonly [{name:string;clue:string},{name:string;clue:string}]>={
+ lantern:[{name:'Bramble Crossing',clue:'The bridge planks are new, and someone has cut the brambles back from one bank only.'},
+  {name:'The Moonwell',clue:'The moonwell still shines, but the lantern hook above it hangs empty.'}],
+ crown:[{name:'The Sunken Archive',clue:'Every shelf is soaked except one, and that one has been emptied.'},
+  {name:'The Star Chamber',clue:'The orrery still turns, and one of its brass stars is missing.'}],
+ salt:[{name:'The Tideglass Steps',clue:'Fresh glass glitters on every step down to the water.'},
+  {name:'The Mistwater Cove',clue:'A smugglers’ boat lies hidden in the cove, its lantern hooded.'}],
+};
+/** Which of the tale's places this chapter is: 0–2 are the standard three (2 is always the Keeper's), 3–4 the long
+    tale's middle places. Long built-in tales from LONG_PLACES_EDITION play 0, 1, 3, 4, 2; everything else 0, 1, 2. */
+export function chapterPlace(game:Pick<GameState,'scene'|'options'|'lore'>):number{
+ const long=game.options.duration==='long'&&(game.lore??0)>=LONG_PLACES_EDITION&&!!builtInTale(game.options.creation?.story);
+ return long?[0,1,3,4,2][game.scene]??2:game.scene%3;
+}
+/** The chapter's place name in a built-in tale, or undefined to keep the story's own locations. */
+export function placeName(game:Pick<GameState,'scene'|'options'|'lore'>):string|undefined{
+ const id=builtInTale(game.options.creation?.story),place=chapterPlace(game);
+ if(!id)return undefined;
+ return place>=3?LONG_PLACES[id][place-3].name:TALES.find(t=>t.id===id)!.story.locations[place];
+}
+
 /** The built-in tale a story is, if it is one. Custom tales never match. */
 export function builtInTale(story:StoryBlueprint|undefined):TaleId|undefined {
  if(!story)return undefined;
@@ -69,9 +94,9 @@ export function settingLine(story:StoryBlueprint|undefined):string|undefined {
 export function loreOpening(game:GameState,standard:boolean,final:boolean,goal:number):string|undefined {
  if((game.lore??0)<1)return undefined;
  const id=builtInTale(game.options.creation?.story);if(!id)return undefined;
- const lore=LORE[id],place=game.scene%3;
+ const lore=LORE[id],place=chapterPlace(game);
  if(standard)return lore.openings[game.options.narrator][place];
- return `${game.sceneName}. ${lore.clues[place]} ${game.relics} of ${goal} lantern shards recovered. ${final?'The final shard is here. Face the Hollow Keeper and bring the lantern home.':'Defeat the guardians, recover this shard, and follow Aether’s light to the next waymark.'}`;
+ return `${game.sceneName}. ${place>=3?LONG_PLACES[id][place-3].clue:lore.clues[place]} ${game.relics} of ${goal} lantern shards recovered. ${final?'The final shard is here. Face the Hollow Keeper and bring the lantern home.':'Defeat the guardians, recover this shard, and follow Aether’s light to the next waymark.'}`;
 }
 
 /** At victory, the waymarks relight along the tale's branch toward the Waylantern. */

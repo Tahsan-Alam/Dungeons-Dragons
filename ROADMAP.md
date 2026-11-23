@@ -44,7 +44,7 @@ Keep this as the short checkpoint overview. Use GitHub issues for individual tas
 - [ ] Design the boards at night (lit lanterns, torches and windows over darker ground).
 - [ ] Replace the chapter card panoramas with the regional day and dusk scenes.
 - [ ] Map button during play, and the full relight at victory.
-- [ ] Decide long runs: revisit the three stops or use the five region scene names.
+- [x] Long runs: five distinct places per built-in tale (two new middle places per region) with a new creature each.
 - [ ] Decide whether the creator's narrator keeps the name Aether.
 
 These are proposed next tasks, not promises that every feature lands in alpha.2. Choose a small scope together for each checkpoint.

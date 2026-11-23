@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {applyAction,createGame,runBots} from './engine.ts';
 import {newReplay,appendReplay,reconstructReplay} from './replay.ts';
 import {GAME_MASTERS,HEROES,TALES,SETTING} from './presets.ts';
-import {LORE_EDITION,builtInTale,settingLine} from './lore.ts';
+import {LONG_PLACES,LORE_EDITION,builtInTale,settingLine} from './lore.ts';
 import {storyGoal} from './campaign.ts';
 import type {GameOptions,GameState,Narrator} from './types.ts';
 import type {StoryBlueprint} from './creation.ts';
@@ -41,7 +41,9 @@ test('every built-in tale plays its chapters in order at every length, one shard
   assert.equal(goal,duration==='short'?1:duration==='long'?5:3,label);
   assert.equal(game.status,'victory',label);assert.equal(game.relics,goal,label);
   const played=chapters.slice(0,-1);
-  assert.deepEqual(played.map(c=>c.place),played.map((_,i)=>tale.story.locations[i%3]),label);
+  // A long tale plays five places: I, II, the region's two long places, then the Keeper's (edition 6).
+  const id=tale.id as keyof typeof LONG_PLACES,places=duration==='long'?[tale.story.locations[0],tale.story.locations[1],LONG_PLACES[id][0].name,LONG_PLACES[id][1].name,tale.story.locations[2]]:tale.story.locations;
+  assert.deepEqual(played.map(c=>c.place),played.map((_,i)=>places[i]),label);
   assert.deepEqual(played.map(c=>c.relicsBefore),played.map((_,i)=>i),label);
   // The first chapter leads with the region's visible clue.
   assert.match(played[0].opening,CLUE[tale.id],label);

@@ -2,7 +2,7 @@ import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {existsSync} from 'node:fs';
 import {fileURLToPath} from 'node:url';
-import {ENEMIES} from '../../game/engine.ts';
+import {ENEMIES,LONG_CREATURE} from '../../game/engine.ts';
 import {HEROES} from '../../game/presets.ts';
 import {ENEMY_ART} from './enemy-art-data.ts';
 import {enemyArtKey,heroArtFor,heroPlacement,enemyPlacement,KEEPER_NAME,KEEPER_BY_BIOME,TILE} from './actor-art.ts';
@@ -10,7 +10,7 @@ import {enemyArtKey,heroArtFor,heroPlacement,enemyPlacement,KEEPER_NAME,KEEPER_B
 const publicFile=(src:string)=>fileURLToPath(new URL(`../../public${src}`,import.meta.url));
 
 test('every enemy the game can spawn has artwork, numbered or not',()=>{
- for(const[biome,names]of Object.entries(ENEMIES) as [keyof typeof ENEMIES,string[]][])for(const name of names){
+ for(const[biome,names]of Object.entries(ENEMIES).map(([b,n])=>[b,[...n,LONG_CREATURE[b as keyof typeof LONG_CREATURE]]]) as [keyof typeof ENEMIES,string[]][])for(const name of names){
   const key=enemyArtKey({name},biome);assert.ok(key,`${name} needs art`);
   assert.equal(enemyArtKey({name:`${name} 3`},biome),key);
  }

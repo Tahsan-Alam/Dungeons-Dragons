@@ -16,6 +16,10 @@ export const ENEMY_ART={
  'ridge-giant':{src:'/art/enemies/ridge-giant.svg',viewBox:[34,127.8,256,348.8],anchor:[150,458],unitsPerTile:160,floats:false,portrait:[120,122,130]},
  'ridge-giant-slam':{src:'/art/enemies/ridge-giant-slam.svg',viewBox:[34,-19.3,240,495.9],anchor:[150,458],unitsPerTile:160,floats:false,portrait:[100,0,200]},
  'sealwax-ooze':{src:'/art/enemies/sealwax-ooze.svg',viewBox:[8,66,224,84],anchor:[120,136],unitsPerTile:160,floats:false,portrait:[78,52,104]},
+ // The long built-in tales' new creatures (lore edition 6), drawn for the Long tales board.
+ 'mirewisp':{src:'/art/enemies/mirewisp.svg',viewBox:[54,30,104,190],anchor:[100,214],unitsPerTile:130,floats:true,portrait:[66,52,80]},
+ 'star-moth':{src:'/art/enemies/star-moth.svg',viewBox:[16,44,178,176],anchor:[104,214],unitsPerTile:150,floats:true,portrait:[56,62,96]},
+ 'mist-eel':{src:'/art/enemies/mist-eel.svg',viewBox:[40,44,128,176],anchor:[92,214],unitsPerTile:150,floats:false,portrait:[104,50,66]},
  'ink-wisp':{src:'/art/enemies/ink-wisp.svg',viewBox:[44.8,22,69.6,200.8],anchor:[80,214],unitsPerTile:116,floats:true,portrait:[30,24,104]},
  'vault-imp':{src:'/art/enemies/vault-imp.svg',viewBox:[42,58,114.5,111.5],anchor:[104,160],unitsPerTile:120,floats:false,portrait:[84,50,76]},
  'paper-golem':{src:'/art/enemies/paper-golem.svg',viewBox:[34,30.5,140.3,237],anchor:[102,257],unitsPerTile:160,floats:false,portrait:[50,30,124]},

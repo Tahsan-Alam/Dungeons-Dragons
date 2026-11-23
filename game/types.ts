@@ -12,11 +12,13 @@ export type SetPieceProp = 'span' | 'shop' | 'stall' | 'salt-stall' | 'stall-ske
   | 'fence' | 'waymark-lit' | 'waymark-dark' | 'standing-stone' | 'shrine' | 'road-on' | 'threshold' | 'wolf-eyes'
   | 'parapet' | 'banner' | 'retaining' | 'slope' | 'pillar' | 'treasury' | 'crown' | 'wall-torch' | 'wall-banner' | 'gatepost'
   | 'workshop' | 'workshop-wide' | 'workshop-narrow' | 'workshop-counter' | 'worktable' | 'worktable-invoice' | 'sandbin' | 'rack' | 'rack-marked' | 'stairs-down'
-  | 'pier' | 'pier-repaired' | 'pier-stump' | 'niche' | 'vault-door' | 'sea-door' | 'stairs-up';
+  | 'pier' | 'pier-repaired' | 'pier-stump' | 'niche' | 'vault-door' | 'sea-door' | 'stairs-up'
+  | 'bramble' | 'moonwell' | 'shelf' | 'shelf-empty' | 'lectern' | 'orrery' | 'wreck';
 /** Marks painted on the ground: cobbles, cart grooves, pier planks, a loading square, a shard of lens glass, low water (on water tiles), the shrine's refuge, flagstones and a trampled path;
     the ridge's drop (on water tiles), cart ruts along a road, grass leaning in the wind, ashlar paving, wet slate, the chalked tally mark, damp vault stone and a drainage grate. */
 export type GroundMark = 'cobble' | 'groove' | 'deck' | 'loading' | 'glass' | 'hollow' | 'refuge' | 'flagstone' | 'trampled'
-  | 'drop' | 'rut' | 'wind' | 'ashlar' | 'slate' | 'tally' | 'vault' | 'grate';
+  | 'drop' | 'rut' | 'wind' | 'ashlar' | 'slate' | 'tally' | 'vault' | 'grate'
+  | 'stones' | 'pages' | 'stars' | 'steps' | 'sand' | 'bridge';
 /** The Hollow Keepers: the built-in tales' named finales, the custom-tale boss pool, and the untitled Keeper of edition-2 custom tales. */
 export type KeeperKind = 'wolf' | 'dragon' | 'warden' | 'hollow' | 'thornhound' | 'grey-wolf' | 'giant' | 'drake' | 'eye' | 'tide-warden';
 export interface Cell { x: number; y: number; }

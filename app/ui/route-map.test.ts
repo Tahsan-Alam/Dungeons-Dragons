@@ -42,9 +42,25 @@ test('short and long runs keep to the tale’s three stops without relighting a 
  assert.equal(sv.victory,true);assert.deepEqual(sv.fresh,['q1','q2','h1','h2','cw']);
  let long=start(tale.story,'long');const seen:{here:number|null;fresh:string[]}[]=[];
  for(let i=0;i<5;i++){const v=routeView(long)!;seen.push({here:v.here,fresh:v.fresh});long=clearChapter(long);}
- assert.deepEqual(seen.map(s=>s.here),[0,1,2,0,1]);
- assert.deepEqual(seen.map(s=>s.fresh.length),[0,1,1,0,0]);
+ assert.deepEqual(seen.map(s=>s.here),[0,1,1,1,2]);
+ assert.deepEqual(seen.map(s=>s.fresh.length),[0,1,0,0,1]);
  assert.equal(routeHeadline(routeView(start(tale.story,'long'))!,tale.story.locations),'The harbour road is still dark');
+ // An older long save (before lore edition 6) circles back to the first two stops.
+ let old=start(tale.story,'long');old.lore=5;const olds:(number|null)[]=[];
+ for(let i=0;i<5;i++){olds.push(routeView(old)!.here);old=clearChapter(old);}
+ assert.deepEqual(olds,[0,1,2,0,1]);
+});
+
+test('a long built-in tale walks its two middle places on the road to the third stop, then relights it',()=>{
+ const tale=TALES[0],places=tale.story.locations;let game=start(tale.story,'long');const seen:{here:number|null;fresh:string[];place?:string}[]=[];
+ for(let i=0;i<5;i++){const v=routeView(game)!;seen.push({here:v.here,fresh:v.fresh,place:v.place});if(i===2){
+   assert.equal(routeHeadline(v,places),'On along the west road to Bramble Crossing');
+   assert.equal(describeRoute(v,places),'The west road is lit from Starfall Market to the forest road. Next: Bramble Crossing, chapter 3 of 5.');}
+  game=clearChapter(game);}
+ assert.deepEqual(seen.map(s=>s.here),[0,1,1,1,2]);
+ assert.deepEqual(seen.map(s=>s.fresh.length),[0,1,0,0,1]);
+ assert.deepEqual(seen.map(s=>s.place),['Starfall Market','The forest road','Bramble Crossing','The Moonwell','The lantern shrine']);
+ assert.equal(game.status,'victory');assert.deepEqual(routeView(game)!.fresh,['w2']);
 });
 
 test('custom tales get no map',()=>{

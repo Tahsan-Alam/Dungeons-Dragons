@@ -24,7 +24,7 @@ function load(file:string,overrides:Record<string,unknown>){
  return exports;
 }
 const shared={'./Theme':{useTheme:()=>presentation},'./artPalette':{ART_PALETTE,TREE_TONES,worldPigment}};
-const place=load('./PlaceArt.tsx',shared),pieces=load('./SetPieceArt.tsx',{...shared,'./PlaceArt':place}),setPieces={isGroundMark,isSetPieceProp,groundOf,refugeEdges};
+const longPlace=load('./LongPlaceArt.tsx',shared),place=load('./PlaceArt.tsx',{...shared,'./LongPlaceArt':longPlace}),pieces=load('./SetPieceArt.tsx',{...shared,'./PlaceArt':place}),setPieces={isGroundMark,isSetPieceProp,groundOf,refugeEdges};
 const art=load('./Art.tsx',shared),depth=load('./DepthArt.tsx',{...shared,'./Art':art,'./SetPieceArt':pieces,'../../game/set-pieces':setPieces});
 function render(component:React.ElementType,props:Record<string,unknown>){const html=renderToStaticMarkup(React.createElement(component,props));assert.doesNotMatch(html,/NaN|Infinity|<image|<filter/);return html}
 const player={id:'you',name:'Hero',heroClass:'knight' as const,color:'#ef997c',bot:false};
