@@ -110,6 +110,8 @@ Built from the design canvas (Play screen page and the Chapter and Ask boards); 
 - **Ending** (`AdventureEnd.tsx`): victory in a built-in tale shows the whole road lit on the route map; otherwise the Game Master in the tale’s place.
 - **Dialogs and shell** (`realm-dialog.css`, `realm-shell.css`): the shared theme variables are reset to the realm palette on dialogs, the header, replay, notices and loading, so their existing controls follow.
 
+- **Your own Game Master.** `game/own-game-master.ts` turns the player's choices (name, who they are, Hopeful/Wry/Grave, shape, accessory, colour) into a narrator profile checked by `parseNarrator`, the same boundary as AI-made Game Masters. The tone sets the narration voice (`narratorTone`); the shape and accessory use the existing narrator avatar atlas, so no new art is generated. Built-in Game Master names are reserved because the game recognises them by name.
+
 ## Styles
 
 The interface is hand-written CSS in `app/`; there is no component library. Before adding `!important`, look for the rule being overridden and raise or reorder that instead. The overrides that remain are reduced-motion rules, focus and pressed states, and a few specificity conflicts between `globals.css` and the `.play-refined` and creator layers that still need untangling.

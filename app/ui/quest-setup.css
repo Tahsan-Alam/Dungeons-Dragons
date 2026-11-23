@@ -128,6 +128,47 @@ html:root[data-color-mode][data-theme] body .realm button.qs-seg-option[aria-che
 .qs-advanced label{display:flex;flex-direction:column;gap:5px;font:600 12.5px Inter,system-ui,sans-serif;color:#d2cbbf}
 .qs-advanced :is(input,select){min-height:40px;padding:6px 10px;border:1px solid var(--realm-edge);border-radius:2px;background:#0f141b;color:var(--realm-ink);font:500 14px Inter,system-ui,sans-serif}
 
+
+/* Your own Game Master: the fourth card, and a builder in the preview (design canvas, Your own Game Master). */
+.qs-own-card-face{flex:none;display:grid;place-items:center;width:84px;height:104px;overflow:hidden;border-radius:2px;background:radial-gradient(circle at 50% 40%,#2a3442,#141a22)}
+.qs-own-face{display:inline-grid;place-items:center;flex:none;overflow:hidden;border-radius:2px;background:radial-gradient(circle at 50% 40%,#2a3442,#141a22)}
+.qs-gm-preview.qs-own{display:grid;grid-template-columns:minmax(0,42%) minmax(0,1fr);aspect-ratio:auto;height:clamp(300px,var(--qs-h),760px);width:100%}
+.qs-own .qs-gm-stage{position:relative}
+.qs-own-glow{position:absolute;left:50%;top:6%;width:90%;height:62%;transform:translateX(-50%);background:radial-gradient(ellipse at 50% 50%,color-mix(in srgb,var(--own-colour,#87bdcf) 42%,transparent),transparent 68%);pointer-events:none}
+.qs-own .qs-gm-scene{filter:saturate(.9)}
+.qs-own-figure{position:absolute;left:50%;top:12%;width:min(74%,290px);transform:translateX(-50%);display:grid;place-items:center;filter:drop-shadow(0 10px 22px rgba(0,0,0,.55))}
+.qs-own-sample{position:absolute;left:16px;right:16px;bottom:14px;margin:0;padding:10px 14px;display:flex;flex-direction:column;gap:3px;background:rgba(10,14,20,.86);border:1px solid #2f3946;border-left:3px solid var(--own-colour,#87bdcf);font:italic 400 16px/1.4 var(--realm-prose);color:#E7DFD0}
+.qs-own-sample .realm-eyebrow{font-style:normal;text-align:left}
+.qs-own-form{box-sizing:border-box;min-height:0;overflow:auto;padding:22px 26px;display:flex;flex-direction:column;gap:14px;background:#0f141b;border-left:1px solid #2a3340}
+.qs-own-form .realm-eyebrow{display:block;margin-bottom:6px;text-align:left}
+.qs-own-name input{box-sizing:border-box;width:100%;padding:6px 0 8px;border:0;border-bottom:1px solid #435263;background:none;color:var(--realm-ink);font:600 clamp(22px,2.2vw,30px)/1.15 var(--realm-serif);letter-spacing:.02em}
+.qs-own-name input::placeholder{color:#4f5b68;font-style:italic;font-family:var(--realm-prose);font-weight:400}
+.qs-own-name input:focus{outline:none;border-bottom-color:#9CC9EA}
+.qs-own-taken{margin:-6px 0 0;font:600 12.5px Inter,system-ui,sans-serif;color:#e9a48a}
+.qs-own-ideas{margin:-6px 0 0;display:flex;flex-wrap:wrap;align-items:center;gap:6px;font:500 12.5px Inter,system-ui,sans-serif;color:#8d99a6}
+.qs-own-who textarea{box-sizing:border-box;width:100%;resize:none;padding:8px 10px;border:1px solid #2f3946;border-radius:2px;background:#141a22;color:#E7DFD0;font:400 16px/1.4 var(--realm-prose)}
+.qs-own-who textarea::placeholder{color:#5f6b78;font-style:italic}
+.qs-own-who textarea:focus{outline:1.5px solid #9CC9EA;outline-offset:1px}
+.qs-own-set{margin:0;padding:0;border:0;min-width:0}
+.qs-own-tones{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.qs-own-tone{display:flex;flex-direction:column;align-items:flex-start;gap:2px;padding:9px 10px;text-align:left}
+.qs-own-tone strong{font:600 15px var(--realm-serif);color:var(--realm-ink)}
+.qs-own-tone span{font:500 12px Inter,system-ui,sans-serif;color:#b3bcc6}
+.qs-own-tone[aria-checked="true"],.qs-own-form-pick[aria-checked="true"]{border-color:#9CC9EA !important;background:#1d2733 !important}
+.qs-own-forms{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:6px}
+.qs-own-form-pick{display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px 2px 5px}
+.qs-own-form-pick span{font:600 11.5px Inter,system-ui,sans-serif;color:#b3bcc6}
+.qs-own-row{display:flex;flex-direction:column;gap:14px}
+.qs-own-chips{display:flex;flex-wrap:wrap;gap:6px}
+html:root[data-color-mode][data-theme] body .realm button.qs-own-chip,.qs-own-chip{min-height:32px;padding:0 11px;border:1px solid #435263;border-radius:2px;background:#1a212b;box-shadow:none;color:#E7DFD0;font:600 12.5px Inter,system-ui,sans-serif;cursor:pointer}
+html:root[data-color-mode][data-theme] body .realm button.qs-own-chip[aria-checked="true"],.qs-own-chip[aria-checked="true"]{border-color:#9CC9EA;background:#24303d;color:#F1E5CF}
+.qs-own-swatches{display:flex;flex-wrap:wrap;gap:8px}
+html:root[data-color-mode][data-theme] body .realm button.qs-own-swatch,.qs-own-swatch{width:28px;height:28px;min-height:28px;padding:0;border:2px solid #0f141b;border-radius:50%;box-shadow:0 0 0 1px #435263;cursor:pointer}
+html:root[data-color-mode][data-theme] body .realm button.qs-own-swatch[aria-checked="true"],.qs-own-swatch[aria-checked="true"]{box-shadow:0 0 0 2px #F1E5CF}
+.qs-own-note{margin:0;padding-top:10px;border-top:1px solid #2a3340;font:500 12.5px/1.45 Inter,system-ui,sans-serif;color:#8d99a6}
+.qs-setout-own{display:grid;place-items:end center;width:24%}
+.tc-own{display:grid;place-items:end center}
+
 /* ---- Phones and narrow windows: one column, art first. ---- */
 @media(max-width:900px){
  /* The step grows with its content and the page scrolls, so the footer follows the last row and stays pinned to the bottom instead of floating over the step. */
@@ -145,6 +186,18 @@ html:root[data-color-mode][data-theme] body .realm button.qs-seg-option[aria-che
  .qs-gm-stage{position:relative;aspect-ratio:860/516}
  .qs-gm-text{position:static;width:auto;padding:16px;background:#0c1016}
  .qs-tale{grid-template-columns:minmax(0,1fr);grid-template-areas:"preview" "side" "line"}
+ .qs-gm-cards{display:grid;grid-template-columns:repeat(4,minmax(0,1fr))}
+ .qs-own-card-face{width:100%;height:auto;aspect-ratio:84/104}
+ .qs-gm-preview.qs-own{display:flex;flex-direction:column;height:auto}
+ .qs-own .qs-gm-stage{aspect-ratio:auto;display:flex;flex-direction:column}
+ .qs-own .qs-gm-stage>.qs-gm-scene{height:240px;position:absolute;inset:0 0 auto 0}
+ .qs-own-glow{height:240px;top:0}
+ .qs-own-figure{position:relative;left:auto;top:auto;transform:none;align-self:center;width:200px;height:240px;place-items:center}
+ .qs-own-sample{position:relative;left:auto;right:auto;bottom:auto;margin:0 12px 4px}
+ .qs-gm:has(.qs-own) {scroll-margin-top:12px}
+ .qs-own-form{border-left:0;padding:16px;overflow:visible}
+ .qs-own-forms{grid-template-columns:repeat(3,minmax(0,1fr))}
+ .qs-own-row{grid-template-columns:minmax(0,1fr)}
  .qs-gm-line{flex-direction:column;align-items:stretch}
  .qs-hero-stage{order:-1}
  .qs-sheet-body{grid-template-columns:minmax(0,1fr)}

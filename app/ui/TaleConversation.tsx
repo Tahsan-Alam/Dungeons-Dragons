@@ -10,6 +10,7 @@ import {useLiveNarrator} from './useLiveNarrator';
 import {adoptLegacyAIUnlock,useAIPreference} from './ai-preferences';
 import LiveTranscript from './LiveTranscript';
 import {RealmButton,RealmTools,QuestSteps,Portrait} from './RealmKit';
+import NarratorAvatar from './NarratorAvatar';
 
 type Line={role:'player'|'narrator';text:string};
 type Access={available:boolean;unlocked:boolean;audioAvailable:boolean};
@@ -72,7 +73,7 @@ export default function TaleConversation({gm,initialIdea,initialStory,onKeep,onB
    <section className="tc-scene" aria-label={`${gm.title} in their scene`}>
     <img className="tc-backdrop" src={gm.scene} alt=""/>
     <span className="tc-shadow" aria-hidden="true"/>
-    <img className={`tc-figure${live.speaking?' speaking':''}`} src={gm.art} alt={`${gm.title}, ${gm.realName}`}/>
+    {gm.art?<img className={`tc-figure${live.speaking?' speaking':''}`} src={gm.art} alt={`${gm.title}, ${gm.realName}`}/>:<div className={`tc-figure tc-own${live.speaking?' speaking':''}`} role="img" aria-label={`${gm.title}, ${gm.realName}`}><NarratorAvatar profile={gm.profile} speaking={live.speaking}/></div>}
    </section>
    <section className="tc-tale realm-panel" aria-label="Your tale" aria-live="polite">
     {shown&&scene?<>
@@ -90,7 +91,7 @@ export default function TaleConversation({gm,initialIdea,initialStory,onKeep,onB
   <section className="tc-dialogue" aria-label="Conversation">
    <div className="tc-dialogue-face">
     <div className="tc-dialogue-head">
-     <Portrait art={gm.art} face={gm.face} ratio={GAME_MASTER_ART_RATIO} width={40} height={40} scale={2.4} eye={0.4}/>
+     {gm.art?<Portrait art={gm.art} face={gm.face} ratio={GAME_MASTER_ART_RATIO} width={40} height={40} scale={2.4} eye={0.4}/>:<span className="qs-own-face" style={{width:40,height:40}}><NarratorAvatar profile={gm.profile} compact size={40}/></span>}
      <span className="realm-eyebrow">{gm.title}</span>
      <span className="tc-mode">{enabled?'AI storyteller':'Offline storyteller'}</span>
      <button type="button" className="qs-link tc-log-toggle" aria-expanded={logOpen} onClick={()=>setLogOpen(!logOpen)}>Dialogue log</button>

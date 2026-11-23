@@ -46,6 +46,7 @@ Keep this as the short checkpoint overview. Use GitHub issues for individual tas
 - [ ] Map button during play, and the full relight at victory.
 - [ ] Decide long runs: revisit the three stops or use the five region scene names.
 - [ ] Decide whether the creator's narrator keeps the name Aether.
+- [x] Create your own Game Master: the fourth card on the Game Master step.
 
 These are proposed next tasks, not promises that every feature lands in alpha.2. Choose a small scope together for each checkpoint.
 
