@@ -17,6 +17,11 @@ export const NIGHT_SOURCES:Partial<Record<SetPieceProp,{cx:number;cy:number;r:nu
  'stairs-down':{cx:-6,cy:25,r:34,tone:'teal'},
  'sea-door':{cx:0,cy:25,r:60,tone:'sea'},
  'vault-door':{cx:50,cy:95,r:44,tone:'warm'},
+ // The long tales' middle places (app/ui/LongPlaceArt.tsx, LongLight).
+ moonwell:{cx:50,cy:20,r:70,tone:'teal'},
+ orrery:{cx:50,cy:20,r:56,tone:'warm'},
+ lectern:{cx:38,cy:22,r:34,tone:'warm'},
+ wreck:{cx:-6,cy:20,r:30,tone:'warm'},
 };
 
 /** Light colours: [core, spill, rim on a figure standing in it]. */

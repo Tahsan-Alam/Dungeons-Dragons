@@ -16,15 +16,16 @@ const board=(props:[number,number,string][],water:[number,number][]=[]):GameStat
 const read=(f:string)=>readFileSync(new URL(f,import.meta.url),'utf8');
 
 test('every light the day board draws has a night light of the same colour',()=>{
- const glow:Record<string,string>={'LAMP_GLOW':'warm','LENS':'teal','TEAL':'teal','SEA':'sea'};
- for(const file of ['./SetPieceArt.tsx','./PlaceArt.tsx']){
-  const src=read(file),body=src.slice(src.search(/export function (GroundLight|PlaceLight)/));
+ const glow:Record<string,string>={'LAMP_GLOW':'warm','LENS':'teal','TEAL':'teal','SEA':'sea'};let seen=0;
+ for(const file of ['./SetPieceArt.tsx','./PlaceArt.tsx','./LongPlaceArt.tsx']){
+  const src=read(file),body=src.slice(src.search(/export function (GroundLight|PlaceLight|LongLight)/));
   for(const m of body.matchAll(/prop==='([a-z-]+)'\)return <[^;]*?fill=\{(LAMP_GLOW|LENS|TEAL|SEA)\}/g)){
    const source=NIGHT_SOURCES[m[1] as keyof typeof NIGHT_SOURCES];
-   assert.ok(source,`${m[1]} has a night light`);
+   assert.ok(source,`${m[1]} has a night light`);seen++;
    if(m[1]!=='sea-door')assert.equal(source.tone,glow[m[2]],`${m[1]} keeps its colour at night`);
   }
  }
+ assert.equal(seen,Object.keys(NIGHT_SOURCES).length,'every lit prop is checked');
 });
 
 test('a lamp throws a warm pool; a figure beside it takes a rim on the side facing it, one far away does not',()=>{
