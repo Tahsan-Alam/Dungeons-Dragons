@@ -23,6 +23,8 @@ import {turnGuidance} from './turn-guidance';
 import {upcomingTurns} from './turn-order';
 import {healthLevel} from './readability';
 import type {Exchange} from './narrator-thread';
+import SealedNote,{SealSigil,sealedOpened,markSealedOpened} from './SealedNote';
+import {sealedNoteFor} from '../../game/secrets';
 import './controls.css';
 import './realm-kit.css';
 import './play-hud.css';
@@ -34,17 +36,24 @@ type Props={game:GameState;room:RoomView|null;session:Session|null;busy:boolean;
  voice:boolean;speaking?:boolean;onVoice:()=>void;music:boolean;onMusic:()=>void;onSkip:()=>void;rollsPending?:boolean;
  thread?:Exchange[];onListen?:(line:string)=>void;onNarrate?:()=>unknown;onSteer?:(text:string)=>Promise<unknown>;
  /** Opens the Journal on a tab from outside, for example Ask’s Dialogue Log. */
- journalRequest?:{tab:JournalTab;at:number}|null};
+ journalRequest?:{tab:JournalTab;at:number}|null;
+ /** A chapter scene is over the table: the sealed note waits until it closes. */
+ sceneOpen?:boolean};
 
 /** The play screen: the board fills the window and the controls float over the scene (design canvas, Play screen page). */
-export default function PlayTable({game,room,session,busy,connection,onAction,onMenu,onHelp,onAI,onSettings,onTableDialogChange,voice,speaking=false,onVoice,music,onMusic,onSkip,rollsPending=false,thread=[],onListen,onNarrate,onSteer,journalRequest}:Props){
+export default function PlayTable({game,room,session,busy,connection,onAction,onMenu,onHelp,onAI,onSettings,onTableDialogChange,voice,speaking=false,onVoice,music,onMusic,onSkip,rollsPending=false,thread=[],onListen,onNarrate,onSteer,journalRequest,sceneOpen=false}:Props){
  const {preferences}=useControls();const board=useRef<BoardControls>(null),journalOpener=useRef<HTMLElement|null>(null),actionPending=useRef(false);
  const[confirmEnd,setConfirmEnd]=useState(false),[moving,setMoving]=useState(false),[tool,setTool]=useState<Tool>('move'),[selectedId,setSelectedId]=useState(''),[detailId,setDetailId]=useState<string|null>(null);
  const[ownRoll,setOwnRoll]=useState<{request:AttackRollRequest;label:string}|null>(null),[journal,setJournal]=useState<JournalTab|null>(null),[sideTab,setSideTab]=useState<'party'|'foes'>('party'),[soundOpen,setSoundOpen]=useState(false),[sideOpen,setSideOpen]=useState(false),[seen,setSeen]=useState(game.eventSequence),[rollShown,setRollShown]=useState(false);
  const detail=game.actors.find(a=>a.id===detailId);
- const tableDialogOpen=!!detail||confirmEnd;
- useEffect(()=>{onTableDialogChange(tableDialogOpen);return()=>onTableDialogChange(false)},[tableDialogOpen,onTableDialogChange]);
  const me=session?.playerId||'you',actor=game.actors.find(a=>a.id===game.activeActorId),mine=game.actors.find(a=>a.playerId===me);
+ const note=sealedNoteFor(game,me),noteKey=`${game.options.seed}:${me}`;
+ const[noteShown,setNoteShown]=useState(false),[noteOpened,setNoteOpened]=useState(()=>sealedOpened(noteKey)),noteAsked=useRef(false);
+ // The quest begins: once chapter I's opening closes, the Game Master hands this player their sealed note.
+ useEffect(()=>{if(note&&game.scene===0&&game.status==='playing'&&!sceneOpen&&!noteOpened&&!noteAsked.current){noteAsked.current=true;setNoteShown(true)}},[note,game.scene,game.status,sceneOpen,noteOpened]);
+ function closeNote(opened:boolean){setNoteShown(false);if(opened){markSealedOpened(noteKey);setNoteOpened(true)}}
+ const tableDialogOpen=!!detail||confirmEnd||noteShown;
+ useEffect(()=>{onTableDialogChange(tableDialogOpen);return()=>onTableDialogChange(false)},[tableDialogOpen,onTableDialogChange]);
  const myTurn=!!actor&&!actor.bot&&actor.playerId===me&&game.status==='playing';
  const clear=encounterCleared(game),quest=getQuestAction(game,actor),target=game.actors.find(a=>a.id===selectedId);
  useEffect(()=>{setTool('move')},[game.activeActorId,game.round,game.scene]);
@@ -178,6 +187,7 @@ export default function PlayTable({game,room,session,busy,connection,onAction,on
   <div className={`game-connection ${connection==='reconnecting'?'connection-warning':''}`} aria-live="polite">{connection==='reconnecting'?'Reconnecting… Your game is saved.':null}</div>
 
   {confirmEnd?<Modal title="End this turn?" onClose={()=>setConfirmEnd(false)}><div className="confirm-turn"><p>You still have an action available.</p><div><button className="button paper" onClick={()=>setConfirmEnd(false)}>Keep playing</button><button className="button primary" onClick={()=>{setConfirmEnd(false);act({type:'end'})}}>End turn</button></div></div></Modal>:null}
+  {noteShown&&note?<SealedNote game={game} heroName={note.hero.name} gmId={note.gm.id} gmName={note.gm.title} gmRealName={note.gm.realName} gmArt={note.gm.art} secret={note.secret} opened={noteOpened} onClose={closeNote}/>:null}
   {detail?<Modal title={detail.name} onClose={()=>setDetailId(null)} wide>{(()=>{const preset=heroArtFor(detail),named=!!preset&&(preset.name.toLowerCase()===detail.name.toLowerCase()||preset.short.toLowerCase()===detail.name.toLowerCase());const info=CLASS_INFO[detail.heroClass];
    return <div className="hs">
     <div className="hs-art">{preset?<img src={preset.art} alt=""/>:<ActorPortrait actor={detail} biome={game.options.biome}/>}</div>
@@ -188,6 +198,12 @@ export default function PlayTable({game,room,session,busy,connection,onAction,on
      <dl className="hs-stats"><div><dt>Armour</dt><dd>{detail.ac}</dd></div><div><dt>Speed</dt><dd>{detail.speed} tiles</dd></div><div><dt>Initiative</dt><dd>{detail.initiative}</dd></div><div><dt>Potions</dt><dd>{detail.potions}</dd></div><div><dt>Power uses</dt><dd>{detail.abilityUses}</dd></div><div><dt>Reach</dt><dd>{info.range} {info.range===1?'tile':'tiles'}</dd></div></dl>
      <p className="hs-ability"><strong>{info.ability}</strong> · {detail.abilityUses} {detail.abilityUses===1?'use':'uses'} left this encounter.</p>
      {named?<p className="hs-intro">{preset!.intro}</p>:null}
+     {note&&detail.id===mine?.id?<div className={`hs-sealed ${noteOpened?'open':''}`}>
+      <span className="hs-sealed-seal" aria-hidden="true"><SealSigil gm={note.gm.id}/></span>
+      <div><p className="hs-sealed-kicker">Sealed note · only you see this</p>
+       {noteOpened?<p className="hs-sealed-text"><strong>{note.gm.title} knows.</strong> {note.secret}</p>
+       :<button type="button" className="hs-sealed-open" onClick={()=>{setDetailId(null);setNoteShown(true)}}>Break the seal</button>}</div>
+     </div>:null}
     </div>
    </div>})()}</Modal>:null}
  </div>;

@@ -112,6 +112,8 @@ Built from the design canvas (Play screen page and the Chapter and Ask boards); 
 - **Ending** (`AdventureEnd.tsx`): victory in a built-in tale shows the whole road lit on the route map; otherwise the Game Master in the tale’s place.
 - **Dialogs and shell** (`realm-dialog.css`, `realm-shell.css`): the shared theme variables are reset to the realm palette on dialogs, the header, replay, notices and loading, so their existing controls follow.
 
+- **Sealed note.** `game/secrets.ts` holds each built-in hero's secret per built-in Game Master; `sealedNoteFor` gives a player only their own, never a companion's. The play screen offers it once, after chapter I's opening (`SealedNote`, a full-screen scene with the Game Master beside a wax-sealed envelope; breaking the seal unfolds the note, signed with the Game Master's name). Which notes were opened is a per-browser convenience in local storage; the note is always in the player's own hero sheet. The note changes no rule.
+
 ## Styles
 
 The interface is hand-written CSS in `app/`; there is no component library. Before adding `!important`, look for the rule being overridden and raise or reorder that instead. The overrides that remain are reduced-motion rules, focus and pressed states, and a few specificity conflicts between `globals.css` and the `.play-refined` and creator layers that still need untangling.

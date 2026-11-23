@@ -1,0 +1,72 @@
+/* The sealed note: the Game Master hands one player their hero's secret as the quest begins (design canvas, Sealed note). */
+.sn-scene{position:fixed;inset:0;width:100vw;height:100dvh;max-width:none;max-height:none;margin:0;padding:0;border:0;overflow:hidden;background:#0d1218;color:#F1E5CF;font-family:Inter,system-ui,sans-serif;--sn-wax:#a8321f;--sn-wax-hi:#d65a40;--sn-wax-lo:#6e1f15;--sn-glow:rgba(255,190,110,.22)}
+.sn-scene.gm-survivor{--sn-glow:rgba(214,140,190,.2)}
+.sn-scene.gm-cursed{--sn-glow:rgba(170,140,255,.2)}
+.sn-scene::backdrop{background:#05080c}
+.sn-backdrop{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center 40%}
+.sn-wash{position:absolute;inset:0;background:radial-gradient(ellipse 40% 50% at 62% 55%,var(--sn-glow),transparent 70%),linear-gradient(180deg,rgba(8,11,16,.6),rgba(8,11,16,.4) 40%,rgba(8,11,16,.85))}
+.sn-figure{position:absolute;left:clamp(24px,7vw,120px);bottom:clamp(40px,8vh,90px);height:min(62vh,460px);aspect-ratio:400/520;display:flex;align-items:flex-end;justify-content:center}
+.sn-figure img{width:100%;height:100%;object-fit:contain;object-position:bottom;filter:drop-shadow(0 8px 20px rgba(0,0,0,.55))}
+.sn-shadow{position:absolute;left:18%;right:18%;bottom:-6px;height:12px;border-radius:50%;background:rgba(3,5,8,.75);z-index:-1}
+.sn-title{position:absolute;left:48px;top:36px;right:48px}
+.sn-title p{margin:0;font:600 13px Inter,system-ui,sans-serif;letter-spacing:.3em;text-transform:uppercase;color:#b9c9d8}
+.sn-title h1{margin:4px 0 0;font:600 clamp(28px,4vw,44px)/1.1 Cinzel,'EB Garamond',Georgia,serif;letter-spacing:.03em;text-shadow:0 2px 14px rgba(0,0,0,.8)}
+.sn-stage{position:absolute;left:calc(clamp(24px,7vw,120px) + min(62vh,460px) * .77 + 8px);top:50%;width:min(560px,calc(100% - clamp(24px,7vw,120px) - min(62vh,460px) * .77 - 56px));transform:translateY(-44%);display:flex;flex-direction:column;align-items:center;gap:26px}
+.sn-letter{position:relative;width:min(540px,100%);transform:rotate(-1.5deg);filter:drop-shadow(0 18px 30px rgba(0,0,0,.6))}
+.sn-paper,.sn-envelope{position:relative;box-sizing:border-box;color:#3a2c1e;background:radial-gradient(ellipse at 30% 20%,#f6eed8,#e8d9b8 60%,#d6c29a)}
+/* The envelope: the flap points down to the wax; the name is written below it. */
+.sn-envelope{height:340px;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:10px;padding:0 44px 30px;box-shadow:inset 0 0 40px rgba(120,84,40,.22)}
+.sn-flap{position:absolute;left:0;right:0;top:0;height:40%;background:linear-gradient(180deg,#eee2c4,#dccaa2);clip-path:polygon(0 0,100% 0,50% 100%)}
+.sn-flap::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,transparent 60%,rgba(90,60,30,.18));clip-path:polygon(0 0,100% 0,50% 100%)}
+.sn-seal{position:absolute;left:50%;top:40%;width:78px;height:78px;margin:-39px 0 0 -39px;display:grid;place-items:center;border-radius:47% 53% 50% 48%;color:#f3c3ae;
+ background:radial-gradient(circle at 38% 32%,var(--sn-wax-hi),var(--sn-wax) 58%,var(--sn-wax-lo));box-shadow:inset 0 0 0 6px rgba(90,20,12,.45),0 3px 8px rgba(0,0,0,.4)}
+.sn-seal .sn-sigil{width:40px;height:40px;opacity:.9}
+.sn-to{margin:0;display:flex;flex-direction:column;align-items:center;font:italic 500 30px/1.1 'EB Garamond',Georgia,serif;color:#2e2216}
+.sn-to span{font:600 11px Inter,system-ui,sans-serif;font-style:normal;letter-spacing:.2em;text-transform:uppercase;color:#8a3a2a;margin-bottom:4px}
+.sn-hint{margin:0;max-width:400px;font:italic 400 16px/1.45 'EB Garamond',Georgia,serif;color:#6b5440;text-align:center}
+/* The opened note. */
+.sn-paper{padding:40px 44px 28px;display:flex;flex-direction:column;gap:12px;box-shadow:inset 0 0 40px rgba(120,84,40,.25);
+ clip-path:polygon(0 3px,6% 0,22% 2px,41% 0,63% 3px,80% 0,100% 2px,99.6% 40%,100% 70%,99.5% 100%,72% 99%,50% 100%,24% 99%,0 100%,.4% 60%);animation:sn-unfold .55s cubic-bezier(.2,.8,.3,1) both}
+.sn-broken{position:absolute;right:26px;top:18px;display:flex;gap:6px}
+.sn-half{position:relative;width:26px;height:52px;overflow:hidden;color:#f3c3ae}
+.sn-half::before{content:"";position:absolute;top:0;width:52px;height:52px;border-radius:50%;background:radial-gradient(circle at 38% 32%,var(--sn-wax-hi),var(--sn-wax) 58%,var(--sn-wax-lo));box-shadow:inset 0 0 0 4px rgba(90,20,12,.45)}
+.sn-half.left{transform:rotate(-14deg)}.sn-half.right{transform:translateY(5px) rotate(18deg)}
+.sn-half.left::before{left:0}.sn-half.right::before{right:0}
+.sn-half .sn-sigil{position:absolute;top:13px;width:26px;height:26px;opacity:.85}
+.sn-half.left .sn-sigil{left:13px}.sn-half.right .sn-sigil{right:13px}
+.sn-from{margin:0;padding-right:70px;font:600 12px Inter,system-ui,sans-serif;letter-spacing:.16em;text-transform:uppercase;color:#8a3a2a}
+.sn-secret{margin:0;font:italic 400 22px/1.5 'EB Garamond',Georgia,serif;color:#2e2216}
+.sn-sign{margin:0;align-self:flex-end;font:italic 500 19px 'EB Garamond',Georgia,serif;color:#5a4430}
+.sn-private{margin:4px 0 0;padding-top:12px;border-top:1px solid rgba(107,74,44,.35);font:500 13px/1.4 Inter,system-ui,sans-serif;color:#6b5a48}
+@keyframes sn-unfold{from{opacity:0;transform:translateY(16px) scaleY(.9)}to{opacity:1;transform:none}}
+.sn-actions{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
+.sn-scene :focus-visible{outline:1.5px solid #F1E5CF;outline-offset:4px}
+html:root[data-color-mode][data-theme] body .sn-scene button.sn-primary,.sn-scene button.sn-primary{display:inline-flex;align-items:center;justify-content:center;gap:10px;min-height:48px;min-width:220px;padding:0 26px;border:0;border-radius:0;box-shadow:none;background-color:var(--sn-wax);background-image:linear-gradient(180deg,var(--sn-wax-hi) 0,var(--sn-wax-hi) 1px,transparent 1px);color:#FBEFE6;font:700 15px Inter,system-ui,sans-serif;letter-spacing:.05em;text-transform:uppercase;cursor:pointer;
+ clip-path:polygon(10px 0,calc(100% - 10px) 0,100% 10px,100% calc(100% - 10px),calc(100% - 10px) 100%,10px 100%,0 calc(100% - 10px),0 10px)}
+html:root[data-color-mode][data-theme] body .sn-scene button.sn-primary:hover,.sn-scene button.sn-primary:hover{background-color:#bd3b26}
+html:root[data-color-mode][data-theme] body .sn-scene button.sn-secondary,.sn-scene button.sn-secondary{min-height:48px;padding:0 22px;border:1px solid #435263;border-radius:2px;box-shadow:none;background:#1a212b;color:#F1E5CF;font:600 14px Inter,system-ui,sans-serif;cursor:pointer}
+html:root[data-color-mode][data-theme] body .sn-scene button.sn-secondary:hover,.sn-scene button.sn-secondary:hover{border-color:#6a7d92;background:#212a36}
+@media (max-width:760px){
+ /* On a phone the screen is one column: the title, the Game Master standing just behind the letter, the letter, the buttons. */
+ .sn-scene[open]{display:flex;flex-direction:column;box-sizing:border-box;padding:22px 14px max(20px,env(safe-area-inset-bottom))}
+ .sn-title{position:relative;left:auto;top:auto;right:auto;order:0}
+ .sn-title p{letter-spacing:.18em;font-size:11.5px}
+ .sn-title h1{font-size:28px}
+ .sn-figure{position:relative;left:auto;bottom:auto;order:1;flex:1;min-height:0;height:auto;width:100%;aspect-ratio:auto;margin-bottom:-14px}
+ .sn-figure img{max-height:240px}
+ .sn-shadow{display:none}
+ .sn-stage{position:relative;left:auto;top:auto;width:auto;order:2;transform:none;gap:16px}
+ .sn-letter{transform:none;width:100%}
+ .sn-envelope{height:330px;padding:0 20px 22px}
+ .sn-flap{height:36%}.sn-seal{top:36%}
+ .sn-to{font-size:28px}
+ .sn-hint{font-size:15px}
+ .sn-paper{padding:30px 22px 22px}
+ .sn-secret{font-size:19px}
+ .sn-from{padding-right:56px}
+ .sn-actions{width:100%;flex-wrap:nowrap}
+ html:root[data-color-mode][data-theme] body .sn-scene .sn-actions button,.sn-scene .sn-actions button{flex:1;min-width:0;padding:0 12px;font-size:14px;letter-spacing:.03em;white-space:nowrap}
+ html:root[data-color-mode][data-theme] body .sn-scene .sn-actions button.sn-primary,.sn-scene .sn-actions button.sn-primary{flex:1.7}
+}
+.sn-paper:focus{outline:none}
+@media (prefers-reduced-motion:reduce){html:not([data-motion='full']) .sn-paper{animation:none}}

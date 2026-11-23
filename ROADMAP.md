@@ -41,10 +41,10 @@ Keep this as the short checkpoint overview. Use GitHub issues for individual tas
 - [x] Between-chapters map: the route relights after each gateway, and the next chapter opens beside it.
 - [x] Bring the approved chapter I board art into the game: Starfall Market, the broken arch, the lantern pier.
 - [x] Design and build the remaining six chapter places (forest road, shrine, ridge road, keep, glassmakers' row, vaults).
+- [x] Sealed notes: each built-in hero's secret with the chosen Game Master, opened privately as the quest begins and kept in the hero sheet.
 - [x] The board at night: in dark colour mode the board is moonlit and lit only by the lights already on it (lamps, torches, the shrine, the crown, the district lamp, the sea door).
 - [ ] Replace the chapter card panoramas with the regional day and dusk scenes.
 - [ ] Map button during play, and the full relight at victory.
-- [ ] Decide long runs: revisit the three stops or use the five region scene names.
 - [ ] Decide whether the creator's narrator keeps the name Aether.
 
 These are proposed next tasks, not promises that every feature lands in alpha.2. Choose a small scope together for each checkpoint.
