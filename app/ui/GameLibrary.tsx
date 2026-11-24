@@ -1,111 +1,154 @@
 'use client';
-import {useEffect,useMemo,useRef,useState,useId} from 'react';
+import {useEffect,useId,useMemo,useState,type KeyboardEvent} from 'react';
 import type {SavedAdventure} from '../../game/library';
 import {CLASS_INFO} from '../../game/types';
-import {HEROES,HERO_ART_RATIO,SCENE_FOR_BIOME} from '../../game/presets';
+import {HEROES,HERO_ART_RATIO,SCENE_FOR_BIOME,TALES} from '../../game/presets';
 import {HeroArt,Icon} from './Art';
 import Modal from './Modal';
-import {RealmButton,Diamond,Check,Portrait} from './RealmKit';
+import {RealmButton,Portrait} from './RealmKit';
+import {KeyHints} from './MenuKit';
 import './library.css';
 import './journal.css';
 
+/* Adventures as a save-slot screen: the chosen tale's painting fills the screen as Camp's title art does, the saves are
+   slots on the left, and the chosen one is written over its painting. Phones put the painting in a band at the top and
+   open the chosen slot in place. */
 type Filter='active'|'finished'|'archived';
-type Props={games:SavedAdventure[];ready:boolean;busy:boolean;onOpen:(id:string)=>unknown;onReplay:(id:string)=>unknown;onUpdate:(id:string,patch:{title?:string;pinned?:boolean;archived?:boolean})=>Promise<boolean>;onDelete:(id:string)=>Promise<boolean>};
-const Arrow=()=><svg width="9" height="14" viewBox="0 0 9 14" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M2 1l6 6-6 6"/></svg>;
+type Props={games:SavedAdventure[];ready:boolean;busy:boolean;onOpen:(id:string)=>unknown;onReplay:(id:string)=>unknown;onUpdate:(id:string,patch:{title?:string;pinned?:boolean;archived?:boolean})=>Promise<boolean>;onDelete:(id:string)=>Promise<boolean>;
+ onCamp:()=>void;onNew:(mode:'solo'|'online')=>void;onJoin:()=>void;onHelp:()=>void;onSettings:()=>void;disabled?:boolean};
 const finished=(g:SavedAdventure)=>g.status==='victory'||g.status==='defeat';
 const scenes=(g:SavedAdventure)=>SCENE_FOR_BIOME[g.biome??'woodland'];
+const region=(g:SavedAdventure)=>TALES.find(tale=>tale.biome===(g.biome??'woodland'))?.region;
 /** A renamed save keeps its own name; otherwise the journal shows the tale it follows. */
 const named=(g:SavedAdventure)=>!g.title.startsWith(`${g.heroName} · `)||!g.taleTitle?g.title:g.taleTitle;
 const when=(t:number)=>new Date(t).toLocaleDateString(undefined,{month:'short',day:'numeric'});
-/** One line of state or progress for a list row. */
+const today=(t:number)=>new Date(t).toDateString()===new Date().toDateString();
+const day=(t:number)=>today(t)?'Today':when(t);
+const ROMAN=['I','II','III','IV','V','VI','VII','VIII','IX','X'];
+const SEARCH_FROM=8;
+const yours=(g:SavedAdventure)=>g.status==='playing'&&(g.kind==='solo'||g.yourTurn);
+
+/** Under the title: who you play and how far the tale has come. */
+function whoLine(g:SavedAdventure){
+ if(g.status==='lobby')return `${g.heroName} · At party camp`;
+ if(g.status==='unavailable')return `${g.heroName} · Party unavailable`;
+ if(g.status==='victory')return `${g.heroName} · Victory`;
+ if(g.status==='defeat')return `${g.heroName} · Defeat`;
+ return `${g.heroName} · Chapter ${ROMAN[g.scene]??g.scene+1}${g.chapters?` of ${ROMAN[g.chapters-1]??g.chapters}`:''}`;
+}
+/** At the slot's right: whose turn it is, or how it stands. */
 function stateLine(g:SavedAdventure){
- if(g.status==='victory')return `Victory · ${when(g.updatedAt)}`;
- if(g.status==='defeat')return `Defeat · ${when(g.updatedAt)}`;
- if(g.status==='lobby')return 'At party camp';
- if(g.status==='unavailable')return 'Party unavailable';
- const chapter=`Chapter ${g.scene+1}${g.chapters?` of ${g.chapters}`:''}`;
- return g.kind==='solo'?`${chapter} · Paused`:g.yourTurn?`${chapter} · Your turn`:`${chapter} · ${g.turnOf?`Waiting for ${g.turnOf}`:'Waiting for players'}`;
+ if(finished(g))return 'Replay ready';
+ if(g.status==='lobby')return g.kind==='online'?`Party ${g.roomCode}`:'At camp';
+ if(g.status!=='playing')return '';
+ return g.yourTurn?'':g.turnOf?`${g.turnOf}’s turn`:'Waiting for players';
 }
 
-/** The campaign journal: saves on the left, the selected save opened to its place on the right. */
-export default function GameLibrary({games,ready,busy,onOpen,onReplay,onUpdate,onDelete}:Props){
- const[filter,setFilter]=useState<Filter>('active'),[search,setSearch]=useState(''),[edit,setEdit]=useState<SavedAdventure|null>(null),[title,setTitle]=useState(''),[remove,setRemove]=useState<SavedAdventure|null>(null),[saving,setSaving]=useState(false),[notice,setNotice]=useState(''),[more,setMore]=useState(false),[picked,setPicked]=useState('');
- const panelId=useId(),menu=useRef<HTMLDivElement>(null);
+/** The waymarks along the road: lit up to the chapter you are on. */
+function Road({g,big=false}:{g:SavedAdventure;big?:boolean}){
+ const total=g.chapters??0;if(!total||g.status==='lobby'||g.status==='unavailable')return null;
+ const reached=g.status==='victory'?total:g.scene;
+ if(big)return <span className="adv-bigroad" role="img" aria-label={g.status==='victory'?`All ${total} chapters walked`:`Chapter ${g.scene+1} of ${total}`}>{Array.from({length:total},(_,i)=><span key={i} className="adv-stop-wrap">{i?<i className={i<=reached?'lit':''}/>:null}<span className={`adv-stop${i<reached?' done':''}${i===reached&&g.status==='playing'?' here':''}`}>{ROMAN[i]??i+1}</span></span>)}</span>;
+ return <span className="adv-road" aria-hidden="true">{Array.from({length:total},(_,i)=><span key={i}>{i?<i className={i<=reached?'lit':''}/>:null}<b className={i<reached||(i===reached&&g.status==='playing')?'lit':''}/></span>)}</span>;
+}
+
+export default function GameLibrary({games,ready,busy,onOpen,onReplay,onUpdate,onDelete,onCamp,onNew,onJoin,onHelp,onSettings,disabled=false}:Props){
+ const[filter,setFilter]=useState<Filter>('active'),[search,setSearch]=useState(''),[edit,setEdit]=useState<SavedAdventure|null>(null),[title,setTitle]=useState(''),[remove,setRemove]=useState<SavedAdventure|null>(null),[saving,setSaving]=useState(false),[notice,setNotice]=useState(''),[picked,setPicked]=useState('');
+ const[narrow,setNarrow]=useState(false);
+ const panelId=useId();
+ useEffect(()=>{const media=window.matchMedia('(max-width:760px)');const sync=()=>setNarrow(media.matches);sync();media.addEventListener('change',sync);return()=>media.removeEventListener('change',sync)},[]);
  const filtered=useMemo(()=>games.filter(g=>(filter==='archived'?g.archived:!g.archived&&(filter==='finished'?finished(g):!finished(g)))&&`${g.title} ${g.heroName} ${g.taleTitle??''} ${g.roomCode||''}`.toLowerCase().includes(search.trim().toLowerCase())).sort((a,b)=>Number(b.pinned)-Number(a.pinned)||b.updatedAt-a.updatedAt),[games,filter,search]);
  const counts={active:games.filter(g=>!g.archived&&!finished(g)).length,finished:games.filter(g=>!g.archived&&finished(g)).length,archived:games.filter(g=>g.archived).length};
  const selected=filtered.find(g=>g.id===picked)??filtered[0];
- useEffect(()=>{
-  if(!more)return;
-  const close=(event:PointerEvent)=>{if(!menu.current?.contains(event.target as Node))setMore(false)};
-  const escape=(event:KeyboardEvent)=>{if(event.key==='Escape')setMore(false)};
-  document.addEventListener('pointerdown',close);document.addEventListener('keydown',escape);
-  return()=>{document.removeEventListener('pointerdown',close);document.removeEventListener('keydown',escape)};
- },[more]);
- async function update(id:string,patch:{pinned?:boolean;archived?:boolean}){setSaving(true);try{await onUpdate(id,patch);}finally{setSaving(false)}}
  const tabs:Filter[]=['active','finished','archived'];
+ const dialogOpen=!!edit||!!remove;
+ async function update(id:string,patch:{pinned?:boolean;archived?:boolean}){setSaving(true);try{await onUpdate(id,patch);}finally{setSaving(false)}}
+ function primary(g:SavedAdventure){if(g.archived)void update(g.id,{archived:false});else if(finished(g))onReplay(g.id);else if(g.status!=='unavailable')onOpen(g.id)}
+ // Esc goes back to Camp when no dialog is open, as a game menu's Back does.
+ useEffect(()=>{const back=(event:globalThis.KeyboardEvent)=>{if(event.key!=='Escape'||event.defaultPrevented||document.querySelector('dialog[open]'))return;onCamp()};window.addEventListener('keydown',back);return()=>window.removeEventListener('keydown',back)},[onCamp]);
+ function slotKeys(event:KeyboardEvent<HTMLDivElement>){
+  const index=filtered.findIndex(g=>g.id===selected?.id);let next=-1;
+  if(event.key==='ArrowDown')next=Math.min(filtered.length-1,index+1);else if(event.key==='ArrowUp')next=Math.max(0,index-1);
+  else if(event.key==='Home')next=0;else if(event.key==='End')next=filtered.length-1;
+  else if(event.key==='Enter'&&selected&&(event.target as HTMLElement).getAttribute('role')==='radio'){event.preventDefault();if(!busy)primary(selected);return}
+  else return;
+  event.preventDefault();const g=filtered[next];if(!g)return;setPicked(g.id);
+  event.currentTarget.querySelectorAll<HTMLElement>('[role=radio]')[next]?.focus();
+ }
+ const details=selected?<Details g={selected} busy={busy||saving} narrow={narrow} onPrimary={()=>primary(selected)} onReplay={()=>onReplay(selected.id)} onPin={()=>void update(selected.id,{pinned:!selected.pinned})}
+  onRename={()=>{setEdit(selected);setTitle(selected.title)}} onArchive={()=>void update(selected.id,{archived:true})} onDelete={()=>setRemove(selected)}/>:null;
+ const scene=selected?scenes(selected).scene:SCENE_FOR_BIOME.woodland.scene;
 
- return <section className="realm journal" aria-label="Saved adventures">
-  <div className="journal-list">
-   <div className="journal-tabs" role="tablist" aria-label="Adventure list" onKeyDown={e=>{let index=tabs.indexOf(filter);if(e.key==='ArrowRight')index=(index+1)%3;else if(e.key==='ArrowLeft')index=(index+2)%3;else if(e.key==='Home')index=0;else if(e.key==='End')index=2;else return;e.preventDefault();setFilter(tabs[index]);e.currentTarget.querySelectorAll<HTMLButtonElement>('[role=tab]')[index]?.focus()}}>
-    {tabs.map(f=><button key={f} type="button" role="tab" id={`${panelId}-${f}`} aria-controls={panelId} tabIndex={filter===f?0:-1} aria-selected={filter===f} className={`journal-tab${filter===f?' on':''}`} onClick={()=>setFilter(f)}>{f==='active'?'In progress':f==='finished'?'Finished':'Archived'}<span>{counts[f]}</span></button>)}
+ return <section className={`adventures${dialogOpen?' has-dialog':''}`} aria-label="Saved adventures">
+  <div className="adv-scene" aria-hidden="true"><img key={scene} src={scene} alt=""/></div>
+  <header className="adv-top">
+   <button type="button" className="adv-back" onClick={onCamp}><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M10 3 5 8l5 5"/></svg>Camp</button>
+   <div className="adv-corner"><button type="button" className="adv-word" onClick={onHelp}><Icon name="book" size={18}/><span>Guide</span></button><button type="button" className="adv-word" onClick={onSettings}><Icon name="gear" size={18}/><span>Settings</span></button></div>
+  </header>
+  <div className="adv-page">
+   <div className="adv-left">
+    <p className="realm-eyebrow">Your journal</p>
+    <h1>Adventures</h1>
+    <div className="adv-tabs" role="tablist" aria-label="Adventure list" onKeyDown={e=>{let index=tabs.indexOf(filter);if(e.key==='ArrowRight')index=(index+1)%3;else if(e.key==='ArrowLeft')index=(index+2)%3;else if(e.key==='Home')index=0;else if(e.key==='End')index=2;else return;e.preventDefault();setFilter(tabs[index]);e.currentTarget.querySelectorAll<HTMLButtonElement>('[role=tab]')[index]?.focus()}}>
+     {tabs.map(f=><button key={f} type="button" role="tab" id={`${panelId}-${f}`} aria-controls={panelId} tabIndex={filter===f?0:-1} aria-selected={filter===f} onClick={()=>setFilter(f)}>{f==='active'?'In progress':f==='finished'?'Finished':'Archived'}{counts[f]?<b>{counts[f]}</b>:null}</button>)}
+    </div>
+    {games.length>=SEARCH_FROM?<label className="adv-search"><span className="sr-only">Search adventures</span><input type="search" value={search} onChange={e=>setSearch(e.target.value)} placeholder="Find an adventure"/></label>:null}
+    <div id={panelId} role="tabpanel" aria-labelledby={`${panelId}-${filter}`} className="adv-slots-wrap">
+     {!ready?<p className="adv-empty" role="status">Opening the journal…</p>
+      :!filtered.length?<p className="adv-empty">{search?'No adventure by that name.':filter==='archived'?'Nothing archived.':filter==='finished'?'No tale finished yet.':'No adventure under way.'}</p>
+      :<div className="adv-slots" role="radiogroup" aria-label="Saved adventures" onKeyDown={slotKeys}>{filtered.map(g=>{const on=g.id===selected?.id,state=stateLine(g);return <div key={g.id} className={`adv-slot${on?' on':''}`}>
+       <div role="radio" aria-checked={on} tabIndex={on?0:-1} className="adv-slot-face" onClick={()=>setPicked(g.id)} onDoubleClick={()=>{if(!busy)primary(g)}}>
+        <img src={scenes(g).thumb} alt="" className="adv-thumb"/>
+        <span className="adv-slot-text"><strong>{named(g)}</strong><span>{whoLine(g)}</span><Road g={g}/></span>
+        <span className="adv-state">{yours(g)?<span className="adv-turn">Your turn</span>:state?<span>{state}</span>:null}<span>{day(g.updatedAt)}</span></span>
+        {g.pinned?<span className="adv-ribbon" aria-label="Pinned" role="img"/>:null}
+       </div>
+       {on&&narrow?details:null}
+      </div>})}</div>}
+     {filter==='active'&&!search&&ready?<div className="adv-newslot">
+      <span className="adv-plus" aria-hidden="true">+</span>
+      <div><button type="button" className="adv-new" disabled={disabled} onClick={()=>onNew('solo')}>Begin a new quest</button>
+       <p>or <button type="button" disabled={disabled} onClick={()=>onNew('online')}>gather a party</button> · <button type="button" disabled={disabled} onClick={onJoin}>join a party</button></p></div>
+     </div>:null}
+    </div>
+    <div className="adv-foot"><KeyHints hints={[[['↑','↓'],'Choose'],[['Enter'],'Continue'],[['Esc'],'Camp']]}/>{games.length?<span className="adv-kept" title="Online parties end after 30 days without a visit or a move; their replays stay.">Kept on this device</span>:null}</div>
    </div>
-   <label className="journal-search"><span className="sr-only">Search adventures</span><input type="search" value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search adventures"/></label>
-   <div id={panelId} role="tabpanel" aria-labelledby={`${panelId}-${filter}`}>
-    {!ready?<p className="journal-empty" role="status">Loading adventures…</p>
-     :!filtered.length?<div className="journal-empty"><h2>{search?'No matching adventures':filter==='archived'?'No archived adventures':filter==='finished'?'No finished adventures':'No saved adventures yet'}</h2>{!search&&filter==='active'?<p>Start a new quest or gather a party.</p>:null}</div>
-     :<div className="journal-rows" role="radiogroup" aria-label="Saved adventures">{filtered.map(g=><button key={g.id} type="button" role="radio" aria-checked={g.id===selected?.id} className="realm-choice journal-row" onClick={()=>{setPicked(g.id);setMore(false)}}>
-      <img src={scenes(g).thumb} alt="" className="journal-thumb"/>
-      <span className={`journal-row-text${g.id===selected?.id?' realm-tint':''}`}><strong>{named(g)}</strong><span className={g.yourTurn&&g.status==='playing'&&g.kind==='online'?'turn':''}>{stateLine(g)}</span></span>
-      {g.pinned?<span className="journal-pin" aria-label="Pinned"><Icon name="pin" size={13}/></span>:null}
-      {g.id===selected?.id?<Diamond/>:null}
-     </button>)}</div>}
-   </div>
+   {!narrow?<div className="adv-right">{details}</div>:null}
   </div>
-  {selected?<Preview g={selected} busy={busy||saving} onOpen={onOpen} onReplay={onReplay} onRestore={()=>void update(selected.id,{archived:false})} onPin={()=>void update(selected.id,{pinned:!selected.pinned})}
-   more={more} setMore={setMore} menu={menu} onRename={()=>{setMore(false);setEdit(selected);setTitle(selected.title)}} onArchive={()=>{setMore(false);void update(selected.id,{archived:true})}} onDelete={()=>{setMore(false);setRemove(selected)}}/>:<div className="journal-preview journal-blank" aria-hidden="true"><img src="/art/scenes/tale-lantern.svg" alt=""/></div>}
-  {games.length?<p className="journal-storage">Saved in this browser. Online parties expire after 30 days without a visit or game change; saved replays remain available.</p>:null}
-  {notice?<p className="library-notice" role="status">{notice}<button onClick={()=>setNotice('')} aria-label="Dismiss notification"><Icon name="close" size={14}/></button></p>:null}
+  {notice?<p className="library-notice adv-notice" role="status">{notice}<button onClick={()=>setNotice('')} aria-label="Dismiss notification"><Icon name="close" size={14}/></button></p>:null}
   {edit?<Modal title="Rename adventure" dismissible={!saving} onClose={()=>{if(!saving)setEdit(null)}}><form className="library-dialog" onSubmit={async e=>{e.preventDefault();if(!title.trim()||saving)return;setSaving(true);try{if(await onUpdate(edit.id,{title:title.trim()}))setEdit(null)}finally{setSaving(false)}}}><label className="field">Adventure name<input autoFocus value={title} onChange={e=>setTitle(e.target.value)} maxLength={60} required/></label><div className="dialog-actions"><button type="button" className="button paper" disabled={saving} onClick={()=>setEdit(null)}>Cancel</button><button className="button primary" disabled={saving||!title.trim()}>{saving?'Saving…':'Save'}</button></div></form></Modal>:null}
-  {remove?<Modal title="Delete saved adventure?" dismissible={!saving} onClose={()=>{if(!saving)setRemove(null)}}><div className="library-dialog"><p>Delete <strong>{remove.title}</strong> and its replay from this browser? This cannot be undone.</p>{remove.kind==='online'?<p>This removes your saved seat from this browser. Other players can continue. Archive instead if you want to return later.</p>:null}<div className="dialog-actions"><button className="button paper" disabled={saving} onClick={()=>setRemove(null)}>Cancel</button><button className="button danger" disabled={saving} onClick={async()=>{setSaving(true);try{if(await onDelete(remove.id)){setRemove(null);setNotice('Saved adventure deleted.')}}finally{setSaving(false)}}}>{saving?'Deleting…':'Delete adventure'}</button></div></div></Modal>:null}
+  {remove?<Modal title="Delete saved adventure?" dismissible={!saving} onClose={()=>{if(!saving)setRemove(null)}}><div className="library-dialog"><p>Delete <strong>{remove.title}</strong> and its replay from this device? This cannot be undone.</p>{remove.kind==='online'?<p>This removes your saved seat from this device. Other players can continue. Archive instead if you want to return later.</p>:null}<div className="dialog-actions"><button className="button paper" disabled={saving} onClick={()=>setRemove(null)}>Cancel</button><button className="button danger" disabled={saving} onClick={async()=>{setSaving(true);try{if(await onDelete(remove.id)){setRemove(null);setNotice('Saved adventure deleted.')}}finally{setSaving(false)}}}>{saving?'Deleting…':'Delete adventure'}</button></div></div></Modal>:null}
  </section>;
 }
 
-type PreviewProps={g:SavedAdventure;busy:boolean;onOpen:(id:string)=>unknown;onReplay:(id:string)=>unknown;onRestore:()=>void;onPin:()=>void;more:boolean;setMore:(v:boolean)=>void;menu:React.RefObject<HTMLDivElement|null>;onRename:()=>void;onArchive:()=>void;onDelete:()=>void};
-function Preview({g,busy,onOpen,onReplay,onRestore,onPin,more,setMore,menu,onRename,onArchive,onDelete}:PreviewProps){
- const hero=HEROES.find(h=>h.name===g.heroName),done=finished(g);
- const marks=g.chapters&&!done&&g.status==='playing'?Array.from({length:g.chapters},(_,i)=><span key={i} className={i<g.scene?'done':i===g.scene?'now':''}/>):null;
- const main=g.archived?<RealmButton disabled={busy} onClick={onRestore}>Restore</RealmButton>
-  :done?<RealmButton variant="primary" minWidth={200} disabled={busy} onClick={()=>onReplay(g.id)}>Watch Replay<Arrow/></RealmButton>
-  :g.status==='unavailable'?null
-  :g.status==='lobby'?<RealmButton variant="primary" minWidth={200} disabled={busy} onClick={()=>onOpen(g.id)}>Open party camp<Arrow/></RealmButton>
-  :g.kind==='online'&&!g.yourTurn?<RealmButton minWidth={140} disabled={busy} onClick={()=>onOpen(g.id)}>Open</RealmButton>
-  :<RealmButton variant="primary" minWidth={180} disabled={busy} onClick={()=>onOpen(g.id)}>Continue<Arrow/></RealmButton>;
- const side=done?<span className="journal-side">Replay ready</span>
-  :g.status==='playing'?(g.kind==='solo'||g.yourTurn?<span className="journal-side turn"><span aria-hidden="true"/>Your turn</span>:<span className="journal-side">{g.turnOf?`Waiting for ${g.turnOf}`:'Waiting for players'}</span>):null;
- return <article className="journal-preview realm-panel" aria-label={named(g)}>
-  <img className="journal-scene realm-fade" key={g.id} src={scenes(g).scene} alt=""/>
-  <div className="journal-body">
-   <div className="journal-head"><h2>{named(g)}</h2>{g.status==='playing'?<span>{g.sceneName}</span>:null}</div>
-   <div className="journal-facts">
-    <div className="journal-hero">{hero?<Portrait art={hero.art} face={hero.face} ratio={HERO_ART_RATIO} width={64} height={64} scale={1.6} className="journal-portrait"/>:<span className="journal-portrait journal-art"><HeroArt heroClass={g.heroClass}/></span>}
-     <div><span className="realm-eyebrow">Playing as</span><strong>{g.heroName}</strong><span>{CLASS_INFO[g.heroClass].name}{g.kind==='online'?` · Party ${g.roomCode}`:' · Solo'}</span></div></div>
-    <div className="journal-divider" aria-hidden="true"/>
-    <div className="journal-progress">
-     {done?<span className={`journal-result ${g.status}`}>{g.status==='victory'?<><Check size={14}/>Victory</>:<>✕ Defeat</>}</span>
-      :<strong>{g.status==='lobby'?'At party camp':`Chapter ${g.scene+1}${g.chapters?` of ${g.chapters}`:''}`}</strong>}
-     {marks?<span className="journal-marks" role="img" aria-label={`Chapter ${g.scene+1} of ${g.chapters}`}>{marks}</span>:null}
-     <span><time dateTime={new Date(g.updatedAt).toISOString()}>{done?'Finished':'Played'} {when(g.updatedAt)}</time>{g.status==='playing'?` · Round ${g.round}`:''}</span>
-    </div>
+type DetailsProps={g:SavedAdventure;busy:boolean;narrow:boolean;onPrimary:()=>void;onReplay:()=>void;onPin:()=>void;onRename:()=>void;onArchive:()=>void;onDelete:()=>void};
+/** The chosen save, written over its painting (or opened in place on a phone). */
+function Details({g,busy,narrow,onPrimary,onReplay,onPin,onRename,onArchive,onDelete}:DetailsProps){
+ const hero=HEROES.find(h=>h.name===g.heroName),done=finished(g),where=region(g);
+ const label=g.archived?'Restore':done?'Watch replay':g.status==='lobby'?'Open party camp':g.kind==='online'&&!g.yourTurn?'Open':'Continue';
+ const main=g.status==='unavailable'&&!g.archived?null:<RealmButton variant={g.archived||(g.kind==='online'&&!g.yourTurn&&g.status==='playing')?'secondary':'primary'} minWidth={narrow?undefined:190} disabled={busy} onClick={onPrimary}>{label}{label==='Continue'||label==='Watch replay'||label==='Open party camp'?<span aria-hidden="true">›</span>:null}</RealmButton>;
+ return <article className="adv-tale" aria-label={named(g)}>
+  {!narrow?<>
+   <p className="adv-where">{[where,'The Lantern Marches'].filter(Boolean).join(' · ')}</p>
+   <h2>{named(g)}</h2>
+   {g.status==='playing'?<p className="adv-place">{g.sceneName}</p>:null}
+  </>:null}
+  {g.lastLine&&!done?<p className="adv-line">“{g.lastLine}”</p>:null}
+  <div className="adv-party">
+   <div className="adv-hero">{hero?<Portrait art={hero.art} face={hero.face} ratio={HERO_ART_RATIO} width={56} height={64} scale={1.6} className="adv-portrait"/>:<span className="adv-portrait adv-art"><HeroArt heroClass={g.heroClass}/></span>}
+    <div><span className="adv-label">Playing as</span><strong>{g.heroName}</strong><span>{CLASS_INFO[g.heroClass].name}{g.kind==='online'?` · Party ${g.roomCode}`:' · Solo'}</span></div></div>
+   <div className="adv-onroad">
+    {done?<span className={`adv-result ${g.status}`}>{g.status==='victory'?'Victory':'Defeat'}</span>:<span className="adv-label">{g.status==='lobby'?'At party camp':'On the road'}</span>}
+    <Road g={g} big/>
+    <span className="adv-when">{g.status==='playing'?`Round ${g.round} · `:''}<time dateTime={new Date(g.updatedAt).toISOString()}>{done?'finished':'played'} {today(g.updatedAt)?'today':when(g.updatedAt)}</time></span>
    </div>
-   <div className="journal-actions">
-    <div className="journal-tools" ref={menu}>
-     <button type="button" className={`journal-icon${g.pinned?' on':''}`} aria-pressed={g.pinned} aria-label={`${g.pinned?'Unpin':'Pin'} ${g.title}`} data-tooltip={g.pinned?'Unpin':'Pin to the top'} disabled={busy} onClick={onPin}><Icon name="pin" size={16}/></button>
-     <button type="button" className="journal-icon" aria-expanded={more} aria-label={`Options for ${g.title}`} data-tooltip="Adventure options" onClick={()=>setMore(!more)}>•••</button>
-     {more?<div className="journal-menu" role="group" aria-label={`Adventure options for ${g.title}`}><button type="button" onClick={onRename}>Rename</button>{!g.archived?<button type="button" onClick={onArchive}>Archive</button>:null}<button type="button" className="danger" onClick={onDelete}>Delete</button></div>:null}
-    </div>
-    {!done&&g.status==='playing'&&!g.archived?<RealmButton small disabled={busy} onClick={()=>onReplay(g.id)}>Watch replay</RealmButton>:null}
-    {side}{main}
-   </div>
+  </div>
+  <div className="adv-acts">{main}{!done&&g.status==='playing'&&!g.archived?<RealmButton disabled={busy} onClick={onReplay}>Watch replay</RealmButton>:null}</div>
+  <div className="adv-small">
+   <button type="button" disabled={busy} aria-pressed={g.pinned} onClick={onPin}>{g.pinned?'Unpin':'Pin'}</button>
+   <button type="button" disabled={busy} onClick={onRename}>Rename</button>
+   {!g.archived?<button type="button" disabled={busy} onClick={onArchive}>Archive</button>:null}
+   <button type="button" className="danger" disabled={busy} onClick={onDelete}>Delete</button>
   </div>
  </article>;
 }

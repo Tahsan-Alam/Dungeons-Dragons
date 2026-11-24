@@ -7,6 +7,8 @@ export interface SavedAdventure {
  sceneName:string;scene:number;round:number;roomCode?:string;yourTurn:boolean;recordedActions:number;
  /** For the journal: the tale's region (picks its scene art), its title, how many chapters, and whose turn it is when not yours. */
  biome?:Biome;taleTitle?:string;chapters?:number;turnOf?:string;
+ /** The latest line of the story, shown under the save on the Adventures screen. */
+ lastLine?:string;
 }
 export interface AdventureRecord {
  meta:SavedAdventure;game:GameState|null;room:RoomView|null;session:Session|null;replay:ReplayArchive|null;revision:number;
@@ -25,11 +27,13 @@ export function isSession(value:unknown):value is Session {
 }
 const CHAPTERS={short:1,standard:3,long:5} as const;
 /** Journal details that older saves may lack; every field is optional so earlier records stay valid. */
-function journal(options:GameOptions|undefined,game:GameState|null,me?:string):Pick<SavedAdventure,'biome'|'taleTitle'|'chapters'|'turnOf'>{
+function journal(options:GameOptions|undefined,game:GameState|null,me?:string):Pick<SavedAdventure,'biome'|'taleTitle'|'chapters'|'turnOf'|'lastLine'>{
  if(!options)return {};
  const active=game?.status==='playing'?game.actors.find(a=>a.id===game.activeActorId):undefined;
  const turnOf=me&&active&&!active.enemy&&active.playerId&&active.playerId!==me?active.name:undefined;
- return {biome:options.biome,chapters:CHAPTERS[options.duration??'standard'],...(options.creation?{taleTitle:options.creation.story.title}:{}),...(turnOf?{turnOf}:{})};
+ const story=game?[...game.events].reverse().find(event=>event.kind==='story')?.text?.trim():undefined;
+ const lastLine=story?(story.length>150?`${story.slice(0,story.lastIndexOf(' ',147)).replace(/[,;:.]$/,'')}…`:story):undefined;
+ return {biome:options.biome,chapters:CHAPTERS[options.duration??'standard'],...(options.creation?{taleTitle:options.creation.story.title}:{}),...(turnOf?{turnOf}:{}),...(lastLine?{lastLine}:{})};
 }
 export function soloRecord(game:GameState,replay:ReplayArchive,id:string,now=Date.now()):AdventureRecord {
  const me=game.actors.find(a=>a.playerId==='you')??game.actors.find(a=>!a.enemy)!;

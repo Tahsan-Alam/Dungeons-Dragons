@@ -21,8 +21,10 @@ export default function TooltipLayer(){
 
   function buttonAt(target:EventTarget|null){
    const element=target instanceof Element?target:null,button=element?.closest('button');
-   // data-tooltip="none": the button's own large label already says it all.
-   return button instanceof HTMLButtonElement&&button.dataset.tooltip!=='none'&&button.closest('.app-root,dialog.modal,.toast')?button:null;
+   // data-tooltip="none": the button's own large label already says it all. The menu screens (.game-menu) label every
+   // control in words, so only a button there with its own title or data-tooltip gets one.
+   if(!(button instanceof HTMLButtonElement)||button.dataset.tooltip==='none'||!button.closest('.app-root,dialog.modal,.toast'))return null;
+   return button.closest('.game-menu')&&!button.dataset.tooltip&&!button.getAttribute('title')&&!titles.get(button)?.value?null:button;
   }
   function nativeTitle(button:HTMLButtonElement){
    const current=button.getAttribute('title');

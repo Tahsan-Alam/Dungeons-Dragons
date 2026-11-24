@@ -1,0 +1,78 @@
+/* Table settings as a game's options menu: a framed panel with brass corner ticks over the dimmed table, the pages listed
+   like Camp's menu with a pale-blue diamond on the open one, every option a ‹ value › chooser, volumes as notches, and
+   the keys along the foot. Looks the same in light and dark mode. */
+html[data-color-mode][data-theme] dialog.modal.options-menu{width:min(1060px,calc(100vw - 48px));max-height:calc(100dvh - 48px);overflow:visible;
+ background:linear-gradient(180deg,#141b24f7,#0f141bf7);border:1px solid #3b4757;border-radius:0;box-shadow:0 0 0 1px #0008,0 30px 80px #000a,inset 0 1px 0 #ffffff0d}
+html[data-color-mode][data-theme] dialog.modal.options-menu::backdrop{background:rgba(5,8,12,.7);backdrop-filter:blur(6px) saturate(.8)}
+dialog.modal.options-menu::before,dialog.modal.options-menu::after{content:'';position:absolute;width:18px;height:18px;border:2px solid #b98a43;pointer-events:none;z-index:1}
+dialog.modal.options-menu::before{top:-1px;left:-1px;border-right:0;border-bottom:0}
+dialog.modal.options-menu::after{bottom:-1px;right:-1px;border-left:0;border-top:0}
+html[data-color-mode][data-theme] dialog.modal.options-menu .modal-head{padding:20px 30px 16px;border-bottom:1px solid #2f3946}
+html[data-color-mode][data-theme] dialog.modal.options-menu .modal-head h2{font-size:26px;letter-spacing:.06em}
+.modal-esc{display:inline-flex;align-items:center;gap:8px;margin-right:12px;font:500 13px Inter,system-ui,sans-serif;color:#8d99a6}
+.options-menu .modal-tools{display:flex;align-items:center}
+.options-menu .settings-shell{display:grid;grid-template-columns:250px minmax(0,1fr);grid-template-rows:minmax(0,1fr) auto;height:min(600px,calc(100dvh - 160px))}
+
+/* Pages: Camp's menu words, a diamond on the open one. */
+.options-menu .settings-navigation{display:flex;flex-direction:column;gap:2px;padding:18px 0 18px 26px;border-right:1px solid #2f3946;background:none}
+.options-menu .settings-navigation>button{position:relative;display:flex;align-items:center;min-height:46px;padding:0 0 0 24px;text-align:left;border:0;background:none;
+ font:600 14.5px Cinzel,'EB Garamond',Georgia,serif;letter-spacing:.12em;text-transform:uppercase;color:#8e9aa7}
+.options-menu .settings-navigation>button:hover:not(:disabled){color:#F1E5CF;background:none}
+.options-menu .settings-navigation>button[aria-selected=true]{color:#F1E5CF;background:none;border:0;font-weight:600}
+.options-menu .settings-navigation>button[aria-selected=true]::before{content:'';position:absolute;left:4px;top:50%;width:9px;height:9px;margin-top:-5px;transform:rotate(45deg);background:#9CC9EA;box-shadow:0 0 10px #9cc9ea99}
+.options-menu .settings-navigation>button[aria-selected=true]::after{content:'';position:absolute;left:24px;right:26px;bottom:8px;height:1px;background:linear-gradient(90deg,#9cc9ea80,transparent)}
+
+.options-menu .settings-content{padding:10px 34px 18px;scrollbar-color:#435263 transparent}
+.options-menu .settings-content:focus{outline:none}
+.mk-group{margin:18px 0 0;font:600 12px Inter,system-ui,sans-serif!important;letter-spacing:.2em!important;text-transform:uppercase;color:#9CC9EA!important}
+.mk-group:first-child{margin-top:8px}
+.mk-aside{margin:18px 0 0;font:italic 400 16px/1.45 'EB Garamond',Georgia,serif;color:#a9a395}
+
+/* Banner colours as glass gems. */
+.mk-gems{display:flex;align-items:center;gap:12px;border-radius:2px}
+.game-menu .mk-gem{position:relative;width:34px;height:34px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#fff9 0,#fff0 32%),var(--gem);box-shadow:inset 0 -4px 8px #0006,0 0 0 1px #0009}
+.game-menu .mk-gem.on{box-shadow:inset 0 -4px 8px #0006,0 0 0 2px #0f141b,0 0 0 4px #F1E5CF,0 0 16px var(--gem)}
+.game-menu .mk-gem:hover:not(.on){box-shadow:inset 0 -4px 8px #0006,0 0 0 2px #0f141b,0 0 0 3px #6a7d92}
+.mk-gem-name{min-width:66px;font:600 13px Cinzel,'EB Garamond',Georgia,serif;letter-spacing:.1em;text-transform:uppercase;color:#d2cbbf}
+
+/* Older controls on these pages, in the menu's hand. */
+.options-menu .settings-link{display:flex;align-items:center;justify-content:space-between;width:100%;min-height:64px;padding:0;border-bottom:1px solid #2a333f;font:500 21px 'EB Garamond',Georgia,serif;color:#F1E5CF}
+.options-menu .settings-link:hover:not(:disabled){color:#9CC9EA}
+.options-menu .current-game-settings h4{margin-top:6px;font-size:15px;letter-spacing:.08em;text-transform:uppercase}
+.options-menu .settings-description,.options-menu .seed-setting span{font-size:13px;color:#a9b3be}
+.options-menu .leave-party{margin-top:4px}
+.options-menu :is(.binding-key,.binding-clear){border:1px solid #4a5868;border-bottom-width:3px;border-radius:4px;background:#18202a;color:#F1E5CF;font:600 12px Inter,system-ui,sans-serif}
+.options-menu .binding-key:hover{border-color:#9CC9EA}
+.options-menu .binding-key.listening{background:#284B68;border-color:#9CC9EA}
+.options-menu .binding-clear{width:28px;min-height:38px;margin-left:4px;color:#a9b3be}
+.options-menu .binding-clear:disabled{opacity:.35}
+.options-menu .binding-group h4{font-size:12px;letter-spacing:.2em;text-transform:uppercase;color:#9CC9EA}
+.options-menu .binding-column-labels{font:600 11px Inter,system-ui,sans-serif;letter-spacing:.14em;text-transform:uppercase;color:#8d99a6}
+.options-menu .binding-row>span:first-child{font:500 17px 'EB Garamond',Georgia,serif}
+.options-menu .text-button{color:#9CC9EA;font:600 12px Inter,system-ui,sans-serif;letter-spacing:.1em;text-transform:uppercase;min-height:36px}
+.options-menu .text-button:hover{color:#fff}
+.options-menu .shortcut-filters :is(input,select){background:#121820;border-color:#435263;color:#F1E5CF;border-radius:2px}
+.options-menu .ai-play-guide h4{letter-spacing:.06em}
+.options-menu .team-ai-settings .settings-row strong{font:500 21px 'EB Garamond',Georgia,serif}
+
+.options-foot{grid-column:1/-1;display:flex;justify-content:space-between;align-items:center;gap:12px;padding:13px 30px;border-top:1px solid #2f3946}
+.options-kept{margin-left:auto;font:500 12.5px Inter,system-ui,sans-serif;color:#75818e}
+
+@media (max-width:650px){
+ html[data-color-mode][data-theme] dialog.modal.options-menu{width:100vw;max-width:100vw;height:100dvh;max-height:100dvh;margin:0;border:0}
+ dialog.modal.options-menu::before,dialog.modal.options-menu::after{display:none}
+ html[data-color-mode][data-theme] dialog.modal.options-menu .modal-head{padding:14px 16px 12px}
+ html[data-color-mode][data-theme] dialog.modal.options-menu .modal-head h2{font-size:22px}
+ .modal-esc{display:none}
+ .options-menu .settings-shell{display:flex;flex-direction:column;height:calc(100dvh - 70px)}
+ .options-menu .settings-navigation{flex-direction:row;gap:0;padding:0 8px;border-right:0;border-bottom:1px solid #2f3946;overflow-x:auto;scrollbar-width:none;flex:none;
+  -webkit-mask-image:linear-gradient(90deg,#000 82%,#0000);mask-image:linear-gradient(90deg,#000 82%,#0000)}
+ .options-menu .settings-navigation::-webkit-scrollbar{display:none}
+ .options-menu .settings-navigation>button{flex:none;min-height:48px;padding:0 12px;font-size:12.5px;text-align:center}
+ .options-menu .settings-navigation>button[aria-selected=true]::before{left:50%;top:auto;bottom:-5px;margin:0 0 0 -4px;width:8px;height:8px}
+ .options-menu .settings-navigation>button[aria-selected=true]::after{left:12px;right:12px;bottom:0}
+ .options-menu .settings-navigation>button:last-child{margin-right:40px}
+ .options-menu .settings-content{padding:4px 16px 20px;flex:1}
+ .options-foot{padding:10px 16px}
+}
+@media (max-height:500px) and (min-width:651px){.options-menu .settings-shell{height:calc(100dvh - 120px)}.options-foot{padding:8px 30px}}

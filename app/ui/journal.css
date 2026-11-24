@@ -1,86 +1,133 @@
-/* Adventures journal: saves listed on the left, the chosen save opened on the right. Phones stack the two. */
-.journal{display:grid;grid-template-columns:minmax(260px,340px) minmax(0,1fr);grid-template-rows:auto auto;gap:16px 20px;align-items:start;width:100%;box-sizing:border-box;padding:4px 0 8px;background:none}
-.journal-list{display:flex;flex-direction:column;gap:10px;min-width:0}
-.journal-tabs{display:flex;gap:2px;border-bottom:1px solid var(--realm-edge)}
-.realm .journal-tab,html:root[data-color-mode][data-theme] body .realm button.journal-tab{flex:1;display:flex;align-items:center;justify-content:center;gap:6px;min-height:42px;padding:0 8px;border:0;border-bottom:2px solid transparent;border-radius:0;margin-bottom:-1px;background:none;box-shadow:none;transform:none;cursor:pointer;font:600 13px Inter,system-ui,sans-serif;color:var(--realm-muted)}
-.realm .journal-tab span{font-weight:500;font-size:12px;color:#7f8b98}
-html:root[data-color-mode][data-theme] body .realm button.journal-tab:hover{background:rgba(156,201,234,.06);color:var(--realm-ink)}
-html:root[data-color-mode][data-theme] body .realm button.journal-tab.on{color:var(--realm-ink);border-bottom-color:var(--realm-select)}
-.realm .journal-tab:focus-visible{outline:2px solid var(--realm-ink);outline-offset:-2px}
-.journal-search input{box-sizing:border-box;width:100%;min-height:40px;padding:0 12px;border:1px solid var(--realm-edge);border-radius:3px;background:var(--realm-surface);color:var(--realm-ink);font:400 14px Inter,system-ui,sans-serif}
-.journal-search input::placeholder{color:#8792a0}
-.journal-search input:focus-visible{outline:2px solid var(--realm-select);outline-offset:1px}
-.journal-rows{display:flex;flex-direction:column;gap:6px;max-height:calc(100dvh - 300px);min-height:120px;overflow-y:auto;padding:3px}
-.realm .journal-row,html:root[data-color-mode][data-theme] body .realm button.journal-row{display:grid;grid-template-columns:64px minmax(0,1fr) auto auto;align-items:center;gap:12px;width:100%;min-height:62px;padding:6px 12px 6px 6px;text-align:left;font:inherit}
-.realm .journal-row[aria-checked='true']::before{content:'';position:absolute;left:-1px;top:6px;bottom:6px;width:3px;background:var(--realm-select);border-radius:0 2px 2px 0}
-.journal-thumb{width:64px;height:48px;object-fit:cover;border-radius:2px;display:block}
-.journal-row-text{display:flex;flex-direction:column;gap:3px;min-width:0;padding:4px 6px;border-radius:2px;background:none}
-.journal-row-text strong{font:600 15px/1.2 var(--realm-serif);color:var(--realm-ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.journal-row-text>span{font:400 12.5px/1.3 Inter,system-ui,sans-serif;color:var(--realm-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.journal-row-text>span.turn{color:var(--realm-select)}
-.journal-pin{color:#b9c9d8;display:flex}
-.journal-empty{padding:24px 12px;text-align:center;color:var(--realm-muted);font:400 14px/1.5 Inter,system-ui,sans-serif}
-.journal-empty h2{font-size:17px;margin:0 0 6px}
-.journal-empty p{margin:0}
+/* Adventures: a save-slot screen. The chosen tale's painting fills the right of the screen like Camp's title art, the
+   saves are slots on the left, and the chosen save is written over its painting. Selection is the realm's pale blue;
+   amber is kept for lamps: your turn and the lit road. Fixed colours, so it reads the same in light and dark mode. */
+.menu-screen.journal-page{position:relative;flex:1 1 auto;width:100%;max-width:none;margin:0;padding:0;min-height:100dvh;box-sizing:border-box;background:#0b1016;overflow:hidden}
+.adventures{position:relative;min-height:100dvh;--adv-ground:#0b1016;--adv-select:#9CC9EA;--adv-lamp:#e9b35a}
+.adv-scene{position:absolute;inset:0;overflow:hidden;pointer-events:none}
+.adv-scene img{position:absolute;right:0;top:0;width:68%;height:100%;object-fit:cover;object-position:34% 50%;animation:adv-fade 320ms ease both}
+.adv-scene::after{content:'';position:absolute;inset:0;background:linear-gradient(90deg,#0b1016 32%,#0b1016e0 41%,#0b101626 58%,#0b101600 72%),linear-gradient(0deg,#0b1016f0 0,#0b10168c 30%,#0b101600 52%)}
+@keyframes adv-fade{from{opacity:.2}to{opacity:1}}
+html[data-motion=reduced] .adv-scene img{animation:none}
 
-.journal-preview{position:relative;display:flex;flex-direction:column;min-width:0;overflow:visible}
-.journal-scene{display:block;width:100%;aspect-ratio:16/7;max-height:max(150px,calc(100dvh - 500px));object-fit:cover;border-bottom:1px solid #3a4655;animation:journal-fade 260ms ease both}
-@keyframes journal-fade{from{opacity:.25}to{opacity:1}}
-@media (prefers-reduced-motion:reduce){.journal-scene{animation:none}}
-.journal-blank{opacity:.5}
-.journal-blank img{width:100%;aspect-ratio:16/7;object-fit:cover;border-radius:3px;filter:grayscale(.5)}
-.journal-body{display:flex;flex-direction:column;gap:16px;padding:18px 22px 20px}
-.journal-head{display:flex;flex-direction:column;gap:2px}
-.journal-head h2{margin:0;font-size:clamp(22px,2.4vw,30px);line-height:1.15}
-.journal-head span{font:italic 400 16px var(--realm-prose);color:var(--realm-dim)}
-.journal-facts{display:flex;align-items:center;gap:20px;flex-wrap:wrap}
-.journal-hero{display:flex;align-items:center;gap:12px;min-width:0}
-.journal-hero>div{display:flex;flex-direction:column;gap:2px}
-.journal-hero strong{font:600 17px var(--realm-serif);color:var(--realm-ink)}
-.journal-hero>div>span:last-child{font:400 13px Inter,system-ui,sans-serif;color:var(--realm-muted)}
-.journal-portrait{border:1px solid var(--realm-edge-hi);border-radius:3px;box-shadow:0 0 0 3px var(--realm-surface),0 0 0 4px #3a4655}
-.journal-art{display:block;width:64px;height:64px;overflow:hidden;background:#1d2530}
-.journal-art svg{width:100%;height:100%}
-.journal-divider{width:1px;align-self:stretch;background:#3a4655}
-.journal-progress{display:flex;flex-direction:column;gap:6px;font:400 13px Inter,system-ui,sans-serif;color:var(--realm-muted)}
-.journal-progress strong{font:600 15px var(--realm-serif);color:var(--realm-ink)}
-.journal-marks{display:flex;gap:6px}
-.journal-marks span{width:22px;height:4px;border-radius:1px;background:#3a4655}
-.journal-marks span.done{background:#5d7690}
-.journal-marks span.now{background:var(--realm-select)}
-.journal-result{display:inline-flex;align-items:center;gap:6px;font:600 15px var(--realm-serif)}
-.journal-result.victory{color:var(--realm-ready)}
-.journal-result.defeat{color:#e39b8f}
-.journal-actions{display:flex;align-items:center;gap:12px;flex-wrap:wrap;justify-content:flex-end;padding-top:14px;border-top:1px solid #2c3643}
-.journal-tools{position:relative;display:flex;gap:6px;margin-right:auto}
-.realm .journal-icon,html:root[data-color-mode][data-theme] body .realm button.journal-icon{display:flex;align-items:center;justify-content:center;width:40px;height:40px;min-height:40px;padding:0;border:1px solid var(--realm-edge);border-radius:3px;background:var(--realm-surface-2);box-shadow:none;transform:none;color:var(--realm-dim);cursor:pointer;font:700 13px Inter,system-ui,sans-serif;letter-spacing:.05em}
-html:root[data-color-mode][data-theme] body .realm button.journal-icon:hover:not(:disabled){background:#212a36;border-color:var(--realm-edge-hi);color:var(--realm-ink)}
-html:root[data-color-mode][data-theme] body .realm button.journal-icon.on{color:var(--realm-select);border-color:var(--realm-select)}
-.realm .journal-icon:focus-visible{outline:2px solid var(--realm-ink);outline-offset:2px}
-.journal-menu{position:absolute;left:0;bottom:calc(100% + 6px);z-index:20;display:flex;flex-direction:column;min-width:150px;padding:4px;background:var(--realm-surface-2);border:1px solid var(--realm-edge-hi);border-radius:3px;box-shadow:0 10px 24px rgba(0,0,0,.45)}
-.realm .journal-menu button,html:root[data-color-mode][data-theme] body .realm .journal-menu button{min-height:38px;padding:0 12px;border:0;border-radius:2px;background:none;box-shadow:none;transform:none;text-align:left;cursor:pointer;font:500 14px Inter,system-ui,sans-serif;color:var(--realm-ink)}
-html:root[data-color-mode][data-theme] body .realm .journal-menu button:hover{background:#262f3c}
-html:root[data-color-mode][data-theme] body .realm .journal-menu button.danger{color:#e39b8f}
-.journal-side{display:inline-flex;align-items:center;gap:7px;font:500 13.5px Inter,system-ui,sans-serif;color:var(--realm-muted)}
-.journal-side.turn{color:var(--realm-select)}
-.journal-side.turn span{width:8px;height:8px;border-radius:50%;background:var(--realm-select);box-shadow:0 0 8px rgba(156,201,234,.7)}
-.journal-storage{grid-column:1/-1;margin:0;font:400 12.5px/1.5 Inter,system-ui,sans-serif;color:#8792a0}
+.adv-top{position:relative;z-index:3;display:flex;justify-content:space-between;align-items:center;padding:20px 40px 0}
+.game-menu .adv-back{display:inline-flex;align-items:center;gap:10px;min-height:44px;font:600 14px Cinzel,'EB Garamond',Georgia,serif;letter-spacing:.14em;text-transform:uppercase;color:#d2cbbf}
+.adv-back svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.adv-corner{display:flex;gap:26px}
+.game-menu .adv-word{display:inline-flex;align-items:center;gap:9px;min-height:44px;font:600 13.5px Cinzel,'EB Garamond',Georgia,serif;letter-spacing:.16em;text-transform:uppercase;color:#d2cbbf}
+.game-menu :is(.adv-back,.adv-word):hover{color:#fff}
 
+.adv-page{position:relative;z-index:2;display:grid;grid-template-columns:minmax(380px,520px) minmax(0,1fr);gap:40px;min-height:calc(100dvh - 64px);box-sizing:border-box;padding:18px 40px 26px 64px}
+.adv-left{display:flex;flex-direction:column;min-height:0;min-width:0}
+.adventures h1{margin:6px 0 16px;font:600 clamp(34px,3.4vw,44px)/1 Cinzel,'EB Garamond',Georgia,serif;letter-spacing:.03em;color:#F1E5CF}
+.adv-tabs{display:flex;gap:26px;margin-bottom:14px;border-bottom:1px solid #2f394680}
+.game-menu .adv-tabs button{position:relative;min-height:40px;padding:0 0 8px;font:600 13px Cinzel,'EB Garamond',Georgia,serif;letter-spacing:.12em;text-transform:uppercase;color:#8d99a6}
+.game-menu .adv-tabs button:hover{color:#F1E5CF}
+.adv-tabs b{margin-left:6px;font:600 11px Inter,system-ui,sans-serif;letter-spacing:0;color:#8d99a6}
+.game-menu .adv-tabs button[aria-selected=true]{color:#F1E5CF}
+.adv-tabs button[aria-selected=true]::after{content:'';position:absolute;left:0;right:0;bottom:-1px;height:2px;background:var(--adv-select);box-shadow:0 0 10px #9cc9ea88}
+.adv-search input{box-sizing:border-box;width:100%;min-height:40px;margin-bottom:12px;padding:0 12px;border:1px solid #435263;border-radius:2px;background:#121820cc;color:#F1E5CF;font:400 15px 'EB Garamond',Georgia,serif}
+.adv-slots-wrap{display:flex;flex-direction:column;gap:10px;min-height:0}
+.adv-slots{display:flex;flex-direction:column;gap:10px;max-height:calc(100dvh - 400px);min-height:84px;overflow-y:auto;padding:2px 2px 2px 26px;margin-left:-26px;scrollbar-width:thin;scrollbar-color:#435263 transparent}
+.adv-empty{margin:8px 0;font:italic 400 18px 'EB Garamond',Georgia,serif;color:#a9a395}
+
+/* A save slot. The chosen one has a pale-blue edge and a diamond outside it, like Camp's menu marker. */
+.adv-slot{position:relative;border:1px solid #2f394699;background:#121820d9;transition:border-color 120ms ease,background-color 120ms ease}
+.adv-slot:hover{border-color:#435263}
+.adv-slot.on{border-color:#6f93b2;background:linear-gradient(90deg,#1a2532e8,#121820e6 60%);box-shadow:inset 3px 0 0 var(--adv-select)}
+.adv-slot.on::before{content:'';position:absolute;left:-22px;top:38px;width:9px;height:9px;transform:rotate(45deg);background:var(--adv-select);box-shadow:0 0 10px #9cc9ea}
+.adv-slot-face{display:grid;grid-template-columns:112px minmax(0,1fr) auto;gap:16px;align-items:center;padding:10px 16px 10px 10px;cursor:pointer}
+.adv-slot-face:focus-visible{outline:1.5px solid #F1E5CF;outline-offset:3px}
+.adv-thumb{display:block;width:112px;height:66px;object-fit:cover;border:1px solid #3a4655}
+.adv-slot-text{display:flex;flex-direction:column;gap:3px;min-width:0}
+.adv-slot-text strong{font:600 17px/1.15 Cinzel,'EB Garamond',Georgia,serif;letter-spacing:.02em;color:#F1E5CF;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.adv-slot-text>span:not(.adv-road){font:500 13px Inter,system-ui,sans-serif;color:#d2cbbf;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.adv-road{display:flex;align-items:center;margin-top:5px}
+.adv-road>span{display:flex;align-items:center}
+.adv-road i{display:block;width:20px;height:1.5px;background:#4b5866}
+.adv-road b{display:block;width:8px;height:8px;transform:rotate(45deg);border:1.5px solid #6b7784;box-sizing:border-box}
+.adv-road i.lit{background:var(--adv-lamp)}
+.adv-road b.lit{background:var(--adv-lamp);border-color:var(--adv-lamp);box-shadow:0 0 6px #e9b35a99}
+.adv-state{display:flex;flex-direction:column;align-items:flex-end;gap:6px;font:500 12px Inter,system-ui,sans-serif;color:#8d99a6;white-space:nowrap}
+.adv-turn{display:inline-flex;align-items:center;gap:7px;color:var(--adv-lamp);font-weight:600}
+.adv-turn::before{content:'';width:8px;height:8px;border-radius:50%;background:var(--adv-lamp);box-shadow:0 0 0 3px #e9b35a33,0 0 12px #e9b35a}
+.adv-ribbon{position:absolute;top:-6px;right:12px;width:20px;height:24px;background:#b8392a;clip-path:polygon(0 0,100% 0,100% 100%,50% 78%,0 100%)}
+
+/* The empty slot at the end: a new quest. */
+.adv-newslot{display:grid;grid-template-columns:112px minmax(0,1fr);gap:16px;align-items:center;padding:10px 16px 10px 10px;border:1px dashed #4a5868;background:#0b101699}
+.adv-plus{display:grid;place-items:center;width:112px;height:66px;border:1px dashed #4a5868;color:var(--adv-select);font:400 30px Cinzel,'EB Garamond',Georgia,serif}
+.game-menu .adv-new{min-height:32px;font:600 16px Cinzel,'EB Garamond',Georgia,serif;letter-spacing:.04em;color:#F1E5CF;text-align:left}
+.game-menu .adv-new:hover:not(:disabled){color:var(--adv-select)}
+.adv-newslot p{margin:2px 0 0;font:500 13px Inter,system-ui,sans-serif;color:#8d99a6}
+.game-menu .adv-newslot p button{min-height:28px;color:var(--adv-select)}
+.game-menu .adv-newslot p button:hover:not(:disabled){color:#fff;text-decoration:underline;text-underline-offset:3px}
+.adv-foot{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-top:auto;padding-top:16px}
+.adv-kept{margin-left:auto;font:500 12px Inter,system-ui,sans-serif;color:#6f7b88}
+
+/* The chosen tale, written over its painting. */
+.adv-right{display:flex;flex-direction:column;justify-content:flex-end;align-items:flex-start;min-width:0;padding-bottom:4px}
+.adv-tale{display:flex;flex-direction:column;gap:14px;width:min(580px,100%)}
+.adv-where{margin:0;font:600 11px Inter,system-ui,sans-serif;letter-spacing:.24em;text-transform:uppercase;color:var(--adv-lamp)}
+.adventures .adv-tale h2{margin:0;font:600 clamp(34px,3.6vw,46px)/1.04 Cinzel,'EB Garamond',Georgia,serif;letter-spacing:.02em;color:#F1E5CF;text-shadow:0 2px 18px #000c}
+.adv-place{margin:-6px 0 0;font:italic 400 21px 'EB Garamond',Georgia,serif;color:#d2cbbf}
+.adv-line{margin:0;max-width:52ch;font:italic 400 17px/1.45 'EB Garamond',Georgia,serif;color:#c9c3b8;text-shadow:0 1px 10px #000}
+.adv-party{display:flex;gap:18px;align-items:center;flex-wrap:wrap;padding:12px 0;border-top:1px solid #f1e5cf26;border-bottom:1px solid #f1e5cf26}
+.adv-hero{display:flex;gap:14px;align-items:center;min-width:0;padding-right:18px;border-right:1px solid #f1e5cf26}
+.adv-hero>div{display:flex;flex-direction:column;gap:1px}
+.adv-portrait{border:1px solid #f1e5cf40;background:#1a2330}
+.adv-art{display:block;width:56px;height:64px;overflow:hidden}.adv-art svg{width:100%;height:100%}
+.adv-label{font:600 10.5px Inter,system-ui,sans-serif;letter-spacing:.2em;text-transform:uppercase;color:#8d99a6}
+.adv-hero strong{font:600 18px Cinzel,'EB Garamond',Georgia,serif;color:#F1E5CF}
+.adv-hero>div>span:last-child{font:500 13px Inter,system-ui,sans-serif;color:#d2cbbf}
+.adv-onroad{display:flex;flex-direction:column;gap:6px}
+.adv-bigroad{display:flex;align-items:center}
+.adv-stop-wrap{display:flex;align-items:center}
+.adv-bigroad i{display:block;width:30px;height:2px;background:#4b5866}
+.adv-bigroad i.lit{background:#b98a43}
+.adv-stop{display:grid;place-items:center;width:26px;height:26px;border-radius:50%;border:1.5px solid #7c8996;box-sizing:border-box;font:600 10px Cinzel,'EB Garamond',Georgia,serif;color:#9aa6b2}
+.adv-stop.done{border-color:#b98a43;color:#e9c88c}
+.adv-stop.here{border-color:var(--adv-lamp);color:#1b1408;background:var(--adv-lamp);box-shadow:0 0 0 4px #e9b35a2e,0 0 16px #e9b35aaa}
+.adv-when{font:500 13px Inter,system-ui,sans-serif;color:#d2cbbf}
+.adv-result{font:600 15px Cinzel,'EB Garamond',Georgia,serif;letter-spacing:.08em;text-transform:uppercase}
+.adv-result.victory{color:var(--adv-lamp)}.adv-result.defeat{color:#e39b8f}
+.adv-acts{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.adv-acts .realm-btn-label>span{font-size:18px;line-height:1}
+.adv-small{display:flex;gap:22px;flex-wrap:wrap}
+.game-menu .adv-small button{min-height:36px;font:600 12px Inter,system-ui,sans-serif;letter-spacing:.12em;text-transform:uppercase;color:#a9b3be}
+.game-menu .adv-small button:hover:not(:disabled){color:#fff}
+.game-menu .adv-small button[aria-pressed=true]{color:var(--adv-select)}
+.game-menu .adv-small button.danger{color:#d99382}
+.game-menu .adv-small button:disabled{opacity:.45}
+.adv-notice{position:fixed;left:50%;bottom:20px;z-index:5;transform:translateX(-50%);background:#18202b;color:#F1E5CF;border:1px solid #435263}
+
+/* Phones and narrow windows: the painting is a band at the top; the chosen slot opens in place. */
 @media (max-width:760px){
- .journal{grid-template-columns:minmax(0,1fr)}
- .journal-preview{order:-1}
- .journal-rows{max-height:none}
- .journal-scene{aspect-ratio:16/8}
- .journal-body{padding:14px 14px 16px}
- .journal-divider{display:none}
- .journal-actions{justify-content:stretch}
- .journal-actions .realm-btn{flex:1 1 auto}
+ .menu-screen.journal-page{overflow:visible}
+ .adv-scene{height:300px}
+ .adv-scene img{width:100%;height:300px}
+ .adv-scene::after{background:linear-gradient(0deg,#0b1016 6%,#0b101600 70%)}
+ .adv-top{padding:12px 12px 0 8px}
+ .adv-corner{gap:8px}
+ .game-menu .adv-word{justify-content:center;width:44px;height:44px;border:1px solid #435263;background:#121820b3}
+ .adv-word span{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+ .adv-page{display:flex;flex-direction:column;gap:0;min-height:0;padding:110px 16px 28px}
+ .adventures h1{font-size:34px;margin-bottom:12px}
+ .adv-tabs{gap:18px}
+ .adv-slots{max-height:none;overflow:visible;padding-left:2px;margin-left:-2px}
+ .adv-slot.on::before{display:none}
+ .adv-slot-face{grid-template-columns:84px minmax(0,1fr);gap:12px;padding:8px 12px 8px 8px}
+ .adv-thumb{width:84px;height:56px}
+ .adv-state{grid-column:2;flex-direction:row;align-items:center;gap:12px}
+ .adv-slot-text strong{font-size:15.5px}
+ .adv-tale{gap:12px;width:auto;padding:4px 12px 14px}
+ .adv-line{font-size:16px}
+ .adv-party{gap:12px}
+ .adv-hero{border-right:0;padding-right:0}
+ .adv-acts{display:flex;flex-direction:column;align-items:stretch}
+ .adv-acts>.realm-btn:only-child,.adv-acts>.realm-primary{grid-column:1/-1}
+ .adv-acts .realm-btn{width:100%}.adv-acts .realm-btn-face{width:100%}
+ .adv-small{justify-content:space-between;gap:8px}
+ .adv-newslot{grid-template-columns:84px minmax(0,1fr);gap:12px;padding:8px}
+ .adv-plus{width:84px;height:56px}
+ .adv-foot{padding-top:20px}
 }
-
-/* The Adventures page around the journal: night sky behind a lit table, never a plain app page. */
-.menu-screen.journal-page{flex:1 1 auto;min-height:calc(100dvh - 72px);box-sizing:border-box;background:radial-gradient(ellipse at 62% 30%,#1a2330,#0a0e14 72%)}
-.journal-page .games-main{box-sizing:border-box;max-width:1280px;margin:0 auto;padding:22px clamp(16px,3.6vw,48px) 28px;background:none}
-.journal-top{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:18px}
-.journal-top h1{margin:2px 0 0;font-size:clamp(28px,3vw,38px);line-height:1.1}
-.journal-quests{display:flex;gap:8px;flex-wrap:wrap}
-@media (max-width:760px){.journal-quests{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));width:100%;gap:6px}.journal-quests .realm-btn{width:100%;min-width:0}.journal-quests .realm-btn-face{padding:0 4px;font-size:12.5px;white-space:nowrap}}
+@media (max-height:640px) and (min-width:761px){.adv-slots{max-height:calc(100dvh - 330px)}.adv-page{padding-top:8px}}
