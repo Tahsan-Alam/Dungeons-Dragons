@@ -243,4 +243,4 @@ html[data-color-mode][data-theme] .ph .ph-board .board-tools i{width:1px;height:
 .hs-sealed-kicker{margin:0 0 4px;font:600 11px Inter,system-ui,sans-serif;letter-spacing:.14em;text-transform:uppercase;color:#8a3a2a}
 .hs-sealed-text{margin:0;font:italic 400 16px/1.45 'EB Garamond',Georgia,serif;color:#2e2216}
 .hs-sealed-text strong{font-style:normal;font-weight:600}
-.hs-sealed-open{margin-top:2px;padding:6px 0;border:0;background:none;font:700 13px Inter,system-ui,sans-serif;letter-spacing:.05em;text-transform:uppercase;color:#7a2a20;text-decoration:underline;text-underline-offset:4px;cursor:pointer}
+.hs-sealed .hs-sealed-open{margin-top:2px;padding:6px 0;border:0;background:none;font:700 13px Inter,system-ui,sans-serif;letter-spacing:.05em;text-transform:uppercase;color:#7a2a20;text-decoration:underline;text-underline-offset:4px;cursor:pointer}
