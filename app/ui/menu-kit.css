@@ -1,0 +1,64 @@
+/* Menu kit: the options-menu controls shared by Adventures, Table settings and the guide (see MenuKit.tsx).
+   Selection is the realm's pale blue; amber is kept for lamps (your turn, the lit road). Colours are fixed, so the
+   menus read the same in light and dark mode. These containers are excluded from the shared button surface. */
+.game-menu{--mk-ink:#F1E5CF;--mk-prose:#d2cbbf;--mk-muted:#8d99a6;--mk-why:#a9a395;--mk-select:#9CC9EA;--mk-lamp:#e9b35a;--mk-edge:#2f3946;--mk-edge-2:#435263;--mk-brass:#b98a43;
+ --mk-display:Cinzel,'EB Garamond',Georgia,serif;--mk-body:'EB Garamond',Georgia,serif;--mk-ui:Inter,system-ui,sans-serif}
+.game-menu :where(button:not(.button)){font:inherit;color:inherit;background:none;border:0;padding:0;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.game-menu :where(button:disabled){cursor:default}
+.game-menu :is(button,[tabindex]):focus-visible{outline:1.5px solid var(--mk-ink);outline-offset:3px}
+
+/* ‹ value › chooser */
+.mk-pick{display:grid;grid-template-columns:36px minmax(150px,auto) 36px;align-items:center;justify-items:center;row-gap:5px;border-radius:2px}
+.mk-pick .mk-arrow{display:grid;place-items:center;width:36px;height:36px;color:var(--mk-select);font:400 28px/1 var(--mk-display)}
+.mk-pick .mk-arrow:hover:not(:disabled){color:#fff}
+.mk-pick .mk-arrow:disabled{color:#3f4a57}
+.mk-value{font:600 15.5px var(--mk-display);letter-spacing:.1em;text-transform:uppercase;white-space:nowrap;color:var(--mk-ink)}
+.mk-notches{grid-column:2;display:flex;gap:6px}
+.mk-notches i{width:18px;height:3px;background:#3a4553}
+.mk-notches i.on{background:var(--mk-select)}
+.mk-pick[aria-disabled=true] .mk-value{color:#6f7b88}
+
+/* Ten notches for a level */
+.mk-bars{display:flex;align-items:center;gap:14px;border-radius:2px;cursor:pointer;touch-action:manipulation}
+.mk-bar-row{display:flex;gap:4px;padding:4px 0}
+.mk-bar-row i{width:14px;height:18px;background:#2b3440;transform:skewX(-12deg);transition:background-color 100ms ease}
+.mk-bar-row i.on{background:linear-gradient(180deg,#cfe6f7,#7fb0d6)}
+.mk-bars:hover .mk-bar-row i:not(.on){background:#35404d}
+.mk-bars b{min-width:44px;text-align:right;font:600 14px var(--mk-ui);color:var(--mk-prose);font-variant-numeric:tabular-nums}
+.mk-bars[aria-disabled=true]{opacity:.45;cursor:default}
+
+/* An option row */
+.mk-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px 24px;align-items:center;min-height:78px;padding:12px 14px;margin:0 -14px;border-bottom:1px solid #2a333f}
+.mk-row:focus-within{background:linear-gradient(90deg,#9cc9ea12,#9cc9ea00 70%);box-shadow:inset 2px 0 0 var(--mk-select)}
+.mk-text{display:flex;flex-direction:column;gap:3px;min-width:0}
+.mk-name{font:500 21px/1.2 var(--mk-body);color:var(--mk-ink)}
+.mk-why{font:400 16px/1.35 var(--mk-body);color:var(--mk-why);max-width:48ch}
+.mk-control{display:flex;align-items:center;gap:14px;justify-content:flex-end}
+.mk-row.wide{grid-template-columns:1fr}
+.mk-row.wide .mk-control{justify-content:flex-start}
+
+/* Key hints */
+.mk-keys{display:flex;flex-wrap:wrap;gap:6px 20px;font:500 12.5px var(--mk-ui);color:var(--mk-muted)}
+.mk-keys span{display:inline-flex;align-items:center;gap:6px}
+.game-menu kbd,.mk-keys kbd{display:inline-grid;place-items:center;min-width:22px;height:22px;padding:0 6px;border:1px solid #4a5868;border-bottom-width:2px;border-radius:3px;background:#18202a;color:var(--mk-ink);font:600 11px var(--mk-ui);box-sizing:border-box}
+@media (pointer:coarse),(max-width:600px){.mk-keys{display:none}}
+
+/* A quiet text action: small caps, underline on hover */
+.mk-link{display:inline-flex;align-items:center;gap:6px;min-height:36px;font:600 12.5px var(--mk-ui)!important;letter-spacing:.12em;text-transform:uppercase;color:var(--mk-select)!important}
+.mk-link:hover:not(:disabled){color:#fff!important}
+.mk-link.danger{color:#e3a08c!important}
+.mk-link:disabled{opacity:.45}
+
+@media (max-width:600px){
+ .mk-row{grid-template-columns:minmax(0,1fr) auto;grid-template-areas:'name control' 'why why';align-items:center;row-gap:4px;column-gap:10px;margin:0 -16px;padding:14px 16px;min-height:0}
+ .mk-text{display:contents}
+ .mk-name{grid-area:name;font-size:19px}
+ .mk-why{grid-area:why;font-size:15px}
+ .mk-control{grid-area:control}
+ .mk-row:has(.mk-bars),.mk-row:has(.mk-gems),.mk-row.wide{grid-template-areas:'name name' 'why why' 'control control'}
+ .mk-row:has(.mk-bars) .mk-control,.mk-row:has(.mk-gems) .mk-control,.mk-row.wide .mk-control{justify-content:flex-start;margin-top:6px;flex-wrap:wrap}
+ .mk-pick{grid-template-columns:40px minmax(104px,auto) 40px}
+ .mk-pick .mk-arrow{width:40px;height:44px}
+ .mk-value{font-size:13.5px}
+ .mk-bar-row i{width:16px;height:22px}
+}

@@ -6,9 +6,9 @@ import './realm-dialog.css';
 
 /** A supplied action runs after dismissal; useful for leaving a multi-step dialog. */
 export type ModalDismiss=(afterClose?:()=>void)=>void;
-type ModalProps={title:string;onClose:()=>void;children:ReactNode|((dismiss:ModalDismiss)=>ReactNode);wide?:boolean;dismissible?:boolean;initialFocus?:RefObject<HTMLElement|null>;keepOpenOnDismiss?:boolean};
+type ModalProps={title:string;onClose:()=>void;children:ReactNode|((dismiss:ModalDismiss)=>ReactNode);wide?:boolean;dismissible?:boolean;initialFocus?:RefObject<HTMLElement|null>;keepOpenOnDismiss?:boolean;className?:string;escHint?:string};
 
-export default function Modal({title,onClose,children,wide=false,dismissible=true,initialFocus,keepOpenOnDismiss=false}:ModalProps) {
+export default function Modal({title,onClose,children,wide=false,dismissible=true,initialFocus,keepOpenOnDismiss=false,className='',escHint}:ModalProps) {
  const{reducedMotion}=useTheme();const reducedMotionRef=useRef(reducedMotion);reducedMotionRef.current=reducedMotion;
  const dialog=useRef<HTMLDialogElement>(null),close=useRef(onClose),timer=useRef<ReturnType<typeof setTimeout>|null>(null),closingRef=useRef(false);
  const[closing,setClosing]=useState(false);const titleId=useId(),canDismiss=useRef(dismissible),keepOpen=useRef(keepOpenOnDismiss),focusTarget=useRef(initialFocus);close.current=onClose;canDismiss.current=dismissible;keepOpen.current=keepOpenOnDismiss;focusTarget.current=initialFocus;
@@ -28,7 +28,7 @@ export default function Modal({title,onClose,children,wide=false,dismissible=tru
   const handler=(e:Event)=>{e.preventDefault();requestClose()};el?.addEventListener('cancel',handler);
   return()=>{if(timer.current)clearTimeout(timer.current);el?.removeEventListener('cancel',handler);el?.close()};
  },[requestClose]);
- return <dialog ref={dialog} inert={closing} aria-labelledby={titleId} className={`modal ${wide?'wide':''} ${closing?'is-closing':''}`} onClick={e=>{if(e.target===dialog.current){const rect=dialog.current.getBoundingClientRect();if(e.clientX<rect.left||e.clientX>rect.right||e.clientY<rect.top||e.clientY>rect.bottom)requestClose()}}}>
-  <div className="modal-head"><h2 id={titleId}>{title}</h2><div className="modal-tools"><button className="icon-button" aria-label="Close dialog" title="Close (Esc)" disabled={!dismissible||closing} onClick={()=>requestClose()}><Icon name="close"/></button></div></div>{typeof children==='function'?children(requestClose):children}
+ return <dialog ref={dialog} inert={closing} aria-labelledby={titleId} className={`modal ${wide?'wide':''} ${closing?'is-closing':''} ${className}`} onClick={e=>{if(e.target===dialog.current){const rect=dialog.current.getBoundingClientRect();if(e.clientX<rect.left||e.clientX>rect.right||e.clientY<rect.top||e.clientY>rect.bottom)requestClose()}}}>
+  <div className="modal-head"><h2 id={titleId}>{title}</h2><div className="modal-tools">{escHint?<span className="modal-esc" aria-hidden="true"><kbd>Esc</kbd>{escHint}</span>:null}<button className="icon-button" aria-label="Close dialog" title="Close (Esc)" disabled={!dismissible||closing} onClick={()=>requestClose()}><Icon name="close"/></button></div></div>{typeof children==='function'?children(requestClose):children}
  </dialog>;
 }
