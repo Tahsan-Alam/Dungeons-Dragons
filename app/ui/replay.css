@@ -1,4 +1,105 @@
-.replay-screen{height:100dvh;display:flex;flex-direction:column;overflow:hidden}.replay-layout{display:grid;grid-template-columns:minmax(0,1fr) 280px;min-height:0;flex:1}.replay-main{display:flex;flex-direction:column;min-height:0;min-width:0;padding:0 24px 18px}.replay-scene{height:70px;display:flex;align-items:center;gap:18px;flex-shrink:0}.replay-scene h1{font-size:27px}.replay-scene>span{margin-left:auto;font-size:12px;color:var(--muted)}.replay-event{min-height:50px;display:flex;align-items:center;font-size:12px;line-height:1.6;padding:10px 0}.replay-controls{flex-shrink:0}.replay-timeline{display:block;padding:7px 0}.replay-timeline input{display:block;width:100%;height:22px;accent-color:var(--forest);cursor:pointer}.replay-transport{display:flex;align-items:center;gap:12px;padding-top:8px}.transport-group{display:flex;align-items:center;gap:4px}.transport-group .icon-button{width:34px;height:40px;font-size:12px}.replay-play{min-height:40px;width:76px;padding:8px 12px;font-size:12px}.replay-progress{font:11px var(--mono);color:var(--muted);min-width:60px}.replay-transport select{border:1px solid var(--line);border-radius:5px;background:var(--surface);padding:9px 8px;min-height:40px;font-size:12px;max-width:100%}.replay-chapter{margin-left:auto;max-width:220px;min-width:0}.replay-sidebar{padding:20px 18px 14px;border-left:1px solid var(--line);min-height:0;display:flex;flex-direction:column;overflow:hidden;background:var(--paper)}.replay-party{max-height:40%;overflow:auto;flex-shrink:0;margin-bottom:20px}.replay-hero{display:flex;align-items:center;gap:12px;width:100%;padding:5px 7px;text-align:left;border-radius:7px}.replay-hero:hover,.replay-hero.selected{background:var(--sage)}.replay-hero .hero-art{width:36px;height:44px;flex-shrink:0}.replay-hero>span{min-width:0}.replay-hero strong{display:block;font-size:12px;overflow-wrap:anywhere}.replay-hero small{display:block;font-size:11px;color:var(--muted);margin-top:5px}.replay-inspect{padding:8px 0 16px;font-size:11px;color:var(--muted)}.replay-log{overflow:auto;min-height:0;font-size:11px}.replay-log p{padding:11px 0;border-bottom:1px solid var(--line);color:var(--muted)}.replay-log .story{font-family:var(--heading);font-size:16px;color:var(--ink)}.replay-legacy{font-size:11px;margin-top:15px;color:var(--muted)}.replay-details-button,.replay-close,.replay-scrim{display:none}
-@media(max-width:850px){.replay-layout{grid-template-columns:minmax(0,1fr)}.replay-main{padding:0 16px 15px}.replay-details-button{display:flex}.replay-sidebar{display:none}.replay-sidebar.open{display:flex;position:fixed;right:0;top:63px;bottom:0;width:min(330px,88vw);z-index:45;box-shadow:-8px 0 35px #293e3520;animation:menu-in .18s ease}.replay-close{display:flex}.replay-scrim{display:block;position:fixed;inset:63px 0 0;background:#293e3538;z-index:44;cursor:default}}
-@media(max-width:600px){.replay-scene{height:62px;gap:10px}.replay-scene h1{font-size:23px}.replay-scene>span{font-size:11px}.replay-event{font-size:11px;min-height:60px}.replay-transport{gap:8px;flex-wrap:wrap}.transport-group{gap:2px}.transport-group .icon-button{width:34px;height:44px}.replay-play{width:64px;min-height:44px}.replay-progress{min-width:45px;font-size:11px;margin-left:auto}.replay-transport select{min-height:44px}.replay-chapter{width:100%;max-width:none}.replay-chapter select{width:100%}.replay-speed select{padding:8px 4px}.replay-screen .board-container{min-height:140px}.replay-main{padding:0 12px 12px}}
+/* Replay as a theatre: no app header, the tale's name over the board, the narration line under it, and a playback bar
+   whose timeline is the road, with a waymark for each chapter. The party and the tale so far sit to the side.
+   Fixed realm colours, so it reads the same in light and dark mode (the board keeps its own day or night). */
+.replay-screen.rp-theatre{height:100dvh;display:flex;flex-direction:column;overflow:hidden;background:radial-gradient(ellipse at 50% 30%,#141c26,#0a0e14 75%);color:#F1E5CF}
+.rp-top{display:flex;justify-content:space-between;align-items:center;flex:none;padding:10px 28px 0 20px}
+.game-menu .rp-back,.game-menu .rp-word{display:inline-flex;align-items:center;gap:9px;min-height:44px;font:600 13.5px Cinzel,'EB Garamond',Georgia,serif;letter-spacing:.14em;text-transform:uppercase;color:#d2cbbf}
+.rp-back svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.rp-corner{display:flex;gap:24px}
+.game-menu :is(.rp-back,.rp-word):hover{color:#fff}
+.rp-waiting{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;font:italic 400 19px 'EB Garamond',Georgia,serif;color:#c9c3b8}
+
+.rp-theatre .replay-layout{display:grid;grid-template-columns:minmax(0,1fr) 300px;min-height:0;flex:1}
+.rp-theatre .replay-main{display:flex;flex-direction:column;min-height:0;min-width:0;padding:0 24px 14px 28px}
+.rp-theatre .replay-scene{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;height:auto;padding:2px 0 12px;flex:none}
+.rp-title{display:flex;flex-direction:column;gap:2px;min-width:0}
+.rp-eyebrow{font:600 11px Inter,system-ui,sans-serif;letter-spacing:.22em;text-transform:uppercase;color:#e9b35a}
+.rp-theatre .replay-scene h1{margin:0;font:600 clamp(24px,2.6vw,32px)/1.1 Cinzel,'EB Garamond',Georgia,serif;letter-spacing:.03em;color:#F1E5CF;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rp-place{font:italic 400 17px 'EB Garamond',Georgia,serif;color:#c9c3b8}
+.rp-theatre .replay-event{min-height:52px;display:flex;align-items:center;justify-content:center;margin:0;padding:10px 12px;text-align:center;font:italic 400 18px/1.45 'EB Garamond',Georgia,serif;color:#e8dcc4}
+
+/* The road: the timeline track, lit up to where the replay stands, with a waymark per chapter. */
+.rp-theatre .replay-controls{flex:none;padding:10px 4px 0;border-top:1px solid #2f3946}
+.rp-road{position:relative;height:44px;margin:0 14px}
+.rp-range{position:absolute;left:0;right:0;top:0;width:100%;height:34px;margin:0;background:none;-webkit-appearance:none;appearance:none;cursor:pointer}
+.rp-range::-webkit-slider-runnable-track{height:3px;background:linear-gradient(90deg,#b98a43 var(--rp-at),#3a4553 var(--rp-at))}
+.rp-range::-moz-range-track{height:3px;background:linear-gradient(90deg,#b98a43 var(--rp-at),#3a4553 var(--rp-at))}
+.rp-range::-webkit-slider-thumb{-webkit-appearance:none;width:16px;height:16px;margin-top:-6.5px;transform:rotate(45deg);background:#e9b35a;border:2px solid #0d1218;box-shadow:0 0 10px #e9b35aaa}
+.rp-range::-moz-range-thumb{width:13px;height:13px;transform:rotate(45deg);background:#e9b35a;border:2px solid #0d1218;border-radius:0;box-shadow:0 0 10px #e9b35aaa}
+html[data-color-mode][data-theme] body .replay-screen.rp-theatre input.rp-range:focus-visible{outline:none;box-shadow:none}
+.rp-range:focus-visible::-webkit-slider-thumb{box-shadow:0 0 0 3px #0d1218,0 0 0 5px #F1E5CF}
+.rp-range:focus-visible::-moz-range-thumb{box-shadow:0 0 0 3px #0d1218,0 0 0 5px #F1E5CF}
+.game-menu .rp-waymark{position:absolute;top:12px;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:2px;pointer-events:auto;z-index:1}
+.rp-waymark::before{content:'';width:9px;height:9px;transform:rotate(45deg);border:1.5px solid #7c8996;background:#0d1218}
+.rp-waymark.lit::before{border-color:#b98a43;background:#b98a43}
+.rp-waymark span{font:600 10px Cinzel,'EB Garamond',Georgia,serif;color:#8d99a6}
+.rp-waymark.lit span{color:#e9c88c}
+.game-menu .rp-waymark:hover span{color:#fff}
+
+.rp-theatre .replay-transport{display:flex;align-items:center;gap:18px;flex-wrap:wrap;padding-top:6px}
+.rp-theatre .transport-group{display:flex;align-items:center;gap:4px}
+.game-menu .rp-btn{display:grid;place-items:center;width:40px;height:40px;color:#d2cbbf;border-radius:2px}
+.game-menu .rp-btn:hover:not(:disabled){color:#fff;background:#ffffff0d}
+.game-menu .rp-btn:disabled{color:#4b5664}
+.rp-btn svg,.rp-play svg{width:18px;height:18px;fill:currentColor;stroke:currentColor;stroke-width:1.6;stroke-linejoin:round;stroke-linecap:round}
+.rp-btn svg path:not([d*='z']){fill:none}
+.game-menu .rp-play{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-width:118px;height:44px;margin:0 6px;padding:0 18px;color:#F1E5CF;font:700 14px Inter,system-ui,sans-serif;letter-spacing:.08em;text-transform:uppercase;
+ background:#284B68;background-image:linear-gradient(180deg,#4b739a 0,#4b739a 1px,transparent 1px);clip-path:polygon(9px 0,calc(100% - 9px) 0,100% 9px,100% calc(100% - 9px),calc(100% - 9px) 100%,9px 100%,0 calc(100% - 9px),0 9px)}
+.game-menu .rp-play:hover{background-color:#30587a}
+.rp-play svg{stroke:none}
+.rp-theatre .replay-progress{min-width:0;font:500 13px Inter,system-ui,sans-serif;color:#a9b3be}
+.replay-progress em{font:italic 400 15px 'EB Garamond',Georgia,serif;color:#c9c3b8}
+.rp-speed{display:flex;align-items:center;gap:6px;margin-left:auto}
+.rp-label{font:600 11px Inter,system-ui,sans-serif;letter-spacing:.18em;text-transform:uppercase;color:#8d99a6}
+.rp-speed .mk-pick{grid-template-columns:32px 54px 32px}
+.rp-speed .mk-pick .mk-arrow{width:32px}
+.rp-theatre .mk-keys{width:100%;justify-content:flex-end;padding-top:2px}
+
+/* The party and the tale so far. */
+.rp-theatre .replay-sidebar{display:flex;flex-direction:column;min-height:0;overflow:hidden;padding:12px 20px 14px;border-left:1px solid #2f3946;background:#0f141bcc}
+.rp-theatre .rail-heading{display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin:8px 0 10px}
+.replay-screen.rp-theatre .rail-heading h2{white-space:nowrap;margin:0;font:600 13px Cinzel,'EB Garamond',Georgia,serif;letter-spacing:.18em;text-transform:uppercase;color:#F1E5CF}
+.replay-screen.rp-theatre .rail-heading>span{white-space:nowrap;font:600 11px Inter,system-ui,sans-serif;letter-spacing:.16em;text-transform:uppercase;color:#e9b35a}
+.rp-theatre .replay-party{display:flex;flex-direction:column;gap:6px;max-height:42%;overflow:auto;flex-shrink:0;margin-bottom:12px}
+.game-menu .replay-hero{display:flex;align-items:center;gap:12px;width:100%;padding:6px 8px;text-align:left;border:1px solid transparent;border-radius:2px;background:#121820}
+.game-menu .replay-hero:hover{border-color:#435263}
+.game-menu .replay-hero.selected{border-color:#9CC9EA;box-shadow:inset 3px 0 0 #9CC9EA}
+.replay-hero.active strong::after{content:'';display:inline-block;width:7px;height:7px;margin-left:8px;border-radius:50%;background:#e9b35a;box-shadow:0 0 8px #e9b35a;vertical-align:2px}
+.rp-theatre .replay-hero .hero-art{width:36px;height:44px;flex-shrink:0}
+.rp-theatre .replay-hero>span{display:flex;flex-direction:column;gap:4px;min-width:0;flex:1}
+.rp-theatre .replay-hero strong{font:600 15px Cinzel,'EB Garamond',Georgia,serif;color:#F1E5CF;overflow-wrap:anywhere}
+.rp-hp{display:block;height:4px;background:#2b3440}
+.rp-hp i{display:block;height:100%;background:#8FD18B}.rp-hp i.mid{background:#e8c060}.rp-hp i.low{background:#e3a08c}
+.rp-theatre .replay-hero small{font:500 12px Inter,system-ui,sans-serif;color:#a9b3be}
+.rp-theatre .replay-inspect{margin:0 0 10px;font:500 12.5px Inter,system-ui,sans-serif;color:#a9b3be}
+.rp-theatre .replay-log{overflow:auto;min-height:0;scrollbar-width:thin;scrollbar-color:#435263 transparent}
+.rp-theatre .replay-log p{margin:0;padding:9px 0;border-bottom:1px dashed #2f3946;font:400 15px/1.4 'EB Garamond',Georgia,serif;color:#a9a395}
+.rp-theatre .replay-log .story{font:italic 400 17px/1.45 'EB Garamond',Georgia,serif;color:#e8dcc4}
+.rp-theatre .replay-legacy{margin-top:12px;font:italic 400 14px 'EB Garamond',Georgia,serif;color:#8d99a6}
+.replay-details-button,.replay-scrim,.rp-theatre .replay-sidebar:not(.open) .replay-close{display:none}
+
+@media(max-width:850px){
+ .rp-theatre .replay-layout{grid-template-columns:minmax(0,1fr)}
+ .rp-theatre .replay-main{padding:0 14px 12px}
+ .rp-theatre .replay-details-button{display:inline-flex;flex:none}
+ .rp-theatre .replay-sidebar{display:none}
+ .rp-theatre .replay-sidebar.open{display:flex;position:fixed;right:0;top:0;bottom:0;width:min(330px,88vw);z-index:45;background:#0f141b;box-shadow:-8px 0 35px #000a}
+ .replay-sidebar.open .replay-close{display:grid}
+ .replay-scrim{display:block;position:fixed;inset:0;background:#05080cb0;z-index:44;border:0;cursor:default}
+ .rp-corner{gap:8px}
+ .game-menu .rp-word{justify-content:center;width:44px;height:44px;border:1px solid #435263;background:#121820b3}
+ .rp-word span{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+ .rp-top{padding:8px 12px 4px 8px}
+}
+@media(max-width:600px){
+ .rp-theatre .replay-scene{flex-wrap:wrap;align-items:flex-end}
+ .rp-theatre .replay-scene h1{font-size:22px}
+ .rp-place{font-size:15px}
+ .rp-theatre .replay-event{font-size:16px;min-height:60px}
+ .rp-theatre .replay-transport{gap:8px 10px;justify-content:space-between}
+ .rp-theatre .transport-group{width:100%;justify-content:center}
+ .game-menu .rp-btn{width:44px;height:44px}
+ .rp-speed{margin-left:0}
+ .rp-theatre .board-container{min-height:140px}
+}
 @media(prefers-reduced-motion:reduce){html:not([data-motion="full"]) .replay-sidebar.open{animation:none}}

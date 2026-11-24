@@ -131,3 +131,26 @@ html[data-motion=reduced] .adv-scene img{animation:none}
  .adv-foot{padding-top:20px}
 }
 @media (max-height:640px) and (min-width:761px){.adv-slots{max-height:calc(100dvh - 330px)}.adv-page{padding-top:8px}}
+
+/* Rename and Delete are notes on the sealed note's parchment: ink lettering, a written line to fill in, and the
+   wax-red seal on the act that closes the note. */
+html[data-color-mode][data-theme] dialog.modal.parchment-note{width:min(460px,calc(100vw - 32px));color:#33261a;border:0;border-radius:2px;
+ background:#f2e7cd radial-gradient(ellipse at 20% 15%,#fbf3df 0,#f2e7cd00 60%);box-shadow:0 0 0 1px #6b5034,0 0 0 5px #2a1d14,0 0 0 6px #b98a43,0 30px 80px #000c}
+html[data-color-mode][data-theme] dialog.modal.parchment-note::backdrop{background:rgba(5,8,12,.74);backdrop-filter:blur(4px)}
+html[data-color-mode][data-theme] dialog.modal.parchment-note .modal-head{padding:24px 26px 6px;border:0}
+html[data-color-mode][data-theme] dialog.modal.parchment-note .modal-head h2{font-size:22px;letter-spacing:.05em;color:#2b1f14}
+html[data-color-mode][data-theme] dialog.modal.parchment-note .modal-head h2::after{content:'';display:block;width:70px;height:2px;margin-top:9px;background:linear-gradient(90deg,#8a2f22,#8a2f2200)}
+html[data-color-mode][data-theme] dialog.modal.parchment-note .modal-tools .icon-button{width:36px;height:36px;min-height:36px;border:1px solid #b99a6e;background:#ead9b4;color:#3a2a1a}
+.parchment-note .library-dialog{padding:8px 26px 24px}
+html[data-color-mode][data-theme] dialog.modal.parchment-note .library-dialog p{margin:0 0 10px;font:400 17.5px/1.5 'EB Garamond',Georgia,serif;color:#33261a}
+.parchment-note .field{gap:6px;margin:6px 0 0;font:italic 400 16px 'EB Garamond',Georgia,serif;color:#7a6248}
+html[data-color-mode][data-theme] dialog.modal.parchment-note .field input{min-height:44px;padding:4px 2px;border:0;border-bottom:1.5px solid #6d5136;border-radius:0;background:transparent;color:#2b1f14;font:500 21px 'EB Garamond',Georgia,serif}
+html[data-color-mode][data-theme] dialog.modal.parchment-note .field input:focus{outline:none;border-bottom-color:#8a2f22;box-shadow:0 1px 0 #8a2f22}
+.parchment-note .dialog-actions{display:flex;justify-content:flex-end;align-items:center;gap:18px;margin-top:22px}
+html[data-color-mode][data-theme] dialog.modal.parchment-note .dialog-actions .button{min-height:44px;border-radius:0;box-shadow:none;font:600 13px Cinzel,'EB Garamond',Georgia,serif;letter-spacing:.12em;text-transform:uppercase}
+html[data-color-mode][data-theme] dialog.modal.parchment-note .dialog-actions .button.paper{min-width:0;padding:0 4px;border:0;background:none;color:#7a6248}
+html[data-color-mode][data-theme] dialog.modal.parchment-note .dialog-actions .button.paper:hover:not(:disabled){color:#2b1f14;text-decoration:underline;text-underline-offset:4px}
+html[data-color-mode][data-theme] dialog.modal.parchment-note .dialog-actions :is(.button.primary,.button.danger){padding:0 22px;border:0;color:#fbe9dc;clip-path:none;background:linear-gradient(180deg,#b8392a,#8a2a1e);background-image:linear-gradient(180deg,#b8392a,#8a2a1e);box-shadow:inset 0 1px 0 #d65a40,0 2px 0 #5a1a12}
+html[data-color-mode][data-theme] dialog.modal.parchment-note .dialog-actions :is(.button.primary,.button.danger):hover:not(:disabled){background:linear-gradient(180deg,#c84634,#982f22)}
+html[data-color-mode][data-theme] dialog.modal.parchment-note .dialog-actions .button:disabled{opacity:.5}
+html[data-color-mode][data-theme] dialog.modal.parchment-note :is(button,input):focus-visible{outline:1.5px solid #8a2f22;outline-offset:3px}

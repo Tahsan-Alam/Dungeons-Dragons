@@ -21,11 +21,12 @@ export default function TooltipLayer(){
 
   function buttonAt(target:EventTarget|null){
    const element=target instanceof Element?target:null,button=element?.closest('button');
-   // data-tooltip="none": the button's own large label already says it all. The menu screens (.game-menu) label every
-   // control in words, so only a button there with its own title or data-tooltip gets one.
+   // data-tooltip="none": the button's own large label already says it all. On the menu screens (.game-menu) and in the
+   // creator (.qs) a button that shows words gets no tooltip unless it asks for one; icon-only buttons keep theirs.
    if(!(button instanceof HTMLButtonElement)||button.dataset.tooltip==='none'||!button.closest('.app-root,dialog.modal,.toast'))return null;
-   return button.closest('.game-menu')&&!button.dataset.tooltip&&!button.getAttribute('title')&&!titles.get(button)?.value?null:button;
+   return button.closest('.game-menu,.qs')&&!button.dataset.tooltip&&!button.getAttribute('title')&&!titles.get(button)?.value&&visibleText(button)?null:button;
   }
+  function visibleText(button:HTMLButtonElement){const clone=button.cloneNode(true) as HTMLButtonElement;clone.querySelectorAll('svg,kbd,[aria-hidden="true"],.sr-only').forEach(node=>node.remove());return clean(clone.textContent)}
   function nativeTitle(button:HTMLButtonElement){
    const current=button.getAttribute('title');
    return current!==null&&current!==''?current:titles.get(button)?.value||'';
