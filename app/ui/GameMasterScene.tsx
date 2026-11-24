@@ -1,9 +1,15 @@
 'use client';
 import {useLayoutEffect,useRef,type ReactNode} from 'react';
 import type {GameState} from '../../game/types';
-import {GAME_MASTERS,SCENE_FOR_BIOME} from '../../game/presets';
+import {GAME_MASTERS} from '../../game/presets';
+import type {Biome} from '../../game/types';
 import NarratorAvatar from './NarratorAvatar';
+import {useTheme} from './Theme';
 import './gm-scene.css';
+
+/** The region behind the Game Master, by day or after dusk (design canvas: World page mood boards). Follows Time of day. */
+const REGION:Record<Biome,string>={woodland:'lanternwood',ruins:'reach',coast:'saltreach'};
+export const regionScene=(biome:Biome,night:boolean)=>`/art/scenes/region-${REGION[biome]??'lanternwood'}-${night?'dusk':'day'}.svg`;
 
 /** A full-screen moment with the Game Master standing in the tale's place: the chapter opening and Ask.
     The panel along the bottom holds what they say and the way back to the encounter. */
@@ -16,8 +22,8 @@ export default function GameMasterScene({game,label,eyebrow,title,talking=false,
   return()=>{el?.removeEventListener('cancel',cancel);el?.close()};
  },[]);
  const narrator=game.options.creation?.narrator,gm=GAME_MASTERS.find(g=>g.profile.name===narrator?.name);
- const scene=SCENE_FOR_BIOME[game.options.biome].scene;
- return <dialog ref={dialog} className={`gm-scene realm ${className}`} aria-label={label}>
+ const night=useTheme().resolvedColorMode==='dark',scene=regionScene(game.options.biome,night);
+ return <dialog ref={dialog} className={`gm-scene realm ${night?'dusk':'day'} ${className}`} aria-label={label}>
   <img className="gm-backdrop" src={scene} alt="" aria-hidden="true"/>
   <div className="gm-wash" aria-hidden="true"/>
   <div className="gm-figure" aria-hidden="true">{gm?<img src={gm.art} alt=""/>:<NarratorAvatar profile={narrator} size={220} talking={talking}/>}<span className="gm-shadow"/></div>

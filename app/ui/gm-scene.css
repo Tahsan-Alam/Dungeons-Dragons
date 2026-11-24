@@ -74,3 +74,10 @@
  .gm-ask-choices>.gm-actions:last-child{position:fixed;left:12px;right:12px;bottom:28px}
  .gm-ask-choices>.gm-actions:last-child .gm-primary{flex:1;min-height:52px}
 }
+/* By day the region scene is lighter, so the wash eases off at the top and still settles dark behind the panel. */
+.gm-scene.day .gm-wash{background:linear-gradient(180deg,rgba(8,11,16,.42),rgba(8,11,16,.06) 38%,rgba(8,11,16,.55) 68%,rgba(8,11,16,.94))}
+/* Tall phones: the scene fills the height, so lift it until its ground (about two thirds down the region art) meets the Game Master's feet. */
+@media (max-width:760px) and (max-aspect-ratio:1/1){
+ .gm-backdrop{object-position:center top;transform:translateY(calc(70px + min(36vh,300px) - 65dvh))}
+ .gm-ask .gm-backdrop{transform:translateY(calc(64px + min(28vh,240px) - 65dvh))}
+}
