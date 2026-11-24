@@ -14,6 +14,8 @@ import {heroArtFor} from './actor-art';
 import Modal from './Modal';
 import {Portrait} from './RealmKit';
 import NarratorAvatar from './NarratorAvatar';
+import ChapterMap from './ChapterMap';
+import {routeView} from './route-map';
 import JournalDrawer,{type JournalEntry,type JournalTab} from './JournalDrawer';
 import {OwnRoll} from './RollCard';
 import {prepareAttackRoll,findAttackRollResult,type AttackRollRequest} from './attack-roll';
@@ -52,7 +54,10 @@ export default function PlayTable({game,room,session,busy,connection,onAction,on
  // The quest begins: once chapter I's opening closes, the Game Master hands this player their sealed note.
  useEffect(()=>{if(note&&game.scene===0&&game.status==='playing'&&!sceneOpen&&!noteOpened&&!noteAsked.current){noteAsked.current=true;setNoteShown(true)}},[note,game.scene,game.status,sceneOpen,noteOpened]);
  function closeNote(opened:boolean){setNoteShown(false);if(opened){markSealedOpened(noteKey);setNoteOpened(true)}}
- const tableDialogOpen=!!detail||confirmEnd||noteShown;
+ const[roadOpen,setRoadOpen]=useState(false),roadOpener=useRef<HTMLElement|null>(null);
+ const route=useMemo(()=>game.status==='playing'?routeView(game):null,[game]);
+ const openRoad=()=>{roadOpener.current=document.activeElement as HTMLElement;setRoadOpen(true)};
+ const tableDialogOpen=!!detail||confirmEnd||noteShown||roadOpen;
  useEffect(()=>{onTableDialogChange(tableDialogOpen);return()=>onTableDialogChange(false)},[tableDialogOpen,onTableDialogChange]);
  const myTurn=!!actor&&!actor.bot&&actor.playerId===me&&game.status==='playing';
  const clear=encounterCleared(game),quest=getQuestAction(game,actor),target=game.actors.find(a=>a.id===selectedId);
@@ -128,9 +133,10 @@ export default function PlayTable({game,room,session,busy,connection,onAction,on
 
   <header className="ph-top ph-ui">
    <div className="ph-title"><span className="realm-eyebrow">Chapter {ROMAN[game.scene]??game.scene+1} of {ROMAN[goal-1]??goal} · Round {game.round} · {game.options.rules==='simple'?'Streamlined':'Classic'}</span><h1>{game.sceneName}</h1></div>
-   <p className="ph-objective"><Icon name="flag" size={15}/><span><strong>Objective</strong> · {game.objective}</span><span className="ph-shards" aria-label={`${game.relics} of ${goal} lantern shards`}>{Array.from({length:goal},(_,i)=><i key={i} className={i<game.relics?'on':''}/>)}</span></p>
-   <div className="ph-tools" role="group" aria-label="Journal, sound, guide, settings and leave">
+   <p className="ph-objective"><Icon name="flag" size={15}/><span><strong>Objective</strong> · {game.objective}</span>{route?<button type="button" className="ph-shards" aria-haspopup="dialog" aria-label={`The road: ${game.relics} of ${goal} lantern shards`} data-tooltip={`${game.relics} of ${goal} lantern shards · see the road`} onClick={openRoad}>{Array.from({length:goal},(_,i)=><i key={i} className={i<game.relics?'on':''}/>)}</button>:<span className="ph-shards" aria-label={`${game.relics} of ${goal} lantern shards`}>{Array.from({length:goal},(_,i)=><i key={i} className={i<game.relics?'on':''}/>)}</span>}</p>
+   <div className="ph-tools" role="group" aria-label="The road, journal, sound, guide, settings and leave">
     <button type="button" className="ph-tool phone-only" aria-label="Party and foes" data-tooltip="Party and foes" aria-expanded={sideOpen} onClick={()=>setSideOpen(!sideOpen)}><Icon name="people" size={17}/></button>
+    {route?<button type="button" className="ph-tool wide ph-road" aria-haspopup="dialog" data-tooltip="The road so far, on the map of the Lantern Marches" onClick={openRoad}><Icon name="road" size={16}/>The road</button>:null}
     <button type="button" className="ph-tool wide" aria-expanded={!!journal} onClick={()=>openJournal('log')}><Icon name="book" size={16}/>Journal{fresh?<span className="ph-dot" aria-label="New entries"/>:null}</button>
     <div className="ph-sound"><button type="button" className="ph-tool" aria-label="Music and voice" data-tooltip="Music and voice" aria-expanded={soundOpen} onClick={()=>setSoundOpen(!soundOpen)}><Icon name={music||voice?'sound':'mute'} size={17}/></button>
      {soundOpen?<div className="ph-popover" role="group" aria-label="Sound"><label><input type="checkbox" checked={music} onChange={onMusic}/>Music</label><label><input type="checkbox" checked={voice} onChange={onVoice}/>{narratorName}’s voice</label></div>:null}</div>
@@ -183,6 +189,7 @@ export default function PlayTable({game,room,session,busy,connection,onAction,on
    <button type="button" className="ph-end" disabled={!myTurn||locked} onClick={endTurn} data-tooltip={actionTip('end')}><span>{busy?'Saving…':'End turn'}</span><kbd>{shortcut('end')}</kbd></button>
   </footer>
 
+  {roadOpen&&route?<ChapterMap look game={game} view={{...route,fresh:[]}} onClose={()=>{setRoadOpen(false);requestAnimationFrame(()=>roadOpener.current?.focus())}}/>:null}
   {journal?<JournalDrawer game={game} entries={entries} thread={thread} narratorName={narratorName} host={host} tab={journal} onTab={setJournal} onClose={closeJournal} onAsk={onAI} onNarrate={onNarrate} onSteer={onSteer} busy={busy}/>:null}
   <div className={`game-connection ${connection==='reconnecting'?'connection-warning':''}`} aria-live="polite">{connection==='reconnecting'?'Reconnecting… Your game is saved.':null}</div>
 

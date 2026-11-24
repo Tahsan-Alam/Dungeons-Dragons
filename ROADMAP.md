@@ -45,7 +45,7 @@ Keep this as the short checkpoint overview. Use GitHub issues for individual tas
 - [x] The board at night: in dark colour mode the board is moonlit and lit only by the lights already on it (lamps, torches, the shrine, the crown, the district lamp, the sea door).
 - [ ] Replace the chapter card panoramas with the regional day and dusk scenes.
 - [x] The full relight at victory: the whole road to the Waylantern beside the recap.
-- [ ] Map button during play.
+- [x] The road during play: the road map from the table (The road beside Journal, or the lantern shards).
 - [x] Long runs: five distinct places per built-in tale (two new middle places per region) with a new creature each.
 - [ ] Decide whether the creator's narrator keeps the name Aether.
 - [x] Create your own Game Master: the fourth card on the Game Master step.
