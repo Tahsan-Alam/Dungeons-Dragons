@@ -1,5 +1,7 @@
 'use client';
-import {useLayoutEffect,useRef,useState} from 'react';
+import {playSound} from './sound/engine';
+import {useOpenCue} from './sound/useCue';
+import {useEffect,useLayoutEffect,useRef,useState} from 'react';
 import RouteMap from './RouteMap';
 import {describeRoute,routeHeadline,type RouteView} from './route-map';
 import {RealmButton} from './RealmKit';
@@ -17,6 +19,9 @@ export default function ChapterMap({game,view,onClose,look=false}:{game:GameStat
  useLayoutEffect(()=>{close.current=onClose});
  const{reducedMotion}=useTheme();
  const[settled,setSettled]=useState(look||reducedMotion||!view.fresh.length);
+ useOpenCue(look?'ui-map-open':null,look?'ui-map-close':null);
+ // Each stretch of road chimes as it finishes relighting (RouteMap: drawn over 1.2s, 0.35s apart). Skipping silences the rest.
+ useEffect(()=>{if(settled)return;const timers=view.fresh.map((_,i)=>setTimeout(()=>playSound('relight',{rate:1+i*.12,variation:1+i%3}),350+i*350+1150));return()=>timers.forEach(clearTimeout)},[settled]); // eslint-disable-line react-hooks/exhaustive-deps -- the road is fixed while the map is open
  useLayoutEffect(()=>{
   const el=dialog.current;el?.showModal();go.current?.querySelector('button')?.focus();
   const cancel=(e:Event)=>{e.preventDefault();close.current()};el?.addEventListener('cancel',cancel);

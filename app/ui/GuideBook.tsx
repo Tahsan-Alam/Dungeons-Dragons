@@ -1,4 +1,5 @@
 'use client';
+import {useChangeCue,useOpenCue} from './sound/useCue';
 import {useState,type ReactNode} from 'react';
 import Modal from './Modal';
 import {ShortcutReference} from './ControlsSettings';
@@ -36,6 +37,7 @@ const BOARD_ICONS={
 type Props={onClose:()=>void;onCustomize:()=>void;moveKeys:string;panKeys:string};
 export default function GuideBook({onClose,onCustomize,moveKeys,panKeys}:Props){
  const[ribbon,setRibbon]=useState<Ribbon>('playing'),[leaf,setLeaf]=useState(0);
+ useOpenCue('ui-book-open','ui-close');useChangeCue(`${ribbon}-${leaf}`,'ui-page');
  const spread=SPREAD[ribbon];
  const open=(next:Ribbon)=>{setRibbon(next);setLeaf(next==='credits'?1:0)};
  const nextSpread:Ribbon|null=spread===0?'keys':spread===1?'rules':null;

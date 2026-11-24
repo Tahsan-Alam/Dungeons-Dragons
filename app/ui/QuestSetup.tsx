@@ -1,4 +1,5 @@
 'use client';
+import {playSound} from './sound/engine';
 import {useEffect,useRef,useState} from 'react';
 import {DEFAULT_OPTIONS} from '../../game/types';
 import type {GameOptions,HeroClass} from '../../game/types';
@@ -71,6 +72,7 @@ export default function QuestSetup({mode,onBack,onStart,busy,quick=false,onAISet
   const options:GameOptions={...DEFAULT_OPTIONS,rules:s.rules,seed:s.seed.trim()||fresh().seed,duration:s.length,companions:s.companions,aiEnabled:savedAI,
    narrator:narratorTone(gm.profile),biome:story.biome,narratorPrompt:[gm.profile.persona,...gm.profile.speakingStyle].join('. ').slice(0,400),characterPrompt:hero.profile.background,
    creation:{narrator:gm.profile,story,hero:hero.profile}};
+  playSound('ui-confirm');
   void onStart(hero.profile.name,hero.profile.heroClass,options,'',hero.id);
  }
 

@@ -1,0 +1,1178 @@
+{
+ "sources": {
+  "kenney-rpg": {
+   "title": "RPG Audio (50 RPG sound effects)",
+   "author": "Kenney",
+   "page": "https://opengameart.org/content/50-rpg-sound-effects",
+   "license": "CC0 1.0"
+  },
+  "kenney-ui": {
+   "title": "Interface Sounds",
+   "author": "Kenney",
+   "page": "https://opengameart.org/content/interface-sounds",
+   "license": "CC0 1.0"
+  },
+  "kenney-casino": {
+   "title": "Casino Audio",
+   "author": "Kenney",
+   "page": "https://opengameart.org/content/54-casino-sound-effects-cards-dice-chips",
+   "license": "CC0 1.0"
+  },
+  "rd-rpg": {
+   "title": "80 CC0 RPG SFX",
+   "author": "rubberduck",
+   "page": "https://opengameart.org/content/80-cc0-rpg-sfx",
+   "license": "CC0 1.0"
+  },
+  "rd-creature": {
+   "title": "80 CC0 creature SFX",
+   "author": "rubberduck",
+   "page": "https://opengameart.org/content/80-cc0-creature-sfx",
+   "license": "CC0 1.0"
+  },
+  "rd-break": {
+   "title": "75 CC0 breaking/falling/hit SFX",
+   "author": "rubberduck",
+   "page": "https://opengameart.org/content/75-cc0-breaking-falling-hit-sfx",
+   "license": "CC0 1.0"
+  },
+  "rd-water": {
+   "title": "40 CC0 water/splash/slime SFX",
+   "author": "rubberduck",
+   "page": "https://opengameart.org/content/40-cc0-water-splash-slime-sfx",
+   "license": "CC0 1.0"
+  },
+  "up-150": {
+   "title": "150 combat sound effects (compiled CC0: Kenney Impact Sounds, lentikula spell impacts)",
+   "author": "untamedpixels",
+   "page": "https://opengameart.org/content/150-combat-sound-effects",
+   "license": "CC0 1.0"
+  },
+  "jaggedstone-magic": {
+   "title": "Magic spell SFX",
+   "author": "jaggedstone",
+   "page": "https://opengameart.org/content/magic-spell-sfx",
+   "license": "CC0 1.0"
+  },
+  "cure": {
+   "title": "Cure magic",
+   "author": "someoneman",
+   "page": "https://opengameart.org/content/cure-magic",
+   "license": "CC0 1.0"
+  },
+  "tinysized": {
+   "title": "Fantasy sound effects (Tinysized SFX)",
+   "author": "vehicle",
+   "page": "https://opengameart.org/content/fantasy-sound-effects-tinysized-sfx",
+   "license": "CC0 1.0"
+  },
+  "swishes": {
+   "title": "Swishes sound pack",
+   "author": "artisticdude",
+   "page": "https://opengameart.org/content/swishes-sound-pack",
+   "license": "CC0 1.0"
+  },
+  "ad-rpg": {
+   "title": "RPG sound pack",
+   "author": "artisticdude",
+   "page": "https://opengameart.org/content/rpg-sound-pack",
+   "license": "CC0 1.0"
+  },
+  "book-flips": {
+   "title": "10 book page flips",
+   "author": "starninjas",
+   "page": "https://opengameart.org/content/10-book-page-flips",
+   "license": "CC0 1.0"
+  },
+  "map": {
+   "title": "Opening and closing a map",
+   "author": "spring-spring",
+   "page": "https://opengameart.org/content/opening-and-closing-a-map-sounds",
+   "license": "CC0 1.0"
+  },
+  "dice": {
+   "title": "2 dice roll, 29 throws",
+   "author": "rpg",
+   "page": "https://opengameart.org/content/2-dice-roll-29-throws",
+   "license": "CC0 1.0"
+  },
+  "fantozzi": {
+   "title": "Fantozzi's footsteps (grass/sand, stone)",
+   "author": "qubodup",
+   "page": "https://opengameart.org/content/fantozzis-footsteps-grasssand-stone",
+   "license": "CC0 1.0"
+  },
+  "bells": {
+   "title": "Bell dings/chimes",
+   "author": "pwl",
+   "page": "https://opengameart.org/content/bell-dingschimes",
+   "license": "CC0 1.0"
+  },
+  "monster-roar": {
+   "title": "Deep monster roar",
+   "author": "trazzz123",
+   "page": "https://opengameart.org/content/cc0-deep-monster-roar",
+   "license": "CC0 1.0"
+  },
+  "sn-monster": {
+   "title": "16 monster growls",
+   "author": "starninjas",
+   "page": "https://opengameart.org/content/16-monster-growls",
+   "license": "CC0 1.0"
+  },
+  "gulls": {
+   "title": "Solo seagull sound effects",
+   "author": "rango-mango",
+   "page": "https://opengameart.org/content/solo-seagull-sound-effects",
+   "license": "CC0 1.0"
+  },
+  "birds": {
+   "title": "Ambient bird sounds",
+   "author": "isaiah658",
+   "page": "https://opengameart.org/content/ambient-bird-sounds",
+   "license": "CC0 1.0"
+  },
+  "crickets": {
+   "title": "Crickets ambient noise (loopable)",
+   "author": "wolfgang",
+   "page": "https://opengameart.org/content/crickets-ambient-noise-loopable",
+   "license": "CC0 1.0"
+  },
+  "park": {
+   "title": "Park ambiences",
+   "author": "thimras",
+   "page": "https://opengameart.org/content/park-ambiences",
+   "license": "CC0 1.0"
+  },
+  "waves": {
+   "title": "Sea and river wave sounds",
+   "author": "randommind",
+   "page": "https://opengameart.org/content/sea-and-river-wave-sounds",
+   "license": "CC0 1.0"
+  },
+  "dungeon": {
+   "title": "Loopable dungeon ambience",
+   "author": "jaggedstone",
+   "page": "https://opengameart.org/content/loopable-dungeon-ambience",
+   "license": "CC0 1.0"
+  },
+  "wind-woosh": {
+   "title": "Wind whoosh loop",
+   "author": "sketchman3",
+   "page": "https://opengameart.org/content/wind-whoosh-loop",
+   "license": "CC0 1.0"
+  },
+  "fireplace": {
+   "title": "Fireplace sound loop",
+   "author": "pagdev",
+   "page": "https://opengameart.org/content/fireplace-sound-loop",
+   "license": "CC0 1.0"
+  },
+  "m-exploration": {
+   "title": "Medieval: Exploration",
+   "author": "RandomMind",
+   "page": "https://opengameart.org/content/medieval-exploration",
+   "license": "CC0 1.0"
+  },
+  "m-victory": {
+   "title": "Medieval: Victory theme",
+   "author": "RandomMind",
+   "page": "https://opengameart.org/content/medieval-victory-theme",
+   "license": "CC0 1.0"
+  },
+  "m-defeat": {
+   "title": "Medieval: Defeat theme",
+   "author": "RandomMind",
+   "page": "https://opengameart.org/content/medieval-defeat-theme",
+   "license": "CC0 1.0"
+  },
+  "m-battle": {
+   "title": "Medieval: Battle",
+   "author": "RandomMind",
+   "page": "https://opengameart.org/content/medieval-battle",
+   "license": "CC0 1.0"
+  },
+  "m-moon": {
+   "title": "Fantasy: Rising Moon",
+   "author": "RandomMind",
+   "page": "https://opengameart.org/content/fantasy-rising-moon",
+   "license": "CC0 1.0"
+  },
+  "m-whisper": {
+   "title": "Forest Whisper theme",
+   "author": "Cleyton Kauffman",
+   "page": "https://opengameart.org/content/forest-whisper-theme",
+   "license": "CC0 1.0"
+  },
+  "m-darkforest": {
+   "title": "Dark forest theme",
+   "author": "cynicmusic",
+   "page": "https://opengameart.org/content/dark-forest-theme",
+   "license": "CC0 1.0"
+  },
+  "m-temple": {
+   "title": "Ancient temple",
+   "author": "umplix",
+   "page": "https://opengameart.org/content/ancient-temple-1",
+   "license": "CC0 1.0"
+  },
+  "m-merchants": {
+   "title": "Merchants and sea salt",
+   "author": "nbjdlukasabsolute",
+   "page": "https://opengameart.org/content/merchants-and-sea-salt",
+   "license": "CC0 1.0"
+  },
+  "m-ocean": {
+   "title": "Eyes of the ocean (dark loop)",
+   "author": "Tsorthan Grove",
+   "page": "https://opengameart.org/content/eyes-of-the-ocean",
+   "license": "CC0 1.0"
+  },
+  "m-town": {
+   "title": "Calming RPG town theme",
+   "author": "destin715",
+   "page": "https://opengameart.org/content/calming-rpg-town-theme",
+   "license": "CC0 1.0"
+  },
+  "m-boss": {
+   "title": "Epic boss battle (seamlessly looping)",
+   "author": "Juhani Junkala (SubspaceAudio)",
+   "page": "https://opengameart.org/content/boss-battle-music",
+   "license": "CC0 1.0"
+  },
+  "m-choir": {
+   "title": "Fantasy choir 1",
+   "author": "cesisco",
+   "page": "https://opengameart.org/content/fantasy-choir-3-orchestral-pieces",
+   "license": "CC0 1.0"
+  },
+  "m-forest": {
+   "title": "Beautiful forest (orchestra)",
+   "author": "nene",
+   "page": "https://opengameart.org/content/beautiful-forest-orchestra",
+   "license": "CC0 1.0"
+  }
+ },
+ "variations": {
+  "ui-page": 3,
+  "ui-open": 2,
+  "ui-close": 1,
+  "ui-book-open": 1,
+  "ui-toggle": 1,
+  "ui-latch": 1,
+  "ui-tick": 1,
+  "ui-select": 2,
+  "ui-confirm": 1,
+  "ui-deny": 1,
+  "ui-notice": 1,
+  "ui-map-open": 1,
+  "ui-map-close": 1,
+  "ui-seal": 1,
+  "ui-unfold": 1,
+  "ui-join": 1,
+  "ui-voice-on": 1,
+  "ui-voice-off": 1,
+  "ui-coins": 1,
+  "dice-shake": 2,
+  "dice-throw": 4,
+  "step-soft": 4,
+  "step-stone": 4,
+  "step-wood": 4,
+  "step-water": 3,
+  "swing": 3,
+  "swing-heavy": 2,
+  "hit": 3,
+  "hit-heavy": 2,
+  "clash": 3,
+  "blade-draw": 2,
+  "knife": 2,
+  "arrow": 1,
+  "quiver": 2,
+  "spell-cast": 3,
+  "spell-fire": 2,
+  "heal": 3,
+  "song": 1,
+  "roots": 2,
+  "shield": 2,
+  "guard": 1,
+  "uncork": 1,
+  "drink": 1,
+  "revive": 1,
+  "fall": 2,
+  "chest-unlock": 1,
+  "chest-open": 1,
+  "shard": 1,
+  "shard-bell": 1,
+  "gateway": 1,
+  "relight": 3,
+  "turn-yours": 1,
+  "turn-foes": 1,
+  "keeper-wolf": 1,
+  "keeper-breath": 1,
+  "keeper-glass": 1,
+  "keeper-stone": 1,
+  "release-pounce": 1,
+  "release-fire": 2,
+  "release-tide": 2,
+  "release-rock": 2,
+  "keeper-fall": 1,
+  "v-imp": 3,
+  "v-goblin": 3,
+  "v-wisp": 3,
+  "v-stone": 3,
+  "v-beast": 3,
+  "v-ooze": 3,
+  "v-crab": 3,
+  "v-eel": 3,
+  "v-moth": 3,
+  "v-wolf": 3,
+  "v-dragon": 3,
+  "v-monster": 3,
+  "gull": 3
+ },
+ "music": {
+  "title": {
+   "source": "m-exploration",
+   "file": "Exploration.mp3",
+   "seconds": 150.0,
+   "loops": true
+  },
+  "camp": {
+   "source": "m-town",
+   "file": "CalmTownTheme_0.mp3",
+   "seconds": 84.4,
+   "loops": true
+  },
+  "lanternwood-day": {
+   "source": "m-whisper",
+   "file": "Forest Whisper.ogg",
+   "seconds": 82.3,
+   "loops": true
+  },
+  "lanternwood-dusk": {
+   "source": "m-darkforest",
+   "file": "GameMusic_ForestTheme_24_0.mp3",
+   "seconds": 89.1,
+   "loops": true
+  },
+  "reach-day": {
+   "source": "m-temple",
+   "file": "ancient_temple.wav",
+   "seconds": 102.0,
+   "loops": true
+  },
+  "reach-dusk": {
+   "source": "m-moon",
+   "file": "Rising_Moon_0.mp3",
+   "seconds": 150.0,
+   "loops": true
+  },
+  "saltreach-day": {
+   "source": "m-merchants",
+   "file": "merchants_and_sea_salt.wav",
+   "seconds": 98.9,
+   "loops": true
+  },
+  "saltreach-dusk": {
+   "source": "m-ocean",
+   "file": "dark_eyes_of_the_ocean_0.ogg",
+   "seconds": 76.8,
+   "loops": true
+  },
+  "peril": {
+   "source": "m-battle",
+   "file": "battle_8.mp3",
+   "seconds": 75.9,
+   "loops": true
+  },
+  "keeper": {
+   "source": "m-boss",
+   "file": "Juhani Junkala - Epic Boss Battle [Seamlessly Looping].wav",
+   "seconds": 123.4,
+   "loops": true
+  },
+  "road": {
+   "source": "m-choir",
+   "file": "Fantasy Choir 1.mp3",
+   "seconds": 53.2,
+   "loops": false
+  },
+  "victory": {
+   "source": "m-victory",
+   "file": "victory.mp3",
+   "seconds": 32.4,
+   "loops": false
+  },
+  "defeat": {
+   "source": "m-defeat",
+   "file": "defeat.mp3",
+   "seconds": 45.1,
+   "loops": false
+  },
+  "replay": {
+   "source": "m-forest",
+   "file": "beautiful_forest_16bit_44.1khz_1.ogg",
+   "seconds": 66.0,
+   "loops": true
+  }
+ },
+ "ambience": {
+  "birds": {
+   "source": "birds",
+   "file": "birds-isaiah658.ogg",
+   "seconds": 27.7
+  },
+  "wind": {
+   "source": "park",
+   "file": "park_ambience_wind.wav",
+   "seconds": 60.0
+  },
+  "wind-high": {
+   "source": "wind-woosh",
+   "file": "wind woosh loop.ogg",
+   "seconds": 6.0
+  },
+  "crickets": {
+   "source": "crickets",
+   "file": "crickets_1.mp3",
+   "seconds": 11.5
+  },
+  "waves": {
+   "source": "waves",
+   "file": "VistulaShort.mp3",
+   "seconds": 60.0
+  },
+  "cave": {
+   "source": "dungeon",
+   "file": "dungeon_ambient_1.ogg",
+   "seconds": 60.0
+  },
+  "fire": {
+   "source": "fireplace",
+   "file": "fire.wav",
+   "seconds": 27.3
+  }
+ },
+ "sfx": {
+  "ui-page-1": {
+   "source": "kenney-rpg",
+   "file": "bookFlip1.ogg",
+   "seconds": 0.7
+  },
+  "ui-page-2": {
+   "source": "kenney-rpg",
+   "file": "bookFlip2.ogg",
+   "seconds": 0.43
+  },
+  "ui-page-3": {
+   "source": "kenney-rpg",
+   "file": "bookFlip3.ogg",
+   "seconds": 0.22
+  },
+  "ui-open-1": {
+   "source": "book-flips",
+   "file": "book_flip.3.ogg",
+   "seconds": 1.09
+  },
+  "ui-open-2": {
+   "source": "book-flips",
+   "file": "book_flip.6.ogg",
+   "seconds": 0.61
+  },
+  "ui-close": {
+   "source": "kenney-rpg",
+   "file": "bookClose.ogg",
+   "seconds": 0.23
+  },
+  "ui-book-open": {
+   "source": "kenney-rpg",
+   "file": "bookOpen.ogg",
+   "seconds": 0.15
+  },
+  "ui-toggle": {
+   "source": "kenney-rpg",
+   "file": "metalClick.ogg",
+   "seconds": 0.4
+  },
+  "ui-latch": {
+   "source": "kenney-rpg",
+   "file": "metalLatch.ogg",
+   "seconds": 0.26
+  },
+  "ui-tick": {
+   "source": "kenney-ui",
+   "file": "tick_002.ogg",
+   "seconds": 0.02
+  },
+  "ui-select-1": {
+   "source": "kenney-rpg",
+   "file": "handleSmallLeather.ogg",
+   "seconds": 0.23
+  },
+  "ui-select-2": {
+   "source": "kenney-rpg",
+   "file": "handleSmallLeather2.ogg",
+   "seconds": 0.23
+  },
+  "ui-confirm": {
+   "source": "bells",
+   "file": "bell_ding2.wav",
+   "seconds": 1.35
+  },
+  "ui-deny": {
+   "source": "rd-rpg",
+   "file": "item_wood_01.ogg",
+   "seconds": 0.47
+  },
+  "ui-notice": {
+   "source": "kenney-ui",
+   "file": "pluck_001.ogg",
+   "seconds": 0.1
+  },
+  "ui-map-open": {
+   "source": "map",
+   "file": "snd_use_map.wav",
+   "seconds": 1.08
+  },
+  "ui-map-close": {
+   "source": "map",
+   "file": "snd_close_map.wav",
+   "seconds": 1.47
+  },
+  "ui-seal": {
+   "source": "tinysized",
+   "file": "wood-twigs-break-01.wav",
+   "seconds": 0.38
+  },
+  "ui-unfold": {
+   "source": "tinysized",
+   "file": "cover-paper-tear-01.wav",
+   "seconds": 1.11
+  },
+  "ui-join": {
+   "source": "tinysized",
+   "file": "chimes-wood-rattle.wav",
+   "seconds": 1.8
+  },
+  "ui-voice-on": {
+   "source": "kenney-ui",
+   "file": "maximize_003.ogg",
+   "seconds": 0.21
+  },
+  "ui-voice-off": {
+   "source": "kenney-ui",
+   "file": "minimize_003.ogg",
+   "seconds": 0.21
+  },
+  "ui-coins": {
+   "source": "kenney-rpg",
+   "file": "handleCoins.ogg",
+   "seconds": 0.75
+  },
+  "dice-shake-1": {
+   "source": "kenney-casino",
+   "file": "dice-shake-1.ogg",
+   "seconds": 1.45
+  },
+  "dice-shake-2": {
+   "source": "kenney-casino",
+   "file": "dice-shake-2.ogg",
+   "seconds": 1.29
+  },
+  "dice-throw-1": {
+   "source": "dice",
+   "file": "dice-3.wav",
+   "seconds": 1.24
+  },
+  "dice-throw-2": {
+   "source": "dice",
+   "file": "dice-8.wav",
+   "seconds": 1.15
+  },
+  "dice-throw-3": {
+   "source": "dice",
+   "file": "dice-14.wav",
+   "seconds": 0.88
+  },
+  "dice-throw-4": {
+   "source": "dice",
+   "file": "dice-21.wav",
+   "seconds": 1.19
+  },
+  "step-soft-1": {
+   "source": "fantozzi",
+   "file": "Fantozzi-SandL1.ogg",
+   "seconds": 0.44
+  },
+  "step-soft-2": {
+   "source": "fantozzi",
+   "file": "Fantozzi-SandR1.ogg",
+   "seconds": 0.41
+  },
+  "step-soft-3": {
+   "source": "fantozzi",
+   "file": "Fantozzi-SandL2.ogg",
+   "seconds": 0.32
+  },
+  "step-soft-4": {
+   "source": "fantozzi",
+   "file": "Fantozzi-SandR2.ogg",
+   "seconds": 0.34
+  },
+  "step-stone-1": {
+   "source": "fantozzi",
+   "file": "Fantozzi-StoneL1.ogg",
+   "seconds": 0.37
+  },
+  "step-stone-2": {
+   "source": "fantozzi",
+   "file": "Fantozzi-StoneR1.ogg",
+   "seconds": 0.36
+  },
+  "step-stone-3": {
+   "source": "fantozzi",
+   "file": "Fantozzi-StoneL2.ogg",
+   "seconds": 0.33
+  },
+  "step-stone-4": {
+   "source": "fantozzi",
+   "file": "Fantozzi-StoneR2.ogg",
+   "seconds": 0.32
+  },
+  "step-wood-1": {
+   "source": "kenney-rpg",
+   "file": "footstep01.ogg",
+   "seconds": 0.28
+  },
+  "step-wood-2": {
+   "source": "kenney-rpg",
+   "file": "footstep03.ogg",
+   "seconds": 0.26
+  },
+  "step-wood-3": {
+   "source": "kenney-rpg",
+   "file": "footstep05.ogg",
+   "seconds": 0.27
+  },
+  "step-wood-4": {
+   "source": "kenney-rpg",
+   "file": "footstep07.ogg",
+   "seconds": 0.26
+  },
+  "step-water-1": {
+   "source": "rd-water",
+   "file": "splash_02.ogg",
+   "seconds": 0.63
+  },
+  "step-water-2": {
+   "source": "rd-water",
+   "file": "splash_05.ogg",
+   "seconds": 1.03
+  },
+  "step-water-3": {
+   "source": "rd-water",
+   "file": "splash_09.ogg",
+   "seconds": 0.24
+  },
+  "swing-1": {
+   "source": "swishes",
+   "file": "swish-1.wav",
+   "seconds": 0.11
+  },
+  "swing-2": {
+   "source": "swishes",
+   "file": "swish-2.wav",
+   "seconds": 0.08
+  },
+  "swing-3": {
+   "source": "swishes",
+   "file": "swish-3.wav",
+   "seconds": 0.12
+  },
+  "swing-heavy-1": {
+   "source": "swishes",
+   "file": "swish-9.wav",
+   "seconds": 0.17
+  },
+  "swing-heavy-2": {
+   "source": "swishes",
+   "file": "swish-11.wav",
+   "seconds": 0.1
+  },
+  "hit-1": {
+   "source": "up-150",
+   "file": "impact_punch_medium_000_48kHz_16bit_0.36s_bd322da3_s02.wav",
+   "seconds": 0.33
+  },
+  "hit-2": {
+   "source": "up-150",
+   "file": "impact_punch_medium_002_48kHz_16bit_0.42s_212c5895_s02.wav",
+   "seconds": 0.4
+  },
+  "hit-3": {
+   "source": "up-150",
+   "file": "impact_punch_medium_004_48kHz_16bit_0.44s_0fa50bbe_s02.wav",
+   "seconds": 0.4
+  },
+  "hit-heavy-1": {
+   "source": "up-150",
+   "file": "impact_punch_heavy_000_48kHz_16bit_0.65s_8fb58ba7_s02.wav",
+   "seconds": 0.55
+  },
+  "hit-heavy-2": {
+   "source": "up-150",
+   "file": "impact_punch_heavy_002_48kHz_16bit_0.46s_565485a1_s02.wav",
+   "seconds": 0.43
+  },
+  "clash-1": {
+   "source": "tinysized",
+   "file": "sword-clash-01.wav",
+   "seconds": 1.07
+  },
+  "clash-2": {
+   "source": "tinysized",
+   "file": "sword-clash-03.wav",
+   "seconds": 0.67
+  },
+  "clash-3": {
+   "source": "tinysized",
+   "file": "sword-clash-05.wav",
+   "seconds": 0.64
+  },
+  "blade-draw-1": {
+   "source": "ad-rpg",
+   "file": "sword-unsheathe.wav",
+   "seconds": 0.4
+  },
+  "blade-draw-2": {
+   "source": "ad-rpg",
+   "file": "sword-unsheathe3.wav",
+   "seconds": 0.39
+  },
+  "knife-1": {
+   "source": "kenney-rpg",
+   "file": "knifeSlice.ogg",
+   "seconds": 0.42
+  },
+  "knife-2": {
+   "source": "kenney-rpg",
+   "file": "knifeSlice2.ogg",
+   "seconds": 0.51
+  },
+  "arrow": {
+   "source": "tinysized",
+   "file": "arrow-feathers-01.wav",
+   "seconds": 0.52
+  },
+  "quiver-1": {
+   "source": "tinysized",
+   "file": "arrow-grab-from-quiver-01.wav",
+   "seconds": 0.62
+  },
+  "quiver-2": {
+   "source": "tinysized",
+   "file": "arrow-grab-from-quiver-02.wav",
+   "seconds": 1.22
+  },
+  "spell-cast-1": {
+   "source": "jaggedstone-magic",
+   "file": "magical_1_0.ogg",
+   "seconds": 1.59
+  },
+  "spell-cast-2": {
+   "source": "jaggedstone-magic",
+   "file": "magical_3.ogg",
+   "seconds": 1.82
+  },
+  "spell-cast-3": {
+   "source": "jaggedstone-magic",
+   "file": "magical_5.ogg",
+   "seconds": 1.44
+  },
+  "spell-fire-1": {
+   "source": "up-150",
+   "file": "Fire Spell Impact 1_s06.wav",
+   "seconds": 2.26
+  },
+  "spell-fire-2": {
+   "source": "up-150",
+   "file": "Fire Spell Impact 3_s06.wav",
+   "seconds": 1.87
+  },
+  "heal-1": {
+   "source": "up-150",
+   "file": "Healing Spell Impact 10_s08.wav",
+   "seconds": 1.13
+  },
+  "heal-2": {
+   "source": "up-150",
+   "file": "Healing Spell Impact 4_s08.wav",
+   "seconds": 1.39
+  },
+  "heal-3": {
+   "source": "up-150",
+   "file": "Healing Spell Impact 7_s08.wav",
+   "seconds": 1.67
+  },
+  "song": {
+   "source": "up-150",
+   "file": "Healing Spell Impact 12_s08.wav",
+   "seconds": 1.36
+  },
+  "roots-1": {
+   "source": "up-150",
+   "file": "Plant Spell Impact 1_s07.wav",
+   "seconds": 1.77
+  },
+  "roots-2": {
+   "source": "up-150",
+   "file": "Plant Spell Impact 3_s07.wav",
+   "seconds": 1.97
+  },
+  "shield-1": {
+   "source": "rd-break",
+   "file": "bfh1_metal_hit_02.ogg",
+   "seconds": 0.49
+  },
+  "shield-2": {
+   "source": "rd-break",
+   "file": "bfh1_metal_hit_04.ogg",
+   "seconds": 0.26
+  },
+  "guard": {
+   "source": "ad-rpg",
+   "file": "chainmail1.wav",
+   "seconds": 0.47
+  },
+  "uncork": {
+   "source": "tinysized",
+   "file": "bottle-glass-uncork-01.wav",
+   "seconds": 0.48
+  },
+  "drink": {
+   "source": "ad-rpg",
+   "file": "bubble.wav",
+   "seconds": 0.39
+  },
+  "revive": {
+   "source": "cure",
+   "file": "Cure2.wav",
+   "seconds": 1.0
+  },
+  "fall-1": {
+   "source": "rd-break",
+   "file": "bfh1_falling_02.ogg",
+   "seconds": 0.96
+  },
+  "fall-2": {
+   "source": "rd-break",
+   "file": "bfh1_falling_05.ogg",
+   "seconds": 0.72
+  },
+  "chest-unlock": {
+   "source": "tinysized",
+   "file": "keyhole-lockbox-turn-01.wav",
+   "seconds": 0.91
+  },
+  "chest-open": {
+   "source": "kenney-rpg",
+   "file": "creak1.ogg",
+   "seconds": 0.6
+  },
+  "shard": {
+   "source": "rd-rpg",
+   "file": "item_gem_02.ogg",
+   "seconds": 0.14
+  },
+  "shard-bell": {
+   "source": "bells",
+   "file": "bell_ding1.wav",
+   "seconds": 1.03
+  },
+  "gateway": {
+   "source": "up-150",
+   "file": "Wind Spell Impact 3_s07.wav",
+   "seconds": 2.0
+  },
+  "relight-1": {
+   "source": "kenney-ui",
+   "file": "glass_001.ogg",
+   "seconds": 0.28
+  },
+  "relight-2": {
+   "source": "kenney-ui",
+   "file": "glass_002.ogg",
+   "seconds": 0.12
+  },
+  "relight-3": {
+   "source": "kenney-ui",
+   "file": "glass_003.ogg",
+   "seconds": 0.12
+  },
+  "turn-yours": {
+   "source": "bells",
+   "file": "bell_ding3.wav",
+   "seconds": 1.41
+  },
+  "turn-foes": {
+   "source": "kenney-ui",
+   "file": "bong_001.ogg",
+   "seconds": 0.12
+  },
+  "keeper-wolf": {
+   "source": "rd-creature",
+   "file": "howl.ogg",
+   "seconds": 0.58
+  },
+  "keeper-breath": {
+   "source": "rd-creature",
+   "file": "breath.ogg",
+   "seconds": 0.49
+  },
+  "keeper-glass": {
+   "source": "kenney-ui",
+   "file": "glass_005.ogg",
+   "seconds": 0.11
+  },
+  "keeper-stone": {
+   "source": "ad-rpg",
+   "file": "giant2.wav",
+   "seconds": 0.66
+  },
+  "release-pounce": {
+   "source": "rd-creature",
+   "file": "roar_01.ogg",
+   "seconds": 0.32
+  },
+  "release-fire-1": {
+   "source": "rd-rpg",
+   "file": "spell_fire_01.ogg",
+   "seconds": 0.86
+  },
+  "release-fire-2": {
+   "source": "rd-rpg",
+   "file": "spell_fire_04.ogg",
+   "seconds": 1.21
+  },
+  "release-tide-1": {
+   "source": "up-150",
+   "file": "Water Spell Impact 1_s06.wav",
+   "seconds": 1.9
+  },
+  "release-tide-2": {
+   "source": "up-150",
+   "file": "Water Spell Impact 3_s06.wav",
+   "seconds": 2.67
+  },
+  "release-rock-1": {
+   "source": "rd-break",
+   "file": "bfh1_rock_falling_02.ogg",
+   "seconds": 0.34
+  },
+  "release-rock-2": {
+   "source": "rd-break",
+   "file": "bfh1_rock_falling_05.ogg",
+   "seconds": 0.32
+  },
+  "keeper-fall": {
+   "source": "monster-roar",
+   "file": "monster_roar.wav",
+   "seconds": 4.0
+  },
+  "v-imp-1": {
+   "source": "rd-creature",
+   "file": "cute_02.ogg",
+   "seconds": 0.46
+  },
+  "v-imp-2": {
+   "source": "rd-creature",
+   "file": "cute_05.ogg",
+   "seconds": 0.48
+  },
+  "v-imp-3": {
+   "source": "rd-creature",
+   "file": "cute_08.ogg",
+   "seconds": 0.35
+  },
+  "v-goblin-1": {
+   "source": "rd-creature",
+   "file": "grunt_01.ogg",
+   "seconds": 0.73
+  },
+  "v-goblin-2": {
+   "source": "rd-creature",
+   "file": "grunt_03.ogg",
+   "seconds": 0.53
+  },
+  "v-goblin-3": {
+   "source": "rd-creature",
+   "file": "grunt_05.ogg",
+   "seconds": 0.55
+  },
+  "v-wisp-1": {
+   "source": "ad-rpg",
+   "file": "shade1.wav",
+   "seconds": 0.44
+  },
+  "v-wisp-2": {
+   "source": "ad-rpg",
+   "file": "shade4.wav",
+   "seconds": 0.61
+  },
+  "v-wisp-3": {
+   "source": "ad-rpg",
+   "file": "shade9.wav",
+   "seconds": 1.24
+  },
+  "v-stone-1": {
+   "source": "ad-rpg",
+   "file": "giant1.wav",
+   "seconds": 0.54
+  },
+  "v-stone-2": {
+   "source": "ad-rpg",
+   "file": "giant3.wav",
+   "seconds": 0.49
+  },
+  "v-stone-3": {
+   "source": "ad-rpg",
+   "file": "giant5.wav",
+   "seconds": 0.59
+  },
+  "v-beast-1": {
+   "source": "ad-rpg",
+   "file": "mnstr1.wav",
+   "seconds": 0.37
+  },
+  "v-beast-2": {
+   "source": "ad-rpg",
+   "file": "mnstr4.wav",
+   "seconds": 0.59
+  },
+  "v-beast-3": {
+   "source": "ad-rpg",
+   "file": "mnstr9.wav",
+   "seconds": 0.67
+  },
+  "v-ooze-1": {
+   "source": "ad-rpg",
+   "file": "slime1.wav",
+   "seconds": 0.2
+  },
+  "v-ooze-2": {
+   "source": "ad-rpg",
+   "file": "slime4.wav",
+   "seconds": 0.22
+  },
+  "v-ooze-3": {
+   "source": "ad-rpg",
+   "file": "slime8.wav",
+   "seconds": 0.54
+  },
+  "v-crab-1": {
+   "source": "ad-rpg",
+   "file": "bite-small.wav",
+   "seconds": 0.38
+  },
+  "v-crab-2": {
+   "source": "ad-rpg",
+   "file": "bite-small2.wav",
+   "seconds": 0.35
+  },
+  "v-crab-3": {
+   "source": "ad-rpg",
+   "file": "bite-small3.wav",
+   "seconds": 0.48
+  },
+  "v-eel-1": {
+   "source": "rd-creature",
+   "file": "burble_01.ogg",
+   "seconds": 0.94
+  },
+  "v-eel-2": {
+   "source": "rd-creature",
+   "file": "burble_02.ogg",
+   "seconds": 0.82
+  },
+  "v-eel-3": {
+   "source": "rd-creature",
+   "file": "spit_02.ogg",
+   "seconds": 0.61
+  },
+  "v-moth-1": {
+   "source": "rd-creature",
+   "file": "bug_01.ogg",
+   "seconds": 0.29
+  },
+  "v-moth-2": {
+   "source": "rd-creature",
+   "file": "bug_02.ogg",
+   "seconds": 0.48
+  },
+  "v-moth-3": {
+   "source": "rd-creature",
+   "file": "bug_04.ogg",
+   "seconds": 0.41
+  },
+  "v-wolf-1": {
+   "source": "ad-rpg",
+   "file": "wolfman.wav",
+   "seconds": 0.38
+  },
+  "v-wolf-2": {
+   "source": "rd-creature",
+   "file": "hurt_02.ogg",
+   "seconds": 0.45
+  },
+  "v-wolf-3": {
+   "source": "rd-creature",
+   "file": "howl.ogg",
+   "seconds": 0.58
+  },
+  "v-dragon-1": {
+   "source": "rd-creature",
+   "file": "roar_02.ogg",
+   "seconds": 0.8
+  },
+  "v-dragon-2": {
+   "source": "rd-creature",
+   "file": "roar_03.ogg",
+   "seconds": 0.46
+  },
+  "v-dragon-3": {
+   "source": "rd-creature",
+   "file": "monster_05.ogg",
+   "seconds": 0.43
+  },
+  "v-monster-1": {
+   "source": "sn-monster",
+   "file": "monster.2.ogg",
+   "seconds": 0.75
+  },
+  "v-monster-2": {
+   "source": "sn-monster",
+   "file": "monster.6.ogg",
+   "seconds": 1.27
+  },
+  "v-monster-3": {
+   "source": "sn-monster",
+   "file": "monster.11.ogg",
+   "seconds": 1.67
+  },
+  "gull-1": {
+   "source": "gulls",
+   "file": "Seagull Ambient 1.wav",
+   "seconds": 2.2
+  },
+  "gull-2": {
+   "source": "gulls",
+   "file": "Seagull Ambient 2.wav",
+   "seconds": 1.48
+  },
+  "gull-3": {
+   "source": "gulls",
+   "file": "Seagull Ambient 3.wav",
+   "seconds": 1.11
+  }
+ }
+}

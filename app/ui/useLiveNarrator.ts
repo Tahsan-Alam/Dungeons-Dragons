@@ -1,4 +1,5 @@
 'use client';
+import {playSound} from './sound/engine';
 import {useCallback,useEffect,useReducer,useRef,useState} from 'react';
 import type {NarratorProfile} from '../../game/creation';
 import {AETHER} from '../../game/creation';
@@ -16,6 +17,8 @@ class VoicePreflightError extends Error {}
 
 export function useLiveNarrator(options:LiveNarratorOptions){
  const [status,setStatus]=useState<LiveStatus>('idle'),[micMuted,setMicState]=useState(true),[speakerMuted,setSpeakerState]=useState(true),[speaking,setSpeaking]=useState(false),[error,setError]=useState('');
+ const wasLive=useRef(false);
+ useEffect(()=>{const live=status==='listening';if(live!==wasLive.current){wasLive.current=live;playSound(live?'ui-voice-on':'ui-voice-off')}},[status]);
  const [transcript,dispatchTranscript]=useReducer(liveTranscriptReducer,undefined,emptyLiveTranscript);
  const current=useRef(options),active=useRef<Session|null>(null),serial=useRef(0),speaker=useRef(true),microphone=useRef(true),lastComment=useRef(0),mounted=useRef(true),delegations=useRef<ReturnType<typeof createLiveDelegationQueue>|null>(null);
  current.current=options;

@@ -1,4 +1,5 @@
 'use client';
+import {useChangeCue,useOpenCue} from './sound/useCue';
 import {useEffect,useRef,useState} from 'react';
 import type {GameEvent,GameState} from '../../game/types';
 import {applyStoryDirection} from '../../game/campaign';
@@ -11,6 +12,7 @@ export type JournalTab='log'|'dialogue'|'story';
 
 /** The adventure log, the conversation with the Game Master and the story's pace, in one drawer over the scene. */
 export default function JournalDrawer({game,entries,thread,narratorName,host,tab,onTab,onClose,onAsk,onNarrate,onSteer,busy}:{game:GameState;entries:JournalEntry[];thread:Exchange[];narratorName:string;host:boolean;tab:JournalTab;onTab:(tab:JournalTab)=>void;onClose:()=>void;onAsk:()=>void;onNarrate?:()=>unknown;onSteer?:(text:string)=>Promise<unknown>;busy:boolean}){
+ useOpenCue('ui-book-open','ui-close');useChangeCue(tab,'ui-page');
  const panel=useRef<HTMLElement>(null),[pending,setPending]=useState(false),[status,setStatus]=useState(''),[direction,setDirection]=useState('');
  useEffect(()=>{(panel.current?.querySelector('[role=tab][aria-selected=true]') as HTMLElement|null)?.focus()},[]);
  const tabs:[JournalTab,string][]=[['log','Log'],['dialogue','Dialogue'],['story','Story']];
@@ -29,7 +31,7 @@ export default function JournalDrawer({game,entries,thread,narratorName,host,tab
  const ending=!!game.story?.direction?.endAfterChapter;
  return <aside ref={panel} className="ph-journal ph-ui" aria-label="Journal">
   <div className="ph-journal-head"><h2>Journal</h2><button type="button" className="ph-tool" aria-label="Close the journal" data-tooltip="Close (Esc)" onClick={onClose}><Icon name="close" size={18}/></button></div>
-  <div role="tablist" aria-label="Journal sections" className="ph-tabs" onKeyDown={key}>{tabs.map(([t,label])=><button key={t} id={`journal-tab-${t}`} type="button" role="tab" aria-selected={tab===t} aria-controls={`journal-panel-${t}`} tabIndex={tab===t?0:-1} onClick={()=>onTab(t)}>{label}</button>)}</div>
+  <div role="tablist" aria-label="Journal sections" className="ph-tabs" onKeyDown={key}>{tabs.map(([t,label])=><button key={t} id={`journal-tab-${t}`} type="button" role="tab" data-ui-sound="off" aria-selected={tab===t} aria-controls={`journal-panel-${t}`} tabIndex={tab===t?0:-1} onClick={()=>onTab(t)}>{label}</button>)}</div>
   <div id={`journal-panel-${tab}`} role="tabpanel" aria-labelledby={`journal-tab-${tab}`} className="ph-journal-body" tabIndex={0}>
    {tab==='log'?<ol className="ph-log">{entries.map(entry=>{
     if(entry.narration)return <li key={entry.key} className="story"><small>{narratorName}</small><p>{entry.narration.caption}</p></li>;

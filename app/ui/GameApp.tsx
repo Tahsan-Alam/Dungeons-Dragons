@@ -26,6 +26,7 @@ import {storyGoal} from '../../game/campaign';
 import {settingLine} from '../../game/lore';
 import ChapterMap from './ChapterMap';
 import ChapterOpening from './ChapterOpening';
+import {useSoundDirector} from './sound/useSoundDirector';
 import AskScene from './AskScene';
 import AdventureEnd from './AdventureEnd';
 import {routeView} from './route-map';
@@ -63,6 +64,7 @@ export default function GameApp(){
  const tools={onHelp:()=>setModal('help'),onSettings:settings};
  const caption=game?currentNarration(game):'';
  const route=game?routeView(game):null;
+ useSoundDirector({screen,game:game??null,adventureId:state.activeId??null,playerId:state.session?.playerId??'you',road:!!(chapter&&chapterStep==='map'&&route&&game?.status==='playing')});
  const listen=(line:string)=>{if(audio.voice){audio.speak(line);return}if(typeof window!=='undefined'&&'speechSynthesis' in window){window.speechSynthesis.cancel();window.speechSynthesis.speak(new SpeechSynthesisUtterance(line))}};
  const thread=conversation.game===state.activeId?conversation.thread:[];
  const recordExchange=(question:string,answer:string,local:boolean)=>{const id=state.activeId;setConversation(current=>({game:id,thread:addExchange(current.game===id?current.thread:[],question,answer,local)}))};

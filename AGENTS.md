@@ -1,6 +1,6 @@
 # Painted Realms
 
-Read README.md for setup, CONTRIBUTING.md for the team workflow, and ROADMAP.md for current scope. DESIGN.md, RULES.md, MULTIPLAYER.md and AI-OPTIONS.md describe the existing design and proposed integrations.
+Read README.md for setup, CONTRIBUTING.md for the team workflow, and ROADMAP.md for current scope. DESIGN.md, SOUND.md, RULES.md, MULTIPLAYER.md and AI-OPTIONS.md describe the existing design and proposed integrations.
 
 - Keep changes focused on the assigned task. Work on a feature/fix branch and explain validation in the pull request.
 - Run `npm run check` before proposing a merge. For visible changes, check narrow/mobile and desktop layouts.

@@ -21,3 +21,12 @@ test('old saved levels migrate with quiet interface defaults and invalid levels 
  assert.equal(normalizeAudioPreferences({hoverSounds:false}).hoverSounds,false);
  assert.equal('interfaceSounds' in normalizeAudioPreferences({interfaceSounds:true}),false);
 });
+
+test('music, effects and table sounds start on and keep the player\'s choice; their levels are bounded',()=>{
+ const fresh=normalizeAudioPreferences(null);
+ assert.equal(fresh.musicOn,true);assert.equal(fresh.effectsOn,true);assert.equal(fresh.interfaceOn,true);
+ const chosen=normalizeAudioPreferences({musicOn:false,effectsOn:false,interfaceOn:false,effectsVolume:3,ambienceVolume:-1});
+ assert.equal(chosen.musicOn,false);assert.equal(chosen.effectsOn,false);assert.equal(chosen.interfaceOn,false);
+ assert.equal(chosen.effectsVolume,1);assert.equal(chosen.ambienceVolume,0);
+ assert.equal(normalizeAudioPreferences({musicOn:'yes'}).musicOn,true);
+});
