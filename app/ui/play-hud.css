@@ -244,3 +244,8 @@ html[data-color-mode][data-theme] .ph .ph-board .board-tools i{width:1px;height:
 .hs-sealed-text{margin:0;font:italic 400 16px/1.45 'EB Garamond',Georgia,serif;color:#2e2216}
 .hs-sealed-text strong{font-style:normal;font-weight:600}
 .hs-sealed .hs-sealed-open{margin-top:2px;padding:6px 0;border:0;background:none;font:700 13px Inter,system-ui,sans-serif;letter-spacing:.05em;text-transform:uppercase;color:#7a2a20;text-decoration:underline;text-underline-offset:4px;cursor:pointer}
+/* The lantern shards open the road map too (built-in tales); on phones they are the way in, so the top row keeps its room. */
+.ph button.ph-shards{min-height:28px;padding:0 6px;margin-left:0;border:0;border-radius:2px;background:none;cursor:pointer;align-items:center}
+.ph button.ph-shards:hover{background:rgba(232,168,64,.12)}
+.ph button.ph-shards:focus-visible{outline:1.5px solid var(--ph-ink);outline-offset:2px}
+@media (max-width:760px){.ph .ph-tool.ph-road{display:none}.ph button.ph-shards{min-height:36px;min-width:44px;justify-content:center}}

@@ -10,12 +10,13 @@ import './chapter-map.css';
 
 const ROMAN=['I','II','III','IV','V'];
 
-/** Between chapters: the road relights on the map, then the Game Master opens the next chapter (ChapterOpening). Built-in tales only. */
-export default function ChapterMap({game,view,onClose}:{game:GameState;view:RouteView;onClose:()=>void}){
+/** Between chapters: the road relights on the map, then the Game Master opens the next chapter (ChapterOpening). Built-in tales only.
+    With `look`, the same map opened from the table during a chapter (The road): nothing relights and it closes back to play. */
+export default function ChapterMap({game,view,onClose,look=false}:{game:GameState;view:RouteView;onClose:()=>void;look?:boolean}){
  const dialog=useRef<HTMLDialogElement>(null),go=useRef<HTMLDivElement>(null),close=useRef(onClose);
  useLayoutEffect(()=>{close.current=onClose});
  const{reducedMotion}=useTheme();
- const[settled,setSettled]=useState(reducedMotion||!view.fresh.length);
+ const[settled,setSettled]=useState(look||reducedMotion||!view.fresh.length);
  useLayoutEffect(()=>{
   const el=dialog.current;el?.showModal();go.current?.querySelector('button')?.focus();
   const cancel=(e:Event)=>{e.preventDefault();close.current()};el?.addEventListener('cancel',cancel);
@@ -23,7 +24,7 @@ export default function ChapterMap({game,view,onClose}:{game:GameState;view:Rout
  },[]);
  const story=game.options.creation!.story,places=story.locations;
  const chapter=game.scene+1,final=chapter>=view.total;
- return <dialog ref={dialog} className="chapter-map realm" aria-labelledby="chapter-map-title" aria-describedby="chapter-map-route">
+ return <dialog ref={dialog} className={`chapter-map realm${look?' cm-look':''}`} aria-labelledby="chapter-map-title" aria-describedby="chapter-map-route">
   <div className="cm-layout">
    <header className="cm-head">
     <span className="realm-eyebrow">{SETTING} · {story.world} · {story.title}</span>
@@ -40,8 +41,9 @@ export default function ChapterMap({game,view,onClose}:{game:GameState;view:Rout
     <p className="cm-shards">{Array.from({length:view.total},(_,i)=><i key={i} className={i<game.relics?'on':''} aria-hidden="true"/>)}<span>{game.relics} of {view.total} lantern shards</span></p>
    </div>
    <div className="cm-actions" ref={go}>
-    <span className="cm-next">Next · Chapter {ROMAN[game.scene]??chapter} of {ROMAN[view.total-1]??view.total}{final&&view.total>1?' · the final chapter':''} · <strong>{game.sceneName}</strong></span><RealmButton variant="primary" style={{width:'100%'}} onClick={()=>close.current()}>Continue</RealmButton>
-    <span className="cm-skip" aria-hidden={settled} style={{visibility:settled?'hidden':undefined}}>Select the map to finish the animation</span>
+    {look?<><span className="cm-next">Now · Chapter {ROMAN[game.scene]??chapter} of {ROMAN[view.total-1]??view.total} · <strong>{game.sceneName}</strong></span><RealmButton style={{width:'100%'}} onClick={()=>close.current()}>Back to the table</RealmButton><span className="cm-skip">Esc closes the map</span></>
+    :<><span className="cm-next">Next · Chapter {ROMAN[game.scene]??chapter} of {ROMAN[view.total-1]??view.total}{final&&view.total>1?' · the final chapter':''} · <strong>{game.sceneName}</strong></span><RealmButton variant="primary" style={{width:'100%'}} onClick={()=>close.current()}>Continue</RealmButton>
+    <span className="cm-skip" aria-hidden={settled} style={{visibility:settled?'hidden':undefined}}>Select the map to finish the animation</span></>}
    </div>
   </div>
  </dialog>;
