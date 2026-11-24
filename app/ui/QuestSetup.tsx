@@ -125,12 +125,12 @@ function GameMasterStep({gm,pick,own,setOwn,ownReady}:{gm:GameMasterPreset;pick:
  useEffect(()=>{if(mine&&!wasMine.current&&window.matchMedia('(max-width:900px)').matches)builder.current?.scrollIntoView({block:'start',behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth'});wasMine.current=mine},[mine]);
  return <div className="qs-gm">
   <div className="qs-gm-cards" role="radiogroup" aria-label="Game Masters">
-   {GAME_MASTERS.map(g=><button key={g.id} type="button" role="radio" aria-checked={g.id===gm.id} data-tooltip={`${g.title}: ${g.tone.toLowerCase()}`} className="realm-choice qs-gm-card" onClick={()=>pick(g.id)}>
+   {GAME_MASTERS.map(g=><button key={g.id} type="button" role="radio" aria-checked={g.id===gm.id} data-tooltip="none" className="realm-choice qs-gm-card" onClick={()=>pick(g.id)}>
     <Portrait art={g.art} face={g.face} ratio={GAME_MASTER_ART_RATIO} width={84} height={104} scale={2.1}/>
     <span className={`qs-gm-card-text${g.id===gm.id?' realm-tint':''}`}><strong>{g.title}</strong><span>{g.mood}</span><span>{g.tone}</span></span>
     {g.id===gm.id?<Diamond/>:null}
    </button>)}
-   <button type="button" role="radio" aria-checked={mine} data-tooltip="Your own Game Master: name them and choose how they tell it" className="realm-choice qs-gm-card qs-gm-card-own" onClick={()=>pick('own')}>
+   <button type="button" role="radio" aria-checked={mine} data-tooltip="none" className="realm-choice qs-gm-card qs-gm-card-own" onClick={()=>pick('own')}>
     <span className="qs-own-card-face"><NarratorAvatar profile={preview} compact size={84}/></span>
     <span className={`qs-gm-card-text${mine?' realm-tint':''}`}><strong>{mine&&ownReady?gm.title:'Your own'}</strong><span>{mine&&ownReady?'Your own Game Master':'Name them'}</span><span>{tone.tells}</span></span>
     {mine?<Diamond/>:null}
@@ -198,7 +198,7 @@ function TaleStep({s,gm,story,art,pick,idea,setIdea,shape,tellAnother,pending,er
   </section>
   <div className="qs-tale-side">
    <div className="qs-tale-list" role="radiogroup" aria-label="Tales">
-    {rows.map(r=><button key={r.id} type="button" role="radio" aria-checked={s.tale===r.id} data-tooltip={`${r.title} · ${r.meta}`} className="realm-choice qs-row" onClick={()=>pick(r.id)}>
+    {rows.map(r=><button key={r.id} type="button" role="radio" aria-checked={s.tale===r.id} data-tooltip="none" className="realm-choice qs-row" onClick={()=>pick(r.id)}>
      <img src={r.thumb} alt="" className="qs-row-thumb"/>
      <span className={`qs-row-text${s.tale===r.id?' realm-tint':''}`}><strong>{r.title}</strong><span>{r.meta}</span></span>
      {s.tale===r.id?<Diamond/>:null}

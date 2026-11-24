@@ -76,3 +76,17 @@ html[data-color-mode][data-theme] dialog.modal.options-menu .modal-head h2{font-
  .options-foot{padding:10px 16px}
 }
 @media (max-height:500px) and (min-width:651px){.options-menu .settings-shell{height:calc(100dvh - 120px)}.options-foot{padding:8px 30px}}
+
+/* The Storyteller page: team AI as a menu row, the limits as three figures, the steps in the book's hand. */
+.ai-status{font:600 15.5px Cinzel,'EB Garamond',Georgia,serif;letter-spacing:.1em;text-transform:uppercase;color:#8d99a6;padding-right:36px}
+.ai-status.on{color:#8FD18B}
+.ai-limits{display:flex;gap:18px;font:500 13px Inter,system-ui,sans-serif;color:#a9b3be;white-space:nowrap}
+.ai-limits b{display:block;font:600 18px Cinzel,'EB Garamond',Georgia,serif;color:#F1E5CF}
+.options-menu .ai-unlock-form{padding:16px 0;border-bottom:1px solid #2a333f}
+.options-menu .ai-unlock-form>label{font:500 21px 'EB Garamond',Georgia,serif;color:#F1E5CF}
+.options-menu .ai-unlock-fields input{background:#121820;border:1px solid #435263;border-radius:2px;color:#F1E5CF}
+.options-menu .ai-device-actions{display:flex;align-items:center;gap:6px 16px;flex-wrap:wrap;margin-top:8px}
+.ai-steps{margin:10px 0 0;padding-left:22px;font:400 17px/1.5 'EB Garamond',Georgia,serif;color:#d2cbbf}
+.ai-steps li{padding:3px 0}
+.ai-steps li::marker{font-family:Cinzel,'EB Garamond',Georgia,serif;color:#9CC9EA}
+@media (max-width:650px){.ai-limits{gap:12px;flex-wrap:wrap}.ai-status{padding-right:0}}
