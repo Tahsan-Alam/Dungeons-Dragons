@@ -24,9 +24,9 @@ export const OWN_FORMS:readonly {id:NarratorAvatar['form'];label:string;model:He
  {id:'human',label:'Person',model:'ranger'},{id:'spirit',label:'Spirit',model:'mage'},{id:'cat',label:'Cat',model:'knight'},
  {id:'owl',label:'Owl',model:'cleric'},{id:'fox',label:'Fox',model:'rogue'},{id:'dragon',label:'Dragon',model:'guardian'},
 ];
-export const OWN_ACCESSORIES:readonly {id:NarratorAvatar['accessory'];label:string}[]=[{id:'none',label:'Nothing'},{id:'hood',label:'A hood'},{id:'glasses',label:'Glasses'},{id:'crown',label:'A crown'}];
+export const OWN_ACCESSORIES:readonly {id:NarratorAvatar['accessory'];label:string}[]=[{id:'none',label:'Nothing'},{id:'glasses',label:'Glasses'},{id:'crown',label:'A crown'}];
 
-export const OWN_DEFAULT:OwnGameMasterInput={name:'',who:'',tone:'hopeful',form:'owl',accessory:'hood',color:HERO_COLORS[6]};
+export const OWN_DEFAULT:OwnGameMasterInput={name:'',who:'',tone:'hopeful',form:'owl',accessory:'none',color:HERO_COLORS[6]};
 /** Names the player can start from; never sent anywhere. */
 export const OWN_NAME_IDEAS=['The Lamplighter','Old Mother Reed','The Ferryman','Captain Wren','The Archivist','Bramble'];
 
