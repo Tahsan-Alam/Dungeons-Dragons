@@ -55,9 +55,9 @@ test('a board with no lights is all moonlight, and water gets glints',()=>{
 });
 
 test('night draws under every rule mark and leaves light mode alone',()=>{
- const depth=read('./DepthArt.tsx'),flat=read('./Board.tsx'),css=read('./night.css');
+ const depth=read('./DepthArt.tsx'),flat=read('./Board.tsx'),tactical=read('./TacticalArt.tsx'),css=read('./night.css');
  assert.ok(depth.indexOf('<NightVeil')>0&&depth.indexOf('<NightVeil')<depth.indexOf('<RefugeEdges edges'),'2.5D: the veil is under the refuge edge');
- const terrain=flat.slice(flat.indexOf('const Terrain='));
+ const terrain=tactical.slice(tactical.indexOf('export const TacticalTerrain='));
  assert.ok(terrain.indexOf('<NightVeil')>0&&terrain.indexOf('<NightVeil')<terrain.indexOf('<RefugeEdges'),'tactical map: the veil is under the refuge edge');
  assert.ok(flat.indexOf('<BoardTerrain')<flat.indexOf('<KeeperMarks')&&flat.indexOf('<BoardTerrain')<flat.indexOf('className={`tile-hit'),'Keeper marks and move range are drawn above the night');
  const rules=css.replace(/\/\*[\s\S]*?\*\//g,'').split('}').map(r=>r.trim()).filter(r=>r.includes('{')&&!r.startsWith('@'));

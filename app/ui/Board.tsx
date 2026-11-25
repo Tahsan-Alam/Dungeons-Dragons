@@ -2,19 +2,18 @@
 import {memo,useMemo,useRef,useState,useEffect,useLayoutEffect,useImperativeHandle,useCallback,useId,type Ref,type ReactNode} from 'react';
 import type {Actor,GameState} from '../../game/types';
 import {getReachable,getValidTargets} from '../../game/engine';
-import {HeroArt,Icon,Tree} from './Art';
+import {Icon} from './Art';
 import {useTheme} from './Theme';
 import {ART_PALETTE as P} from './artPalette';
 import {findBoardPath,isBoardDiscontinuity,planActorMotions,boardPathKeyframes,sampleBoardPath,initialBoardFrame,followBoardTarget,anchoredBoardPan,type BoardPoint} from './board-motion';
 import {createBoardProjection,type BoardProjection} from './board-projection';
 import {collectBoardFeedback,type BoardFeedback} from './board-feedback';
 import {DepthTerrain,DepthProp,DepthChest,DepthGateway} from './DepthArt';
-import {FlatSetPiece,GroundLight,GroundMarkArt,RefugeEdges} from './SetPieceArt';
-import {groundOf,isGroundMark,isSetPieceProp,refugeEdges} from '../../game/set-pieces';
+import {isGroundMark} from '../../game/set-pieces';
 import {ActorSprite,spriteTop} from './ActorArt';
 import {keeperYields} from './actor-art';
 import {KeeperMarks} from './KeeperMarks';
-import {NightVeil} from './NightVeil';
+import {TacticalTerrain,TacticalToken} from './TacticalArt';
 import {nightLights,nightLitTiles,nightRim} from './night-light';
 import {healthLevel} from './readability';
 import {sameBoardTerrain,rovingBoardTile,nextBoardTile,resizedBoardPan,revealedBoardPan,type BoardDirection} from './board-interaction';
@@ -23,23 +22,8 @@ import './board-view.css';
 import './night.css';
 export type Tool='move'|'attack'|'ability';
 export type BoardControls={fit:()=>void;focusActor:()=>void;zoomIn:()=>void;zoomOut:()=>void;toggleGrid:()=>void;pan:(dx:number,dy:number)=>void;isMoving:()=>boolean;isInteracting:()=>boolean};
-const Terrain=memo(function Terrain({game,grid}:{game:GameState;grid:boolean}){return <>
- <defs><pattern id="board-dots" width="50" height="50" patternUnits="userSpaceOnUse"><circle cx="0" cy="0" r="1.4" fill={P.grassDetail} opacity=".26"/></pattern><pattern id="water-lines" width="35" height="20" patternUnits="userSpaceOnUse"><path d="M2 10q5-3 11 0t11 0" stroke={P.waterLight} strokeWidth="1" fill="none"/></pattern></defs>
- <rect width={game.width*50} height={game.height*50} rx="18" fill={game.options.biome==='ruins'?P.ruinGrass:P.grass}/>
- {game.tiles.map(t=><g key={`${t.x},${t.y}`} transform={`translate(${t.x*50} ${t.y*50})`}>
- {isGroundMark(t.decoration)||isSetPieceProp(t.decoration)?(g=><>{g.kind==='path'?<rect x="-1" y="-1" width="52" height="52" rx="10" fill={P.road}/>:g.kind==='water'?<><rect width="51" height="51" rx="8" fill={P.water}/><rect width="50" height="50" fill="url(#water-lines)"/></>:null}{g.base?<GroundMarkArt mark={g.base} seed={t.x*17+t.y*31}/>:null}{g.mark?<GroundMarkArt mark={g.mark} seed={t.x*17+t.y*31}/>:null}</>)(groundOf(game,t)):null}
- {isSetPieceProp(t.decoration)||isGroundMark(t.decoration)?null:t.kind==='path'?<rect x="-1" y="-1" width="52" height="52" rx="10" fill={P.road}/>:t.kind==='water'?<><rect width="51" height="51" rx="8" fill={P.water}/><rect width="50" height="50" fill="url(#water-lines)"/></>:t.kind==='wall'?<path d="m5 7 32-4 10 9-3 28-33 3-8-11Z" fill={P.stone} stroke={P.stoneDark} strokeWidth="1.5"/>:((t.x*7+t.y*3)%11===0)?<path d="m20 35-4-6m4 6 4-9m0 9 4-4" fill="none" stroke={P.grassDetail} strokeWidth="1.5"/>:null}
- {t.decoration==='flower'?<g fill={P.flower}><circle cx="18" cy="24" r="3"/><circle cx="32" cy="37" r="2.5"/></g>:t.decoration==='mushroom'?<g stroke={P.bark} strokeWidth="1.3"><path d="M27 37v-7m-8-1q8-18 16 0Z" fill={P.mushroom}/></g>:t.decoration==='rock'?<path d="m14 31 6-13 16 3 4 13-17 5Z" fill={P.stone} stroke={P.stoneDark} strokeWidth="1.5"/>:t.decoration==='ruin'?<g fill={P.stoneLight} stroke={P.stoneDark} strokeWidth="1.5"><path d="m13 39 2-30 8 3 10-5 4 32Z"/><path d="m15 22 12 1m-5 9 14-1"/></g>:null}
- </g>)}
- {game.tiles.map(t=>isSetPieceProp(t.decoration)?<g key={`light${t.x},${t.y}`} className="ground-light" transform={`translate(${t.x*50} ${t.y*50})`}><GroundLight prop={t.decoration}/></g>:null)}
- <NightVeil game={game}/>
- <RefugeEdges edges={refugeEdges(game)}/>
- {game.tiles.map(t=>isSetPieceProp(t.decoration)?<g key={`piece${t.x},${t.y}`} transform={`translate(${t.x*50} ${t.y*50})`}><FlatSetPiece prop={t.decoration}/></g>:null)}
- {grid?<rect width={game.width*50} height={game.height*50} fill="url(#board-dots)"/>:null}
- {game.tiles.filter(t=>t.decoration==='tree').map(t=><Tree key={`tree${t.x}-${t.y}`} x={t.x*50+25} y={t.y*50+32} size={.75+(t.x%3)*.08} tone={t.x+t.y}/>)}
- </>});
 const BoardTerrain=memo(function BoardTerrain({game,grid,projection}:{game:GameState;grid:boolean;projection:BoardProjection}){
- return projection.mode==='2.5d'?<DepthTerrain game={game} grid={grid} projection={projection}/>:<Terrain game={game} grid={grid}/>;
+ return projection.mode==='2.5d'?<DepthTerrain game={game} grid={grid} projection={projection}/>:<TacticalTerrain game={game} grid={grid}/>;
 },(before,after)=>before.grid===after.grid&&before.projection===after.projection&&sameBoardTerrain(before.game,after.game));
 function useActorMotion(game:GameState,projection:BoardProjection,focusId:string|undefined,enabled:boolean,resetKey:string|number|undefined,reducedMotion:boolean,onChange?:((moving:boolean)=>void)){
  const nodes=useRef(new Map<string,SVGGElement>()),animations=useRef(new Map<string,{animation:Animation;x:number;y:number;path:BoardPoint[];duration:number}>()),previous=useRef<GameState|null>(null),lastReset=useRef(resetKey),lastProjection=useRef(projection);
@@ -176,13 +160,13 @@ export default function Board({game,actor,tool,onTile,onActor,selectedId,myTurn,
   return()=>{window.removeEventListener('pointerup',release);window.removeEventListener('pointercancel',release);window.removeEventListener('blur',cancel)};
  },[releasePointer]);
  function renderActor(a:Actor){
-  const rim=nightRim(lights,a.x,a.y),point=projection.tileCenter(a.x,a.y),targeted=targets.has(a.id),attackable=quickTargets.has(a.id),dimmed=targets.size>0&&!targeted&&!a.defeated&&a.id!==actor?.id,hit=struck.get(a.id),depth=viewMode==='2.5d',top=depth?spriteTop(a,game.options.biome):-45;return <g key={a.id} data-x={a.x} data-y={a.y} ref={node=>{if(node)motion.nodes.current.set(a.id,node);else motion.nodes.current.delete(a.id)}} className={`board-actor ${a.hp<=0?'downed':''} ${a.defeated?keeperYields(a.keeper)?'defeated yielded':'defeated':''} ${targeted?'targeted':''} ${attackable?'attackable':''} ${dimmed?'out-of-range':''} ${rim?`night-${rim.tone}`:''}`} style={{transform:`translate(${point.x}px, ${point.y}px)`,...(rim?{'--night-side':rim.side}:{})}} pointerEvents={a.defeated?'none':undefined} role={a.defeated?undefined:'button'} aria-label={`${a.name}, ${a.hp} of ${a.maxHp} health${a.enemy?', enemy':''}${attackable?', select to attack':targeted?', valid target':''}`} tabIndex={a.defeated?undefined:0} onClick={e=>{e.stopPropagation();if(!motion.isMoving()&&Date.now()>suppressClick.current)onActor(a)}} onKeyDown={e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();e.stopPropagation();if(!motion.isMoving())onActor(a)}}}>
+  const rim=nightRim(lights,a.x,a.y),point=projection.tileCenter(a.x,a.y),targeted=targets.has(a.id),attackable=quickTargets.has(a.id),dimmed=targets.size>0&&!targeted&&!a.defeated&&a.id!==actor?.id,hit=struck.get(a.id),depth=viewMode==='2.5d',top=depth?spriteTop(a,game.options.biome):-20;return <g key={a.id} data-x={a.x} data-y={a.y} ref={node=>{if(node)motion.nodes.current.set(a.id,node);else motion.nodes.current.delete(a.id)}} className={`board-actor ${a.hp<=0?'downed':''} ${a.defeated?keeperYields(a.keeper)?'defeated yielded':'defeated':''} ${targeted?'targeted':''} ${attackable?'attackable':''} ${dimmed?'out-of-range':''} ${rim?`night-${rim.tone}`:''}`} style={{transform:`translate(${point.x}px, ${point.y}px)`,...(rim?{'--night-side':rim.side}:{})}} pointerEvents={a.defeated?'none':undefined} role={a.defeated?undefined:'button'} aria-label={`${a.name}, ${a.hp} of ${a.maxHp} health${a.enemy?', enemy':''}${attackable?', select to attack':targeted?', valid target':''}`} tabIndex={a.defeated?undefined:0} onClick={e=>{e.stopPropagation();if(!motion.isMoving()&&Date.now()>suppressClick.current)onActor(a)}} onKeyDown={e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();e.stopPropagation();if(!motion.isMoving())onActor(a)}}}>
  {attackable?<title>{`Attack ${a.name}`}</title>:null}
- {!a.defeated?<ellipse className="actor-floor-marker" cy={viewMode==='2.5d'?5:11} rx="22" ry={viewMode==='2.5d'?11:15} fill={targets.has(a.id)?P.target:a.id===game.activeActorId?P.active:a.color} stroke={a.id===selectedId?P.marker:a.enemy?P.enemyHealth:P.health} strokeWidth={a.id===selectedId?2.6:1.2} fillOpacity=".65"/>:null}
- {!a.defeated&&(targeted||attackable)?<ellipse className={`actor-target-ring ${targeted?'pulse':''}`} cy={depth?5:11} rx="27" ry={depth?15:20} stroke={P.target} strokeWidth={targeted?3:2} strokeDasharray={targeted?undefined:'4 4'}/>:null}
+ {!a.defeated?<ellipse className="actor-floor-marker" cy={depth?5:0} rx={depth?22:24} ry={depth?11:24} fill={targets.has(a.id)?P.target:a.id===game.activeActorId?P.active:a.color} stroke={a.id===selectedId?P.marker:a.enemy?P.enemyHealth:P.health} strokeWidth={a.id===selectedId?2.6:1.2} fillOpacity=".65"/>:null}
+ {!a.defeated&&(targeted||attackable)?<ellipse className={`actor-target-ring ${targeted?'pulse':''}`} cy={depth?5:0} rx={depth?27:28} ry={depth?15:28} stroke={P.target} strokeWidth={targeted?3:2} strokeDasharray={targeted?undefined:'4 4'}/>:null}
  {!a.defeated&&a.id===game.activeActorId?<path d={`M-4 ${top-8}h8l-4 5Z`} fill={P.marker}/>:null}
- <g className={hit?`actor-body ${hit.kind}`:'actor-body'} style={hit?{animationDelay:`${hit.delay}ms`}:undefined}>{depth?<g opacity={a.defeated&&!keeperYields(a.keeper)?.3:undefined}><ActorSprite actor={a} biome={game.options.biome}/></g>:<g transform={a.defeated?'translate(-3 9) rotate(-75) scale(.55)':undefined}><svg x="-25" y="-45" width="50" height="58" viewBox="0 0 80 90"><HeroArt heroClass={a.heroClass} color={a.color} enemy={a.enemy}/></svg></g>}</g>
- {!a.defeated?<><rect x="-16" y="20" width="32" height="4" rx="2" fill={P.healthTrack} opacity=".2"/><rect x="-16" y="20" width={32*Math.max(0,a.hp/a.maxHp)} height="4" rx="2" fill={a.enemy?P.enemyHealth:{ok:P.health,low:'var(--warning)',critical:'var(--danger)',down:'var(--danger)'}[healthLevel(a.hp,a.maxHp)]}/></>:null}
+ <g className={hit?`actor-body ${hit.kind}`:'actor-body'} style={hit?{animationDelay:`${hit.delay}ms`}:undefined}>{depth?<g opacity={a.defeated&&!keeperYields(a.keeper)?.3:undefined}><ActorSprite actor={a} biome={game.options.biome}/></g>:<g transform={a.defeated?'scale(.8)':undefined}><TacticalToken actor={a} biome={game.options.biome} ring={a.enemy?P.enemyHealth:a.color}/></g>}</g>
+ {!a.defeated?<><rect x="-16" y={depth?20:25} width="32" height="4" rx="2" fill={P.healthTrack} opacity=".2"/><rect x="-16" y={depth?20:25} width={32*Math.max(0,a.hp/a.maxHp)} height="4" rx="2" fill={a.enemy?P.enemyHealth:{ok:P.health,low:'var(--warning)',critical:'var(--danger)',down:'var(--danger)'}[healthLevel(a.hp,a.maxHp)]}/></>:null}
  {!a.defeated&&a.guarding?<path transform={`translate(15 ${top+12})`} d="M0 0h10v7l-5 4-5-4Z" fill={P.accent} stroke={P.leafDark}/>:null}
  </g>;
  }
