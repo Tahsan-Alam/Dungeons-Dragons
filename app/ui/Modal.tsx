@@ -1,4 +1,5 @@
 'use client';
+import {useOpenCue} from './sound/useCue';
 import {useCallback,useLayoutEffect,useId,useRef,useState,type ReactNode,type RefObject} from 'react';
 import {Icon} from './Art';
 import {useTheme} from './Theme';
@@ -11,6 +12,7 @@ type ModalProps={title:string;onClose:()=>void;children:ReactNode|((dismiss:Moda
 export default function Modal({title,onClose,children,wide=false,dismissible=true,initialFocus,keepOpenOnDismiss=false,className='',escHint}:ModalProps) {
  const{reducedMotion}=useTheme();const reducedMotionRef=useRef(reducedMotion);reducedMotionRef.current=reducedMotion;
  const dialog=useRef<HTMLDialogElement>(null),close=useRef(onClose),timer=useRef<ReturnType<typeof setTimeout>|null>(null),closingRef=useRef(false);
+ useOpenCue(className.includes('parchment')?'ui-unfold':'ui-open');
  const[closing,setClosing]=useState(false);const titleId=useId(),canDismiss=useRef(dismissible),keepOpen=useRef(keepOpenOnDismiss),focusTarget=useRef(initialFocus);close.current=onClose;canDismiss.current=dismissible;keepOpen.current=keepOpenOnDismiss;focusTarget.current=initialFocus;
  const requestClose=useCallback<ModalDismiss>((afterClose)=>{
   if(closingRef.current||!canDismiss.current)return;

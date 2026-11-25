@@ -50,6 +50,12 @@ Keep this as the short checkpoint overview. Use GitHub issues for individual tas
 - [x] Decide whether the creator's narrator keeps the name Aether: it does. The guide is the voice of the light the party follows.
 - [x] Create your own Game Master: the fourth card on the Game Master step.
 
+### Sound
+
+- [x] Sound design (SOUND.md): CC0 music per region by day and after dusk, Keeper, camp, road, victory and defeat themes; surroundings; dice, steps, blows, spells, creature voices, Keeper warnings, chests, shards and the road; table sounds; Sound settings.
+- [ ] Listen-through in a playtest: confirm each region's pair of themes, the levels and the loops.
+- [ ] Narrator voice API: a voice provider behind the server, clips cached, built-in tales voiced ahead of time (SOUND.md, Next). Needs the owner's choice of provider and authorization for paid use.
+
 These are proposed next tasks, not promises that every feature lands in alpha.2. Choose a small scope together for each checkpoint.
 
 ## Later

@@ -46,18 +46,22 @@ export default function Settings({onClose,onAI,audio,game,initialSection='appear
  <p className="mk-aside">Only you see these choices; the party keeps its own.</p>
  </>:null}
  {section==='audio'?<>
- <h4 className="mk-group">Table sounds</h4>
- <MenuRow name="Interface sounds" why="Soft, tactile clicks."><OnOff label="Interface sounds" on={audio.interfaceSounds} onChange={()=>audio.toggleInterfaceSounds()}/></MenuRow>
- <MenuRow name="Volume"><Notches label="Interface volume" value={audio.preferences.interfaceVolume} onChange={audio.setInterfaceVolume}/><button type="button" className="mk-link" data-ui-sound="off" disabled={audio.preferences.interfaceVolume===0} onClick={audio.previewSound}>Try it</button></MenuRow>
- <MenuRow name="Pointing sounds" why="A click when you point at or move between choices."><OnOff label="Hover and keyboard focus sounds" on={audio.preferences.hoverSounds} onChange={audio.setHoverSounds}/></MenuRow>
- {audio.soundError?<p className="settings-audio-error" role="status">{audio.soundError}</p>:null}
+ <h4 className="mk-group">Music</h4>
+ <MenuRow name="Music" why="A theme for each region, by day and after dusk, and for the Keepers."><OnOff label="Music" on={audio.music} onChange={()=>audio.toggleMusic()}/></MenuRow>
+ <MenuRow name="Music volume"><Notches label="Music volume" disabled={!audio.music} value={audio.preferences.musicVolume} onChange={audio.setMusicVolume}/></MenuRow>
+ <h4 className="mk-group">The world</h4>
+ <MenuRow name="Sounds of play" why="Dice, steps, blows, spells, creatures, chests and the road."><OnOff label="Sounds of play" on={audio.effects} onChange={()=>audio.toggleEffects()}/></MenuRow>
+ <MenuRow name="Effects volume"><Notches label="Effects volume" disabled={!audio.effects} value={audio.preferences.effectsVolume} onChange={audio.setEffectsVolume}/></MenuRow>
+ <MenuRow name="Surroundings" why="Birds, wind, crickets, waves and the camp fire."><Notches label="Surroundings volume" disabled={!audio.effects} value={audio.preferences.ambienceVolume} onChange={audio.setAmbienceVolume}/></MenuRow>
+ <h4 className="mk-group">The table</h4>
+ <MenuRow name="Table sounds" why="Pages, switches and soft, tactile clicks."><OnOff label="Table sounds" on={audio.interfaceSounds} onChange={()=>audio.toggleInterfaceSounds()}/></MenuRow>
+ <MenuRow name="Table volume"><Notches label="Table sounds volume" disabled={!audio.interfaceSounds} value={audio.preferences.interfaceVolume} onChange={audio.setInterfaceVolume}/><button type="button" className="mk-link" data-ui-sound="off" disabled={!audio.interfaceSounds||audio.preferences.interfaceVolume===0} onClick={audio.previewSound}>Try it</button></MenuRow>
+ <MenuRow name="Pointing sounds" why="A click when you point at or move between choices."><OnOff label="Hover and keyboard focus sounds" disabled={!audio.interfaceSounds} on={audio.preferences.hoverSounds} onChange={audio.setHoverSounds}/></MenuRow>
  <h4 className="mk-group">The narrator</h4>
  <MenuRow name="Narration" why={audio.available?'Your device’s voice reads the story aloud.':'Your browser has no voice to read the story.'}><OnOff label="Spoken narration" disabled={!audio.available} on={audio.voice} onChange={()=>audio.toggleVoice()}/></MenuRow>
  <MenuRow name="Voice volume"><Notches label="Narration volume" disabled={!audio.available} value={audio.preferences.voiceVolume} onChange={audio.setVoiceVolume}/></MenuRow>
  <MenuRow name="Voice speed"><Notches label="Narration speed" disabled={!audio.available} min={.5} max={1.5} value={audio.preferences.speechRate} format={v=>`${v.toFixed(1)}×`} onChange={audio.setSpeechRate}/><button type="button" className="mk-link" disabled={!audio.available} onClick={audio.previewVoice}>Hear a line</button></MenuRow>
- <h4 className="mk-group">Music</h4>
- <MenuRow name="Music" why="Quiet background notes. They pause while you’re away."><OnOff label="Background music" on={audio.music} onChange={()=>audio.toggleMusic()}/></MenuRow>
- <MenuRow name="Music volume"><Notches label="Music volume" value={audio.preferences.musicVolume} onChange={audio.setMusicVolume}/></MenuRow>
+
  </>:null}
  {section==='controls'?<ControlsSettings section="bindings"/>:null}
  {section==='game'?<><MenuRow name="AI adventures" id={`${id}-ai`} why="Personal quests and characters for new adventures."><OnOff label="AI adventures" describedBy={`${id}-ai`} on={aiEnabled} onChange={setAIEnabled}/></MenuRow><ControlsSettings section="interaction"/>{game?<button className="settings-link" disabled={leaving} onClick={onAI}><span>Ask Pip</span><Icon name="arrow" size={17}/></button>:null}{game?<div className="current-game-settings"><h4>{game.kind==='online'?`Party ${game.roomCode}`:'This adventure'}</h4>{game.seed?<div className="seed-setting"><div><span>Seed</span><code>{game.seed}</code></div><button className="mk-link" onClick={()=>void copySeed()}>{copied?'Copied':'Copy'}</button></div>:null}{copyMessage?<p className="settings-description" role="status">{copyMessage}</p>:null}<p className="settings-description">{game.kind==='solo'?'Solo play pauses when you leave.':'Other players can continue while you are away.'}</p><button className="button primary full-width" disabled={leaving} onClick={game.onGames}>Save &amp; return to adventures<Icon name="arrow" size={17}/></button>{game.onLeave?<><button className="mk-link danger leave-party" disabled={game.busy||leaving} onClick={()=>{setLeaveError('');setLeave(true)}}>Leave party</button>{leave?<div className="setting-confirm" role="group" aria-label="Leave party confirmation"><p>Give up your seat? A companion takes over your character.</p><button className="button paper compact" disabled={leaving} onClick={()=>{setLeaveError('');setLeave(false)}}>Cancel</button><button className="button danger compact" disabled={game.busy||leaving} onClick={()=>void leaveParty()}>{leaving?'Leaving…':'Leave party'}</button>{leaveError?<p className="settings-leave-error" role="alert">{leaveError}</p>:null}</div>:null}</>:null}</div>:null}</>:null}

@@ -1,4 +1,5 @@
 'use client';
+import {useOpenCue} from './sound/useCue';
 import {useLayoutEffect,useRef,type ReactNode} from 'react';
 import type {GameState} from '../../game/types';
 import {GAME_MASTERS} from '../../game/presets';
@@ -16,6 +17,7 @@ export const regionScene=(biome:Biome,night:boolean)=>`/art/scenes/region-${REGI
 export default function GameMasterScene({game,label,eyebrow,title,talking=false,onClose,children,className=''}:{game:GameState;label:string;eyebrow?:string;title:string;talking?:boolean;onClose:()=>void;children:ReactNode;className?:string}){
  const dialog=useRef<HTMLDialogElement>(null),close=useRef(onClose);
  useLayoutEffect(()=>{close.current=onClose});
+ useOpenCue(className.includes('gm-opening')?'ui-confirm':'ui-book-open',className.includes('gm-opening')?null:'ui-close');
  useLayoutEffect(()=>{
   const el=dialog.current;el?.showModal();(el?.querySelector('[data-autofocus]') as HTMLElement|null)?.focus();
   const cancel=(e:Event)=>{e.preventDefault();close.current()};el?.addEventListener('cancel',cancel);

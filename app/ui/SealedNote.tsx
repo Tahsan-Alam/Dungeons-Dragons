@@ -1,4 +1,5 @@
 'use client';
+import {playSound} from './sound/engine';
 import {useLayoutEffect,useRef,useState} from 'react';
 import type {GameState} from '../../game/types';
 import {SCENE_FOR_BIOME} from '../../game/presets';
@@ -55,7 +56,7 @@ export default function SealedNote({game,heroName,gmId,gmName,gmRealName,gmArt,s
    </div>
    <div className="sn-actions">
     {open?<button type="button" className="sn-primary" data-tooltip="none" data-keep data-autofocus={opened||undefined} onClick={()=>onClose(true)}>Keep it close<span aria-hidden="true">›</span></button>
-    :<><button type="button" className="sn-secondary" data-tooltip="none" onClick={()=>onClose(false)}>Later</button><button type="button" className="sn-primary" data-tooltip="none" data-autofocus onClick={()=>setOpen(true)}>Break the seal</button></>}
+    :<><button type="button" className="sn-secondary" data-tooltip="none" onClick={()=>onClose(false)}>Later</button><button type="button" className="sn-primary" data-tooltip="none" data-autofocus data-ui-sound="off" onClick={()=>{playSound('ui-seal');playSound('ui-unfold',{delay:.3});setOpen(true)}}>Break the seal</button></>}
    </div>
   </section>
  </dialog>;

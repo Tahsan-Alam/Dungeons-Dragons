@@ -1,4 +1,5 @@
 'use client';
+import {useChangeCue} from './sound/useCue';
 import {useEffect,useRef,useState} from 'react';
 import type {CSSProperties} from 'react';
 import type {RoomPlayer,RoomView,Session} from '../../game/types';
@@ -39,6 +40,7 @@ export default function PartyCamp({room,session,busy,command,onMenu}:{room:RoomV
  const inviteUrl=()=>{const url=new URL(location.href);url.searchParams.set('room',room.code);return url.href};
  async function copy(){try{await navigator.clipboard.writeText(inviteUrl());setCopied(true);setCopyFailed(false);if(copyTimer.current)clearTimeout(copyTimer.current);copyTimer.current=setTimeout(()=>setCopied(false),2500)}catch{setCopyFailed(true)}}
  async function share(){try{await navigator.share({title:'Painted Realms',text:`Join my party for “${title}”. Party code: ${room.code}`,url:inviteUrl()})}catch(error){/* Closing the share sheet is not a failure. */if((error as Error)?.name!=='AbortError')void copy()}}
+ useChangeCue(room.players.length,'ui-join');useChangeCue(room.players.filter(p=>p.ready).length,'ui-latch');
  const ready=room.players.filter(p=>p.ready),waiting=room.players.filter(p=>!p.ready).map(p=>p.name),canStart=waiting.length===0;
  const waitingText=waiting.length?`Waiting for ${waiting.length>2?`${waiting.slice(0,2).join(', ')} and ${waiting.length-2} more`:waiting.join(' and ')}`:'Everyone is ready';
  const placed=room.players.slice(0,SLOTS.length).map((p,i)=>({p,slot:SLOTS[i]}));

@@ -1,4 +1,5 @@
 'use client';
+import {playSound} from './sound/engine';
 import {useEffect,useLayoutEffect,useRef,useState,type ReactNode} from 'react';
 import type {GameEvent,GameState} from '../../game/types';
 import {useTheme} from './Theme';
@@ -36,7 +37,7 @@ export function OwnRoll({label,result,onShown,onDone}:{label:string;result?:Game
  const{reducedMotion}=useTheme();
  const[tumbled,setTumbled]=useState(reducedMotion),[held,setHeld]=useState(false),done=useRef(onDone),announced=useRef(onShown);
  useLayoutEffect(()=>{done.current=onDone;announced.current=onShown});
- useEffect(()=>{if(reducedMotion)return;const t=setTimeout(()=>setTumbled(true),ROLL_TUMBLE_MS);return()=>clearTimeout(t)},[reducedMotion]);
+ useEffect(()=>{if(reducedMotion)return;playSound('dice-shake',{gain:.7});const t=setTimeout(()=>setTumbled(true),ROLL_TUMBLE_MS);return()=>clearTimeout(t)},[reducedMotion]);
  const shown=tumbled&&result?result:undefined;
  useEffect(()=>{if(shown)announced.current?.()},[shown]);
  useEffect(()=>{if(!shown||held)return;const t=setTimeout(()=>done.current(),ROLL_LINGER_MS);return()=>clearTimeout(t)},[shown,held]);

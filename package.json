@@ -14,7 +14,7 @@
     "lint": "eslint . --ignore-pattern dist --ignore-pattern .next",
     "db:generate": "drizzle-kit generate",
     "typecheck": "tsc --noEmit",
-    "test": "node --experimental-strip-types --test game/*.test.ts server/*.test.ts app/ui/*.test.ts scripts/*.test.mjs",
+    "test": "node --experimental-strip-types --test game/*.test.ts server/*.test.ts app/ui/*.test.ts app/ui/sound/*.test.ts scripts/*.test.mjs",
     "check": "npm run typecheck && npm test && npm run build"
   },
   "dependencies": {
