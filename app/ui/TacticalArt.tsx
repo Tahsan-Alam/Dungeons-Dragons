@@ -6,6 +6,7 @@ import {ActorPortrait} from './ActorArt';
 import {FlatSetPiece,GroundLight,GroundMarkArt,RefugeEdges} from './SetPieceArt';
 import {groundOf,isGroundMark,isSetPieceProp,refugeEdges} from '../../game/set-pieces';
 import {NightVeil} from './NightVeil';
+import {TacticalPlace} from './TacticalPlaces';
 import './tactical-art.css';
 
 /* The tactical map: the same board seen from above, painted like the scene. Light falls from the top left, so
@@ -25,7 +26,7 @@ export function joinedTile(sides:Sides,radius:number,inset=0){
 
 const ROCK:Record<Biome,{top:string;side:string;edge:string}>={
  woodland:{top:P.stone,side:P.stoneDark,edge:P.stoneDeep},
- ruins:{top:P.stoneLight,side:P.stone,edge:P.stoneDark},
+ ruins:{top:P.stone,side:P.stoneDark,edge:P.stoneDeep},
  coast:{top:P.stone,side:P.stoneDeep,edge:P.stoneDeep},
 };
 
@@ -91,7 +92,7 @@ export function TacticalPiece({prop}:{prop:SetPieceProp}){
   case 'bollard':return <g><circle cx={25} cy={25} r={10} fill={P.stoneDeep} {...edge}/><circle cx={23.5} cy={23.5} r={6} fill={P.stoneDark}/><path d="M33 31q8 4 4 10t-10 0" fill="none" stroke={P.barkLight} strokeWidth={2.5} strokeLinecap="round"/></g>;
   case 'standing-stone':return <g><ellipse cx={25} cy={26} rx={14} ry={11} fill={P.stoneDark} {...edge}/><ellipse cx={23} cy={24} rx={10} ry={7.5} fill={P.stone}/><path d="M19 22q4-3 8 0" fill="none" stroke={P.leaf} strokeWidth={2.5} strokeLinecap="round" opacity=".7"/></g>;
   case 'waymark-lit':case 'waymark-dark':{const lit=prop==='waymark-lit';return <g>{lit?<circle cx={25} cy={25} r={24} fill={LAMP_GLOW} opacity=".25"/>:null}<rect x={14} y={14} width={22} height={22} rx={4} fill={P.stoneDark} {...edge}/><rect x={16} y={15} width={17} height={17} rx={3} fill={P.stone}/><circle cx={24.5} cy={23.5} r={5} fill={lit?LAMP:DARK_GLASS}/>{lit?<circle cx={23} cy={22} r={1.8} fill="#fff"/>:null}</g>;}
-  default:return <FlatSetPiece prop={prop}/>;
+  default:return TacticalPlace({prop})??<FlatSetPiece prop={prop}/>;
  }
 }
 
@@ -117,7 +118,8 @@ export const TacticalTerrain=memo(function TacticalTerrain({game,grid}:{game:Gam
     {path?<><path d={joinedTile(same(t.x,t.y,(x,y)=>kindAt(x,y)==='path'),16,2)} fill={P.road}/>{seed<4?<path d={seed%2?'M12 15h5M33 34h7M28 12h3':'M30 13h6M11 36h5M22 26h3'} stroke={P.roadDetail} strokeWidth={1.6} strokeLinecap="round"/>:null}</>
      :water?<><path d={joinedTile(same(t.x,t.y,(x,y)=>kindAt(x,y)==='water'),16,0)} fill={P.shore}/><path d={joinedTile(same(t.x,t.y,(x,y)=>kindAt(x,y)==='water'),14,5)} fill={P.water}/><path d={seed%2?'M9 18q6-3 12 0t12 0M20 34q5-3 10 0':'M14 14q6-3 12 0M12 31q6-3 12 0t12 0'} fill="none" stroke={P.waterLight} strokeOpacity=".7" strokeWidth={1.3} strokeLinecap="round"/></>
      :g.kind==='grass'&&!t.decoration&&seed<2?<path d="m18 34-3-6m5 6 2-8m0 8 4-4" fill="none" stroke={P.grassDetail} strokeOpacity=".7" strokeWidth={1.4} strokeLinecap="round"/>:null}
-    {g.base?<GroundMarkArt mark={g.base} seed={seed}/>:null}{g.mark?<GroundMarkArt mark={g.mark} seed={seed}/>:null}
+    {g.base==='hollow'?<><path d={joinedTile(same(t.x,t.y,(x,y)=>grounds.get(key(x,y))?.base==='hollow'),18,3)} fill={P.leafDark} opacity=".8"/><path d={joinedTile(same(t.x,t.y,(x,y)=>grounds.get(key(x,y))?.base==='hollow'),15,8)} fill={P.water}/><path d={joinedTile(same(t.x,t.y,(x,y)=>grounds.get(key(x,y))?.base==='hollow'),15,8)} fill={P.ink} opacity=".25"/><path d={seed%2?'M14 20h9M27 31h8':'M18 26h10M12 34h7'} stroke={P.waterLight} strokeOpacity=".55" strokeWidth={1.3} strokeLinecap="round"/></>
+     :g.base?<GroundMarkArt mark={g.base} seed={seed}/>:null}{g.mark?<GroundMarkArt mark={g.mark} seed={seed}/>:null}
    </g>;
   })}
   {game.tiles.map(t=>isSetPieceProp(t.decoration)?<g key={`light${t.x},${t.y}`} className="ground-light" transform={`translate(${t.x*T} ${t.y*T})`}><GroundLight prop={t.decoration}/></g>:null)}
@@ -143,5 +145,26 @@ export function TacticalToken({actor,biome,ring}:{actor:Actor;biome:Biome;ring:s
   <g clipPath={`url(#${id})`}><svg x={-17.5} y={-17.5} width={35} height={35} overflow="hidden"><ActorPortrait actor={actor} biome={biome}/></svg></g>
   <circle r={18.6} fill="none" stroke={ring} strokeWidth={3}/>
   <circle r={20.4} fill="none" stroke={P.ink} strokeOpacity=".45" strokeWidth={1}/>
+ </g>;
+}
+
+/** The chest from above: a banded lid, its lock, and the lid thrown back once opened. */
+export function TacticalChest({opened}:{opened:boolean}){
+ return <g className="tactical-chest" aria-hidden="true">
+  <rect x={-14} y={-8} width={30} height={22} rx={3} fill={P.ink} opacity=".22" transform="translate(3 4)"/>
+  {opened?<><rect x={-15} y={-22} width={30} height={14} rx={3} fill={P.chest} stroke={P.ink} strokeOpacity=".5" strokeWidth={1.2}/><path d="M-15 -16h30" stroke={P.chestTrim} strokeWidth={2}/></>:null}
+  <rect x={-15} y={-9} width={30} height={21} rx={3} fill={opened?P.chestOpen:P.chest} stroke={P.ink} strokeOpacity=".5" strokeWidth={1.2}/>
+  {opened?<rect x={-12} y={-6} width={24} height={15} rx={2} fill={P.ink} opacity=".45"/>:<><rect x={-13} y={-8} width={26} height={8} rx={2} fill={P.chestTrim} opacity=".45"/><path d="M-7 -9v21M7 -9v21" stroke={P.chestTrim} strokeWidth={2.4}/><rect x={-3} y={-1} width={6} height={7} rx={1} fill={P.chestTrim} stroke={P.ink} strokeOpacity=".5"/></>}
+ </g>;
+}
+
+/** The way on from above: a worn threshold with an arrow cut in it, lit once the shard is found. */
+export function TacticalGateway({active}:{active:boolean}){
+ return <g className="tactical-gateway" aria-hidden="true">
+  {active?<circle r={24} fill={P.gatewayActive} opacity=".3"/>:null}
+  <rect x={-18} y={-18} width={36} height={36} rx={7} fill={P.stoneDark} stroke={P.ink} strokeOpacity=".4" strokeWidth={1.2}/>
+  <rect x={-17} y={-19} width={33} height={33} rx={6} fill={active?P.gatewayActive:P.gateway}/>
+  <rect x={-12} y={-14} width={23} height={23} rx={4} fill="none" stroke={P.glyph} strokeOpacity=".7" strokeWidth={1.2} strokeDasharray="3 3"/>
+  <path d="M-9 -2.5h16m-6-6 6 6-6 6" fill="none" stroke={P.glyph} strokeWidth={2.4} strokeLinecap="round" strokeLinejoin="round"/>
  </g>;
 }

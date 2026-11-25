@@ -13,7 +13,7 @@ import {isGroundMark} from '../../game/set-pieces';
 import {ActorSprite,spriteTop} from './ActorArt';
 import {keeperYields} from './actor-art';
 import {KeeperMarks} from './KeeperMarks';
-import {TacticalTerrain,TacticalToken} from './TacticalArt';
+import {TacticalChest,TacticalGateway,TacticalTerrain,TacticalToken} from './TacticalArt';
 import {nightLights,nightLitTiles,nightRim} from './night-light';
 import {healthLevel} from './readability';
 import {sameBoardTerrain,rovingBoardTile,nextBoardTile,resizedBoardPan,revealedBoardPan,type BoardDirection} from './board-interaction';
@@ -190,11 +190,9 @@ export default function Board({game,actor,tool,onTile,onActor,selectedId,myTurn,
  <BoardTerrain game={game} grid={grid} projection={projection}/>
  <g className="board-ground-overlay" transform={projection.groundTransform||undefined}>
  <KeeperMarks game={game}/>
- {reachable.map(t=><rect key={`reach${t.x},${t.y}`} x={t.x*50+3} y={t.y*50+3} width="44" height="44" rx="9" fill={P.reachable} fillOpacity=".15" stroke={P.reachable} strokeOpacity=".4" strokeDasharray="3 4"/>)}
+ {reachable.map(t=><rect key={`reach${t.x},${t.y}`} x={t.x*50+3} y={t.y*50+3} width="44" height="44" rx="9" fill={P.reachable} fillOpacity={viewMode==='2d'?.12:.15} stroke={P.reachable} strokeOpacity={viewMode==='2d'?.32:.4} strokeDasharray={viewMode==='2d'?'2 5':'3 4'} strokeLinecap="round"/>)}
  {route&&route.length>1?<g className="board-route" aria-hidden="true"><polyline className="board-route-line" points={route.map(p=>`${p.x*50+25},${p.y*50+25}`).join(' ')} fill="none" stroke={P.route} strokeWidth="3.5"/><circle className="board-route-destination" cx={route.at(-1)!.x*50+25} cy={route.at(-1)!.y*50+25} r="9" fill={P.grass} stroke={P.route}/></g>:null}
- {viewMode==='2d'?<> <g role="img" aria-label="Gateway" transform={`translate(${game.exit.x*50+25} ${game.exit.y*50+25})`}>{<><ellipse rx="19" ry="15" fill={game.chest.opened?P.gatewayActive:P.gateway} stroke={P.glyph} strokeDasharray="3 3"/><path d="M-13 3h25m-7-6 7 6-7 6" stroke={P.glyph} strokeWidth="2" fill="none"/></>}</g>
- <g role="img" aria-label="Chest" transform={`translate(${game.chest.x*50+10} ${game.chest.y*50+13})`} stroke={P.ink} strokeWidth="2">{<><path d={game.chest.opened?'M0 11 5 2l26 4-2 9v14H0Z':'M0 11q0-18 30 0v18H0Z'} fill={game.chest.opened?P.chestOpen:P.chest}/><path d="M0 16h30m-18-4v9h6v-9" fill={P.chestTrim}/></>}</g>
- </>:null}
+ {viewMode==='2d'?<><g role="img" aria-label="Gateway" transform={`translate(${game.exit.x*50+25} ${game.exit.y*50+25})`}><TacticalGateway active={game.chest.opened}/></g><g role="img" aria-label="Chest" transform={`translate(${game.chest.x*50+25} ${game.chest.y*50+25})`}><TacticalChest opened={game.chest.opened}/></g></>:null}
  {game.tiles.map(t=>{const tileKey=`${t.x},${t.y}`,canMove=reachableKeys.has(tileKey);return <rect key={`hit${tileKey}`} data-board-tile={tileKey} x={t.x*50} y={t.y*50} width="50" height="50" fill="transparent" className={`tile-hit ${canMove?'reachable':''}`} role={canMove?'button':undefined} aria-label={canMove?`Move to ${t.x}, ${t.y}`:undefined} aria-describedby={canMove?keyboardHelpId:undefined} tabIndex={canMove?(keyboardTile?.x===t.x&&keyboardTile.y===t.y?0:-1):undefined} onPointerEnter={e=>{if(e.pointerType!=='touch'&&canMove)setPreviewTile({x:t.x,y:t.y})}} onPointerLeave={e=>{if(document.activeElement!==e.currentTarget)setPreviewTile(null)}} onFocus={e=>{if(canMove)previewFocus(t,e.currentTarget.matches(':focus-visible'))}} onBlur={()=>setPreviewTile(null)} onClick={()=>{if(!motion.isMoving()&&Date.now()>suppressClick.current&&canMove)onTile(t.x,t.y)}} onKeyDown={e=>{
   if(!e.altKey&&!e.ctrlKey&&!e.metaKey&&!e.shiftKey&&['ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.key)){
    e.preventDefault();e.stopPropagation();if(!canMove)return;
