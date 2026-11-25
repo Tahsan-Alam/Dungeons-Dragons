@@ -1,12 +1,13 @@
 'use client';
 import {useEffect,useId,useMemo,useState,type KeyboardEvent} from 'react';
 import type {SavedAdventure} from '../../game/library';
-import {CLASS_INFO} from '../../game/types';
+import {CLASS_INFO,HERO_COLORS} from '../../game/types';
 import {HEROES,HERO_ART_RATIO,SCENE_FOR_BIOME,TALES} from '../../game/presets';
-import {HeroArt,Icon} from './Art';
+import {Icon} from './Art';
 import Modal from './Modal';
 import {RealmButton,Portrait} from './RealmKit';
 import {KeyHints} from './MenuKit';
+import {CUSTOM_FACE,customHeroArt} from './hero-figure';
 import './library.css';
 import './journal.css';
 
@@ -124,7 +125,7 @@ export default function GameLibrary({games,ready,busy,onOpen,onReplay,onUpdate,o
 type DetailsProps={g:SavedAdventure;busy:boolean;narrow:boolean;onPrimary:()=>void;onReplay:()=>void;onPin:()=>void;onRename:()=>void;onArchive:()=>void;onDelete:()=>void};
 /** The chosen save, written over its painting (or opened in place on a phone). */
 function Details({g,busy,narrow,onPrimary,onReplay,onPin,onRename,onArchive,onDelete}:DetailsProps){
- const hero=HEROES.find(h=>h.name===g.heroName),done=finished(g),where=region(g);
+ const hero=HEROES.find(h=>h.name===g.heroName&&h.profile.heroClass===g.heroClass),done=finished(g),where=region(g);
  const label=g.archived?'Restore':done?'Watch replay':g.status==='lobby'?'Open party camp':g.kind==='online'&&!g.yourTurn?'Open':'Continue';
  const main=g.status==='unavailable'&&!g.archived?null:<RealmButton variant={g.archived||(g.kind==='online'&&!g.yourTurn&&g.status==='playing')?'secondary':'primary'} minWidth={narrow?undefined:190} disabled={busy} onClick={onPrimary}>{label}{label==='Continue'||label==='Watch replay'||label==='Open party camp'?<span aria-hidden="true">›</span>:null}</RealmButton>;
  return <article className="adv-tale" aria-label={named(g)}>
@@ -135,7 +136,7 @@ function Details({g,busy,narrow,onPrimary,onReplay,onPin,onRename,onArchive,onDe
   </>:null}
   {g.lastLine&&!done?<p className="adv-line">“{g.lastLine}”</p>:null}
   <div className="adv-party">
-   <div className="adv-hero">{hero?<Portrait art={hero.art} face={hero.face} ratio={HERO_ART_RATIO} width={56} height={64} scale={1.6} className="adv-portrait"/>:<span className="adv-portrait adv-art"><HeroArt heroClass={g.heroClass}/></span>}
+   <div className="adv-hero"><Portrait art={hero?.art??customHeroArt({name:g.heroName,heroClass:g.heroClass,color:HERO_COLORS[0]})} face={hero?.face??CUSTOM_FACE} ratio={HERO_ART_RATIO} width={56} height={64} scale={1.6} className="adv-portrait"/>
     <div><span className="adv-label">Playing as</span><strong>{g.heroName}</strong><span>{CLASS_INFO[g.heroClass].name}{g.kind==='online'?` · Party ${g.roomCode}`:' · Solo'}</span></div></div>
    <div className="adv-onroad">
     {done?<span className={`adv-result ${g.status}`}>{g.status==='victory'?'Victory':'Defeat'}</span>:<span className="adv-label">{g.status==='lobby'?'At party camp':'On the road'}</span>}

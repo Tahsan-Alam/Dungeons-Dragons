@@ -10,7 +10,7 @@ import {GAME_MASTERS,GAME_MASTER_ART_RATIO} from '../../game/presets';
 import Board,{type Tool,type BoardControls} from './Board';
 import {Icon} from './Art';
 import {ActorPortrait} from './ActorArt';
-import {heroArtFor} from './actor-art';
+import {heroDrawing} from './actor-art';
 import Modal from './Modal';
 import {Portrait} from './RealmKit';
 import NarratorAvatar from './NarratorAvatar';
@@ -195,9 +195,9 @@ export default function PlayTable({game,room,session,busy,connection,onAction,on
 
   {confirmEnd?<Modal title="End this turn?" onClose={()=>setConfirmEnd(false)}><div className="confirm-turn"><p>You still have an action available.</p><div><button className="button paper" onClick={()=>setConfirmEnd(false)}>Keep playing</button><button className="button primary" onClick={()=>{setConfirmEnd(false);act({type:'end'})}}>End turn</button></div></div></Modal>:null}
   {noteShown&&note?<SealedNote game={game} heroName={note.hero.name} gmId={note.gm.id} gmName={note.gm.title} gmRealName={note.gm.realName} gmArt={note.gm.art} secret={note.secret} opened={noteOpened} onClose={closeNote}/>:null}
-  {detail?<Modal title={detail.name} onClose={()=>setDetailId(null)} wide>{(()=>{const preset=heroArtFor(detail),named=!!preset&&(preset.name.toLowerCase()===detail.name.toLowerCase()||preset.short.toLowerCase()===detail.name.toLowerCase());const info=CLASS_INFO[detail.heroClass];
+  {detail?<Modal title={detail.name} onClose={()=>setDetailId(null)} wide>{(()=>{const drawing=detail.enemy?undefined:heroDrawing(detail),preset=drawing?.preset,named=!!preset;const info=CLASS_INFO[detail.heroClass];
    return <div className="hs">
-    <div className="hs-art">{preset?<img src={preset.art} alt=""/>:<ActorPortrait actor={detail} biome={game.options.biome}/>}</div>
+    <div className="hs-art">{drawing?<img src={drawing.art} alt=""/>:<ActorPortrait actor={detail} biome={game.options.biome}/>}</div>
     <div className="hs-info">
      <span className="realm-eyebrow">{named?`${preset!.className} · ${preset!.subclass}`:info.name}{detail.bot?' · companion':detail.id===mine?.id?' · you':''}</span>
      {named?<p className="hs-epithet">{preset!.epithet}</p>:<p className="hs-epithet">{info.description}</p>}

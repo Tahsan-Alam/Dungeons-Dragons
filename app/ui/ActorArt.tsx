@@ -3,12 +3,13 @@ import {memo} from 'react';
 import type {Actor,Biome} from '../../game/types';
 import {HeroArt} from './Art';
 import {ENEMY_ART} from './enemy-art-data';
-import {enemyArtKey,heroArtFor,heroPlacement,enemyPlacement,heroPortraitBox,enemyPortraitBox,type Placement} from './actor-art';
+import {enemyArtKey,heroDrawing,heroPlacement,enemyPlacement,heroPortraitBox,enemyPortraitBox,type Placement} from './actor-art';
 
-/** The figure's artwork and where it sits relative to the tile point, or null when only the generic token exists. */
+/** The figure's artwork and where it sits relative to the tile point, or null when only the generic token exists
+    (a creature from a custom tale). Every hero has a drawing. */
 export function actorFigure(actor:Actor,biome:Biome):{src:string;place:Placement;enemy:boolean}|null{
  if(actor.enemy){const key=enemyArtKey(actor,biome);return key?{src:ENEMY_ART[key].src,place:enemyPlacement(key),enemy:true}:null}
- const hero=heroArtFor(actor);return hero?{src:hero.art,place:heroPlacement(hero),enemy:false}:null;
+ const hero=heroDrawing(actor);return {src:hero.art,place:heroPlacement(hero),enemy:false};
 }
 
 /** An upright figure standing on its tile in the scene view. The image ignores the pointer; a body-sized area takes clicks. */
@@ -26,7 +27,7 @@ export function spriteTop(actor:Actor,biome:Biome){return actorFigure(actor,biom
 
 /** A head-and-shoulders crop from the same artwork, for turn order, lists and detail panels. */
 export const ActorPortrait=memo(function ActorPortrait({actor,biome}:{actor:Actor;biome:Biome}){
- const key=actor.enemy?enemyArtKey(actor,biome):undefined,hero=actor.enemy?undefined:heroArtFor(actor);
+ const key=actor.enemy?enemyArtKey(actor,biome):undefined,hero=actor.enemy?undefined:heroDrawing(actor);
  const box=key?enemyPortraitBox(key):hero?heroPortraitBox(hero):null,src=key?ENEMY_ART[key].src:hero?.art;
  if(!box||!src)return <HeroArt heroClass={actor.heroClass} color={actor.color} enemy={actor.enemy}/>;
  return <svg className="hero-art actor-portrait" viewBox={`${box.x} ${box.y} ${box.size} ${box.size}`} preserveAspectRatio="xMidYMid slice" aria-hidden="true">
