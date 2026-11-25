@@ -69,7 +69,8 @@ function Portrait({appearance,leaving=false}:{appearance:Appearance;leaving?:boo
 }
 
 function Accessory({form,accessory}:{form:Form;accessory:AvatarRecipe['accessory']}){
- if(accessory==='none'||(form==='spirit'&&accessory==='hood'))return null;
+ // 'hood' is kept for old saves but draws nothing: the painted portraits already wear their wraps.
+ if(accessory==='none'||accessory==='hood')return null;
  const eyes=form==='spirit'?[[271,204,27],[333,204,27]]:EYES[form].points;
  return <svg className={`narrator-accessory narrator-accessory-${accessory}`} viewBox="0 0 512 512" fill="none" aria-hidden="true" shapeRendering={undefined}>
   {accessory==='glasses'?<g stroke="#e8cd97" strokeWidth="5" strokeLinecap={'round'} strokeLinejoin={'round'}>
@@ -79,6 +80,6 @@ function Accessory({form,accessory}:{form:Form;accessory:AvatarRecipe['accessory
   </g>:accessory==='crown'?<g transform={`translate(${form==='dragon'?155:form==='fox'?304:form==='spirit'?298:286} ${form==='spirit'?65:form==='cat'?109:form==='owl'?105:72}) rotate(${form==='cat'?-7:form==='fox'?-4:0})`}>
    <path d="m-49 16-12-45 29 17 29-34 27 35 33-15-12 45Z" fill="#d7b767" stroke="#6d5181" strokeWidth="5" strokeLinejoin="round"/>
    <path d="M-48 17h93v14h-93Z" fill="#edd09a" stroke="#6d5181" strokeWidth="4"/><path d="m-3-16 7 9-7 9-7-9Z" fill="#8870c2"/>
-  </g>:<path d={form==='dragon'?'M99 212C65 87 148 34 229 82c76 45 96 176 64 240l-38-38c27-94-19-177-72-181-52-3-60 55-60 104Z':form==='fox'?'M206 236c-72-104-24-191 67-198 104-9 182 86 159 220l-48 23c21-114-18-195-95-199-67-3-85 59-59 134Z':'M141 272C85 138 157 31 277 29c125-1 200 119 167 253l-49-17c26-103-26-184-118-188-90-4-134 82-99 174Z'} fill="#635087" fillOpacity=".8" stroke="#a58ac7" strokeWidth={4} strokeLinejoin="round"/>}
+  </g>:null}
  </svg>;
 }
