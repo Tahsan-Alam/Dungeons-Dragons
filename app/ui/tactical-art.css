@@ -1,0 +1,10 @@
+/* The tactical map, seen from above. Landmarks and trees stand above the ground, so they cast a soft shadow down and right. */
+.tactical-piece{filter:drop-shadow(3px 4px 0 rgb(20 30 32 / .22))}
+.board-view-flat .board-actor .tactical-token{transition:transform 160ms ease}
+.board-view-flat .board-actor:is(:hover,:focus-visible) .tactical-token{transform:scale(1.06)}
+.board-view-flat .board-actor.defeated .tactical-token{filter:grayscale(1) brightness(.85);opacity:.55}
+/* At night the trees and landmarks out of the lamps' reach sit in moonlight. */
+html[data-color-mode="dark"] .tactical-tree{filter:brightness(.8) saturate(.85)}
+html[data-color-mode="dark"] .tactical-walls{filter:brightness(.85) saturate(.9)}
+html[data-color-mode="dark"] .tactical-piece{filter:drop-shadow(3px 4px 0 rgb(0 0 0 / .35)) brightness(.86)}
+@media (prefers-reduced-motion:reduce){.board-view-flat .board-actor .tactical-token{transition:none}}
