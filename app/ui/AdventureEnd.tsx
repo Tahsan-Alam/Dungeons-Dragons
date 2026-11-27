@@ -2,13 +2,13 @@
 import {useLayoutEffect,useRef} from 'react';
 import type {GameState} from '../../game/types';
 import {storyGoal} from '../../game/campaign';
-import {GAME_MASTERS,GAME_MASTER_ART_RATIO,SCENE_FOR_BIOME,SETTING} from '../../game/presets';
+import {GAME_MASTER_ART_RATIO,SCENE_FOR_BIOME,SETTING} from '../../game/presets';
 import {builtInTale} from '../../game/lore';
 import RouteMap from './RouteMap';
 import {routeHeadline,routeView} from './route-map';
 import {adventureRecap,fallenLine} from './recap';
 import {Portrait} from './RealmKit';
-import NarratorAvatar from './NarratorAvatar';
+import {gameMasterDrawing} from './game-master-figure';
 import {useTheme} from './Theme';
 import './chapter-map.css';
 import './adventure-end.css';
@@ -25,7 +25,7 @@ export default function AdventureEnd({game,caption,onReplay,onAdventures,onNewQu
  },[]);
  const{reducedMotion}=useTheme();
  const recap=adventureRecap(game),won=game.status==='victory',story=game.options.creation?.story;
- const view=won?routeView(game):null,narrator=game.options.creation?.narrator,gm=GAME_MASTERS.find(g=>g.profile.name===narrator?.name);
+ const view=won?routeView(game):null,figure=gameMasterDrawing(game.options.creation?.narrator);
  const headline=view&&story?routeHeadline(view,story.locations):won?'The lantern is restored':'The lantern dims';
  const eyebrow=`${won?'Victory':'Defeat'}${story?` · ${story.title}`:''}${story&&builtInTale(story)?` · ${SETTING}`:''}`;
  return <dialog ref={dialog} className={`adventure-end realm ${won?'won':'lost'}`} aria-labelledby="end-title">
@@ -33,12 +33,12 @@ export default function AdventureEnd({game,caption,onReplay,onAdventures,onNewQu
    <div className="ae-visual">
     {view&&story?<RouteMap view={view} places={story.locations} animate={!reducedMotion} motion={!reducedMotion}/>
      :<><img className="ae-scene" src={SCENE_FOR_BIOME[game.options.biome].scene} alt="" aria-hidden="true"/><div className="ae-wash" aria-hidden="true"/>
-      <div className="ae-figure" aria-hidden="true">{gm?<img src={gm.art} alt=""/>:<NarratorAvatar profile={narrator} size={200}/>}</div></>}
+      <div className="ae-figure" aria-hidden="true"><img src={figure.art} alt=""/></div></>}
    </div>
    <section className="ae-panel" aria-label="Adventure recap">
     <span className="realm-eyebrow">{eyebrow}</span>
     <h1 id="end-title">{headline}</h1>
-    <div className="ae-line">{gm?<Portrait art={gm.art} face={gm.face} ratio={GAME_MASTER_ART_RATIO} width={48} height={48} scale={2.4} eye={0.4}/>:null}<p>“{caption}”</p></div>
+    <div className="ae-line"><Portrait art={figure.art} face={figure.face} ratio={GAME_MASTER_ART_RATIO} width={48} height={48} scale={2.4} eye={0.4}/><p>“{caption}”</p></div>
     <dl className="ae-stats">
      <div><dt>Shards</dt><dd>{game.relics} / {storyGoal(game)}</dd></div><div><dt>Chapters</dt><dd>{recap.chapters}</dd></div><div><dt>Rounds</dt><dd>{recap.rounds}</dd></div>
      <div><dt>Damage dealt</dt><dd>{recap.damageDealt}</dd></div><div><dt>Damage taken</dt><dd>{recap.damageTaken}</dd></div><div><dt>Critical hits</dt><dd>{recap.criticals}</dd></div>
