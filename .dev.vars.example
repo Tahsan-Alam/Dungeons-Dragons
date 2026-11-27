@@ -10,3 +10,9 @@ AI_PLANNER_MODEL=gpt-6-luna
 AI_CAMPAIGN_MICRO_USD=400000
 AI_DAY_MICRO_USD=1000000
 AI_MONTH_MICRO_USD=4000000
+# Painting your own Game Master (FLUX + the team style LoRA on fal). Off unless all three are set.
+AI_ENABLE_IMAGES=DISABLED
+FAL_KEY=
+FAL_LORA_URL=
+# Pictures per player per UTC day for each kind (Game Master, hero), two per try. Default 4, at most 12.
+AI_IMAGES_PER_PLAYER_DAY=4

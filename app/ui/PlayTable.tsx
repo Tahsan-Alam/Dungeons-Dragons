@@ -12,8 +12,9 @@ import {Icon} from './Art';
 import {ActorPortrait} from './ActorArt';
 import {heroDrawing} from './actor-art';
 import Modal from './Modal';
+import PauseMenu from './PauseMenu';
 import {Portrait} from './RealmKit';
-import {gameMasterDrawing} from './game-master-figure';
+import {useGameMasterDrawing,usePaintedTick} from './painted-portrait';
 import ChapterMap from './ChapterMap';
 import {routeView} from './route-map';
 import JournalDrawer,{type JournalEntry,type JournalTab} from './JournalDrawer';
@@ -34,7 +35,7 @@ import './play-hud.css';
 const ROMAN=['I','II','III','IV','V'];
 const tiles=(a:{x:number;y:number},b:{x:number;y:number})=>Math.abs(a.x-b.x)+Math.abs(a.y-b.y);
 
-type Props={game:GameState;room:RoomView|null;session:Session|null;busy:boolean;connection:string;onAction:(a:GameAction)=>unknown;onMenu:()=>void;onHelp:()=>void;onAI:()=>void;onSettings:()=>void;onTableDialogChange:(open:boolean)=>void;
+type Props={game:GameState;room:RoomView|null;session:Session|null;busy:boolean;connection:string;onAction:(a:GameAction)=>unknown;onMenu:()=>void;/** Back to the title screen (from the pause menu). */onTitle?:()=>void;onHelp:()=>void;onAI:()=>void;onSettings:()=>void;onTableDialogChange:(open:boolean)=>void;
  voice:boolean;speaking?:boolean;onVoice:()=>void;music:boolean;onMusic:()=>void;onSkip:()=>void;rollsPending?:boolean;
  thread?:Exchange[];onListen?:(line:string)=>void;onNarrate?:()=>unknown;onSteer?:(text:string)=>Promise<unknown>;
  /** Opens the Journal on a tab from outside, for example Ask’s Dialogue Log. */
@@ -43,9 +44,9 @@ type Props={game:GameState;room:RoomView|null;session:Session|null;busy:boolean;
  sceneOpen?:boolean};
 
 /** The play screen: the board fills the window and the controls float over the scene (design canvas, Play screen page). */
-export default function PlayTable({game,room,session,busy,connection,onAction,onMenu,onHelp,onAI,onSettings,onTableDialogChange,voice,speaking=false,onVoice,music,onMusic,onSkip,rollsPending=false,thread=[],onListen,onNarrate,onSteer,journalRequest,sceneOpen=false}:Props){
+export default function PlayTable({game,room,session,busy,connection,onAction,onMenu,onTitle,onHelp,onAI,onSettings,onTableDialogChange,voice,speaking=false,onVoice,music,onMusic,onSkip,rollsPending=false,thread=[],onListen,onNarrate,onSteer,journalRequest,sceneOpen=false}:Props){
  const {preferences}=useControls();const board=useRef<BoardControls>(null),journalOpener=useRef<HTMLElement|null>(null),actionPending=useRef(false);
- const[confirmEnd,setConfirmEnd]=useState(false),[moving,setMoving]=useState(false),[tool,setTool]=useState<Tool>('move'),[selectedId,setSelectedId]=useState(''),[detailId,setDetailId]=useState<string|null>(null);
+ const[paused,setPaused]=useState(false),[confirmEnd,setConfirmEnd]=useState(false),[moving,setMoving]=useState(false),[tool,setTool]=useState<Tool>('move'),[selectedId,setSelectedId]=useState(''),[detailId,setDetailId]=useState<string|null>(null);
  const[ownRoll,setOwnRoll]=useState<{request:AttackRollRequest;label:string}|null>(null),[journal,setJournal]=useState<JournalTab|null>(null),[sideTab,setSideTab]=useState<'party'|'foes'>('party'),[soundOpen,setSoundOpen]=useState(false),[sideOpen,setSideOpen]=useState(false),[seen,setSeen]=useState(game.eventSequence),[rollShown,setRollShown]=useState(false);
  const detail=game.actors.find(a=>a.id===detailId);
  const me=session?.playerId||'you',actor=game.actors.find(a=>a.id===game.activeActorId),mine=game.actors.find(a=>a.playerId===me);
@@ -99,7 +100,7 @@ export default function PlayTable({game,room,session,busy,connection,onAction,on
   if(el?.closest('[role=tablist]'))return;if((e.key==='Enter'||e.key===' ')&&el?.closest('button,a,[role=button]'))return;
   const action=actionForKey(preferences.bindings,eventBinding(e));if(!action)return;if(e.repeat&&!['moveUp','moveDown','moveLeft','moveRight','panUp','panDown','panLeft','panRight','zoomIn','zoomOut'].includes(action))return;
   const boardActions:Partial<Record<ControlAction,()=>void>>={fit:()=>board.current?.fit(),focus:()=>board.current?.focusActor(),zoomIn:()=>board.current?.zoomIn(),zoomOut:()=>board.current?.zoomOut(),grid:()=>board.current?.toggleGrid(),panUp:()=>board.current?.pan(0,50),panDown:()=>board.current?.pan(0,-50),panLeft:()=>board.current?.pan(50,0),panRight:()=>board.current?.pan(-50,0),
-   party:()=>(document.querySelector('.ph-side [role=tab][aria-selected=true]') as HTMLElement|null)?.focus(),story:()=>openJournal('log'),settings:onSettings,menu:onMenu};
+   party:()=>(document.querySelector('.ph-side [role=tab][aria-selected=true]') as HTMLElement|null)?.focus(),story:()=>openJournal('log'),settings:onSettings,menu:()=>setPaused(true)};
   if(boardActions[action]){e.preventDefault();boardActions[action]!();return}if(!myTurn||locked)return;
   const direction:Partial<Record<ControlAction,[number,number]>>={moveUp:[0,-1],moveDown:[0,1],moveLeft:[-1,0],moveRight:[1,0]};if(direction[action]){e.preventDefault();step(...direction[action]!);return;}
   if(action==='move'){e.preventDefault();setTool('move')}else if(action==='attack'&&!actor?.actionUsed){e.preventDefault();setTool('attack')}else if(action==='ability'&&!actor?.actionUsed&&actor?.abilityUses){e.preventDefault();setTool('ability')}else if(action==='end'){e.preventDefault();endTurn()}else if(action==='guard'&&!actor?.actionUsed){e.preventDefault();act({type:'guard'})}else if(action==='potion'&&!actor?.actionUsed&&actor?.potions&&actor.hp<actor.maxHp){e.preventDefault();act({type:'potion'})}else if(action==='interact'&&quest?.available){e.preventDefault();act({type:quest.type})}
@@ -112,7 +113,8 @@ export default function PlayTable({game,room,session,busy,connection,onAction,on
  }
  const party=game.actors.filter(a=>!a.enemy),foes=game.actors.filter(a=>a.enemy&&!a.defeated&&a.hp>0);const turns=useMemo(()=>upcomingTurns(game),[game]);
  const entries=useMemo(()=>{const list:JournalEntry[]=[...game.events.slice(-45).map(event=>({key:`event-${event.id}`,at:event.id,event})),...(game.story?.narrations.slice(-10)??[]).map(narration=>({key:`narration-${narration.eventId}`,at:narration.eventId,narration}))];return list.sort((a,b)=>b.at-a.at||Number(!!b.narration)-Number(!!a.narration))},[game.events,game.story?.narrations]);
- const narrator=game.options.creation?.narrator,narratorName=narrator?.name??'Storyteller',gmFigure=gameMasterDrawing(narrator);
+ usePaintedTick(); // the hero sheet reads painted pictures directly
+ const narrator=game.options.creation?.narrator,narratorName=narrator?.name??'Storyteller',gmFigure=useGameMasterDrawing(narrator);
  const caption=currentNarration(game),host=!room||room.hostId===session?.playerId;
  const turnRole=(a:Actor)=>a.enemy?'Enemy':a.id===mine?.id?'You':a.bot?'Companion':'Player';
  const turnWhen=(index:number)=>index===0?'acting now':index===1?'up next':`in ${index} turns`;
@@ -142,7 +144,7 @@ export default function PlayTable({game,room,session,busy,connection,onAction,on
      {soundOpen?<div className="ph-popover" role="group" aria-label="Sound"><label><input type="checkbox" checked={music} onChange={onMusic}/>Music</label><label><input type="checkbox" checked={voice} onChange={onVoice}/>{narratorName}’s voice</label></div>:null}</div>
     <button type="button" className="ph-tool" aria-label="Adventurer’s guide" data-tooltip="Adventurer’s guide" onClick={onHelp}><Icon name="book" size={17}/></button>
     <button type="button" className="ph-tool" aria-label="Table settings" data-tooltip="Table settings" onClick={onSettings}><Icon name="gear" size={17}/></button>
-    <button type="button" className="ph-tool" aria-label="Leave the table" data-tooltip="Leave the table · your game is saved" onClick={onMenu}><Icon name="back" size={17}/></button>
+    <button type="button" className="ph-tool wide" aria-haspopup="dialog" data-tooltip="Pause · settings, saved adventures, the title (Esc)" onClick={()=>setPaused(true)}><Icon name="back" size={16}/>Menu</button>
    </div>
   </header>
 
@@ -193,6 +195,7 @@ export default function PlayTable({game,room,session,busy,connection,onAction,on
   {journal?<JournalDrawer game={game} entries={entries} thread={thread} narratorName={narratorName} host={host} tab={journal} onTab={setJournal} onClose={closeJournal} onAsk={onAI} onNarrate={onNarrate} onSteer={onSteer} busy={busy}/>:null}
   <div className={`game-connection ${connection==='reconnecting'?'connection-warning':''}`} aria-live="polite">{connection==='reconnecting'?'Reconnecting… Your game is saved.':null}</div>
 
+  {paused?<PauseMenu title={game.sceneName||game.options.creation?.story.title||'The adventure'} onResume={()=>setPaused(false)} onSettings={onSettings} onHelp={onHelp} onAdventures={onMenu} onTitle={onTitle??onMenu}/>:null}
   {confirmEnd?<Modal title="End this turn?" onClose={()=>setConfirmEnd(false)}><div className="confirm-turn"><p>You still have an action available.</p><div><button className="button paper" onClick={()=>setConfirmEnd(false)}>Keep playing</button><button className="button primary" onClick={()=>{setConfirmEnd(false);act({type:'end'})}}>End turn</button></div></div></Modal>:null}
   {noteShown&&note?<SealedNote game={game} heroName={note.hero.name} gmId={note.gm.id} gmName={note.gm.title} gmRealName={note.gm.realName} gmArt={note.gm.art} secret={note.secret} opened={noteOpened} onClose={closeNote}/>:null}
   {detail?<Modal title={detail.name} onClose={()=>setDetailId(null)} wide>{(()=>{const drawing=detail.enemy?undefined:heroDrawing(detail),preset=drawing?.preset,named=!!preset;const info=CLASS_INFO[detail.heroClass];

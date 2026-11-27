@@ -3,8 +3,10 @@ import {body,handle,throttle} from '../../../../server/http.ts';
 import {aiAccessState,paidAvailable,passwordRequired,unlockAI,lockAI,setAIEnabled} from '../../../../server/ai-access.ts';
 import {RoomError} from '../../../../server/rooms.ts';
 import {aiCaps} from '../../../../server/ai-config.ts';
+import {accessConfigured} from '../../../../server/ai-access.ts';
+import {imagesConfigured,imagesPerPlayerDay} from '../../../../server/ai-image.ts';
 export const dynamic='force-dynamic';
-const status=(state:{remembered:boolean;enabled:boolean})=>({available:paidAvailable(env),passwordRequired:passwordRequired(env),...state,unlocked:paidAvailable(env)&&state.enabled,audioAvailable:paidAvailable(env)&&env.AI_ENABLE_AUDIO==='I_ACCEPT_PAID_AUDIO',limits:aiCaps(env)});
+const status=(state:{remembered:boolean;enabled:boolean})=>({available:paidAvailable(env),passwordRequired:passwordRequired(env),...state,unlocked:paidAvailable(env)&&state.enabled,audioAvailable:paidAvailable(env)&&env.AI_ENABLE_AUDIO==='I_ACCEPT_PAID_AUDIO',imagesAvailable:accessConfigured(env)&&imagesConfigured(env)&&state.enabled,imagesPerDay:imagesPerPlayerDay(env),limits:aiCaps(env)});
 export async function GET(request:Request){return handle(async()=>{await throttle(request,'read');return status(await aiAccessState(request,env));});}
 export async function POST(request:Request){
  let setCookie:string|undefined;

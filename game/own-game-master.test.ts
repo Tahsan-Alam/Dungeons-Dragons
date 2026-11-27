@@ -29,5 +29,7 @@ test('a Game Master needs a name; unsafe or overlong text is cleaned, never pass
 test('saved choices restore safely, and anything no longer offered falls back to the defaults',()=>{
  assert.deepEqual(parseOwnInput(null),OWN_DEFAULT);
  assert.deepEqual(parseOwnInput({name:'Wren',tone:'loud',form:'whale',accessory:'cape',color:'red'}),{...OWN_DEFAULT,name:'Wren'});
- assert.deepEqual(parseOwnInput({name:'Wren',who:'x',tone:'grave',form:'fox',accessory:'crown',color:HERO_COLORS[0]}),{name:'Wren',who:'x',tone:'grave',form:'fox',accessory:'crown',color:HERO_COLORS[0]});
+ assert.deepEqual(parseOwnInput({name:'Wren',who:'x',tone:'grave',form:'fox',accessory:'crown',color:HERO_COLORS[0]}),{name:'Wren',who:'x',tone:'grave',form:'fox',accessory:'crown',color:HERO_COLORS[0],mode:'draw',paintings:[]});
+ assert.equal(parseOwnInput({...OWN_DEFAULT,mode:'paint'}).mode,'paint');
+ assert.equal(parseOwnInput({...OWN_DEFAULT,mode:'sculpt'}).mode,'draw');
 });

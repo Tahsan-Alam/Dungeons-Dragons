@@ -1,0 +1,16 @@
+/* The table's pause menu: a dark panel in the realm kit, centred over the dimmed board. */
+.pause{margin:auto;padding:0;border:0;background:transparent;color:#F1E5CF;max-width:min(420px,calc(100vw - 32px));width:100%;overflow:visible}
+.pause::backdrop{background:rgba(5,8,12,.72)}
+.pause-panel{box-sizing:border-box;display:flex;flex-direction:column;gap:10px;padding:26px 28px 22px;background:#0f141b;border:1px solid #435263;
+ clip-path:polygon(14px 0,calc(100% - 14px) 0,100% 14px,100% calc(100% - 14px),calc(100% - 14px) 100%,14px 100%,0 calc(100% - 14px),0 14px)}
+.pause-eyebrow{margin:0;font:600 12px Inter,system-ui,sans-serif;letter-spacing:.24em;text-transform:uppercase;color:#9fb3c8}
+.pause-panel h2{margin:0 0 8px;font:600 28px/1.15 Cinzel,'EB Garamond',Georgia,serif;color:#F1E5CF}
+.pause-list{display:flex;flex-direction:column;gap:6px}
+.pause .pause-item{display:flex;align-items:center;justify-content:space-between;width:100%;min-height:46px;padding:0 16px;border:1px solid #2c3644;border-radius:2px;background:#141a22;color:#F1E5CF;font:600 15px Inter,system-ui,sans-serif;letter-spacing:.02em;text-align:left;cursor:pointer}
+.pause .pause-item:hover{background:#212a36;border-color:#6a7d92}
+.pause .pause-item:focus-visible{outline:1.5px solid #F1E5CF;outline-offset:3px}
+.pause .pause-item.primary{background:#284B68;border-color:#4b739a}
+.pause .pause-item.primary:hover{background:#30587a}
+.pause .pause-item span{font:500 12px Inter,system-ui,sans-serif;color:#b9c9d8}
+.pause-rule{height:1px;margin:6px 0;background:#2a3340}
+.pause-note{margin:6px 0 0;font:500 12.5px Inter,system-ui,sans-serif;color:#8d99a6}

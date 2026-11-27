@@ -52,3 +52,17 @@ Reserved live allowances increase fourfold: comments $0.06 to $0.24; full calls 
 Room authentication, optional password-mode unlock throttling, game-action limits, validated text lengths, request/individual event sizes, legal game rules, model/voice allowlists, transcript matching, cache/ledger byte limits, connection-start and forced-close timeouts, and playback buffer sizes remain unchanged. They protect protocol validity, responsiveness and storage rather than allocate paid usage. Provider billing, account budgets, purchased credits and model limits are not modified. Automatic retries/reconnects remain disabled.
 
 The ledger remains bounded to 600,000 serialized bytes; that storage safeguard can stop new reservations before the receipt-count or spending ceiling. Pending uncertain receipts continue occupying a concurrency slot until reconciled. No existing receipt is deleted or refunded automatically.
+
+## Painted Game Masters and heroes
+
+Added November 26, 2026.
+
+| Limit | Value |
+| --- | ---: |
+| Pictures per player per UTC day (`AI_IMAGES_PER_PLAYER_DAY`), for each kind | 4 Game Master + 4 hero (one picture per try), at most 12 |
+| Pictures per try | 1 at 768 × 1024 |
+| Ledger reservation per try | $0.04 (fal lists $0.035 per megapixel) |
+| Player description | 80 characters, checked before painting |
+| Stored picture size | 1.2 MB |
+
+Each try counts against the shared campaign/day/month ledger like text and speech. Failed or flagged tries keep their reservation and are never retried automatically.

@@ -8,7 +8,7 @@ import RouteMap from './RouteMap';
 import {routeHeadline,routeView} from './route-map';
 import {adventureRecap,fallenLine} from './recap';
 import {Portrait} from './RealmKit';
-import {gameMasterDrawing} from './game-master-figure';
+import {useGameMasterDrawing} from './painted-portrait';
 import {useTheme} from './Theme';
 import './chapter-map.css';
 import './adventure-end.css';
@@ -25,7 +25,7 @@ export default function AdventureEnd({game,caption,onReplay,onAdventures,onNewQu
  },[]);
  const{reducedMotion}=useTheme();
  const recap=adventureRecap(game),won=game.status==='victory',story=game.options.creation?.story;
- const view=won?routeView(game):null,figure=gameMasterDrawing(game.options.creation?.narrator);
+ const view=won?routeView(game):null,figure=useGameMasterDrawing(game.options.creation?.narrator);
  const headline=view&&story?routeHeadline(view,story.locations):won?'The lantern is restored':'The lantern dims';
  const eyebrow=`${won?'Victory':'Defeat'}${story?` · ${story.title}`:''}${story&&builtInTale(story)?` · ${SETTING}`:''}`;
  return <dialog ref={dialog} className={`adventure-end realm ${won?'won':'lost'}`} aria-labelledby="end-title">

@@ -245,12 +245,15 @@ export function createGame(players: PlayerSpec[], options: GameOptions): GameSta
   const game: GameState = { schemaVersion: 1, lore: LORE_EDITION, options: { ...options }, rng: hash(`${options.seed}|${options.biome}`), status: 'playing', width: WIDTH, height: HEIGHT,
     tiles: [], actors: [], activeActorId: '', turnOrder: [], round: 1, scene: 0, sceneName: '', objective: '', relics: 0,
     exit: { x: 18, y: 7 }, chest: { x: 10, y: 7, opened: false }, events: [], eventSequence: 0 };
+  // The player's own hero (always the first player) keeps the painted portrait they chose, if any.
+  const portrait = options.creation?.hero.portrait;
   for (const p of players) {
     if (!Object.hasOwn(CLASS, p.heroClass) || typeof p.name !== 'string' || !p.name.trim()) throw new Error('Each hero needs a name and a supported class.');
     const stats = CLASS[p.heroClass];
     game.actors.push({ id: `hero-${p.id}`, playerId: p.id, name: p.name.trim().slice(0, 24), heroClass: p.heroClass, color: p.color,
       enemy: false, bot: p.bot, x: 0, y: 0, hp: stats.hp, maxHp: stats.hp, ac: stats.ac, speed: stats.speed, movement: stats.speed,
-      actionUsed: false, guarding: false, potions: 2, abilityUses: 2, initiative: 0, deathSuccesses: 0, deathFailures: 0, defeated: false });
+      actionUsed: false, guarding: false, potions: 2, abilityUses: 2, initiative: 0, deathSuccesses: 0, deathFailures: 0, defeated: false,
+      ...(portrait && p === players[0] ? { portrait } : {}) });
   }
   setupScene(game);
   return installCampaign(game,campaignFixture(options,players));

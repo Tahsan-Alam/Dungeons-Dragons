@@ -32,7 +32,8 @@ export interface Actor { id: string; playerId?: string; name: string; heroClass:
   /** The final guardian of a chapter (game/keepers.ts). Absent on every other actor and on older saves. */ keeper?: KeeperKind;
   /** The Keeper's announced signature attack, resolved on its next turn exactly as stored. */ plan?: KeeperPlan;
   /** True after a signature attack resolves: the next turn is an ordinary one. */ keeperRest?: boolean;
-  /** A Keeper whose pounce missed is open to attack (−3 Armor Class) until its next turn. */ exposed?: boolean; }
+  /** A Keeper whose pounce missed is open to attack (−3 Armor Class) until its next turn. */ exposed?: boolean;
+  /** The painted portrait the player chose for their own hero (a server id). Presentation only; no rule reads it. */ portrait?: string; }
 /** `bonus` and `ac` describe the roll for display (roll + bonus against AC); events recorded before they existed lack them. */
 export interface AttackResult { targetId: string; action: 'attack' | 'ability'; hit: boolean; critical: boolean; damage: number; bonus?: number; ac?: number; }
 export interface GameEvent { id: number; kind: 'story' | 'action' | 'roll' | 'system'; text: string; actorId?: string; roll?: number; attack?: AttackResult; }
