@@ -30,7 +30,10 @@ const Arrow=()=><svg width="9" height="14" viewBox="0 0 9 14" fill="none" stroke
 const BackArrow=()=><svg width="9" height="14" viewBox="0 0 9 14" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M7 1L1 7l6 6"/></svg>;
 const fresh=():Saved=>({v:1,step:0,gm:'wanderer',own:OWN_DEFAULT,tale:'lantern',custom:null,hero:'corin',ownHero:OWN_HERO_DEFAULT,length:'standard',rules:'simple',seed:'quest-'+crypto.randomUUID().slice(0,8),companions:DEFAULT_OPTIONS.companions});
 
-/** Where the hero stands on the stage art (600 × 560): boots at y 485, figure 380 high. Mira is placed so Ash fits too. */
+/** True when this tab has already opened quest setup (sessionStorage lasts until the tab closes); marks it for next time. */
+function sameVisit(key:string){
+ try{const mark=key+'-visit',seen=sessionStorage.getItem(mark)==='1';sessionStorage.setItem(mark,'1');return seen;}catch{return false;}
+}
 
 export default function QuestSetup({mode,onBack,onStart,busy,quick=false,onAISettings}:Props){
  const key='painted-realms-setup-v1-'+mode;
@@ -38,6 +41,8 @@ export default function QuestSetup({mode,onBack,onStart,busy,quick=false,onAISet
  const [role,setRole]=useState<'All'|Role>('All'),[sheet,setSheet]=useState(false),[talking,setTalking]=useState(false),[idea,setIdea]=useState(''),[advanced,setAdvanced]=useState(false);
  const [savedAI]=useAIPreference();const creation=useCreation();
  const heading=useRef<HTMLHeadingElement>(null);
+ // Whether this tab opened quest setup before, decided once per screen (effects may run twice in development).
+ const visit=useRef<boolean|null>(null);
  const update=(patch:Partial<Saved>)=>setS(current=>({...current,...patch}));
  // The workbench (Create your own) replaces the step while open; Back to the list restores the earlier choice.
  const [bench,setBench]=useState<{kind:'gm'|'hero';from:string}|null>(null);
@@ -45,11 +50,15 @@ export default function QuestSetup({mode,onBack,onStart,busy,quick=false,onAISet
  // Restore the last setup, or open a ready-made quest on Set Out.
  useEffect(()=>{
   let next=fresh();
+  visit.current??=sameVisit(key);
   if(quick)next={...next,step:3};
   else try{const raw=JSON.parse(localStorage.getItem(key)??'null');
    if(raw?.v===1&&(GAME_MASTERS.some(g=>g.id===raw.gm)||raw.gm==='own')&&(HEROES.some(h=>h.id===raw.hero)||raw.hero==='own')){
     const custom=raw.custom?parseStory(raw.custom):null;
     next={...next,...raw,own:parseOwnInput(raw.own),ownHero:parseOwnHeroInput(raw.ownHero),custom,tale:raw.tale==='custom'&&!custom?'lantern':raw.tale,step:Math.max(0,Math.min(3,Number(raw.step)||0))};
+    // Your own creations are kept, but only chosen again within the same visit (a refresh, or a trip to the title).
+    // A new visit starts on one of ours, and the Create your own card offers the saved one back.
+    if(!visit.current)next={...next,gm:next.gm==='own'?fresh().gm:next.gm,hero:next.hero==='own'?fresh().hero:next.hero};
    }}catch{/* Setup works without storage. */}
   // eslint-disable-next-line react-hooks/set-state-in-effect
   setS(next);setReady(true);
@@ -106,9 +115,9 @@ export default function QuestSetup({mode,onBack,onStart,busy,quick=false,onAISet
   </header>
   {!ready?null:bench?.kind==='gm'?<GameMasterBench gm={gm} own={s.own} setOwn={own=>update({own})} ownReady={!!ownProfile}/>
    :bench?.kind==='hero'?<OwnHeroBench hero={hero} own={s.ownHero} setOwn={ownHero=>update({ownHero})}/>
-   :s.step===0?<GameMasterStep gm={gm} pick={id=>update({gm:id})} own={s.own} ownReady={!!ownProfile} openBench={()=>openBench('gm')}/>
+   :s.step===0?<GameMasterStep gm={gm} pick={id=>update({gm:id})} own={s.own} ownName={ownProfile?.name??''} openBench={()=>openBench('gm')}/>
    :s.step===1?<TaleStep s={s} gm={gm} story={story} art={taleArt.scene} pick={id=>update({tale:id})} idea={idea} setIdea={setIdea} shape={shape} tellAnother={tellAnother} pending={creation.pending} error={creation.error} onCreateWithNarrator={()=>setTalking(true)}/>
-   :s.step===2?<HeroStep hero={hero} role={role} setRole={setRole} pick={id=>update({hero:id})} sheet={sheet} openSheet={()=>setSheet(true)} sealed={s.gm!=='own'&&s.hero!=='own'} own={{input:s.ownHero,open:()=>openBench('hero')}}/>
+   :s.step===2?<HeroStep hero={hero} role={role} setRole={setRole} pick={id=>update({hero:id})} sheet={sheet} openSheet={()=>setSheet(true)} sealed={s.gm!=='own'&&s.hero!=='own'} own={{saved:ownHeroProfile?ownHeroPreset(s.ownHero,ownHeroProfile,paintedHero):null,open:()=>openBench('hero')}}/>
    :<SetOutStep s={s} gm={gm} hero={hero} story={story} art={taleArt.scene} thumb={taleArt.thumb} update={update} advanced={advanced} setAdvanced={setAdvanced} mode={mode}/>}
   <footer className="qs-footer">
    <RealmButton onClick={back}><BackArrow/>{bench?'Back to the list':sheet?'Back to heroes':'Back'}</RealmButton>
@@ -144,13 +153,14 @@ function useOwnFigure(own:OwnGameMasterInput,title:string){
 }
 
 /** Choose a Game Master: "Create your own" leads, the three built-ins follow. */
-function GameMasterStep({gm,pick,own,ownReady,openBench}:{gm:GameMasterPreset;pick:(id:string)=>void;own:OwnGameMasterInput;ownReady:boolean;openBench:()=>void}){
- const mine=gm.id===('own' as GameMasterPreset['id']),tone=OWN_TONES.find(t=>t.id===own.tone)!,{figure,face}=useOwnFigure(own,gm.title);
+function GameMasterStep({gm,pick,own,ownName,openBench}:{gm:GameMasterPreset;pick:(id:string)=>void;own:OwnGameMasterInput;ownName:string;openBench:()=>void}){
+ // A named creation from earlier waits on the card, unchosen: a click brings them back; a blank card opens the workbench.
+ const mine=gm.id===('own' as GameMasterPreset['id']),ownReady=!!ownName,tone=OWN_TONES.find(t=>t.id===own.tone)!,{figure,face}=useOwnFigure(own,ownName||gm.title);
  return <div className="qs-gm">
   <div className="qs-gm-cards" role="radiogroup" aria-label="Game Masters">
-   <button type="button" role="radio" aria-checked={mine} data-tooltip="none" className="realm-choice qs-gm-card qs-gm-card-own qs-make" onClick={openBench}>
-    {mine&&ownReady?<Portrait art={figure} face={face} ratio={GAME_MASTER_ART_RATIO} width={84} height={104} scale={2.1}/>:<span className="qs-make-mark" aria-hidden="true">+</span>}
-    <span className={`qs-gm-card-text${mine?' realm-tint':''}`}><strong>{mine&&ownReady?gm.title:'Create your own'}</strong><span>{mine&&ownReady?'Your own Game Master':'Shape, voice and colour'}</span><span>{mine&&ownReady?tone.tells:'Paint them, if you like'}</span></span>
+   <button type="button" role="radio" aria-checked={mine} aria-label={!ownReady?'Create your own Game Master':mine?`${ownName}, your own Game Master`:`${ownName}, your Game Master from before`} data-tooltip="none" className="realm-choice qs-gm-card qs-gm-card-own qs-make" onClick={mine||!ownReady?openBench:()=>pick('own')}>
+    {ownReady?<Portrait art={figure} face={face} ratio={GAME_MASTER_ART_RATIO} width={84} height={104} scale={2.1}/>:<span className="qs-make-mark" aria-hidden="true">+</span>}
+    <span className={`qs-gm-card-text${mine?' realm-tint':''}`}><strong>{ownReady?ownName:'Create your own'}</strong><span>{!ownReady?'Shape, voice and colour':mine?'Your own Game Master':'Yours, from last time'}</span><span>{!ownReady?'Paint them, if you like':mine?tone.tells:'Choose to bring them back'}</span></span>
     {mine?<Diamond/>:null}
    </button>
    <p className="qs-or" aria-hidden="true">or choose one of ours</p>
@@ -199,7 +209,7 @@ function GameMasterBench({gm,own,setOwn,ownReady}:{gm:GameMasterPreset;own:OwnGa
   </section>
   <div className="qs-bench-form">
    <label className="qs-own-name"><span className="realm-eyebrow">Their name</span>
-    <input name="own-name" value={own.name} maxLength={28} placeholder="Type a name"autoComplete="off" spellCheck={false} onChange={e=>set({name:e.target.value})}/></label>
+    <input name="own-name" value={own.name} maxLength={28} placeholder="Type a name" autoComplete="off" spellCheck={false} onChange={e=>set({name:e.target.value})}/></label>
    {ownNameTaken(own.name)?<p className="qs-own-taken" role="status">That name belongs to one of our Game Masters. Choose another.</p>:null}
    {!own.name.trim()?<p className="qs-own-ideas"><span>Or borrow one:</span>{OWN_NAME_IDEAS.slice(0,4).map(n=><button key={n} type="button" className="qs-own-chip" onClick={()=>set({name:n})}>{n}</button>)}</p>:null}
    <fieldset className="qs-own-set"><legend className="realm-eyebrow">Their shape</legend>
@@ -267,8 +277,9 @@ function TaleStep({s,gm,story,art,pick,idea,setIdea,shape,tellAnother,pending,er
 
 /** The roster and the hero's stage. Also used when joining a party, where heroes already at the fire are marked taken. */
 export function HeroStep({hero,role,setRole,pick,sheet,openSheet,taken={},sealed=true,own}:{hero:HeroPreset;role:'All'|Role;setRole:(r:'All'|Role)=>void;pick:(id:string)=>void;sheet:boolean;openSheet:()=>void;taken?:Record<string,string>;sealed?:boolean;
- /** Offers "Your own hero" first in the roster (quest setup only); choosing it opens the workbench. */ own?:{input:OwnHeroInput;open:()=>void}}){
- const mine=hero.id==='own';
+ /** Offers "Your own hero" first in the roster (quest setup only). A blank one opens the workbench; a named one from earlier (saved) comes back on a click. */
+ own?:{saved:HeroPreset|null;open:()=>void}}){
+ const mine=hero.id==='own',saved=own?.saved;
  const wide=hero.id==='mira';
  const stage=<div className="qs-stage" aria-label={`${hero.name}, ${hero.className} ${hero.subclass}`} role="img">
   <img className="realm-fade qs-stage-set" src="/art/scenes/hero-stage.svg" alt="" style={{opacity:wide?0:1}}/>
@@ -303,9 +314,9 @@ export function HeroStep({hero,role,setRole,pick,sheet,openSheet,taken={},sealed
     <span>{own?'16 heroes or your own':'16 heroes'} · two may share a class</span>
    </div>
    <div className="qs-grid realm-panel" role="radiogroup" aria-label="Heroes">
-    {own?<button type="button" role="radio" aria-checked={mine} aria-label={mine&&own.input.name.trim()?`${hero.name}, your own hero`:'Make your own hero'} className="realm-choice qs-tile qs-tile-own qs-make" onClick={own.open}>
-     {mine&&own.input.name.trim()?<Portrait art={hero.art} face={hero.face} ratio={HERO_ART_RATIO} width={120} height={58} scale={1.33} eye={0.42}/>:<span className="qs-make-mark" aria-hidden="true">+</span>}
-     <span className={`qs-tile-name${mine?' realm-tint':''}`}><strong>{mine&&own.input.name.trim()?hero.name:'Your own hero'}</strong><span>{mine&&own.input.name.trim()?hero.className:'Make one'}</span></span>
+    {own?<button type="button" role="radio" aria-checked={mine} aria-label={!saved?'Make your own hero':mine?`${saved.name}, your own hero`:`${saved.name}, your hero from before`} className="realm-choice qs-tile qs-tile-own qs-make" onClick={mine||!saved?own.open:()=>pick('own')}>
+     {saved?<Portrait art={saved.art} face={saved.face} ratio={HERO_ART_RATIO} width={120} height={58} scale={1.33} eye={0.42}/>:<span className="qs-make-mark" aria-hidden="true">+</span>}
+     <span className={`qs-tile-name${mine?' realm-tint':''}`}><strong>{saved?saved.name:'Your own hero'}</strong><span>{!saved?'Make one':mine?saved.className:'Yours, from last time'}</span></span>
      {mine?<Diamond/>:null}
     </button>:null}
     {shown.map(h=>{const by=taken[h.id];return <button key={h.id} type="button" role="radio" aria-checked={h.id===hero.id} aria-disabled={by?true:undefined} aria-label={by?`${h.name}, ${h.subclass}, taken by ${by}`:`${h.name}, ${h.subclass}`} className={`realm-choice qs-tile${by?' taken':''}`} onClick={()=>{if(!by)pick(h.id);}}>
