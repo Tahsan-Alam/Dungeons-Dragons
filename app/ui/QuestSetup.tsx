@@ -199,7 +199,7 @@ function GameMasterBench({gm,own,setOwn,ownReady}:{gm:GameMasterPreset;own:OwnGa
   </section>
   <div className="qs-bench-form">
    <label className="qs-own-name"><span className="realm-eyebrow">Their name</span>
-    <input name="own-name" value={own.name} maxLength={28} placeholder="The Lamplighter" autoComplete="off" spellCheck={false} onChange={e=>set({name:e.target.value})}/></label>
+    <input name="own-name" value={own.name} maxLength={28} placeholder="Type a name"autoComplete="off" spellCheck={false} onChange={e=>set({name:e.target.value})}/></label>
    {ownNameTaken(own.name)?<p className="qs-own-taken" role="status">That name belongs to one of our Game Masters. Choose another.</p>:null}
    {!own.name.trim()?<p className="qs-own-ideas"><span>Or borrow one:</span>{OWN_NAME_IDEAS.slice(0,4).map(n=><button key={n} type="button" className="qs-own-chip" onClick={()=>set({name:n})}>{n}</button>)}</p>:null}
    <fieldset className="qs-own-set"><legend className="realm-eyebrow">Their shape</legend>
@@ -218,8 +218,9 @@ function GameMasterBench({gm,own,setOwn,ownReady}:{gm:GameMasterPreset;own:OwnGa
     </fieldset>
    </div>
    <label className="qs-own-who"><span className="realm-eyebrow">Who are they?</span>
-    <textarea name="own-who" value={own.who} maxLength={200} rows={2} placeholder="A retired lighthouse keeper who still counts the ships that never came home." onChange={e=>set({who:e.target.value})}/></label>
+    <textarea name="own-who" value={own.who} maxLength={200} rows={2} placeholder="Optional. For example: a retired lighthouse keeper who still counts the ships." onChange={e=>set({who:e.target.value})}/></label>
    <PaintPanel key={`${own.form}|${own.color}|${own.accessory}|${own.tone}`} kind="gm" fields={{form:own.form,accessory:own.accessory,color:own.color,tone:own.tone}} name={ownReady?gm.title:''} portrait={own.portrait} drawing={drawing} setPortrait={portrait=>setOwn({...own,portrait})} placeholder="A few words: a one-eyed sailor with a parrot"/>
+   {own.name||own.who||own.portrait?<button type="button" className="qs-own-chip qs-own-reset" onClick={()=>setOwn(OWN_DEFAULT)}>Start again with a blank Game Master</button>:null}
    <p className="qs-own-note">Your own Game Master tells any tale in the Lantern Marches. Sealed notes belong to our three Game Masters, so heroes keep none with yours.</p>
   </div>
  </div>;

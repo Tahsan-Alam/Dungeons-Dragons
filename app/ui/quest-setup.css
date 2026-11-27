@@ -145,7 +145,8 @@ html:root[data-color-mode][data-theme] body .realm button.qs-seg-option[aria-che
 .qs-own-taken{margin:-6px 0 0;font:600 12.5px Inter,system-ui,sans-serif;color:#e9a48a}
 .qs-own-ideas{margin:-6px 0 0;display:flex;flex-wrap:wrap;align-items:center;gap:6px;font:500 12.5px Inter,system-ui,sans-serif;color:#8d99a6}
 .qs-own-who textarea{box-sizing:border-box;width:100%;resize:none;padding:8px 10px;border:1px solid #2f3946;border-radius:2px;background:#141a22;color:#E7DFD0;font:400 16px/1.4 var(--realm-prose)}
-.qs-own-who textarea::placeholder{color:#5f6b78;font-style:italic}
+.qs-own-who textarea::placeholder{color:#4f5b68;font-style:italic}
+.qs-own-reset{justify-self:start;align-self:flex-start}
 .qs-own-who textarea:focus{outline:1.5px solid #9CC9EA;outline-offset:1px}
 .qs-own-set{margin:0;padding:0;border:0;min-width:0}
 .qs-own-tones{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}

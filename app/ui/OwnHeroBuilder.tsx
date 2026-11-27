@@ -2,7 +2,7 @@
 import {HERO_CLASSES,HERO_COLORS,CLASS_INFO} from '../../game/types';
 import {HERO_ART_RATIO,type HeroPreset} from '../../game/presets';
 import type {HeroProfile} from '../../game/creation';
-import {OWN_HERO_NAME_IDEAS,ownHeroClassName,ownHeroRole,type OwnHeroInput} from '../../game/own-hero';
+import {OWN_HERO_DEFAULT,OWN_HERO_NAME_IDEAS,ownHeroClassName,ownHeroRole,type OwnHeroInput} from '../../game/own-hero';
 import {CUSTOM_FACE,customHeroArt} from './hero-figure';
 import type {PaintedFigure} from './painted-portrait';
 import {Portrait} from './RealmKit';
@@ -31,7 +31,7 @@ export default function OwnHeroBench({hero,own,setOwn}:{hero:HeroPreset;own:OwnH
   </section>
   <div className="qs-bench-form">
    <label className="qs-own-name"><span className="realm-eyebrow">Their name</span>
-    <input name="own-hero-name" value={own.name} maxLength={24} placeholder="Tamsin" autoComplete="off" spellCheck={false} onChange={e=>set({name:e.target.value})}/></label>
+    <input name="own-hero-name" value={own.name} maxLength={24} placeholder="Type a name"autoComplete="off" spellCheck={false} onChange={e=>set({name:e.target.value})}/></label>
    {!named?<p className="qs-own-ideas"><span>Or borrow one:</span>{OWN_HERO_NAME_IDEAS.slice(0,4).map(n=><button key={n} type="button" className="qs-own-chip" onClick={()=>set({name:n})}>{n}</button>)}</p>:null}
    <fieldset className="qs-own-set"><legend className="realm-eyebrow">Their class</legend>
     <div className="qs-own-forms qs-own-classes" role="radiogroup" aria-label="Their class">{HERO_CLASSES.map(c=><button key={c} type="button" role="radio" aria-checked={own.heroClass===c} aria-label={ownHeroClassName(c)} data-tooltip={CLASS_INFO[c].description} className="realm-choice qs-own-form-pick" onClick={()=>set({heroClass:c})}>
@@ -42,9 +42,10 @@ export default function OwnHeroBench({hero,own,setOwn}:{hero:HeroPreset;own:OwnH
     <div className="qs-own-swatches" role="radiogroup" aria-label="Their colour">{HERO_COLORS.map(c=><button key={c} type="button" role="radio" aria-checked={own.color===c} aria-label={`Colour ${c}`} data-tooltip="Their colour" className="qs-own-swatch" style={{background:c}} onClick={()=>set({color:c})}/>)}</div>
    </fieldset>
    <label className="qs-own-who"><span className="realm-eyebrow">Who are they?</span>
-    <textarea name="own-hero-who" value={own.who} maxLength={240} rows={2} placeholder="A lamplighter’s apprentice who followed the last light out of town." onChange={e=>set({who:e.target.value})}/></label>
+    <textarea name="own-hero-who" value={own.who} maxLength={240} rows={2} placeholder="Optional. For example: a fisher’s daughter who left home to find her brother." onChange={e=>set({who:e.target.value})}/></label>
    <PaintPanel key={`${own.heroClass}|${own.color}`} kind="hero" fields={{heroClass:own.heroClass,color:own.color}} name={named?hero.name:''} portrait={own.portrait} drawing={drawing}
     setPortrait={portrait=>setOwn({...own,portrait})} placeholder="A few words: freckles and a fox-fur collar"/>
+   {own.name||own.who||own.portrait?<button type="button" className="qs-own-chip qs-own-reset" onClick={()=>setOwn(OWN_HERO_DEFAULT)}>Start again with a blank hero</button>:null}
    <p className="qs-own-note">Your hero plays as a {ownHeroClassName(own.heroClass).toLowerCase()}: the class sets every rule. Sealed notes belong to the sixteen heroes, so yours keeps none.</p>
   </div>
  </div>;
