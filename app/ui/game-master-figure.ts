@@ -21,8 +21,8 @@ const PROP_FOR_VOICE:Partial<Record<NonNullable<NarratorProfile['voice']>,Prop>>
 type Mood='warm'|'wry'|'grave';
 const MOOD:Record<Prop,Mood>={lantern:'warm',book:'wry',hourglass:'grave'};
 
-type Garment='coat'|'robe'|'cloak';type Neck='mantle'|'scarf'|'stole';
-interface Look {form:Form;prop:Prop;mood:Mood;garment:Garment;neck:Neck;variant:number;accent:string;coat:string;mantle:string;inner:string;trim:string;fur:string;belly:string;eye:string;satchel:boolean;human?:HeroLook;crown:boolean;glasses:boolean}
+type Garment='coat'|'robe'|'cloak';type Neck='mantle'|'scarf'|'stole';type Hat='brim'|'cap'|'tall'|'none';
+interface Look {form:Form;prop:Prop;mood:Mood;garment:Garment;neck:Neck;variant:number;accent:string;coat:string;mantle:string;inner:string;trim:string;fur:string;belly:string;eye:string;satchel:boolean;hat:Hat;lean:number;human?:HeroLook;crown:boolean;glasses:boolean}
 
 const FUR:Record<Exclude<Form,'human'|'spirit'>,readonly (readonly [string,string])[]>={
  cat:[['#d98a4a','#f3dcc0'],['#3a3438','#8a8288'],['#e9dcc4','#fbf4e6'],['#9a7a5a','#e6d4bc'],['#b8b2a8','#ece8e0']],
@@ -35,8 +35,8 @@ export function gameMasterLook(spec:GameMasterSpec):Look{
  const r=random(hash(`${spec.name.trim().toLowerCase()}|${spec.form}|gm`));
  const prop=PROP_FOR_VOICE[spec.voice!]??pick(r,['lantern','book','hourglass'] as const),mood=MOOD[prop];
  const a=spec.color,[fur,belly]=spec.form==='human'||spec.form==='spirit'?['','']:pick(r,FUR[spec.form]);
- const look:Look={form:spec.form,prop,mood,garment:spec.form==='spirit'?'robe':pick(r,['coat','robe','cloak'] as const),neck:pick(r,['mantle','scarf','stole'] as const),variant:Math.floor(r()*2),accent:a,coat:mix(a,O,spec.form==='spirit'?.5:.42),mantle:mix(a,O,.12),inner:pick(r,['#ece4d0','#d9c9a8','#c9cfd6']),
-  trim:'#e0b04a',fur,belly,eye:pick(r,['#e0b04a','#8fc06a','#7fb2d9','#d9773a']),satchel:chance(r,.45),crown:spec.accessory==='crown',glasses:spec.accessory==='glasses'};
+ const look:Look={form:spec.form,prop,mood,garment:spec.form==='spirit'?'robe':mood==='grave'?'cloak':pick(r,['coat','robe'] as const),neck:pick(r,['mantle','scarf','stole'] as const),variant:Math.floor(r()*2),accent:a,coat:mix(a,O,spec.form==='spirit'?.5:.3),mantle:mix(a,O,.12),inner:pick(r,['#ece4d0','#d9c9a8','#c9cfd6']),
+  trim:'#e0b04a',fur,belly,eye:pick(r,['#e0b04a','#8fc06a','#7fb2d9','#d9773a']),satchel:false,hat:spec.accessory==='crown'?'none':pick(r,{warm:['brim','brim','brim','none'],wry:['cap','cap','none'],grave:['tall','tall','none']}[mood] as Hat[]),lean:mood==='wry'?-3:0,crown:spec.accessory==='crown',glasses:spec.accessory==='glasses'};
  if(spec.form==='human'){
   // Storytellers run older than adventurers: grey hair and beards come more often.
   const old=chance(r,.45),style=pick(r,HAIR_STYLES.filter(s=>s!=='spiky')),beardRoll=r();
@@ -62,8 +62,6 @@ const OPEN_BOOK=(cover:string)=>shape('M-40 -22c14-6 28-6 40 2 12-8 26-8 40-2v40
 const CLOSED_BOOK=(cover:string)=>shape('M-26 -34h52v68h-52z',cover)+shape('M-26 -34h8v68h-8z',mix(cover,O,.3),3)+shape('M-14 -26h32v18h-32z','#f1e5cf',2.4)
  +stroke('M-10 -20h24M-10 -14h18',O,1.6,' opacity=".5"')+shape('M26 -30h4v60h-4z','#f6eedb',2);
 const QUILL=shape('M0 0c-6-24-4-52 10-74 8 26 2 52-10 74z','#f1e5cf',3)+stroke('M0 0q4-36 10-74',O,1.6,' opacity=".6"')+stroke('M0 0l-3 12',O,3.4);
-const PIPE=shape('M-30 -4h22l4 8h-24z','#5a3a22',3)+shape('M-6 -14h16v20q0 8-8 8t-8-8z','#6b4428',3.4)
- +stroke('M2 -20c-6-10 6-14 0-24s6-14 2-22',mix('#c9cfd6',O,.1),4,' opacity=".75"');
 const HOURGLASS=shape('M-20 -38h40v9h-40zM-20 29h40v9h-40z','#6b4428',3.4)
  +shape('M-14 -29c0 18 11 20 11 29s-11 11-11 29h28c0-18-11-20-11-29s11-11 11-29z','#dde8ee',3.4)
  +`<path d="M-9 -22h18c-2 9-7 13-9 15-2-2-7-7-9-15zM-10 27c2-9 6-12 10-13 4 1 8 4 10 13z" fill="#e0b04a"/>`+stroke('M0 -7v20','#e0b04a',1.8)
@@ -88,7 +86,7 @@ function pose(look:Look):Pose{
    :{left:[[160,226],[146,290],[136,340]],right:[[244,226],[278,232],[296,196]],behind:'',items:'',front:big(136,332,0,1.35,LANTERN)+sparkles(300,168)};
   case 'book':return look.variant===0
    ?{left:[[160,226],[146,284],[178,312]],right:[[244,226],[276,262],[266,200]],behind:'',items:big(200,298,-6,1.3,OPEN_BOOK(cover)),front:big(262,196,18,1.2,QUILL)}
-   :{left:[[160,226],[144,280],[164,318]],right:[[244,226],[276,262],[262,206]],behind:'',items:big(158,302,-10,1.25,CLOSED_BOOK(cover)),front:big(258,196,0,1.2,PIPE)};
+   :{left:[[160,226],[144,280],[164,318]],right:[[244,226],[276,262],[262,206]],behind:'',items:big(158,302,-10,1.25,CLOSED_BOOK(cover)),front:big(266,150,18,1.45,D20)+stroke('M258 196q-6-22 2-36M276 194q8-18 2-32',O,2,' opacity=".45"')};
   case 'hourglass':return look.variant===0
    ?{left:[[160,226],[146,286],[176,322]],right:[[244,226],[268,272],[278,318]],behind:candleStaff(278,112,486),items:big(178,288,0,1.3,HOURGLASS),front:''}
    :{left:[[160,226],[156,284],[186,304]],right:[[244,226],[248,284],[218,304]],behind:'',items:'',front:big(202,300,0,1.3,CANDLE)};
@@ -97,6 +95,10 @@ function pose(look:Look):Pose{
 
 // --- the body ------------------------------------------------------------------------------------------------
 const COAT='M150 208c-12 80-26 170-32 252h168c-6-82-20-172-32-252-20-16-84-16-104 0z';
+/** Hopeful Game Masters get round shapes: the hem swings out in a bell. */
+const BELL='M150 208c-18 76-40 154-52 236q104 40 208 0c-12-82-34-160-52-236-20-16-84-16-104 0z';
+/** Grave ones get a tall cloak to the ground, its hem worn into points. */
+const WORN=(()=>{let d='M146 214c-30 80-46 168-50 262';for(let i=0;i<14;i++)d+=`l15.2 ${i%2?10:-10}`;return d+'c-4-94-20-182-50-262z';})();
 const ROBE='M150 208c-14 84-30 180-36 262h176c-6-82-22-178-36-262-20-16-84-16-104 0z';
 function coat(look:Look):string{
  const s:string[]=[],c=look.coat;
@@ -107,17 +109,23 @@ function coat(look:Look):string{
   for(const [x,y,r] of [[168,300,2.4],[232,272,2],[196,350,2.6],[246,360,2],[156,420,2],[216,430,2.4],[184,256,1.8],[262,316,2]])s.push(dot(x,y,r,'#fff6d8',0,' opacity=".85"'));
   return s.join('');
  }
- if(look.garment==='cloak')s.push(shape('M146 214c-34 80-52 168-58 258h228c-6-90-24-178-58-258z',mix(c,O,.35)));
+ if(look.garment==='cloak')s.push(shape(WORN,mix(c,O,.35)));
  if(look.garment==='robe'){
-  s.push(shape(ROBE,c),shape('M116 448q86 16 172 0l2 22H114z',look.trim,3.4),stroke('M152 300q50 20 100 0',O,2,' opacity=".3"'));
+  s.push(shape(look.mood==='warm'?BELL:ROBE,c),shape('M116 448q86 16 172 0l2 22H114z',look.trim,3.4),stroke('M152 300q50 20 100 0',O,2,' opacity=".3"'));
   s.push(shape('M150 286l104 30-4 16-104-30z',mix(look.accent,'#ffffff',.2),3.4));
  }else{
-  s.push(shape(COAT,c),shape('M190 214l-10 246h44l-10-246z',look.inner,3.4));
+  s.push(shape(look.mood==='warm'?BELL:COAT,c),shape(look.mood==='warm'?'M190 214l-12 252q24 4 48 0l-12-252z':'M190 214l-10 246h44l-10-246z',look.inner,3.4));
   s.push(stroke('M184 220l-12 238M220 220l12 238',look.trim,3,' opacity=".85"'));
   s.push(shape('M142 296h120l2 16h-124z','#5a3a22',3.4)+shape('M194 292h16v24h-16z','#e0b04a',3));
   if(look.garment==='cloak')s.push(dot(160,218,8,'#e0b04a',3),dot(244,218,8,'#e0b04a',3));
  }
  return s.join('');
+}
+/** The Game Master's dice: a pouch on the belt with a d20 showing (a floating one for a spirit). */
+const D20=shape('M0 -16l14 8v16l-14 8-14-8v-16z','#f1e5cf',3)+shape('M0 -9l8 13h-16z','#e0b04a',2.2)+stroke('M0 -16v7M14 -8l-6 12M-14 -8l6 12M0 16l-8-12M0 16l8-12',O,1.6,' opacity=".55"');
+function dice(look:Look):string{
+ if(look.form==='spirit')return big(144,354,-12,1.1,dot(0,0,24,'#fff6d8',0,' opacity=".35"')+D20);
+ return shape('M150 316h34l-4 34q-13 8-26 0z','#6b4428')+stroke('M150 322h34',O,2.4,' opacity=".5"')+big(167,312,-10,.95,D20);
 }
 function feet(look:Look):string{
  if(look.form==='spirit')return '';
@@ -134,6 +142,8 @@ function neckwear(look:Look):string{
  if(look.neck==='scarf')return shape('M172 206c8 14 52 14 60 0l6 14c-14 18-58 18-72 0z',light,3.4)+shape('M218 218l14 52-14 4-12-50z',light,3.4)+stroke('M222 262l-2 14M228 260l2 14',O,2.4);
  return shape('M174 208l-10 150 18 4 12-150z',light,3.4)+shape('M230 208l10 150-18 4-12-150z',light,3.4)+stroke('M166 344l16 4M222 348l16-4',look.trim,3);
 }
+/** Wry Game Masters wear a short cape off one shoulder: an off-balance shape for a sideways smile. */
+const sideCape=(look:Look)=>look.mood==='wry'&&look.form!=='spirit'?shape('M148 212c-22 56-30 116-26 170l46-20c-8-50-4-104 16-148z',mix(look.accent,O,.5))+stroke('M150 222c-16 48-22 98-20 144',look.trim,2.6,' opacity=".8"'):'';
 const satchel=(look:Look)=>look.satchel&&look.form!=='spirit'&&look.prop!=='book'?stroke('M156 214L250 340',O,10)+stroke('M156 214L250 340','#6b4428',5)+shape('M230 334h40l-2 36h-36z','#8a5a34')+shape('M230 334h40l-6 15h-28z','#6b4428',3)+dot(250,346,3,'#e0b04a',2):'';
 
 // --- the head ----------------------------------------------------------------------------------------------------
@@ -191,6 +201,16 @@ function head(look:Look):Head{
     eyes:[[186,148],[218,148]],top:104,skin:glow};}
  }
 }
+function hatAt(look:Look,top:number):string{
+ if(look.hat==='none')return '';
+ const felt=mix(look.coat,O,.25),band=look.accent,eared=look.form!=='human'&&look.form!=='spirit',k=eared?.78:1;
+ const body={
+  brim:shape('M-84 8c10-16 40-18 84-14s74 2 84 14c-20 14-148 14-168 0z',felt)+shape('M-38 0c-2-30 12-46 38-46s40 16 38 46c-24 6-52 6-76 0z',felt)+shape('M-38 -8q38 8 76 0l1 9q-39 8-78 0z',band,3.2)+shape('M30 -10c14-22 34-34 52-36-6 16-24 32-48 42z',mix(band,'#ffffff',.35),2.8),
+  cap:shape('M-44 8c-6-32 22-52 54-46 24 6 40 24 44 42-32-8-66-8-98 4z',mix(band,O,.2))+shape('M30 -18c18-24 40-36 60-38-8 18-30 36-58 44z','#f1e5cf',3)+stroke('M32 -14c18-18 36-30 54-36',O,1.6,' opacity=".5"'),
+  tall:`<ellipse cx="0" cy="4" rx="62" ry="13" fill="${felt}" stroke="${O}" stroke-width="4"/>`+shape('M-34 4c6-44 14-86 30-116 8-14 24-20 38-14-14 6-22 18-24 34-2 34 6 64 24 96z',felt)+shape('M-32 -6q34 8 66 0l1 10q-35 8-68 0z',band,3.2),
+ }[look.hat];
+ return `<g transform="translate(202 ${top+(eared?8:6)}) rotate(${look.hat==='cap'?-10:look.mood==='wry'?-6:0}) scale(${k})">${body}</g>`;
+}
 const crownAt=(top:number)=>at(202,top,0,shape('M-30 0l-8-30 18 12 20-24 20 24 18-12-8 30z','#e0b04a',3.6)+shape('M-30 -2h60v12h-60z','#f0d08a',3.4)+dot(0,4,4,'#b05a8a',2.4)+dot(-18,4,2.6,'#5a8ab0',0)+dot(18,4,2.6,'#5a8ab0',0));
 const spectacles=(eyes:[number,number][],form:Form)=>{const r=form==='owl'?17:12;
  return eyes.map(([x,y])=>dot(x,y,r,'#dfeef6',3.2,' fill-opacity=".25"')).join('')+stroke(`M${eyes[0][0]+r} ${eyes[0][1]-1}q${(eyes[1][0]-eyes[0][0]-2*r)/2} -6 ${eyes[1][0]-eyes[0][0]-2*r} 0`,O,3);};
@@ -215,9 +235,10 @@ export function customGameMasterSvg(spec:GameMasterSpec):string{
  // Sleeves sit a shade darker than the coat so arms read against it, as on the built-in Game Masters.
  const sleeve=look.form==='spirit'?mix(look.coat,'#ffffff',.08):mix(look.coat,O,look.garment==='cloak'?.05:.2);
  const parts:string[]=[];
- parts.push(`<ellipse cx="202" cy="${look.form==='spirit'?494:492}" rx="${look.form==='spirit'?84:124}" ry="${look.form==='spirit'?9:13}" fill="${O}" opacity="${look.form==='spirit'?.12:.18}"/>`);
+ const shadow=`<ellipse cx="202" cy="${look.form==='spirit'?494:492}" rx="${look.form==='spirit'?84:124}" ry="${look.form==='spirit'?9:13}" fill="${O}" opacity="${look.form==='spirit'?.12:.18}"/>`;
  parts.push(behindBody(look),p.behind,`<g transform="translate(202 190) scale(1.16) translate(-202 -190)">${hd.back}</g>`);
- parts.push(feet(look),coat(look),satchel(look),neckwear(look));
+ parts.push(feet(look),coat(look),sideCape(look),satchel(look),neckwear(look),dice(look));
+ if(look.mood==='grave'&&look.form!=='spirit')parts.push(shape('M150 218l-26-78 52 50zM254 218l26-78-52 50z',mix(look.coat,O,.15)));
  parts.push(stroke('M202 206L202 184',O,28)+stroke('M202 206L202 184',hand,20));
  parts.push(p.items);
  parts.push(limb(p.left,sleeve),limb(p.right,sleeve));
@@ -225,8 +246,8 @@ export function customGameMasterSvg(spec:GameMasterSpec):string{
  parts.push(dot(lh[0],lh[1],12,hand),dot(rh[0],rh[1],12,hand));
  if(look.form==='owl')parts.push(stroke(`M${lh[0]-6} ${lh[1]+4}l-4 8M${rh[0]+6} ${rh[1]+4}l4 8`,mix(look.fur,O,.45),2.4));
  parts.push(p.front);
- parts.push(`<g transform="translate(202 190) scale(1.16) rotate(${look.human?.tilt??0}) translate(-202 -190)">${hd.front}${look.glasses&&look.form!=='human'?spectacles(hd.eyes,look.form):''}${look.crown?crownAt(hd.top):''}</g>`);
- return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 520" width="400" height="520" fill="none" stroke-linecap="round" stroke-linejoin="round">${parts.join('')}</svg>`;
+ parts.push(`<g transform="translate(202 190) scale(1.16) rotate(${look.human?.tilt??0}) translate(-202 -190)">${hd.front}${look.glasses&&look.form!=='human'?spectacles(hd.eyes,look.form):''}${look.crown?crownAt(hd.top):hatAt(look,hd.top)}</g>`);
+ return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 520" width="400" height="520" fill="none" stroke-linecap="round" stroke-linejoin="round">${shadow}<g transform="rotate(${look.lean} 202 488)">${parts.join('')}</g></svg>`;
 }
 
 const cache=new Map<string,string>();
