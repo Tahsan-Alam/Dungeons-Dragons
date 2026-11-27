@@ -59,7 +59,7 @@ Added November 26, 2026.
 
 | Limit | Value |
 | --- | ---: |
-| Pictures per player per UTC day (`AI_IMAGES_PER_PLAYER_DAY`), for each kind | 2 Game Master + 2 hero (one try each), at most 12 |
+| Pictures per player per UTC day (`AI_IMAGES_PER_PLAYER_DAY`), for each kind | 4 Game Master + 4 hero (two tries each), at most 12 |
 | Pictures per try | 2 at 768 × 1024 |
 | Ledger reservation per try | $0.08 (fal lists $0.035 per megapixel) |
 | Player description | 80 characters, checked before painting |

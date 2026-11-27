@@ -10,9 +10,9 @@ test('the paint route keeps to the switch, the daily allowance and serves stored
   export default {fetch(request){const path=new URL(request.url).pathname;const m=path.match(/^\\/api\\/ai\\/image\\/([^/]+)$/);return m?GET(request,{params:Promise.resolve({id:m[1]})}):POST(request)}};`,resolveDir:process.cwd()},bundle:true,write:false,format:'esm',platform:'browser',external:['cloudflare:workers']});
  const mock=createFetchMock();mock.disableNetConnect();
  const reply=()=>JSON.stringify({images:[{url:'https://v3.fal.media/files/one.jpg'},{url:'https://v3.fal.media/files/two.jpg'}],has_nsfw_concepts:[false,false]});
- mock.get('https://fal.run').intercept({path:'/fal-ai/flux-lora',method:'POST',headers:{authorization:'Key fal-worker-only'}}).reply(200,reply()).times(2);
- mock.get('https://v3.fal.media').intercept({path:'/files/one.jpg'}).reply(200,new Uint8Array([255,216,255,1]),{headers:{'content-type':'image/jpeg'}}).times(2);
- mock.get('https://v3.fal.media').intercept({path:'/files/two.jpg'}).reply(200,new Uint8Array([255,216,255,2]),{headers:{'content-type':'image/jpeg'}}).times(2);
+ mock.get('https://fal.run').intercept({path:'/fal-ai/flux-lora',method:'POST',headers:{authorization:'Key fal-worker-only'}}).reply(200,reply()).times(4);
+ mock.get('https://v3.fal.media').intercept({path:'/files/one.jpg'}).reply(200,new Uint8Array([255,216,255,1]),{headers:{'content-type':'image/jpeg'}}).times(4);
+ mock.get('https://v3.fal.media').intercept({path:'/files/two.jpg'}).reply(200,new Uint8Array([255,216,255,2]),{headers:{'content-type':'image/jpeg'}}).times(4);
  const bindings={FAL_KEY:'fal-worker-only',FAL_LORA_URL:'https://v3b.fal.media/files/b/x/pytorch_lora_weights.safetensors',AI_ENABLE_IMAGES:'I_ACCEPT_PAID_IMAGES'};
  const mf=new Miniflare({modules:true,script:bundle.outputFiles[0].text,compatibilityDate:'2026-05-15',fetchMock:mock,d1Databases:['DB'],bindings});
  try{
@@ -28,10 +28,12 @@ test('the paint route keeps to the switch, the daily allowance and serves stored
   assert.deepEqual([...new Uint8Array(await picture.arrayBuffer())],[255,216,255,1]);
   assert.equal((await mf.dispatchFetch(`http://localhost/api/ai/image/${'0'.repeat(32)}`)).status,404);
   assert.equal((await mf.dispatchFetch('http://localhost/api/ai/image/not-an-id')).status,404);
-  // Two pictures a day for each kind: a second Game Master try is refused before fal is called, a hero still paints.
-  const second=await post({...paint,requestId:'paint-worker-2'});assert.equal(second.status,429);assert.equal((await second.json() as {code?:string}).code,'PAINT_DAILY_LIMIT');
+  // Four pictures a day for each kind (two tries): a third Game Master try is refused before fal is called, a hero still paints.
+  assert.equal((await post({...paint,requestId:'paint-worker-2'})).status,200);
+  const second=await post({...paint,requestId:'paint-worker-5'});assert.equal(second.status,429);assert.equal((await second.json() as {code?:string}).code,'PAINT_DAILY_LIMIT');
   assert.equal((await post({kind:'hero',name:'Tamsin',heroClass:'ranger',color:'#b2c877',description:'',requestId:'paint-worker-3'})).status,200);
-  assert.equal((await post({kind:'hero',name:'Tamsin',heroClass:'ranger',color:'#b2c877',description:'',requestId:'paint-worker-4'})).status,429);
+  assert.equal((await post({kind:'hero',name:'Tamsin',heroClass:'ranger',color:'#b2c877',description:'',requestId:'paint-worker-4'})).status,200);
+  assert.equal((await post({kind:'hero',name:'Tamsin',heroClass:'ranger',color:'#b2c877',description:'',requestId:'paint-worker-6'})).status,429);
   mock.assertNoPendingInterceptors();
  }finally{await mf.dispose();}
 });

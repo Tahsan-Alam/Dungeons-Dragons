@@ -23,7 +23,7 @@ export function imagesConfigured(env:ImageEnv){
 /** Images each player may make per UTC day, for each kind (Game Master, hero); the owner can lower or raise it, never past 12. */
 export function imagesPerPlayerDay(env:ImageEnv){
  const value=env.AI_IMAGES_PER_PLAYER_DAY;
- return value===undefined?2:/^\d+$/.test(value)?Math.min(Number(value),12):0;
+ return value===undefined?4:/^\d+$/.test(value)?Math.min(Number(value),12):0;
 }
 
 export interface PaintRequest {kind:'gm';name:string;form:typeof NARRATOR_FORMS[number];accessory:typeof NARRATOR_ACCESSORIES[number];color:string;tone:'hopeful'|'wry'|'grave';description:string;requestId:string}

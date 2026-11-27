@@ -45,7 +45,7 @@ test('painting needs the owner to switch it on and a daily allowance',()=>{
  assert.equal(imagesConfigured({...env,AI_ENABLE_IMAGES:'yes'}),false);
  assert.equal(imagesConfigured({...env,FAL_LORA_URL:'https://example.com/lora.safetensors'}),false);
  assert.equal(imagesConfigured(env),true);
- assert.equal(imagesPerPlayerDay({}),2);assert.equal(imagesPerPlayerDay({AI_IMAGES_PER_PLAYER_DAY:'40'}),12);assert.equal(imagesPerPlayerDay({AI_IMAGES_PER_PLAYER_DAY:'-1'}),0);
+ assert.equal(imagesPerPlayerDay({}),4);assert.equal(imagesPerPlayerDay({AI_IMAGES_PER_PLAYER_DAY:'40'}),12);assert.equal(imagesPerPlayerDay({AI_IMAGES_PER_PLAYER_DAY:'-1'}),0);
 });
 
 test('an unconfigured server never calls the painter',async()=>{
