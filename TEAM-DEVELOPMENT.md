@@ -47,6 +47,26 @@ Our recommendation remains one key per teammate under the same funded project. I
 
 Either arrangement uses the project's billing and does not combine the separate local spending ledgers. No keys are created or copied by local:setup.
 
+## Enable AI painting (fal)
+
+"Paint them with AI" on the Create your own workbench uses a second provider, [fal](https://fal.ai), running FLUX with the team's trained style (a LoRA). It is separate from the OpenAI key: you can have either, both or neither. Without it, the workbench offers only **Draw them**, which needs no AI.
+
+1. Ask the owner to invite you to the team's fal workspace, then create your own key under **Settings → API Keys**. As with OpenAI, one key per teammate means one bill but separate keys to revoke. If you must share a key, use a private secret-sharing tool, never Git, chat or screenshots.
+2. Ask the owner for the **LoRA URL** (the trained style's `pytorch_lora_weights.safetensors` link on `fal.media`). Everyone uses the same one. Share it privately as well: anyone holding it can paint in the team's style on their own account.
+3. Add these to the same ignored root `.dev.vars` and restart:
+
+```dotenv
+AI_ENABLE_IMAGES=I_ACCEPT_PAID_IMAGES
+FAL_KEY=<your fal key>
+FAL_LORA_URL=<the team's LoRA URL>
+# Optional; default 4 paintings per player per day for each of Game Master and hero, at most 12.
+AI_IMAGES_PER_PLAYER_DAY=4
+```
+
+Paintings are stored in the local database's `painted_images` table: if you set up before painting arrived, stop the server and rerun `npm run local:setup` once to add it (saves are kept). To check it works, start a quest, open **Create your own**, choose **Paint them with AI**, describe them and press **Paint them**. Each try paints one picture (about $0.035) and reserves $0.04 in this checkout's spending ledger, so the campaign/day/month limits above apply to painting too. Pictures the figure can't be cut out of (a background or frame behind it, or cut off at an edge) show as "Can't use".
+
+Set a monthly limit in fal's billing settings as well; like the OpenAI ledgers, each checkout's daily allowance is counted separately. Tests never call fal: they use a fake painter and need no key. `AI-SETUP.md` covers the hosted settings.
+
 ## Work together
 
 1. Claim a GitHub issue with one owner and a clear result. Coordinate shared types, routes, schemas and global styles before editing them.

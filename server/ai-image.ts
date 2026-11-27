@@ -82,9 +82,10 @@ async function descriptionFlagged(text:string,env:ImageEnv,fetcher:typeof fetch,
  return !!data.results?.some(r=>r.flagged);
 }
 
-export async function paintGameMaster(request:AnyPaintRequest,deps:{env:ImageEnv;ledger:BudgetLedger;store:ImageStore;fetcher?:typeof fetch;now?:number;signal?:AbortSignal}):Promise<{images:string[]}>{
+/** Paints one picture of your own Game Master or hero (see the file comment for the checks around it). */
+export async function paintPicture(request:AnyPaintRequest,deps:{env:ImageEnv;ledger:BudgetLedger;store:ImageStore;fetcher?:typeof fetch;now?:number;signal?:AbortSignal}):Promise<{images:string[]}>{
  const {env,ledger,store}=deps,fetcher=deps.fetcher??fetch,now=deps.now??Date.now();
- if(!imagesConfigured(env))throw new RoomError('Painting is not set up on this server. Your Game Master keeps their drawing.',503,'PAINT_UNAVAILABLE');
+ if(!imagesConfigured(env))throw new RoomError('Painting is not set up on this server. You can still draw them.',503,'PAINT_UNAVAILABLE');
  const key=`paint:${request.requestId}`;
  const cached=await ledger.cached(key) as {images:string[]}|null;
  if(cached){if(!cached.images.length)throw new RoomError('That painting did not finish. Try again.',503,'PAINT_UNAVAILABLE');return cached;}
@@ -92,13 +93,13 @@ export async function paintGameMaster(request:AnyPaintRequest,deps:{env:ImageEnv
  if(borrowed)throw new RoomError(`“${borrowed}” belongs to another story. Describe how they look instead.`,400,'PAINT_BORROWED');
  if(await descriptionFlagged(request.description,env,fetcher,deps.signal))throw new RoomError('That description can’t be painted. Try different words.',400,'PAINT_REJECTED');
  const reservation=await ledger.reserve(key,`paint:${new Date(now).toISOString().slice(0,10)}`,PAINT_RESERVE_MICRO_USD,4_000);
- if(reservation==='blocked')throw new RoomError('Today’s painting allowance is used up. Your Game Master keeps their drawing.',503,'PAINT_ALLOWANCE');
+ if(reservation==='blocked')throw new RoomError('Today’s painting allowance is used up. You can still draw them.',503,'PAINT_ALLOWANCE');
  if(reservation!=='reserved')throw new RoomError('This painting is already being made. Try again in a moment.',409,'PAINT_PENDING');
  let outcome='failed';
  try{
   const response=await fetcher(FAL_ENDPOINT,{method:'POST',signal:deps.signal,headers:{authorization:`Key ${env.FAL_KEY}`,'content-type':'application/json'},
    body:JSON.stringify({prompt:request.kind==='hero'?heroPaintPrompt(request):paintPrompt(request),loras:[{path:env.FAL_LORA_URL,scale:1.1}],image_size:{width:768,height:1024},num_images:IMAGES_PER_PAINT,num_inference_steps:28,guidance_scale:3.5,enable_safety_checker:true,output_format:'jpeg'})});
-  if(!response.ok){outcome=`fal ${response.status}`;throw new RoomError('The painter could not finish. Your Game Master keeps their drawing.',503,'PAINT_UNAVAILABLE');}
+  if(!response.ok){outcome=`fal ${response.status}`;throw new RoomError('The painter could not finish. Try again in a moment.',503,'PAINT_UNAVAILABLE');}
   const data=await response.json() as {images?:{url?:string}[];has_nsfw_concepts?:boolean[]};
   const images:string[]=[];
   for(const [i,image] of (data.images??[]).slice(0,IMAGES_PER_PAINT).entries()){
@@ -117,6 +118,6 @@ export async function paintGameMaster(request:AnyPaintRequest,deps:{env:ImageEnv
  }catch(error){
   // The reservation stays (it may have been billed); record what happened so it is never retried blindly.
   await ledger.finish(key,{images:[]},undefined,{outcome}).catch(()=>{});
-  throw error instanceof RoomError?error:new RoomError('The painter could not be reached. Your Game Master keeps their drawing.',503,'PAINT_UNAVAILABLE');
+  throw error instanceof RoomError?error:new RoomError('The painter could not be reached. Try again in a moment.',503,'PAINT_UNAVAILABLE');
  }
 }

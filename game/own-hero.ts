@@ -1,6 +1,6 @@
 import {HERO_CLASSES,HERO_COLORS,type HeroClass} from './types.ts';
 import {isPortraitId,parseHero,type HeroProfile} from './creation.ts';
-import {ownPortrait,parsePaintings,type OwnMode} from './own-game-master.ts';
+import {ownPortrait,parsePaintings,type OwnMode} from './own-paintings.ts';
 import {PLAYS_AS,ROLE,type ClassName,type Role} from './presets.ts';
 
 /**

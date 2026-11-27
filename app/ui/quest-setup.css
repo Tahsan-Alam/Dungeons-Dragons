@@ -130,16 +130,9 @@ html:root[data-color-mode][data-theme] body .realm button.qs-seg-option[aria-che
 .qs-advanced :is(input,select){min-height:40px;padding:6px 10px;border:1px solid var(--realm-edge);border-radius:2px;background:#0f141b;color:var(--realm-ink);font:500 14px Inter,system-ui,sans-serif}
 
 
-/* Your own Game Master: the fourth card, and a builder in the preview (design canvas, Your own Game Master). */
-.qs-gm-preview.qs-own{display:grid;grid-template-columns:minmax(0,42%) minmax(0,1fr);aspect-ratio:auto;height:clamp(300px,var(--qs-h),760px);width:100%}
-.qs-own .qs-gm-stage{position:relative}
-.qs-own-shadow{position:absolute;left:50%;bottom:calc(24.4% - 7px);width:34%;height:14px;transform:translateX(-50%);border-radius:50%;background:rgba(3,5,8,.72)}
-.qs-own .qs-gm-scene{filter:saturate(.9)}
-.qs-own-figure{position:absolute;left:50%;bottom:20%;height:72%;max-width:96%;width:auto;transform:translateX(-50%);object-fit:contain;object-position:bottom;filter:drop-shadow(0 8px 18px rgba(0,0,0,.5))}
+/* Your own Game Master and hero: the pickers on the workbench (shape, tone, class, colour) and the quote under the figure. */
 .qs-own-sample{position:absolute;left:16px;right:16px;bottom:14px;margin:0;padding:10px 14px;display:flex;flex-direction:column;gap:3px;background:rgba(10,14,20,.86);border:1px solid #2f3946;border-left:3px solid var(--own-colour,#87bdcf);font:italic 400 16px/1.4 var(--realm-prose);color:#E7DFD0}
 .qs-own-sample .realm-eyebrow{font-style:normal;text-align:left}
-.qs-own-form{box-sizing:border-box;min-height:0;overflow:auto;padding:22px 26px;display:flex;flex-direction:column;gap:14px;background:#0f141b;border-left:1px solid #2a3340}
-.qs-own-form .realm-eyebrow{display:block;margin-bottom:6px;text-align:left}
 .qs-own-name input{box-sizing:border-box;width:100%;padding:6px 0 8px;border:0;border-bottom:1px solid #435263;background:none;color:var(--realm-ink);font:600 clamp(22px,2.2vw,30px)/1.15 var(--realm-serif);letter-spacing:.02em}
 .qs-own-name input::placeholder{color:#4f5b68;font-style:italic;font-family:var(--realm-prose);font-weight:400}
 .qs-own-name input:focus{outline:none;border-bottom-color:#9CC9EA}
@@ -185,14 +178,7 @@ html:root[data-color-mode][data-theme] body .realm button.qs-own-swatch[aria-che
  .qs-gm-text{position:static;width:auto;padding:16px;background:#0c1016}
  .qs-tale{grid-template-columns:minmax(0,1fr);grid-template-areas:"preview" "side" "line"}
  .qs-gm-cards{display:grid;grid-template-columns:repeat(4,minmax(0,1fr))}
-  .qs-gm-preview.qs-own{display:flex;flex-direction:column;height:auto}
- .qs-own .qs-gm-stage{aspect-ratio:auto;display:flex;flex-direction:column}
- .qs-own .qs-gm-stage>.qs-gm-scene{height:240px;position:absolute;inset:0 0 auto 0}
- .qs-own-shadow{bottom:auto;top:226px;width:110px}
- .qs-own-figure{position:relative;left:auto;bottom:auto;transform:none;align-self:center;height:240px;width:auto}
  .qs-own-sample{position:relative;left:auto;right:auto;bottom:auto;margin:0 12px 4px}
- .qs-gm:has(.qs-own) {scroll-margin-top:12px}
- .qs-own-form{border-left:0;padding:16px;overflow:visible}
  .qs-own-forms{grid-template-columns:repeat(3,minmax(0,1fr))}
  .qs-own-row{grid-template-columns:minmax(0,1fr)}
  .qs-gm-line{flex-direction:column;align-items:stretch}
@@ -258,16 +244,12 @@ html:root[data-color-mode][data-theme] body .realm button.tc-voice-btn:disabled{
 .qs-tile.taken .qs-tile-name span{display:inline-block;align-self:flex-start;margin-top:1px;padding:0 5px;background:#2a323d;color:#c4ccd5;font-weight:600}
 /* Paint them: the image model's options beside the drawing. */
 .qs-paint{display:flex;flex-direction:column;gap:8px}
-.qs-paint-note{margin:0;font:500 12.5px/1.45 Inter,system-ui,sans-serif;color:#a9b3be}
-.qs-paint-describe input{width:100%;box-sizing:border-box;min-height:40px;padding:8px 12px;border:1px solid #2f3946;border-radius:2px;background:#0f141b;color:#F1E5CF;font:italic 400 16px var(--realm-prose,Georgia)}
-.qs-paint-describe input:focus-visible{outline:1.5px solid #9CC9EA;outline-offset:2px}
 .qs-paint-row{display:flex;align-items:center;gap:12px}
 .qs-paint-hint{font:500 12.5px Inter,system-ui,sans-serif;color:#8d99a6}
 .qs-paint-options{display:flex;gap:8px;flex-wrap:wrap}
 .qs-paint-option{display:flex;flex-direction:column;align-items:center;gap:4px;padding:6px 6px 5px;min-width:80px}
 .qs-paint-option span{font:600 11.5px Inter,system-ui,sans-serif;color:#b3bcc6}
 .qs-paint-option[aria-checked="true"]{border-color:#9CC9EA !important;background:#1d2733 !important}
-.qs-paint-drawing{width:64px;height:78px;object-fit:cover;object-position:50% 12%;border-radius:2px;background:radial-gradient(circle at 50% 40%,#2a3442,#141a22)}
 .qs-paint-loading{width:64px;height:78px;border-radius:2px;background:#1a212b;animation:qs-paint-pulse 1.2s ease-in-out infinite}
 @keyframes qs-paint-pulse{50%{opacity:.5}}
 @media (prefers-reduced-motion:reduce){.qs-paint-loading{animation:none}}
@@ -291,7 +273,6 @@ html:root[data-color-mode][data-theme] body .realm button.tc-voice-btn:disabled{
 .qs-bench-form .qs-own-classes,.qs-bench-form .qs-own-forms{grid-template-columns:repeat(4,minmax(0,1fr))}
 .qs-own-classes{grid-template-columns:repeat(4,minmax(0,1fr))}
 .qs-own-class-note{margin:6px 0 0;font:500 12.5px Inter,system-ui,sans-serif;color:#a9b3be}
-.qs-paint-drawing.hero{object-position:50% 18%}
 /* Short screens (a 720px laptop): the workbench form tightens so name, class and colour fit with the buttons. */
 @media (min-width:901px) and (max-height:820px){
  .qs-bench-form{gap:10px;padding:14px 20px}

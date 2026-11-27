@@ -1,7 +1,7 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {BudgetLedger,MemoryLedger} from './ai-ledger.ts';
-import {MemoryImageStore,heroPaintPrompt,imagesConfigured,imagesPerPlayerDay,paintGameMaster,paintPrompt,parsePaintRequest,type PaintRequest} from './ai-image.ts';
+import {MemoryImageStore,heroPaintPrompt,imagesConfigured,imagesPerPlayerDay,paintPicture,paintPrompt,parsePaintRequest,type PaintRequest} from './ai-image.ts';
 import {parseNarrator} from '../game/creation.ts';
 import {ownGameMaster} from '../game/own-game-master.ts';
 
@@ -49,33 +49,33 @@ test('painting needs the owner to switch it on and a daily allowance',()=>{
 
 test('an unconfigured server never calls the painter',async()=>{
  const {fetcher,calls}=fakeFal();
- await assert.rejects(paintGameMaster(request,{env:{},ledger:new BudgetLedger(new MemoryLedger()),store:new MemoryImageStore(),fetcher}),{code:'PAINT_UNAVAILABLE'});
+ await assert.rejects(paintPicture(request,{env:{},ledger:new BudgetLedger(new MemoryLedger()),store:new MemoryImageStore(),fetcher}),{code:'PAINT_UNAVAILABLE'});
  assert.equal(calls.length,0);
 });
 
 test('a paint reserves the cost, calls fal with the LoRA for one picture, stores it and is never charged twice',async()=>{
  const {fetcher,calls}=fakeFal(),store=new MemoryImageStore(),ledger=new BudgetLedger(new MemoryLedger());
- const result=await paintGameMaster(request,{env,ledger,store,fetcher});
+ const result=await paintPicture(request,{env,ledger,store,fetcher});
  assert.equal(result.images.length,1);assert.match(result.images[0],/^[a-f0-9]{32}$/);
  const fal=calls.find(c=>c.url==='https://fal.run/fal-ai/flux-lora')!;
  assert.equal((fal.init!.headers as Record<string,string>).authorization,'Key fal-test-only');
  const body=JSON.parse(String(fal.init!.body));
  assert.equal(body.loras[0].path,env.FAL_LORA_URL);assert.equal(body.num_images,1);assert.equal(body.enable_safety_checker,true);
  assert.equal((await store.get(result.images[0]))?.contentType,'image/jpeg');
- const again=await paintGameMaster(request,{env,ledger,store,fetcher});
+ const again=await paintPicture(request,{env,ledger,store,fetcher});
  assert.deepEqual(again,result);assert.equal(calls.filter(c=>c.url.includes('fal.run')).length,1);
 });
 
 test('pictures the safety checker flags, or from anywhere but fal, are dropped',async()=>{
  const flagged=fakeFal({nsfw:[true]});
- await assert.rejects(paintGameMaster({...request,requestId:'paint-0002'},{env,ledger:new BudgetLedger(new MemoryLedger()),store:new MemoryImageStore(),fetcher:flagged.fetcher}),{code:'PAINT_EMPTY'});
+ await assert.rejects(paintPicture({...request,requestId:'paint-0002'},{env,ledger:new BudgetLedger(new MemoryLedger()),store:new MemoryImageStore(),fetcher:flagged.fetcher}),{code:'PAINT_EMPTY'});
  const none=fakeFal({urls:['https://example.com/a.jpg']});
- await assert.rejects(paintGameMaster({...request,requestId:'paint-0003'},{env,ledger:new BudgetLedger(new MemoryLedger()),store:new MemoryImageStore(),fetcher:none.fetcher}),{code:'PAINT_EMPTY'});
+ await assert.rejects(paintPicture({...request,requestId:'paint-0003'},{env,ledger:new BudgetLedger(new MemoryLedger()),store:new MemoryImageStore(),fetcher:none.fetcher}),{code:'PAINT_EMPTY'});
 });
 
 test('a flagged description is refused before anything is reserved or painted',async()=>{
  const {fetcher,calls}=fakeFal({flagged:true}),memory=new MemoryLedger();
- await assert.rejects(paintGameMaster(request,{env:{...env,OPENAI_API_KEY:'sk-test'},ledger:new BudgetLedger(memory),store:new MemoryImageStore(),fetcher}),{code:'PAINT_REJECTED'});
+ await assert.rejects(paintPicture(request,{env:{...env,OPENAI_API_KEY:'sk-test'},ledger:new BudgetLedger(memory),store:new MemoryImageStore(),fetcher}),{code:'PAINT_REJECTED'});
  assert.ok(!calls.some(c=>c.url.includes('fal.run')));
  assert.deepEqual((await memory.read()).entries,{});
 });
@@ -83,16 +83,16 @@ test('a flagged description is refused before anything is reserved or painted',a
 test('the shared allowance stops painting when it runs out',async()=>{
  const {fetcher,calls}=fakeFal();
  const ledger=new BudgetLedger(new MemoryLedger(),{campaign:400_000,day:30_000,month:4_000_000,concurrency:8});
- await assert.rejects(paintGameMaster(request,{env,ledger,store:new MemoryImageStore(),fetcher}),{code:'PAINT_ALLOWANCE'});
+ await assert.rejects(paintPicture(request,{env,ledger,store:new MemoryImageStore(),fetcher}),{code:'PAINT_ALLOWANCE'});
  assert.equal(calls.length,0);
 });
 
 test('a failed paint keeps its reservation and is not retried blindly',async()=>{
  const {fetcher}=fakeFal({status:500}),memory=new MemoryLedger(),ledger=new BudgetLedger(memory);
- await assert.rejects(paintGameMaster(request,{env,ledger,store:new MemoryImageStore(),fetcher}),{code:'PAINT_UNAVAILABLE'});
+ await assert.rejects(paintPicture(request,{env,ledger,store:new MemoryImageStore(),fetcher}),{code:'PAINT_UNAVAILABLE'});
  const receipt=(await memory.read()).entries['paint:paint-0001'];
  assert.equal(receipt.status,'done');assert.equal(receipt.diagnostic?.outcome,'fal 500');
- await assert.rejects(paintGameMaster(request,{env,ledger,store:new MemoryImageStore(),fetcher}),{code:'PAINT_UNAVAILABLE'});
+ await assert.rejects(paintPicture(request,{env,ledger,store:new MemoryImageStore(),fetcher}),{code:'PAINT_UNAVAILABLE'});
 });
 
 test('a narrator carries a painted portrait only as a server id, and only when painted',()=>{
@@ -106,7 +106,7 @@ test('a narrator carries a painted portrait only as a server id, and only when p
 
 test('a description naming a character from another story is refused before anything is reserved',async()=>{
  const {fetcher,calls}=fakeFal(),memory=new MemoryLedger();
- await assert.rejects(paintGameMaster({...request,description:'Avatar the last airbender'},{env,ledger:new BudgetLedger(memory),store:new MemoryImageStore(),fetcher}),{code:'PAINT_BORROWED'});
+ await assert.rejects(paintPicture({...request,description:'Avatar the last airbender'},{env,ledger:new BudgetLedger(memory),store:new MemoryImageStore(),fetcher}),{code:'PAINT_BORROWED'});
  assert.equal(calls.length,0);assert.deepEqual((await memory.read()).entries,{});
 });
 
@@ -120,7 +120,7 @@ test('a hero paint request names a class, and the class sets the gear in the pro
 });
 test('a hero is painted through the same checks and ledger',async()=>{
  const {fetcher,calls}=fakeFal();
- const result=await paintGameMaster({kind:'hero',heroClass:'mage',description:'a tall mage with a grey beard',requestId:'hero-0002'},{env,ledger:new BudgetLedger(new MemoryLedger()),store:new MemoryImageStore(),fetcher});
+ const result=await paintPicture({kind:'hero',heroClass:'mage',description:'a tall mage with a grey beard',requestId:'hero-0002'},{env,ledger:new BudgetLedger(new MemoryLedger()),store:new MemoryImageStore(),fetcher});
  assert.equal(result.images.length,1);
  assert.match(JSON.parse(String(calls.find(c=>c.url.includes('fal.run'))!.init!.body)).prompt,/fantasy hero, a mage in a long robe/);
 });

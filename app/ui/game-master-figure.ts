@@ -1,6 +1,6 @@
 import {AETHER,type NarratorProfile} from '../../game/creation.ts';
 import {GAME_MASTERS,type FaceCentre} from '../../game/presets.ts';
-import {HAIR,HAIR_STYLES,O,SKIN,at,chance,dot,face,hairBack,hairFront,hash,limb,mix,n,pick,random,shape,stroke,type HeroLook,type Rand} from './hero-figure.ts';
+import {HAIR,HAIR_STYLES,O,SKIN,at,chance,dot,face,hairBack,hairFront,hash,limb,mix,n,pick,random,shape,stroke,type HeroLook} from './hero-figure.ts';
 
 /* A full-body drawing for a Game Master the game doesn't ship: your own Game Master and ones made with the AI.
    It uses the three built-in Game Masters' kit (public/art/game-masters): a 400 × 520 viewBox, the dark slate

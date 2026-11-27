@@ -29,5 +29,5 @@ test('the painted portrait reaches only the player’s own hero on the board, an
  const me=game.actors.find(a=>a.id==='hero-me')!,bot=game.actors.find(a=>a.id==='hero-bot')!;
  assert.equal(me.portrait,'e'.repeat(32));assert.equal(bot.portrait,undefined);
  const plain=createGame(players,{...options,creation:{...options.creation,hero:{...hero,portrait:undefined}}});
- const {portrait:_,...rest}=me;assert.deepEqual(rest,plain.actors.find(a=>a.id==='hero-me'));
+ const rest={...me};delete rest.portrait;assert.deepEqual(rest,plain.actors.find(a=>a.id==='hero-me'));
 });

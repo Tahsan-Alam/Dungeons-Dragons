@@ -1,7 +1,7 @@
 'use client';
 import {useEffect,useState} from 'react';
 import {GAME_MASTER_ART_RATIO,HERO_ART_RATIO} from '../../game/presets';
-import {MAX_PAINTINGS} from '../../game/own-game-master';
+import {MAX_PAINTINGS} from '../../game/own-paintings';
 import {Portrait} from './RealmKit';
 import {borrowedName} from '../../game/paint-words';
 import {paintedFailed,usePaintedFigure,type PaintedKind} from './painted-portrait';

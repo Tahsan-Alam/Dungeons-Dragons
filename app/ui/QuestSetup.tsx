@@ -13,12 +13,12 @@ import {useAIPreference} from './ai-preferences';
 import {RealmButton,RealmTools,QuestSteps,Portrait,Diamond,CheckBadge} from './RealmKit';
 import TaleConversation from './TaleConversation';
 import {DRAWN_GM_FACE,customGameMasterArt} from './game-master-figure';
-import {CUSTOM_FACE,customHeroArt} from './hero-figure';
 import {usePaintedFigure,type PaintedFigure} from './painted-portrait';
 import PaintPanel,{ModeSwitch,useImageAccess} from './PaintPanel';
 import OwnHeroBench,{ownHeroPreset,stagePlacement} from './OwnHeroBuilder';
 import {OWN_HERO_DEFAULT,ownHero,parseOwnHeroInput,type OwnHeroInput} from '../../game/own-hero';
-import {MAX_PAINTINGS,OWN_ACCESSORIES,OWN_DEFAULT,OWN_FORMS,OWN_NAME_IDEAS,OWN_TONES,ownGameMaster,ownNameTaken,ownPortrait,ownVoice,parseOwnInput,type OwnGameMasterInput} from '../../game/own-game-master';
+import {addPainting,ownPortrait} from '../../game/own-paintings';
+import {OWN_ACCESSORIES,OWN_DEFAULT,OWN_FORMS,OWN_NAME_IDEAS,OWN_TONES,ownGameMaster,ownNameTaken,ownVoice,parseOwnInput,type OwnGameMasterInput} from '../../game/own-game-master';
 import './quest-setup.css';
 
 type Props={mode:'solo'|'online';onBack:()=>void;onStart:(name:string,cls:HeroClass,options:GameOptions,code:string,heroId?:string)=>unknown;busy:boolean;quick?:boolean;onAISettings?:()=>void};
@@ -146,7 +146,7 @@ function useOwnFigure(own:OwnGameMasterInput,title:string){
  const [drawnName,setDrawnName]=useState(title);
  useEffect(()=>{const t=window.setTimeout(()=>setDrawnName(title),450);return()=>window.clearTimeout(t)},[title]);
  const drawing=ownArt(own,drawnName),painted=usePaintedFigure(ownPortrait(own));
- return {drawnName,drawing,painted,figure:painted?.art??drawing,face:painted?.face??DRAWN_GM_FACE};
+ return {drawnName,painted,figure:painted?.art??drawing,face:painted?.face??DRAWN_GM_FACE};
 }
 
 /** Choose a Game Master: "Create your own" leads, the three built-ins follow. */
@@ -218,7 +218,7 @@ function GameMasterBench({gm,own,setOwn,ownReady}:{gm:GameMasterPreset;own:OwnGa
    {painting?<>
     {tones}
     <PaintPanel kind="gm" paintings={paintings} portrait={own.portrait} available={!!access} perDay={access?.imagesPerDay}
-     onPainted={id=>set({portrait:id,paintings:[id,...paintings.filter(p=>p!==id)].slice(0,MAX_PAINTINGS)})} onChoose={portrait=>set({portrait})}
+     onPainted={id=>set({portrait:id,paintings:addPainting(paintings,id)})} onChoose={portrait=>set({portrait})}
      placeholder="For example: an old sea captain with a white beard, a long blue coat and a parrot on one shoulder"/>
    </>:<>
     <fieldset className="qs-own-set"><legend className="realm-eyebrow">Their shape</legend>

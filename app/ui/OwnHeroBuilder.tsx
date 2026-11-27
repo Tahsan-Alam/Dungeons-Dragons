@@ -7,7 +7,7 @@ import {CUSTOM_FACE,customHeroArt} from './hero-figure';
 import {usePaintedFigure,type PaintedFigure} from './painted-portrait';
 import {Portrait} from './RealmKit';
 import PaintPanel,{ModeSwitch,useImageAccess} from './PaintPanel';
-import {MAX_PAINTINGS,ownPortrait} from '../../game/own-game-master';
+import {addPainting,ownPortrait} from '../../game/own-paintings';
 
 /** Where a hero figure stands on the hero stage (a percentage box; the board has its own placement in actor-art). */
 export function stagePlacement(h:Pick<HeroPreset,'id'>){const w=380*HERO_ART_RATIO/600*100,top=(485-0.955*380)/560*100;return {width:w+'%',top:top+'%',left:(50-(h.id==='mira'?0.58:0.5)*w)+'%'};}
@@ -42,7 +42,7 @@ export default function OwnHeroBench({hero,own,setOwn}:{hero:HeroPreset;own:OwnH
     <p className="qs-own-class-note">{CLASS_INFO[own.heroClass].description} · {CLASS_INFO[own.heroClass].ability}</p>
    </fieldset>
    {painting?<PaintPanel kind="hero" extra={{heroClass:own.heroClass}} paintings={paintings} portrait={own.portrait} available={!!access} perDay={access?.imagesPerDay}
-     onPainted={id=>set({portrait:id,paintings:[id,...paintings.filter(p=>p!==id)].slice(0,MAX_PAINTINGS)})} onChoose={portrait=>set({portrait})}
+     onPainted={id=>set({portrait:id,paintings:addPainting(paintings,id)})} onChoose={portrait=>set({portrait})}
      placeholder={`For example: a young ${ownHeroClassName(own.heroClass).toLowerCase()} with freckles, braided red hair and a fox-fur collar`}/>
    :<fieldset className="qs-own-set"><legend className="realm-eyebrow">Their colour</legend>
     <div className="qs-own-swatches" role="radiogroup" aria-label="Their colour">{HERO_COLORS.map(c=><button key={c} type="button" role="radio" aria-checked={own.color===c} aria-label={`Colour ${c}`} data-tooltip="Their colour" className="qs-own-swatch" style={{background:c}} onClick={()=>set({color:c})}/>)}</div>
