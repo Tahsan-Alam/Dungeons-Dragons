@@ -30,19 +30,12 @@ const Arrow=()=><svg width="9" height="14" viewBox="0 0 9 14" fill="none" stroke
 const BackArrow=()=><svg width="9" height="14" viewBox="0 0 9 14" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M7 1L1 7l6 6"/></svg>;
 const fresh=():Saved=>({v:1,step:0,gm:'wanderer',own:OWN_DEFAULT,tale:'lantern',custom:null,hero:'corin',ownHero:OWN_HERO_DEFAULT,length:'standard',rules:'simple',seed:'quest-'+crypto.randomUUID().slice(0,8),companions:DEFAULT_OPTIONS.companions});
 
-/** True when this tab has already opened quest setup (sessionStorage lasts until the tab closes); marks it for next time. */
-function sameVisit(key:string){
- try{const mark=key+'-visit',seen=sessionStorage.getItem(mark)==='1';sessionStorage.setItem(mark,'1');return seen;}catch{return false;}
-}
-
 export default function QuestSetup({mode,onBack,onStart,busy,quick=false,onAISettings}:Props){
  const key='painted-realms-setup-v1-'+mode;
  const [s,setS]=useState<Saved>(fresh),[ready,setReady]=useState(false);
  const [role,setRole]=useState<'All'|Role>('All'),[sheet,setSheet]=useState(false),[talking,setTalking]=useState(false),[idea,setIdea]=useState(''),[advanced,setAdvanced]=useState(false);
  const [savedAI]=useAIPreference();const creation=useCreation();
  const heading=useRef<HTMLHeadingElement>(null);
- // Whether this tab opened quest setup before, decided once per screen (effects may run twice in development).
- const visit=useRef<boolean|null>(null);
  const update=(patch:Partial<Saved>)=>setS(current=>({...current,...patch}));
  // The workbench (Create your own) replaces the step while open; Back to the list restores the earlier choice.
  const [bench,setBench]=useState<{kind:'gm'|'hero';from:string}|null>(null);
@@ -50,15 +43,14 @@ export default function QuestSetup({mode,onBack,onStart,busy,quick=false,onAISet
  // Restore the last setup, or open a ready-made quest on Set Out.
  useEffect(()=>{
   let next=fresh();
-  visit.current??=sameVisit(key);
   if(quick)next={...next,step:3};
   else try{const raw=JSON.parse(localStorage.getItem(key)??'null');
    if(raw?.v===1&&(GAME_MASTERS.some(g=>g.id===raw.gm)||raw.gm==='own')&&(HEROES.some(h=>h.id===raw.hero)||raw.hero==='own')){
     const custom=raw.custom?parseStory(raw.custom):null;
     next={...next,...raw,own:parseOwnInput(raw.own),ownHero:parseOwnHeroInput(raw.ownHero),custom,tale:raw.tale==='custom'&&!custom?'lantern':raw.tale,step:Math.max(0,Math.min(3,Number(raw.step)||0))};
-    // Your own creations are kept, but only chosen again within the same visit (a refresh, or a trip to the title).
-    // A new visit starts on one of ours, and the Create your own card offers the saved one back.
-    if(!visit.current)next={...next,gm:next.gm==='own'?fresh().gm:next.gm,hero:next.hero==='own'?fresh().hero:next.hero};
+    // Your own creations are kept but never chosen on opening: setup starts on one of ours, and the
+    // Create your own card offers the saved one back with a click. (If one was chosen, start from the first step.)
+    if(next.gm==='own'||next.hero==='own')next={...next,step:0,gm:next.gm==='own'?fresh().gm:next.gm,hero:next.hero==='own'?fresh().hero:next.hero};
    }}catch{/* Setup works without storage. */}
   // eslint-disable-next-line react-hooks/set-state-in-effect
   setS(next);setReady(true);
