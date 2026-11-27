@@ -1,5 +1,6 @@
 import {HERO_CLASSES,HERO_COLORS,type HeroClass} from './types.ts';
 import {isPortraitId,parseHero,type HeroProfile} from './creation.ts';
+import {ownPortrait,parsePaintings,type OwnMode} from './own-game-master.ts';
 import {PLAYS_AS,ROLE,type ClassName,type Role} from './presets.ts';
 
 /**
@@ -7,8 +8,9 @@ import {PLAYS_AS,ROLE,type ClassName,type Role} from './presets.ts';
  * and a colour, and may say who they are; the result is an ordinary hero profile checked by parseHero, the same
  * boundary as every other hero. The class sets every rule. A painted portrait, if chosen, is only a server id.
  */
-export interface OwnHeroInput {name:string;heroClass:HeroClass;color:string;who:string;portrait?:string}
-export const OWN_HERO_DEFAULT:OwnHeroInput={name:'',heroClass:'ranger',color:HERO_COLORS[8],who:''};
+/** Like your own Game Master: drawn, or painted from the player's description (mode, portrait and paintings as there). */
+export interface OwnHeroInput {name:string;heroClass:HeroClass;color:string;who:string;mode?:OwnMode;portrait?:string;paintings?:string[]}
+export const OWN_HERO_DEFAULT:OwnHeroInput={name:'',heroClass:'ranger',color:HERO_COLORS[8],who:'',mode:'draw',paintings:[]};
 /** Names the player can start from; never sent anywhere. */
 export const OWN_HERO_NAME_IDEAS=['Tamsin','Rook','Wynn','Odalys','Bram','Sorrel'];
 
@@ -25,7 +27,7 @@ export function ownHero(input:OwnHeroInput):HeroProfile|null{
  const name=clean(input.name).slice(0,24);
  if(!name||!HERO_CLASSES.includes(input.heroClass))return null;
  const background=clean(input.who).slice(0,240)||`${name}, a ${ownHeroClassName(input.heroClass).toLowerCase()} the Lantern Marches haven’t heard of yet.`;
- return parseHero({name,background,personality:[...TRAITS[input.heroClass]],heroClass:input.heroClass,color:input.color,...(isPortraitId(input.portrait)?{portrait:input.portrait}:{})});
+ return parseHero({name,background,personality:[...TRAITS[input.heroClass]],heroClass:input.heroClass,color:input.color,...(ownPortrait(input)?{portrait:ownPortrait(input)}:{})});
 }
 
 /** Restores saved choices, falling back to the defaults for anything that is no longer valid. */
@@ -35,6 +37,8 @@ export function parseOwnHeroInput(raw:unknown):OwnHeroInput{
   name:typeof v.name==='string'?v.name.slice(0,24):'',who:typeof v.who==='string'?v.who.slice(0,240):'',
   heroClass:HERO_CLASSES.includes(v.heroClass as HeroClass)?v.heroClass!:OWN_HERO_DEFAULT.heroClass,
   color:HERO_COLORS.includes(String(v.color))?v.color!:OWN_HERO_DEFAULT.color,
+  // Creations saved before the two modes kept a chosen painting: they open painted, with it in their list.
+  mode:v.mode==='paint'||(v.mode===undefined&&isPortraitId(v.portrait))?'paint':'draw',paintings:parsePaintings([...(Array.isArray(v.paintings)?v.paintings:[]),v.portrait]),
   ...(isPortraitId(v.portrait)?{portrait:v.portrait}:{}),
  };
 }

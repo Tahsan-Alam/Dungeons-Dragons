@@ -1,17 +1,19 @@
 import {RoomError} from './rooms.ts';
 import type {BudgetLedger} from './ai-ledger.ts';
-import {creationText,NARRATOR_ACCESSORIES,NARRATOR_FORMS,isPortraitId} from '../game/creation.ts';
-import {HERO_CLASSES,HERO_COLORS,type HeroClass} from '../game/types.ts';
+import {creationText,isPortraitId} from '../game/creation.ts';
+import {HERO_CLASSES,type HeroClass} from '../game/types.ts';
 import {borrowedName} from '../game/paint-words.ts';
 
-/* Painting a Game Master with the image model (FLUX with the team's style LoRA, hosted on fal).
-   The server builds the prompt from the builder's choices and one short, checked description, reserves
+/* Painting your own Game Master or hero with the image model (FLUX with the team's style LoRA, hosted on fal).
+   The player describes them in their own words (and, for a hero, picks the class that sets their gear); the server
+   wraps that in the style prompt, checks the words, paints one picture per try, reserves
    the cost in the shared AI ledger, holds each player to a daily allowance, keeps only images that
    passed fal's safety checker, and stores them so saves, rooms and replays refer to them by id.
    Nothing here runs unless the owner configured it (see imagesAvailable and AI-SETUP.md). */
 
 export type ImageEnv={FAL_KEY?:string;FAL_LORA_URL?:string;AI_ENABLE_IMAGES?:string;AI_IMAGES_PER_PLAYER_DAY?:string;OPENAI_API_KEY?:string};
-export const IMAGES_PER_PAINT=2;
+/** One picture per try: each of the daily paintings is its own description. */
+export const IMAGES_PER_PAINT=1;
 /** fal bills $0.035 per megapixel, rounded up per image; a 768 × 1024 image is one megapixel. Reserve a little over. */
 export const PAINT_RESERVE_MICRO_USD=IMAGES_PER_PAINT*40_000;
 export const MAX_IMAGE_BYTES=1_200_000;
@@ -26,40 +28,34 @@ export function imagesPerPlayerDay(env:ImageEnv){
  return value===undefined?4:/^\d+$/.test(value)?Math.min(Number(value),12):0;
 }
 
-export interface PaintRequest {kind:'gm';name:string;form:typeof NARRATOR_FORMS[number];accessory:typeof NARRATOR_ACCESSORIES[number];color:string;tone:'hopeful'|'wry'|'grave';description:string;requestId:string}
-export interface HeroPaintRequest {kind:'hero';name:string;heroClass:HeroClass;color:string;description:string;requestId:string}
+/** The longest description a player may give the painter. */
+export const PAINT_DESCRIPTION_MAX=200;
+export interface PaintRequest {kind:'gm';description:string;requestId:string}
+export interface HeroPaintRequest {kind:'hero';heroClass:HeroClass;description:string;requestId:string}
 export type AnyPaintRequest=PaintRequest|HeroPaintRequest;
+/** A paint request: the player's description (required) and, for a hero, the class. Anything else sent is ignored. */
 export function parsePaintRequest(v:Record<string,unknown>):AnyPaintRequest|null{
  const description=typeof v.description==='string'?v.description.replace(/\s+/g,' ').trim():'';
- if(v.kind==='hero'){
-  if(!creationText(v.name,24)||!HERO_CLASSES.includes(v.heroClass as HeroClass)||!HERO_COLORS.includes(String(v.color))||(description&&!creationText(description,80))||typeof v.requestId!=='string'||!/^[a-zA-Z0-9-]{8,64}$/.test(v.requestId))return null;
-  return {kind:'hero',name:String(v.name).trim(),heroClass:v.heroClass as HeroClass,color:String(v.color),description,requestId:v.requestId};
- }
- if((v.kind!==undefined&&v.kind!=='gm')||!creationText(v.name,28)||!NARRATOR_FORMS.includes(v.form as never)||!NARRATOR_ACCESSORIES.includes(v.accessory as never)||!HERO_COLORS.includes(String(v.color))
-  ||!['hopeful','wry','grave'].includes(String(v.tone))||(description&&!creationText(description,80))||typeof v.requestId!=='string'||!/^[a-zA-Z0-9-]{8,64}$/.test(v.requestId))return null;
- return {kind:'gm',name:String(v.name).trim(),form:v.form as PaintRequest['form'],accessory:v.accessory as PaintRequest['accessory'],color:String(v.color),tone:v.tone as PaintRequest['tone'],description,requestId:v.requestId};
+ if(description.length<3||!creationText(description,PAINT_DESCRIPTION_MAX)||typeof v.requestId!=='string'||!/^[a-zA-Z0-9-]{8,64}$/.test(v.requestId))return null;
+ if(v.kind==='hero')return HERO_CLASSES.includes(v.heroClass as HeroClass)?{kind:'hero',heroClass:v.heroClass as HeroClass,description,requestId:v.requestId}:null;
+ return v.kind===undefined||v.kind==='gm'?{kind:'gm',description,requestId:v.requestId}:null;
 }
 
-const COLOUR_NAMES:Record<string,string>={'#ef997c':'coral','#a3bbf0':'cornflower blue','#edcf75':'golden yellow','#b19bd3':'lavender','#8ac4ae':'sea green','#f0a6b2':'rose pink','#87bdcf':'sky blue','#cbad81':'tan','#b2c877':'moss green','#a4a4bf':'slate lilac'};
-const FORM_WORDS:Record<PaintRequest['form'],string>={human:'a human storyteller',spirit:'a glowing spirit storyteller with no feet, its robe fading into wisps',cat:'a cat storyteller standing upright',owl:'an owl storyteller standing upright',fox:'a fox storyteller standing upright',dragon:'a small dragon storyteller standing upright, with wings'};
-// The hat is kept apart so a crown can take its place: a crown on top of a hat reads as a mistake.
-const TONE_WORDS:Record<PaintRequest['tone'],{hat:string;rest:string}>={hopeful:{hat:'a wide traveller hat',rest:'warm and kind, holding up a lantern'},wry:{hat:'a feathered cap tipped to one side',rest:'a sly half smile, a cape over one shoulder, holding a book'},grave:{hat:'a tall pointed hat',rest:'solemn, a high collar and a long worn cloak, holding an hourglass'}};
+// Matches the training captions (full body, centred, plain white) so the picture can be cut out and stood on the ground.
+const FRAME='feet visible, whole figure inside the frame, standing, front view, centered, plain white background, no glow halo, no border, no text, no signature';
 const CLASS_WORDS:Record<HeroClass,string>={
  knight:'a knight in plate armour with a sword and a round shield',guardian:'a guardian in heavy armour with a tall shield and a spear',
  rogue:'a rogue in a dark hood and leather with two daggers',ranger:'a ranger in a hood and cloak with a longbow and a quiver',
  mage:'a mage in a long robe with a staff and a little magic in one hand',cleric:'a cleric in robes with a holy symbol and a mace',
  bard:'a bard in a doublet and cape playing a lute',druid:'a druid with a gnarled wooden staff, leaves and a fur mantle',
 };
-/** A hero's prompt: the class sets the gear; the colour dresses them; the player's words fill one slot. */
+/** A hero's prompt: the class sets the gear (it sets every rule too); the player's words describe the rest. */
 export function heroPaintPrompt(r:HeroPaintRequest){
- return `PRSTYLE, full body from head to feet, fantasy hero, ${CLASS_WORDS[r.heroClass]}, dressed in ${COLOUR_NAMES[r.color]??'muted'} colours${r.description?`, ${r.description}`:''}, feet visible, whole figure inside the frame, standing, front view, centered, plain white background, no glow halo, no border, no text, no signature`;
+ return `PRSTYLE, full body from head to feet, fantasy hero, ${CLASS_WORDS[r.heroClass]}, ${r.description}, ${FRAME}`;
 }
-/** The prompt is ours; the player's words only fill the description slot. */
+/** A Game Master's prompt: the player's words, inside the style and framing the cut-out needs. */
 export function paintPrompt(r:PaintRequest){
- const tone=TONE_WORDS[r.tone],head=r.accessory==='crown'?'a small gold crown and no hat':tone.hat;
- const wear=r.accessory==='glasses'?', round glasses':'';
- // Matches the training captions (full body, centred, plain white) so the picture can be cut out and stood on the ground.
- return `PRSTYLE, full body from head to feet, fantasy storyteller, ${FORM_WORDS[r.form]}, dressed in ${COLOUR_NAMES[r.color]??'muted'} clothes, wearing ${head}${wear}, ${tone.rest}${r.description?`, ${r.description}`:''}, feet visible, whole figure inside the frame, standing, front view, centered, plain white background, no glow halo, no border, no text, no signature`;
+ return `PRSTYLE, full body from head to feet, fantasy storyteller, ${r.description}, ${FRAME}`;
 }
 
 export interface ImageStore {put(id:string,contentType:string,base64:string,now:number):Promise<void>;get(id:string):Promise<{contentType:string;base64:string}|null>}

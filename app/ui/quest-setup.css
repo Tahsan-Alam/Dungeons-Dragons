@@ -303,3 +303,16 @@ html:root[data-color-mode][data-theme] body .realm button.tc-voice-btn:disabled{
  .qs-bench-stage.hero{height:auto;max-width:340px;width:100%;justify-self:center}
  .qs-bench-form{padding:16px}
 }
+/* Draw them / Paint them with AI: the two ways to make your own, at the top of the workbench. */
+.qs-mode{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.qs-mode-pick{display:flex;flex-direction:column;align-items:flex-start;gap:2px;padding:10px 12px;text-align:left}
+.qs-mode-pick strong{font:600 16px var(--realm-serif);color:var(--realm-ink)}
+.qs-mode-pick span{font:500 12px Inter,system-ui,sans-serif;color:#b3bcc6}
+.qs-mode-pick[aria-checked="true"]{border-color:#9CC9EA !important;background:#1d2733 !important}
+.qs-own-who .realm-eyebrow em{margin-left:6px;font:italic 500 12px var(--realm-prose,Georgia);letter-spacing:0;text-transform:none;color:#8d99a6}
+/* Paint mode before a painting is chosen: the drawing waits as a faint outline under a note. */
+.qs-bench-figure.waiting,.qs-stage-figure.waiting{opacity:.16;filter:grayscale(1)}
+.qs-bench-waiting{position:absolute;left:50%;top:44%;transform:translate(-50%,-50%);margin:0;padding:8px 14px;max-width:80%;text-align:center;font:italic 500 17px var(--realm-prose,Georgia);color:#d9d0bf;background:rgba(10,14,20,.72);border:1px solid #3a4655;border-radius:2px}
+@media (max-width:900px){
+ .qs-bench-waiting{top:auto;bottom:10%;transform:translateX(-50%);font-size:15px;padding:6px 10px;white-space:nowrap}
+}

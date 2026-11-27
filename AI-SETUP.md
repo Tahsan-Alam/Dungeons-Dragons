@@ -29,7 +29,7 @@ Off unless all of these are set (locally in .dev.vars, on the host as secrets):
 - FAL_LORA_URL: the trained LoRA's weights URL (the "Diffusers Lora File" link from fal's training result).
 - A D1 binding with the painted_images table (drizzle/0004_painted_images.sql; npm run local:setup applies it).
 
-Players also need AI switched on for their device. Each player gets AI_IMAGES_PER_PLAYER_DAY pictures per UTC day for each kind, Game Master and hero (default 4, so two tries of two each; at most 12), counted per connection; every try also reserves $0.08 in the shared ledger, so the campaign/day/month caps still bound total spend. Set a monthly limit in fal's billing settings as well. Tests use a fake fal and need no key.
+Players also need AI switched on for their device. Each player gets AI_IMAGES_PER_PLAYER_DAY pictures per UTC day for each kind, Game Master and hero (default 4, one picture per try; at most 12), counted per connection; every try also reserves $0.04 in the shared ledger, so the campaign/day/month caps still bound total spend. Set a monthly limit in fal's billing settings as well. Tests use a fake fal and need no key.
 
 ## Local database and server
 

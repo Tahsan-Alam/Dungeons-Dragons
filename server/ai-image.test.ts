@@ -6,7 +6,7 @@ import {parseNarrator} from '../game/creation.ts';
 import {ownGameMaster} from '../game/own-game-master.ts';
 
 const env={FAL_KEY:'fal-test-only',FAL_LORA_URL:'https://v3b.fal.media/files/b/lora/pytorch_lora_weights.safetensors',AI_ENABLE_IMAGES:'I_ACCEPT_PAID_IMAGES'};
-const request:PaintRequest={kind:'gm',name:'Mother Ash',form:'owl',accessory:'none',color:'#87bdcf',tone:'hopeful',description:'a retired lighthouse keeper',requestId:'paint-0001'};
+const request:PaintRequest={kind:'gm',description:'a retired lighthouse keeper with a lantern',requestId:'paint-0001'};
 const jpeg=(n:number)=>new Uint8Array([0xff,0xd8,0xff,n,1,2,3]);
 
 function fakeFal(options:{nsfw?:boolean[];urls?:string[];status?:number;flagged?:boolean}={}){
@@ -21,23 +21,22 @@ function fakeFal(options:{nsfw?:boolean[];urls?:string[];status?:number;flagged?
  return {fetcher,calls};
 }
 
-test('a paint request accepts the builder choices and a short description only',()=>{
+test('a paint request is the player description (required, up to 200 characters); other fields are ignored',()=>{
  const raw={...request} as Record<string,unknown>;
  assert.deepEqual(parsePaintRequest(raw),request);
- assert.equal(parsePaintRequest({...raw,description:'x'.repeat(81)}),null);
+ assert.deepEqual(parsePaintRequest({...raw,name:'Mother Ash',form:'owl',color:'#000000'}),request);
+ assert.equal(parsePaintRequest({...raw,description:'x'.repeat(200)})?.description.length,200);
+ assert.equal(parsePaintRequest({...raw,description:'x'.repeat(201)}),null);
+ assert.equal(parsePaintRequest({...raw,description:''}),null);
+ assert.equal(parsePaintRequest({...raw,description:'ab'}),null);
  assert.equal(parsePaintRequest({...raw,description:'<script>'}),null);
- assert.equal(parsePaintRequest({...raw,color:'#000000'}),null);
- assert.equal(parsePaintRequest({...raw,form:'robot'}),null);
  assert.equal(parsePaintRequest({...raw,requestId:'x'}),null);
 });
 
-test('the prompt is built by the game and carries the style trigger',()=>{
+test('the prompt wraps the player words in the style trigger and the framing the cut-out needs',()=>{
  const prompt=paintPrompt(request);
- assert.match(prompt,/^PRSTYLE, full body from head to feet, fantasy storyteller, an owl storyteller/);
- assert.match(prompt,/sky blue clothes/);assert.match(prompt,/wearing a wide traveller hat/);assert.match(prompt,/holding up a lantern/);assert.match(prompt,/a retired lighthouse keeper/);
- assert.match(prompt,/feet visible/);assert.match(prompt,/no text, no signature$/);
- const crowned=paintPrompt({...request,accessory:'crown'});
- assert.match(crowned,/wearing a small gold crown and no hat/);assert.doesNotMatch(crowned,/traveller hat/);
+ assert.equal(prompt.indexOf('PRSTYLE, full body from head to feet, fantasy storyteller, a retired lighthouse keeper with a lantern, '),0);
+ assert.match(prompt,/feet visible/);assert.match(prompt,/plain white background/);assert.match(prompt,/no text, no signature$/);
 });
 
 test('painting needs the owner to switch it on and a daily allowance',()=>{
@@ -54,24 +53,22 @@ test('an unconfigured server never calls the painter',async()=>{
  assert.equal(calls.length,0);
 });
 
-test('a paint reserves the cost, calls fal with the LoRA, stores both pictures and is never charged twice',async()=>{
+test('a paint reserves the cost, calls fal with the LoRA for one picture, stores it and is never charged twice',async()=>{
  const {fetcher,calls}=fakeFal(),store=new MemoryImageStore(),ledger=new BudgetLedger(new MemoryLedger());
  const result=await paintGameMaster(request,{env,ledger,store,fetcher});
- assert.equal(result.images.length,2);assert.ok(result.images.every(id=>/^[a-f0-9]{32}$/.test(id)));
- assert.notEqual(result.images[0],result.images[1]);
+ assert.equal(result.images.length,1);assert.match(result.images[0],/^[a-f0-9]{32}$/);
  const fal=calls.find(c=>c.url==='https://fal.run/fal-ai/flux-lora')!;
  assert.equal((fal.init!.headers as Record<string,string>).authorization,'Key fal-test-only');
  const body=JSON.parse(String(fal.init!.body));
- assert.equal(body.loras[0].path,env.FAL_LORA_URL);assert.equal(body.num_images,2);assert.equal(body.enable_safety_checker,true);
+ assert.equal(body.loras[0].path,env.FAL_LORA_URL);assert.equal(body.num_images,1);assert.equal(body.enable_safety_checker,true);
  assert.equal((await store.get(result.images[0]))?.contentType,'image/jpeg');
  const again=await paintGameMaster(request,{env,ledger,store,fetcher});
  assert.deepEqual(again,result);assert.equal(calls.filter(c=>c.url.includes('fal.run')).length,1);
 });
 
 test('pictures the safety checker flags, or from anywhere but fal, are dropped',async()=>{
- const one=fakeFal({nsfw:[true,false]});
- const result=await paintGameMaster({...request,requestId:'paint-0002'},{env,ledger:new BudgetLedger(new MemoryLedger()),store:new MemoryImageStore(),fetcher:one.fetcher});
- assert.equal(result.images.length,1);
+ const flagged=fakeFal({nsfw:[true]});
+ await assert.rejects(paintGameMaster({...request,requestId:'paint-0002'},{env,ledger:new BudgetLedger(new MemoryLedger()),store:new MemoryImageStore(),fetcher:flagged.fetcher}),{code:'PAINT_EMPTY'});
  const none=fakeFal({urls:['https://example.com/a.jpg']});
  await assert.rejects(paintGameMaster({...request,requestId:'paint-0003'},{env,ledger:new BudgetLedger(new MemoryLedger()),store:new MemoryImageStore(),fetcher:none.fetcher}),{code:'PAINT_EMPTY'});
 });
@@ -85,7 +82,7 @@ test('a flagged description is refused before anything is reserved or painted',a
 
 test('the shared allowance stops painting when it runs out',async()=>{
  const {fetcher,calls}=fakeFal();
- const ledger=new BudgetLedger(new MemoryLedger(),{campaign:400_000,day:50_000,month:4_000_000,concurrency:8});
+ const ledger=new BudgetLedger(new MemoryLedger(),{campaign:400_000,day:30_000,month:4_000_000,concurrency:8});
  await assert.rejects(paintGameMaster(request,{env,ledger,store:new MemoryImageStore(),fetcher}),{code:'PAINT_ALLOWANCE'});
  assert.equal(calls.length,0);
 });
@@ -98,11 +95,13 @@ test('a failed paint keeps its reservation and is not retried blindly',async()=>
  await assert.rejects(paintGameMaster(request,{env,ledger,store:new MemoryImageStore(),fetcher}),{code:'PAINT_UNAVAILABLE'});
 });
 
-test('a narrator carries a painted portrait only as a server id',()=>{
- const own=ownGameMaster({name:'Mother Ash',who:'',tone:'hopeful',form:'owl',accessory:'none',color:'#87bdcf',portrait:'a'.repeat(32)})!;
+test('a narrator carries a painted portrait only as a server id, and only when painted',()=>{
+ const base={name:'Mother Ash',who:'',tone:'hopeful',form:'owl',accessory:'none',color:'#87bdcf'} as const;
+ const own=ownGameMaster({...base,mode:'paint',portrait:'a'.repeat(32)})!;
  assert.equal(own.portrait,'a'.repeat(32));
  assert.equal(parseNarrator({...own,portrait:'https://example.com/x.png'}),null);
- assert.equal(ownGameMaster({name:'Mother Ash',who:'',tone:'hopeful',form:'owl',accessory:'none',color:'#87bdcf',portrait:'nope'})!.portrait,undefined);
+ assert.equal(ownGameMaster({...base,mode:'paint',portrait:'nope'})!.portrait,undefined);
+ assert.equal(ownGameMaster({...base,mode:'draw',portrait:'a'.repeat(32)})!.portrait,undefined,'a drawn Game Master keeps their drawing');
 });
 
 test('a description naming a character from another story is refused before anything is reserved',async()=>{
@@ -113,16 +112,15 @@ test('a description naming a character from another story is refused before anyt
 
 test('a hero paint request names a class, and the class sets the gear in the prompt',()=>{
  const hero=parsePaintRequest({kind:'hero',name:'Tamsin',heroClass:'ranger',color:'#b2c877',description:'freckles and a fox-fur collar',requestId:'hero-0001'});
- assert.deepEqual(hero,{kind:'hero',name:'Tamsin',heroClass:'ranger',color:'#b2c877',description:'freckles and a fox-fur collar',requestId:'hero-0001'});
- assert.equal(parsePaintRequest({kind:'hero',name:'Tamsin',heroClass:'wizard',color:'#b2c877',requestId:'hero-0001'}),null);
- assert.equal(parsePaintRequest({kind:'villain',name:'Tamsin',form:'owl',accessory:'none',color:'#87bdcf',tone:'hopeful',requestId:'hero-0001'}),null);
+ assert.deepEqual(hero,{kind:'hero',heroClass:'ranger',description:'freckles and a fox-fur collar',requestId:'hero-0001'});
+ assert.equal(parsePaintRequest({kind:'hero',heroClass:'wizard',description:'freckles',requestId:'hero-0001'}),null);
+ assert.equal(parsePaintRequest({kind:'villain',description:'freckles',requestId:'hero-0001'}),null);
  const prompt=heroPaintPrompt(hero as Parameters<typeof heroPaintPrompt>[0]);
- assert.match(prompt,/^PRSTYLE, full body from head to feet, fantasy hero, a ranger in a hood and cloak with a longbow/);
- assert.match(prompt,/moss green colours, freckles and a fox-fur collar/);
+ assert.match(prompt,/^PRSTYLE, full body from head to feet, fantasy hero, a ranger in a hood and cloak with a longbow and a quiver, freckles and a fox-fur collar, feet visible/);
 });
 test('a hero is painted through the same checks and ledger',async()=>{
  const {fetcher,calls}=fakeFal();
- const result=await paintGameMaster({kind:'hero',name:'Tamsin',heroClass:'mage',color:'#a3bbf0',description:'',requestId:'hero-0002'},{env,ledger:new BudgetLedger(new MemoryLedger()),store:new MemoryImageStore(),fetcher});
- assert.equal(result.images.length,2);
+ const result=await paintGameMaster({kind:'hero',heroClass:'mage',description:'a tall mage with a grey beard',requestId:'hero-0002'},{env,ledger:new BudgetLedger(new MemoryLedger()),store:new MemoryImageStore(),fetcher});
+ assert.equal(result.images.length,1);
  assert.match(JSON.parse(String(calls.find(c=>c.url.includes('fal.run'))!.init!.body)).prompt,/fantasy hero, a mage in a long robe/);
 });

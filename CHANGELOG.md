@@ -4,6 +4,7 @@ Record user-visible changes at version checkpoints. Git history and pull request
 
 ## Unreleased
 
+- Draw them, or paint them with AI: making your own Game Master or hero now starts with a choice. Draw them uses the shape, tone, colour and class pickers, no AI. Paint them with AI takes your own description (up to 200 characters) plus the tone or class, and paints one picture per try, so the four daily paintings are four descriptions. Every painting stays in a list to choose from; a picture that can't be cut out can't be chosen.
 - Create your own comes first: it leads the Game Master list and the hero roster, and opens a full workbench where shape, class and colour stay in view while you change them. Done keeps your creation; Back to the list returns to what you had.
 - A pause menu at the table: Esc or Menu opens Resume, Settings, How to play, Saved adventures and Return to the title.
 
