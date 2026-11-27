@@ -26,10 +26,12 @@ export default function Storyteller({game,room,session,narrate,steer,busy,prefer
   const spoken=deviceLine.current;deviceLine.current=null;
   if(spoken){spoken.onstart=null;spoken.onend=null;spoken.onerror=null;window.speechSynthesis?.cancel();}
  },[]);
- const stop=useCallback(()=>{epoch.current++;request.current?.abort();request.current=null;stopPlayback();setPending(false);setCancelable(false);setTalking(false);setAsking('');},[stopPlayback]);
+ // Ends the current request and playback: a newer epoch makes any late reply from the old one ignored.
+ const halt=useCallback(()=>{epoch.current++;request.current?.abort();request.current=null;stopPlayback();},[stopPlayback]);
+ const stop=useCallback(()=>{halt();setPending(false);setCancelable(false);setTalking(false);setAsking('');},[halt]);
  // The external game moment and voice level own playback lifetime and its UI state.
  // eslint-disable-next-line react-hooks/set-state-in-effect
- useEffect(()=>{stop();return()=>{epoch.current++;request.current?.abort();stopPlayback();};},[game?.eventSequence,room?.code,preferences.voiceVolume,stop,stopPlayback]);
+ useEffect(()=>{stop();return halt;},[game?.eventSequence,room?.code,preferences.voiceVolume,stop,halt]);
 
  const host=!room||room.hostId===session?.playerId;
  const caption=game?currentNarration(game):'';

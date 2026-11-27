@@ -62,7 +62,7 @@ export function Canopy({x,y,size=1,tone=0}:{x:number;y:number;size?:number;tone?
 }
 
 /** Small things on open ground, from above. */
-function Decoration({tile,seed}:{tile:Tile;seed:number}){
+function Decoration({tile}:{tile:Tile}){
  switch(tile.decoration){
   case 'flower':return <g>{[[16,22,3],[31,34,2.6],[24,30,2]].map(([x,y,r],i)=><g key={i}><circle cx={x} cy={y} r={r+1.6} fill={P.leaf} opacity=".5"/><circle cx={x} cy={y} r={r} fill={i===1?P.flowerLight:P.flower}/></g>)}</g>;
   case 'mushroom':return <g><ellipse cx={29} cy={36} rx={9} ry={4} fill={P.ink} opacity=".16"/><circle cx={26} cy={32} r={7} fill={P.mushroom}/><circle cx={24} cy={30} r={1.6} fill={P.flowerLight}/><circle cx={28} cy={34} r={1.2} fill={P.flowerLight}/><circle cx={36} cy={27} r={4} fill={P.mushroom}/></g>;
@@ -123,7 +123,7 @@ export const TacticalTerrain=memo(function TacticalTerrain({game,grid}:{game:Gam
    </g>;
   })}
   {game.tiles.map(t=>isSetPieceProp(t.decoration)?<g key={`light${t.x},${t.y}`} className="ground-light" transform={`translate(${t.x*T} ${t.y*T})`}><GroundLight prop={t.decoration}/></g>:null)}
-  {game.tiles.map(t=>t.decoration&&!bare(t)&&!isSetPieceProp(t.decoration)&&!isGroundMark(t.decoration)&&t.decoration!=='tree'?<g key={`deco${t.x},${t.y}`} transform={`translate(${t.x*T} ${t.y*T})`}><Decoration tile={t} seed={(t.x*7+t.y*13)%5}/></g>:null)}
+  {game.tiles.map(t=>t.decoration&&!bare(t)&&!isSetPieceProp(t.decoration)&&!isGroundMark(t.decoration)&&t.decoration!=='tree'?<g key={`deco${t.x},${t.y}`} transform={`translate(${t.x*T} ${t.y*T})`}><Decoration tile={t}/></g>:null)}
   <NightVeil game={game}/>
   <RefugeEdges edges={refugeEdges(game)}/>
   {/* Rock: every shadow first, so one wall never shades its neighbour. */}

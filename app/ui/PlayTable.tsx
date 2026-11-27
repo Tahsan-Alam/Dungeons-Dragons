@@ -1,5 +1,5 @@
 'use client';
-import {useEffect,useMemo,useRef,useState} from 'react';
+import {useEffect,useEffectEvent,useMemo,useRef,useState} from 'react';
 import type {Actor,GameAction,GameState,RoomView,Session} from '../../game/types';
 import {CLASS_INFO,NO_ROLL_ABILITY,SUPPORT_ABILITY} from '../../game/types';
 import {CLASS,encounterCleared,getReachable,getQuestAction,getValidTargets} from '../../game/engine';
@@ -36,7 +36,7 @@ const ROMAN=['I','II','III','IV','V'];
 const tiles=(a:{x:number;y:number},b:{x:number;y:number})=>Math.abs(a.x-b.x)+Math.abs(a.y-b.y);
 
 type Props={game:GameState;room:RoomView|null;session:Session|null;busy:boolean;connection:string;onAction:(a:GameAction)=>unknown;onMenu:()=>void;/** Back to the title screen (from the pause menu). */onTitle?:()=>void;onHelp:()=>void;onAI:()=>void;onSettings:()=>void;onTableDialogChange:(open:boolean)=>void;
- voice:boolean;speaking?:boolean;onVoice:()=>void;music:boolean;onMusic:()=>void;onSkip:()=>void;rollsPending?:boolean;
+ voice:boolean;onVoice:()=>void;music:boolean;onMusic:()=>void;onSkip:()=>void;rollsPending?:boolean;
  thread?:Exchange[];onListen?:(line:string)=>void;onNarrate?:()=>unknown;onSteer?:(text:string)=>Promise<unknown>;
  /** Opens the Journal on a tab from outside, for example Ask’s Dialogue Log. */
  journalRequest?:{tab:JournalTab;at:number}|null;
@@ -44,12 +44,14 @@ type Props={game:GameState;room:RoomView|null;session:Session|null;busy:boolean;
  sceneOpen?:boolean};
 
 /** The play screen: the board fills the window and the controls float over the scene (design canvas, Play screen page). */
-export default function PlayTable({game,room,session,busy,connection,onAction,onMenu,onTitle,onHelp,onAI,onSettings,onTableDialogChange,voice,speaking=false,onVoice,music,onMusic,onSkip,rollsPending=false,thread=[],onListen,onNarrate,onSteer,journalRequest,sceneOpen=false}:Props){
+export default function PlayTable({game,room,session,busy,connection,onAction,onMenu,onTitle,onHelp,onAI,onSettings,onTableDialogChange,voice,onVoice,music,onMusic,onSkip,rollsPending=false,thread=[],onListen,onNarrate,onSteer,journalRequest,sceneOpen=false}:Props){
  const {preferences}=useControls();const board=useRef<BoardControls>(null),journalOpener=useRef<HTMLElement|null>(null),actionPending=useRef(false);
- const[paused,setPaused]=useState(false),[confirmEnd,setConfirmEnd]=useState(false),[moving,setMoving]=useState(false),[tool,setTool]=useState<Tool>('move'),[selectedId,setSelectedId]=useState(''),[detailId,setDetailId]=useState<string|null>(null);
+ const[paused,setPaused]=useState(false),[confirmEnd,setConfirmEnd]=useState(false),[moving,setMoving]=useState(false),[tool,setTool]=useState<Tool>('move'),[pickedId,setSelectedId]=useState(''),[detailId,setDetailId]=useState<string|null>(null);
  const[ownRoll,setOwnRoll]=useState<{request:AttackRollRequest;label:string}|null>(null),[journal,setJournal]=useState<JournalTab|null>(null),[sideTab,setSideTab]=useState<'party'|'foes'>('party'),[soundOpen,setSoundOpen]=useState(false),[sideOpen,setSideOpen]=useState(false),[seen,setSeen]=useState(game.eventSequence),[rollShown,setRollShown]=useState(false);
  const detail=game.actors.find(a=>a.id===detailId);
  const me=session?.playerId||'you',actor=game.actors.find(a=>a.id===game.activeActorId),mine=game.actors.find(a=>a.playerId===me);
+ // Until the player picks someone, their own hero is the one selected.
+ const selectedId=pickedId||mine?.id||'';
  const note=sealedNoteFor(game,me),noteKey=`${game.options.seed}:${me}`;
  const[noteShown,setNoteShown]=useState(false),[noteOpened,setNoteOpened]=useState(()=>sealedOpened(noteKey)),noteAsked=useRef(false);
  // The quest begins: once chapter I's opening closes, the Game Master hands this player their sealed note.
@@ -62,10 +64,10 @@ export default function PlayTable({game,room,session,busy,connection,onAction,on
  useEffect(()=>{onTableDialogChange(tableDialogOpen);return()=>onTableDialogChange(false)},[tableDialogOpen,onTableDialogChange]);
  const myTurn=!!actor&&!actor.bot&&actor.playerId===me&&game.status==='playing';
  const clear=encounterCleared(game),quest=getQuestAction(game,actor),target=game.actors.find(a=>a.id===selectedId);
- useEffect(()=>{setTool('move')},[game.activeActorId,game.round,game.scene]);
+ const turnKey=`${game.activeActorId}|${game.round}|${game.scene}`,[toolTurn,setToolTurn]=useState(turnKey);
+ if(toolTurn!==turnKey){setToolTurn(turnKey);setTool('move');}
  // eslint-disable-next-line react-hooks/set-state-in-effect -- an outside request (Ask’s Dialogue Log) opens the drawer once
  useEffect(()=>{if(journalRequest)setJournal(journalRequest.tab)},[journalRequest]);
- useEffect(()=>{if(!selectedId&&mine)setSelectedId(mine.id)},[selectedId,mine]);
  function act(a:GameAction){
   if(busy||!myTurn||actionPending.current||board.current?.isInteracting()||board.current?.isMoving())return;
   actionPending.current=true;
@@ -94,7 +96,7 @@ export default function PlayTable({game,room,session,busy,connection,onAction,on
   setRollShown(false);setOwnRoll({request,label:`${request.title} · ${actor.name} → ${request.targetName}`});
   void act(action);
  }
- useEffect(()=>{const handler=(e:KeyboardEvent)=>{
+ const onKey=useEffectEvent((e:KeyboardEvent)=>{
   if(board.current?.isInteracting()||e.defaultPrevented||e.isComposing||document.querySelector('dialog[open]'))return;const el=e.target as HTMLElement;if(el?.closest('input,textarea,select,[contenteditable=true]'))return;
   if(e.key==='Escape'&&(journal||soundOpen)){e.preventDefault();if(soundOpen)setSoundOpen(false);else closeJournal();return}
   if(el?.closest('[role=tablist]'))return;if((e.key==='Enter'||e.key===' ')&&el?.closest('button,a,[role=button]'))return;
@@ -104,7 +106,8 @@ export default function PlayTable({game,room,session,busy,connection,onAction,on
   if(boardActions[action]){e.preventDefault();boardActions[action]!();return}if(!myTurn||locked)return;
   const direction:Partial<Record<ControlAction,[number,number]>>={moveUp:[0,-1],moveDown:[0,1],moveLeft:[-1,0],moveRight:[1,0]};if(direction[action]){e.preventDefault();step(...direction[action]!);return;}
   if(action==='move'){e.preventDefault();setTool('move')}else if(action==='attack'&&!actor?.actionUsed){e.preventDefault();setTool('attack')}else if(action==='ability'&&!actor?.actionUsed&&actor?.abilityUses){e.preventDefault();setTool('ability')}else if(action==='end'){e.preventDefault();endTurn()}else if(action==='guard'&&!actor?.actionUsed){e.preventDefault();act({type:'guard'})}else if(action==='potion'&&!actor?.actionUsed&&actor?.potions&&actor.hp<actor.maxHp){e.preventDefault();act({type:'potion'})}else if(action==='interact'&&quest?.available){e.preventDefault();act({type:quest.type})}
- };window.addEventListener('keydown',handler);return()=>window.removeEventListener('keydown',handler)},[preferences.bindings,preferences.confirmEnd,myTurn,busy,moving,ownRoll,actor,game.chest.opened,clear,journal,soundOpen,onMenu,onSettings,onAction]);
+ });
+ useEffect(()=>{const handler=(e:KeyboardEvent)=>onKey(e);window.addEventListener('keydown',handler);return()=>window.removeEventListener('keydown',handler)},[]);
  /** Choosing a character selects it; with Attack or Power chosen, a valid target is used at once. */
  function clickActor(a:Actor){
   setSelectedId(a.id);if(a.enemy)setSideTab('foes');

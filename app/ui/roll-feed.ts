@@ -33,7 +33,6 @@ export function collectSharedRolls(feed:RollFeed,gameId:string|null,game:GameSta
   // The human's own attack already has its interactive roll/result dialog.
   // Their automatic death saves, and all companion/enemy rolls, still belong here.
   if(event.attack&&actor?.playerId===playerId&&!actor.bot)continue;
-  const source=actor?.enemy?'Enemy':actor?.bot?'Companion':'Player';
   const action=event.attack?.action==='ability'&&actor?CLASS_INFO[actor.heroClass].ability:event.attack?'Attack':'d20 roll';
   queue.push({event,actorName:actor?.name??'Character',targetName:event.attack?actors[event.attack.targetId]?.name:undefined,description:action,foe:!!actor?.enemy});
  }

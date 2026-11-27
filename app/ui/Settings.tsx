@@ -23,10 +23,11 @@ export default function Settings({onClose,onAI,audio,game,initialSection='appear
  const[aiEnabled,setAIEnabled]=useAIPreference();
  const[section,setSection]=useState<SettingsSection>(initialSection),[leave,setLeave]=useState(false),[leaving,setLeaving]=useState(false),[leaveError,setLeaveError]=useState(''),[copied,setCopied]=useState(false),[copyMessage,setCopyMessage]=useState('');
  const{colorMode,setColorMode,accent,setAccent,motion,setMotion,viewMode,setViewMode}=useTheme();const id=useId(),tabs=useRef<Array<HTMLButtonElement|null>>([]),panel=useRef<HTMLElement>(null),copyTimer=useRef<ReturnType<typeof setTimeout>|null>(null),leavePending=useRef(false);
- useEffect(()=>{setSection(initialSection)},[initialSection]);
- useEffect(()=>{panel.current?.scrollTo({top:0});setLeave(false)},[section]);
+ const[openedAt,setOpenedAt]=useState(initialSection);
+ if(openedAt!==initialSection){setOpenedAt(initialSection);setSection(initialSection);setLeave(false);}
+ useEffect(()=>{panel.current?.scrollTo({top:0})},[section]);
  useEffect(()=>()=>{if(copyTimer.current)clearTimeout(copyTimer.current)},[]);
- function select(index:number){if(leavePending.current)return;setSection(SECTIONS[index][0]);tabs.current[index]?.focus()}
+ function select(index:number){if(leavePending.current)return;setSection(SECTIONS[index][0]);setLeave(false);tabs.current[index]?.focus()}
  async function leaveParty(){
   if(leavePending.current||game?.busy||!game?.onLeave)return;
   leavePending.current=true;setLeaving(true);setLeaveError('');
@@ -35,7 +36,7 @@ export default function Settings({onClose,onAI,audio,game,initialSection='appear
  async function copySeed(){if(!game?.seed)return;try{await navigator.clipboard.writeText(game.seed);setCopied(true);setCopyMessage('');if(copyTimer.current)clearTimeout(copyTimer.current);copyTimer.current=setTimeout(()=>setCopied(false),2000)}catch{setCopyMessage('Copy unavailable. Select the seed text to copy it.')}}
  const accentIndex=ACCENT_NAMES.indexOf(accent);
  const stepAccent=(next:number)=>{if(next>=0&&next<ACCENT_NAMES.length)setAccent(ACCENT_NAMES[next])};
- return <Modal title="Table settings" className="game-menu options-menu" escHint={game?'Back to the table':'Back'} onClose={onClose} wide dismissible={!leaving}><div className="settings-shell"><nav className="settings-navigation" role="tablist" aria-label="Settings sections" aria-orientation="vertical">{SECTIONS.map(([key,label],index)=><button key={key} ref={el=>{tabs.current[index]=el}} id={`${id}-${key}-tab`} role="tab" disabled={leaving} aria-selected={section===key} aria-controls={`${id}-${key}-panel`} tabIndex={section===key?0:-1} onClick={()=>setSection(key)} onKeyDown={event=>{let next:number|undefined;if(['ArrowDown','ArrowRight'].includes(event.key))next=(index+1)%SECTIONS.length;if(['ArrowUp','ArrowLeft'].includes(event.key))next=(index+SECTIONS.length-1)%SECTIONS.length;if(event.key==='Home')next=0;if(event.key==='End')next=SECTIONS.length-1;if(next!==undefined){event.preventDefault();select(next)}}}>{label}</button>)}</nav>
+ return <Modal title="Table settings" className="game-menu options-menu" escHint={game?'Back to the table':'Back'} onClose={onClose} wide dismissible={!leaving}><div className="settings-shell"><nav className="settings-navigation" role="tablist" aria-label="Settings sections" aria-orientation="vertical">{SECTIONS.map(([key,label],index)=><button key={key} ref={el=>{tabs.current[index]=el}} id={`${id}-${key}-tab`} role="tab" disabled={leaving} aria-selected={section===key} aria-controls={`${id}-${key}-panel`} tabIndex={section===key?0:-1} onClick={()=>{setSection(key);setLeave(false)}} onKeyDown={event=>{let next:number|undefined;if(['ArrowDown','ArrowRight'].includes(event.key))next=(index+1)%SECTIONS.length;if(['ArrowUp','ArrowLeft'].includes(event.key))next=(index+SECTIONS.length-1)%SECTIONS.length;if(event.key==='Home')next=0;if(event.key==='End')next=SECTIONS.length-1;if(next!==undefined){event.preventDefault();select(next)}}}>{label}</button>)}</nav>
  <section key={section} ref={panel} className="settings-content" id={`${id}-${section}-panel`} role="tabpanel" aria-labelledby={`${id}-${section}-tab`} tabIndex={-1} onKeyDown={moveBetweenControls}>
  {section==='ai'?<AISettings onAbout={game?onAI:undefined}/>:null}
  {section==='appearance'?<>

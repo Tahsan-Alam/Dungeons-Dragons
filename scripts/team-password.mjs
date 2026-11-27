@@ -8,7 +8,7 @@ async function hiddenPassword(){
  process.stdin.setRawMode(true);process.stdin.resume();process.stdin.setEncoding('utf8');
  return new Promise((resolve,reject)=>{
   let value='';
-  function finish(error){process.stdin.off('data',onData);process.stdin.setRawMode(false);process.stdin.pause();process.stderr.write('\n');error?reject(error):resolve(value);}
+  function finish(error){process.stdin.off('data',onData);process.stdin.setRawMode(false);process.stdin.pause();process.stderr.write('\n');if(error)reject(error);else resolve(value);}
   function onData(data){for(const character of data){if(character==='\u0003'){finish(new Error('Cancelled.'));return;}if(character==='\r'||character==='\n'){finish();return;}if(character==='\u007f'||character==='\b')value=value.slice(0,-1);else if(character>=' ')value+=character;}}
   process.stdin.on('data',onData);
  });

@@ -31,8 +31,8 @@ export class SpeechFailure extends Error {
 }
 interface Socket {
  accept():void;send(value:string):void;close(code?:number,reason?:string):void;
- addEventListener(type:string,listener:(event:any)=>void):void;
- removeEventListener(type:string,listener:(event:any)=>void):void;
+ addEventListener(type:string,listener:(event:{data:unknown})=>void):void;
+ removeEventListener(type:string,listener:(event:{data:unknown})=>void):void;
 }
 // Realtime may wrap a read-aloud transcript in quotation marks. Ignore one
 // balanced outer pair only: never strip interior punctuation or change words,

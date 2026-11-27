@@ -35,7 +35,7 @@ export const nightInner=(l:NightLight)=>l.tone==='sea'?48:Math.max(62,l.r*1.05);
 export const nightSpill=(l:NightLight)=>l.tone==='sea'?110:Math.max(140,l.r*2.2);
 
 /** Every light on the board in ground units; a column of sea door tiles is one tall doorway of light. */
-export function nightLights(game:GameState):NightLight[]{
+export function nightLights(game:Pick<GameState,'tiles'>):NightLight[]{
  const out:NightLight[]=[];
  for(const t of game.tiles){
   if(!isSetPieceProp(t.decoration))continue;
@@ -66,7 +66,7 @@ export function nightRim(lights:NightLight[],tileX:number,tileY:number):{tone:Ni
 }
 
 /** Props standing in a pool keep their full colour at night. */
-export function nightLitTiles(game:GameState,lights=nightLights(game)){
+export function nightLitTiles(game:Pick<GameState,'tiles'>,lights=nightLights(game)){
  const lit=new Set<string>();
  for(const t of game.tiles)if((t.kind==='wall'||t.decoration)&&nearest(lights,t.x*50+25,t.y*50+40))lit.add(`${t.x},${t.y}`);
  return lit;
@@ -75,4 +75,12 @@ export function nightLitTiles(game:GameState,lights=nightLights(game)){
 /** Thin moonlit glints on every third water tile. */
 export function nightGlints(game:GameState){
  return game.tiles.filter(t=>groundOf(game,t).kind==='water').filter((_,i)=>i%3===0).map((t,i)=>({x:t.x*50,y:t.y*50,d:i%2?'M10 22h16M30 34h9':'M14 18h10M22 32h18'}));
+}
+
+/** The lights and lit tiles for a board, worked out once per tiles array (a game's tiles only change with a new scene). */
+const lighting=new WeakMap<GameState['tiles'],{lights:NightLight[];lit:Set<string>}>();
+export function nightLighting(tiles:GameState['tiles']){
+ let found=lighting.get(tiles);
+ if(!found){const lights=nightLights({tiles});found={lights,lit:nightLitTiles({tiles},lights)};lighting.set(tiles,found)}
+ return found;
 }

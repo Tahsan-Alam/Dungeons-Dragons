@@ -8,13 +8,18 @@ import type {LiveStart} from './live-protocol.ts';
 
 const input:LiveStart={type:'start',scope:'test-creator',requestId:'session-1',mode:'call',voice:'vesper',name:'Aether',persona:'',context:'The player is shaping a narrator.',opening:'What kind of guide shall I become?'};
 const flush=async()=>{await new Promise(resolve=>setImmediate(resolve));await new Promise(resolve=>setImmediate(resolve));};
+/** A message the relay sent the browser (ready, closed, an error...). */
+type Sent={type:string;message?:string;reason?:string;expiresIn?:number;audio?:string;text?:string;content?:string};
 class Socket implements LiveSocket{
- listeners:Record<string,((e:any)=>void)[]>={};sent:any[]=[];closed=false;accepted=false;
+ listeners:Record<string,((e:{data:unknown})=>void)[]>={};sent:Sent[]=[];closed=false;accepted=false;
  accept(){this.accepted=true;}send(data:string){this.sent.push(JSON.parse(data));}close(){this.closed=true;}
- addEventListener(type:string,listener:(e:any)=>void){(this.listeners[type]??=[]).push(listener);}
- removeEventListener(type:string,listener:(e:any)=>void){this.listeners[type]=(this.listeners[type]??[]).filter(x=>x!==listener);}
+ addEventListener(type:string,listener:(e:{data:unknown})=>void){(this.listeners[type]??=[]).push(listener);}
+ removeEventListener(type:string,listener:(e:{data:unknown})=>void){this.listeners[type]=(this.listeners[type]??[]).filter(x=>x!==listener);}
+ /** The last message sent, and the first of a type; a test that expects one fails clearly when it is missing. */
+ last():Sent{const sent=this.sent.at(-1);assert.ok(sent,'nothing was sent');return sent;}
+ of(type:string):Sent{const sent=this.sent.find(e=>e.type===type);assert.ok(sent,`no ${type} message`);return sent;}
  emit(value:unknown){for(const fn of this.listeners.message??[])fn({data:typeof value==='string'?value:JSON.stringify(value)});}
- disconnect(){for(const fn of this.listeners.close??[])fn({});}
+ disconnect(){for(const fn of this.listeners.close??[])fn({data:undefined});}
 }
 async function fixture({mode='call',caps={campaign:5_000_000,day:5_000_000,month:5_000_000,concurrency:2},http=101}:{mode?:'call'|'listen';caps?:{campaign:number;day:number;month:number;concurrency:number};http?:number}={}){
  let now=1000,tick:()=>void=()=>{},calls=0;
@@ -54,34 +59,34 @@ test('live reserves before outbound connection and never sends credentials to br
  f.ready();assert.equal(f.client.sent[0].type,'ready');assert.equal(JSON.stringify(f.client.sent).includes('test-secret'),false);f.relay.close();f.advance(LIVE_LIMITS.grace);await flush();
 });
 test('reached shared cap opens no provider socket',async()=>{
- const f=await fixture({caps:{campaign:1,day:1,month:1,concurrency:2}});assert.equal(f.calls(),0);assert.equal(f.client.closed,true);assert.match(f.client.sent[0].message,/allowance/);
+ const f=await fixture({caps:{campaign:1,day:1,month:1,concurrency:2}});assert.equal(f.calls(),0);assert.equal(f.client.closed,true);assert.match(f.client.sent[0].message??'',/allowance/);
 });
 
 test('a default allowance funds a shorter call without raising caps or opening extra sockets',async()=>{
  const f=await fixture({caps:{campaign:400_000,day:1_000_000,month:4_000_000,concurrency:8}});assert.equal(f.calls(),1);f.ready();
- assert.equal(f.client.sent.find(e=>e.type==='ready').expiresIn,120_000);
+ assert.equal(f.client.of('ready').expiresIn,120_000);
  const receipts=Object.values((await f.store.read()).entries);assert.equal(receipts.length,1);assert.equal(receipts[0].reserved,300_000);
  f.advance(80_000);f.upstream.emit({type:'session.input_transcript.delta',delta:'Keep talking.'});f.advance(40_000);
- assert.equal(f.upstream.sent.at(-1).type,'session.close');f.advance(LIVE_LIMITS.grace);await flush();assert.equal(f.client.sent.find(e=>e.type==='closed').reason,'time_limit');
+ assert.equal(f.upstream.last().type,'session.close');f.advance(LIVE_LIMITS.grace);await flush();assert.equal(f.client.of('closed').reason,'time_limit');
 });
 
 test('every funded call reserve covers the complete bounded lifetime at twice the published rate',()=>{
  for(const window of LIVE_CALL_WINDOWS){const maximumSeconds=(window.duration+LIVE_LIMITS.start+LIVE_LIMITS.grace)/1000;assert.ok(window.reservation>=Math.ceil(maximumSeconds*50_000/60*2));}
 });
 test('server closes idle calls even when the browser sends nothing',async()=>{
- const f=await fixture();f.ready();f.advance(LIVE_LIMITS.idle);assert.equal(f.upstream.sent.at(-1).type,'session.close');f.advance(LIVE_LIMITS.grace);await flush();assert.equal(f.upstream.closed,true);assert.equal(f.client.closed,true);assert.equal(Object.values((await f.store.read()).entries)[0].status,'done');
+ const f=await fixture();f.ready();f.advance(LIVE_LIMITS.idle);assert.equal(f.upstream.last().type,'session.close');f.advance(LIVE_LIMITS.grace);await flush();assert.equal(f.upstream.closed,true);assert.equal(f.client.closed,true);assert.equal(Object.values((await f.store.read()).entries)[0].status,'done');
 });
 test('continuous user activity cannot exceed server hard deadline',async()=>{
- const f=await fixture();f.ready();for(let i=0;i<4;i++){f.upstream.emit({type:'session.input_transcript.delta',delta:'More ideas. '});f.advance(80_000);}f.upstream.emit({type:'session.input_transcript.delta',delta:'Still here.'});f.advance(40_000);assert.equal(f.upstream.sent.at(-1).type,'session.close');f.advance(LIVE_LIMITS.grace);await flush();assert.equal(f.client.sent.find(e=>e.type==='closed')?.reason,'time_limit');
+ const f=await fixture();f.ready();for(let i=0;i<4;i++){f.upstream.emit({type:'session.input_transcript.delta',delta:'More ideas. '});f.advance(80_000);}f.upstream.emit({type:'session.input_transcript.delta',delta:'Still here.'});f.advance(40_000);assert.equal(f.upstream.last().type,'session.close');f.advance(LIVE_LIMITS.grace);await flush();assert.equal(f.client.of('closed').reason,'time_limit');
 });
 test('muted input does not relay microphone bytes; unmute restores it',async()=>{
- const f=await fixture();f.ready();f.client.emit({type:'mic',muted:true});const audio=btoa('\0\0'.repeat(120));f.client.emit({type:'audio',audio});assert.equal(f.upstream.sent.filter(e=>e.type==='session.input_audio.append').length,0);f.client.emit({type:'mic',muted:false});f.client.emit({type:'audio',audio});assert.equal(f.upstream.sent.at(-1).audio,audio);f.relay.close();f.advance(LIVE_LIMITS.grace);await flush();
+ const f=await fixture();f.ready();f.client.emit({type:'mic',muted:true});const audio=btoa('\0\0'.repeat(120));f.client.emit({type:'audio',audio});assert.equal(f.upstream.sent.filter(e=>e.type==='session.input_audio.append').length,0);f.client.emit({type:'mic',muted:false});f.client.emit({type:'audio',audio});assert.equal(f.upstream.last().audio,audio);f.relay.close();f.advance(LIVE_LIMITS.grace);await flush();
 });
 test('listen-only comments supply silence and close after returned audio',async()=>{
- const f=await fixture({mode:'listen'});f.ready();f.advance(100);assert.equal(f.upstream.sent.at(-1).type,'session.input_audio.append');f.upstream.emit({type:'session.output_audio.delta',delta:btoa('\0\0'.repeat(100))});f.advance(1900);assert.equal(f.upstream.sent.at(-1).type,'session.close');f.upstream.emit({type:'session.closed',usage:{seconds:2}});await flush();assert.equal(f.client.sent.find(e=>e.type==='closed')?.reason,'comment_finished');const receipt=Object.values((await f.store.read()).entries)[0];assert.equal(receipt.reserved,LIVE_RESERVATION.listen);assert.deepEqual((receipt.result as {liveSeconds:number}).liveSeconds,2);assert.equal(receipt.diagnostic?.outcome,'live_closed');
+ const f=await fixture({mode:'listen'});f.ready();f.advance(100);assert.equal(f.upstream.last().type,'session.input_audio.append');f.upstream.emit({type:'session.output_audio.delta',delta:btoa('\0\0'.repeat(100))});f.advance(1900);assert.equal(f.upstream.last().type,'session.close');f.upstream.emit({type:'session.closed',usage:{seconds:2}});await flush();assert.equal(f.client.of('closed').reason,'comment_finished');const receipt=Object.values((await f.store.read()).entries)[0];assert.equal(receipt.reserved,LIVE_RESERVATION.listen);assert.deepEqual((receipt.result as {liveSeconds:number}).liveSeconds,2);assert.equal(receipt.diagnostic?.outcome,'live_closed');
 });
 test('delegation waits for a complete quiet transcript and retains correction',async()=>{
- const f=await fixture();f.ready();f.upstream.emit({type:'session.delegation.created',delegation:{id:'d1',target:'client'}});f.advance(200);f.upstream.emit({type:'session.input_transcript.delta',delta:'A cat, '});f.advance(600);f.upstream.emit({type:'session.input_transcript.delta',delta:'without glasses.'});f.advance(800);assert.equal(f.client.sent.some(e=>e.type==='delegate'),false);f.advance(100);assert.equal(f.client.sent.find(e=>e.type==='delegate')?.text,'A cat, without glasses.');f.client.emit({type:'reply',delegationId:'d1',text:'Review the proposed cat without glasses.'});assert.equal(f.upstream.sent.at(-1).content,'Review the proposed cat without glasses.');f.relay.close();f.advance(LIVE_LIMITS.grace);await flush();
+ const f=await fixture();f.ready();f.upstream.emit({type:'session.delegation.created',delegation:{id:'d1',target:'client'}});f.advance(200);f.upstream.emit({type:'session.input_transcript.delta',delta:'A cat, '});f.advance(600);f.upstream.emit({type:'session.input_transcript.delta',delta:'without glasses.'});f.advance(800);assert.equal(f.client.sent.some(e=>e.type==='delegate'),false);f.advance(100);assert.equal(f.client.of('delegate').text,'A cat, without glasses.');f.client.emit({type:'reply',delegationId:'d1',text:'Review the proposed cat without glasses.'});assert.equal(f.upstream.last().content,'Review the proposed cat without glasses.');f.relay.close();f.advance(LIVE_LIMITS.grace);await flush();
 });
 test('a second delegation preserves the first request plus the added sentence',async()=>{
  const f=await fixture();f.ready();
@@ -93,14 +98,14 @@ test('a second delegation preserves the first request plus the added sentence',a
  f.relay.close();f.advance(LIVE_LIMITS.grace);await flush();
 });
 test('unknown delegation reply and a repeated session start close safely',async()=>{
- const f=await fixture();f.ready();f.client.emit({type:'reply',delegationId:'fake',text:'Saved.'});assert.equal(f.upstream.sent.at(-1).type,'session.close');f.advance(LIVE_LIMITS.grace);await flush();assert.equal(f.client.sent.find(e=>e.type==='closed')?.reason,'invalid_request');
+ const f=await fixture();f.ready();f.client.emit({type:'reply',delegationId:'fake',text:'Saved.'});assert.equal(f.upstream.last().type,'session.close');f.advance(LIVE_LIMITS.grace);await flush();assert.equal(f.client.of('closed').reason,'invalid_request');
  const g=await fixture();g.ready();g.client.emit(input);assert.equal(g.calls(),1);g.advance(LIVE_LIMITS.grace);await flush();assert.equal(g.client.closed,true);
 });
 test('failed upgrades retain the reservation without raw provider data',async()=>{
  const f=await fixture({http:403});await flush();const receipt=Object.values((await f.store.read()).entries)[0];assert.equal(receipt.reserved,LIVE_RESERVATION.call);assert.equal(receipt.status,'done');assert.equal(f.client.closed,true);assert.equal(JSON.stringify(f.client.sent).includes('test-secret'),false);
 });
 test('client disconnect closes the upstream and keeps unconfirmed usage charged',async()=>{
- const f=await fixture();f.ready();f.client.disconnect();assert.equal(f.upstream.sent.at(-1).type,'session.close');f.advance(LIVE_LIMITS.grace);await flush();const receipt=Object.values((await f.store.read()).entries)[0];assert.equal(receipt.reserved,LIVE_RESERVATION.call);assert.equal(receipt.diagnostic?.outcome,'live_usage_unconfirmed');
+ const f=await fixture();f.ready();f.client.disconnect();assert.equal(f.upstream.last().type,'session.close');f.advance(LIVE_LIMITS.grace);await flush();const receipt=Object.values((await f.store.read()).entries)[0];assert.equal(receipt.reserved,LIVE_RESERVATION.call);assert.equal(receipt.diagnostic?.outcome,'live_usage_unconfirmed');
 });
 
 test('a full extended call accepts final usage beyond the old 240-second validation ceiling',async()=>{

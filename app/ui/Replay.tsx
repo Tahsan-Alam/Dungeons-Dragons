@@ -1,5 +1,5 @@
 'use client';
-import {useEffect,useMemo,useRef,useState,type CSSProperties} from 'react';
+import {type CSSProperties,useEffect,useEffectEvent,useRef,useState,useSyncExternalStore} from 'react';
 import type {GameState,ReplayArchive} from '../../game/types';
 import {reconstructReplayAsync} from '../../game/replay';
 import Board,{type BoardControls} from './Board';
@@ -11,30 +11,37 @@ import {actionForKey,bindingLabel,eventBinding,type ControlAction} from './contr
 import {Chooser,KeyHints} from './MenuKit';
 import './replay.css';
 import './realm-shell.css';
+const NARROW='(max-width:850px)',NO_FRAMES:GameState[]=[];
+const subscribeNarrow=(change:()=>void)=>{const query=matchMedia(NARROW);query.addEventListener('change',change);return()=>query.removeEventListener('change',change)};
 export default function Replay({archive,title,onBack,onSettings,onHelp,suspended=false}:{archive:ReplayArchive;title:string;onBack:()=>void;onSettings:()=>void;onHelp:()=>void;suspended?:boolean}){
  const {preferences}=useControls();
- const[result,setResult]=useState<{frames:GameState[];error:string;loading:boolean}>({frames:[],error:'',loading:true});
- useEffect(()=>{const controller=new AbortController();setResult({frames:[],error:'',loading:true});void reconstructReplayAsync(archive,controller.signal).then(frames=>{if(!controller.signal.aborted)setResult({frames,error:'',loading:false})}).catch(()=>{if(!controller.signal.aborted)setResult({frames:[],error:'This replay could not be read. Your saved game has not been changed.',loading:false})});return()=>controller.abort()},[archive]);
+ // A result belongs to the archive it was rebuilt from, so a new archive reads as loading until its own result arrives.
+ const[built,setResult]=useState<{archive:ReplayArchive|null;frames:GameState[];error:string}>({archive:null,frames:[],error:''});
+ const loaded=built.archive===archive,result={frames:loaded?built.frames:NO_FRAMES,error:loaded?built.error:'',loading:!loaded};
+ useEffect(()=>{const controller=new AbortController();void reconstructReplayAsync(archive,controller.signal).then(frames=>{if(!controller.signal.aborted)setResult({archive,frames,error:''})}).catch(()=>{if(!controller.signal.aborted)setResult({archive,frames:[],error:'This replay could not be read. Your saved game has not been changed.'})});return()=>controller.abort()},[archive]);
  const frames=result.frames,[index,setIndex]=useState(0),[playing,setPlaying]=useState(false),[speed,setSpeed]=useState(1),[selectedId,setSelectedId]=useState(''),[panel,setPanel]=useState(false),[seekVersion,setSeekVersion]=useState(0);
  const board=useRef<BoardControls>(null),sidebar=useRef<HTMLElement>(null),opener=useRef<HTMLElement|null>(null),game=frames[index],last=frames.length-1;
- const[compact,setCompact]=useState(false);
+ const compact=useSyncExternalStore(subscribeNarrow,()=>matchMedia(NARROW).matches,()=>false);
  useHeaderInert(compact&&panel);
- useEffect(()=>{if(suspended)setPlaying(false)},[suspended]);
- useEffect(()=>{const query=matchMedia('(max-width:850px)');const update=()=>{setCompact(query.matches);if(!query.matches)setPanel(false)};update();query.addEventListener('change',update);return()=>query.removeEventListener('change',update)},[]);
+ const[wasSuspended,setWasSuspended]=useState(suspended);
+ if(suspended!==wasSuspended){setWasSuspended(suspended);if(suspended)setPlaying(false);}
+ useEffect(()=>{const query=matchMedia(NARROW);const update=()=>{if(!query.matches)setPanel(false)};query.addEventListener('change',update);return()=>query.removeEventListener('change',update)},[]);
  function closePanel(){setPanel(false);requestAnimationFrame(()=>opener.current?.focus())}
  function togglePanel(){if(panel)closePanel();else{opener.current=document.activeElement as HTMLElement;setPanel(true)}}
  useEffect(()=>{if(panel&&compact)(sidebar.current?.querySelector('.replay-close') as HTMLElement|null)?.focus()},[panel,compact]);
  function seek(next:number){setSeekVersion(v=>v+1);setPlaying(false);setIndex(Math.max(0,Math.min(last,next)))}
- useEffect(()=>{if(suspended||!playing||index>=last){if(index>=last)setPlaying(false);return;}const timer=setTimeout(()=>setIndex(i=>Math.min(last,i+1)),1000/speed);return()=>clearTimeout(timer)},[playing,index,last,speed,suspended]);
- useEffect(()=>{const key=(e:KeyboardEvent)=>{
+ useEffect(()=>{if(suspended||!playing||index>=last)return;const timer=setTimeout(()=>{setIndex(i=>Math.min(last,i+1));if(index+1>=last)setPlaying(false)},1000/speed);return()=>clearTimeout(timer)},[playing,index,last,speed,suspended]);
+ const onKey=useEffectEvent((e:KeyboardEvent)=>{
   if(panel&&compact&&!document.querySelector('dialog[open]')){if(e.key==='Escape'){e.preventDefault();closePanel();return}if(e.key==='Tab'){const items=[...sidebar.current!.querySelectorAll<HTMLElement>('button:not([disabled])')],first=items[0],last=items.at(-1);if(e.shiftKey&&document.activeElement===first){e.preventDefault();last?.focus()}else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first?.focus()}return}return;}
   if(suspended||e.repeat||e.isComposing||document.querySelector('dialog[open]')||(e.target as HTMLElement)?.closest('input,select,textarea,[contenteditable=true]')||((e.target as HTMLElement)?.closest('button,[role=button]')&&(e.key===' '||e.key==='Enter')))return;
   const action=actionForKey(preferences.bindings,eventBinding(e));
   if(action==='replayPlay'){e.preventDefault();if(index===last)setIndex(0);setPlaying(p=>!p)}
   else if(action==='replayPrevious'){e.preventDefault();seek(index-1)}else if(action==='replayNext'){e.preventDefault();seek(index+1)}else if(action==='replayStart'){e.preventDefault();seek(0)}else if(action==='replayEnd'){e.preventDefault();seek(last)}
   else if(action==='menu'){e.preventDefault();onBack()}else if(action==='settings'){e.preventDefault();setPlaying(false);onSettings()}else if(action==='fit'){e.preventDefault();board.current?.fit()}else if(action==='zoomIn'){e.preventDefault();board.current?.zoomIn()}else if(action==='zoomOut'){e.preventDefault();board.current?.zoomOut()}else if(action==='grid'){e.preventDefault();board.current?.toggleGrid()}else if(action==='story'||action==='party'){e.preventDefault();togglePanel()}else if(action?.startsWith('pan')){e.preventDefault();board.current?.pan(action==='panLeft'?50:action==='panRight'?-50:0,action==='panUp'?50:action==='panDown'?-50:0)}
- };window.addEventListener('keydown',key);return()=>window.removeEventListener('keydown',key)},[preferences.bindings,index,last,onBack,onSettings,panel,compact,suspended]);
- const chapters=useMemo(()=>frames.flatMap((f,i)=>i===0||frames[i-1].scene!==f.scene?[{index:i,scene:f.scene,name:f.sceneName}]:[]),[frames]);
+ });
+ useEffect(()=>{const key=(e:KeyboardEvent)=>onKey(e);window.addEventListener('keydown',key);return()=>window.removeEventListener('keydown',key)},[]);
+ // Where each chapter starts (one quick pass over the frames).
+ const chapters=frames.flatMap((f,i)=>i===0||frames[i-1].scene!==f.scene?[{index:i,scene:f.scene,name:f.sceneName}]:[]);
  const key=(action:ControlAction)=>bindingLabel(preferences.bindings[action].find(Boolean)??null);
  const top=<header className="rp-top game-menu"><button type="button" className="rp-back" onClick={onBack}><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M10 3 5 8l5 5"/></svg>Adventures</button><div className="rp-corner"><button type="button" className="rp-word" onClick={onHelp}><Icon name="book" size={18}/><span>Guide</span></button><button type="button" className="rp-word" onClick={()=>{setPlaying(false);onSettings()}}><Icon name="gear" size={18}/><span>Settings</span></button></div></header>;
  if(!game)return <div className="replay-screen rp-theatre">{top}<main className="rp-waiting game-menu"><p role={result.error?'alert':'status'}>{result.loading?'Setting the stage…':result.error||'No replay recorded yet.'}</p>{!result.loading?<button type="button" className="mk-link" onClick={onBack}>Back to adventures</button>:null}</main></div>;
