@@ -37,6 +37,6 @@ test('built-in Game Masters keep their paintings; everyone else is drawn',()=>{
  assert.match(drawn.art,/^data:image\/svg\+xml;charset=utf-8,/);
  assert.deepEqual(drawn.face,DRAWN_GM_FACE);
  assert.equal(gameMasterDrawing(null).art,gameMasterDrawing(AETHER).art,'no narrator shows Aether');
- const {avatar:_,...old}=own;
+ const old={...own};delete old.avatar;
  assert.match(gameMasterDrawing(old).art,/^data:image\/svg/,'a save from before shapes is still drawn');
 });

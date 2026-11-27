@@ -1,6 +1,7 @@
 import {HERO_COLORS,type HeroClass} from './types.ts';
 import {NARRATOR_ACCESSORIES,NARRATOR_FORMS,isPortraitId,parseNarrator,type NarratorAvatar,type NarratorProfile} from './creation.ts';
 import {GAME_MASTERS} from './presets.ts';
+import {ownPortrait,parsePaintings,type OwnMode} from './own-paintings.ts';
 
 /**
  * "Create your own Game Master": the fourth card on the Game Master step. The player names them, says who they are,
@@ -15,13 +16,7 @@ export interface OwnGameMasterInput {name:string;who:string;tone:OwnTone;form:Na
  portrait?:string;
  /** Every painting made for them so far (newest first), so the player can choose among them. */
  paintings?:string[]}
-export type OwnMode='draw'|'paint';
-/** The paintings kept per creation: a day's allowance and a few from before. */
-export const MAX_PAINTINGS=8;
-/** Saved painting ids, checked and de-duplicated. */
-export const parsePaintings=(v:unknown)=>Array.isArray(v)?[...new Set(v.filter(isPortraitId))].slice(0,MAX_PAINTINGS):[];
-/** The portrait that counts: a painted creation shows its chosen painting; a drawn one never does. */
-export const ownPortrait=(input:{mode?:OwnMode;portrait?:string})=>input.mode==='paint'&&isPortraitId(input.portrait)?input.portrait:undefined;
+
 
 export const OWN_TONES:readonly {id:OwnTone;label:string;tells:string;sample:string}[]=[
  {id:'hopeful',label:'Hopeful',tells:'Tells it with hope',sample:'Every road keeps a light somewhere. Let’s go and find this one.'},
