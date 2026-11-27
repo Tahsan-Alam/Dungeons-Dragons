@@ -3,7 +3,8 @@ import {useEffect,useMemo,useRef,useState,type CSSProperties} from 'react';
 import type {GameState,ReplayArchive} from '../../game/types';
 import {reconstructReplayAsync} from '../../game/replay';
 import Board,{type BoardControls} from './Board';
-import {HeroArt,Icon} from './Art';
+import {Icon} from './Art';
+import {ActorPortrait} from './ActorArt';
 import {useHeaderInert} from './AppHeader';
 import {useControls} from './useControls';
 import {actionForKey,bindingLabel,eventBinding,type ControlAction} from './controls';
@@ -69,7 +70,7 @@ export default function Replay({archive,title,onBack,onSettings,onHelp,suspended
  {panel?<button className="replay-scrim" aria-label="Dismiss replay panel" onClick={closePanel}/>:null}
  <aside ref={sidebar} role={compact&&panel?'dialog':undefined} aria-modal={compact&&panel?true:undefined} aria-label="Replay details" className={`replay-sidebar game-menu ${panel?'open':''}`}>
   <div className="rail-heading"><h2>The party</h2><button type="button" className="rp-btn replay-close" aria-label="Close replay details" onClick={closePanel}><Icon name="close"/></button></div>
-  <div className="replay-party">{game.actors.filter(a=>!a.enemy).map(a=><button key={a.id} type="button" className={`replay-hero${a.id===selectedId?' selected':''}${a.id===game.activeActorId?' active':''}`} aria-pressed={a.id===selectedId} onClick={()=>setSelectedId(a.id)}><HeroArt heroClass={a.heroClass} color={a.color}/><span><strong>{a.name}</strong><span className="rp-hp" aria-hidden="true"><i style={{width:`${Math.max(0,Math.min(100,a.hp/a.maxHp*100))}%`}} className={a.hp<=a.maxHp/4?'low':a.hp<=a.maxHp/2?'mid':''}/></span><small>{a.hp} / {a.maxHp} health{a.id===game.activeActorId?' · their turn':''}</small></span></button>)}</div>
+  <div className="replay-party">{game.actors.filter(a=>!a.enemy).map(a=><button key={a.id} type="button" className={`replay-hero${a.id===selectedId?' selected':''}${a.id===game.activeActorId?' active':''}`} aria-pressed={a.id===selectedId} onClick={()=>setSelectedId(a.id)}><ActorPortrait actor={a} biome={game.options.biome}/><span><strong>{a.name}</strong><span className="rp-hp" aria-hidden="true"><i style={{width:`${Math.max(0,Math.min(100,a.hp/a.maxHp*100))}%`}} className={a.hp<=a.maxHp/4?'low':a.hp<=a.maxHp/2?'mid':''}/></span><small>{a.hp} / {a.maxHp} health{a.id===game.activeActorId?' · their turn':''}</small></span></button>)}</div>
   {selected?<p className="replay-inspect"><strong>{selected.name}</strong> · {selected.hp}/{selected.maxHp} health · armour {selected.ac}</p>:null}
   <div className="rail-heading"><h2>The tale so far</h2><span>{game.status==='playing'?`Chapter ${ROMAN[game.scene]??game.scene+1}`:game.status==='victory'?'Victory':'Defeat'}</span></div>
   <div className="replay-log">{game.story?.narrations.slice(-10).reverse().map(n=><p key={`narration-${n.eventId}`} className="story">{n.caption}</p>)}{game.events.slice(-15).reverse().map(e=><p key={e.id} className={e.kind}>{e.text}</p>)}</div>

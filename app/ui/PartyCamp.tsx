@@ -6,8 +6,9 @@ import type {RoomPlayer,RoomView,Session} from '../../game/types';
 import {CLASS_INFO} from '../../game/types';
 import {GAME_MASTERS,HEROES,HERO_ART_RATIO,GAME_MASTER_ART_RATIO} from '../../game/presets';
 import {openSeats} from './party';
-import {HeroArt,Icon} from './Art';
+import {Icon} from './Art';
 import {RealmButton,Portrait,Check} from './RealmKit';
+import {CUSTOM_FACE,customHeroArt} from './hero-figure';
 import './party-camp.css';
 
 /* Party camp: the party stands in a shallow arc around one fire. Positions are in the 1280 × 720 scene's coordinates.
@@ -16,14 +17,14 @@ const SLOTS:[x:number,feet:number,depth:0|1|2][]=[[450,516,1],[670,516,1],[340,5
 const HEIGHT=[260,244,228];
 const pct=(v:number,of:number)=>`${(v/of*100).toFixed(3)}%`;
 
-/** A player's figure: their roster hero's drawing, or the class figure when they joined without one. */
+/** A player's figure: their roster hero's painting, or the drawing made for them (companions, players without a roster hero). */
 export function CampFigure({player,slot}:{player:RoomPlayer;slot:[number,number,0|1|2]}){
  const [x,feet,depth]=slot,h=HEIGHT[depth],hero=player.heroId?HEROES.find(p=>p.id===player.heroId):undefined;
- const wide=hero?.id==='mira',w=hero?h*HERO_ART_RATIO:h*0.89,left=x-(wide?0.58:0.5)*w,top=feet-0.955*h;
+ const wide=hero?.id==='mira',w=h*HERO_ART_RATIO,left=x-(wide?0.58:0.5)*w,top=feet-0.955*h;
  const box={left:pct(left,1280),top:pct(top,720),width:pct(w,1280),height:pct(h,720),zIndex:10+depth*-3+Math.round(feet/40)} as CSSProperties;
  return <>
   <span className="camp-contact" style={{left:pct(x-(wide?50:32),1280),top:pct(feet-6,720),width:pct(wide?100:64,1280)}} aria-hidden="true"/>
-  <span className="camp-figure" style={box} aria-hidden="true">{hero?<img src={hero.art} alt=""/>:<HeroArt heroClass={player.heroClass} color={player.color}/>}</span>
+  <span className="camp-figure" style={box} aria-hidden="true"><img src={hero?.art??customHeroArt(player)} alt=""/></span>
  </>;
 }
 
@@ -94,7 +95,7 @@ export default function PartyCamp({room,session,busy,command,onMenu}:{room:RoomV
   {/* Phones: the scene is too small for nameplates, so the party is listed under it. */}
   <ul className="camp-list" aria-label="Party">
    {room.players.map(p=>{const hero=p.heroId?HEROES.find(h=>h.id===p.heroId):undefined;return <li key={p.id}>
-    {hero?<Portrait art={hero.art} face={hero.face} ratio={HERO_ART_RATIO} width={44} height={44} scale={1.6}/>:<span className="camp-list-art"><HeroArt heroClass={p.heroClass} color={p.color}/></span>}
+    <Portrait art={hero?.art??customHeroArt(p)} face={hero?.face??CUSTOM_FACE} ratio={HERO_ART_RATIO} width={44} height={44} scale={1.6}/>
     <span><strong>{p.name}{p.id===session.playerId?' (you)':''}</strong><span>{CLASS_INFO[p.heroClass].name}{p.bot?' · Companion':p.id===room.hostId?' · Host':''}</span></span>{status(p)}{remove(p)}
    </li>})}
   </ul>

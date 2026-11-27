@@ -1,5 +1,6 @@
 import type {Actor,Biome,KeeperKind} from '../../game/types.ts';
-import {HEROES,HERO_ART_RATIO,HERO_FEET,type HeroPreset} from '../../game/presets.ts';
+import {HEROES,HERO_ART_RATIO,HERO_FEET,type FaceCentre,type HeroPreset} from '../../game/presets.ts';
+import {CUSTOM_FACE,customHeroArt} from './hero-figure.ts';
 import {ENEMY_ART,type EnemyArtKey} from './enemy-art-data.ts';
 
 /* Which artwork stands for an actor. Presentation only: nothing here reads or changes the rules. */
@@ -41,19 +42,26 @@ export function enemyArtKey(actor:KeeperArtActor,biome:Biome):EnemyArtKey|undefi
  return Object.hasOwn(ENEMY_ART,key)?key as EnemyArtKey:undefined;
 }
 
-/** A hero's drawing: by name first (built-in heroes), otherwise the first hero of the same class. */
+/** A roster hero's painting, when the actor is that hero: the full or short name, playing that hero's class.
+    A companion who shares a roster name (the party's "Pip" is a ranger) is someone else. */
 export function heroArtFor(actor:Pick<Actor,'name'|'heroClass'>):HeroPreset|undefined{
  const name=actor.name.trim().toLowerCase();
- return HEROES.find(h=>h.name.toLowerCase()===name||h.short.toLowerCase()===name)??HEROES.find(h=>h.profile.heroClass===actor.heroClass);
+ return HEROES.find(h=>(h.name.toLowerCase()===name||h.short.toLowerCase()===name)&&h.profile.heroClass===actor.heroClass);
 }
 /** Mira's drawing includes Ash beside her, so her body sits left of the art's centre. */
 export const heroAnchor=(hero:HeroPreset)=>hero.id==='mira'?.58:.5;
-
+/** The full-body drawing that stands for a hero: their roster painting, or one drawn for them from their name,
+    class and colour (app/ui/hero-figure.ts). Both share the art size, ground line and face position. */
+export interface HeroDrawing {art:string;face:FaceCentre;anchor:number;preset?:HeroPreset}
+export function heroDrawing(actor:Pick<Actor,'name'|'heroClass'|'color'>):HeroDrawing{
+ const preset=heroArtFor(actor);
+ return preset?{art:preset.art,face:preset.face,anchor:heroAnchor(preset),preset}:{art:customHeroArt(actor),face:CUSTOM_FACE,anchor:.5};
+}
 export type Placement={x:number;y:number;width:number;height:number;top:number};
 /** Where to draw a hero relative to the tile point its feet stand on. */
-export function heroPlacement(hero:HeroPreset,tile=TILE):Placement{
+export function heroPlacement(hero:{anchor:number},tile=TILE):Placement{
  const height=HERO_TILES*tile,width=height*HERO_ART_RATIO,y=-HERO_FEET*height;
- return {x:-heroAnchor(hero)*width,y,width,height,top:y+height*.04};
+ return {x:-hero.anchor*width,y,width,height,top:y+height*.04};
 }
 /** Where to draw a creature relative to the tile point its anchor stands on. */
 export function enemyPlacement(key:EnemyArtKey,tile=TILE):Placement{
@@ -61,5 +69,5 @@ export function enemyPlacement(key:EnemyArtKey,tile=TILE):Placement{
  return {x:(x0-art.anchor[0])*k,y:(y0-art.anchor[1])*k,width:w*k,height:h*k,top:((PAINTING_TOP[key]??y0)-art.anchor[1])*k};
 }
 /** A square crop around a face or muzzle, in the art's own units: [x, y, size, art width, art height, art x, art y]. */
-export function heroPortraitBox(hero:HeroPreset){const w=376,h=488,s=w*.46;return {x:hero.face.x*w-s/2,y:hero.face.y*h-s*.42,size:s,art:{x:0,y:0,width:w,height:h}}}
+export function heroPortraitBox(hero:{face:FaceCentre}){const w=376,h=488,s=w*.46;return {x:hero.face.x*w-s/2,y:hero.face.y*h-s*.42,size:s,art:{x:0,y:0,width:w,height:h}}}
 export function enemyPortraitBox(key:EnemyArtKey){const art=ENEMY_ART[key],[x,y,size]=art.portrait,[ax,ay,width,height]=art.viewBox;return {x,y,size,art:{x:ax,y:ay,width,height}}}

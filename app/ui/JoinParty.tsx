@@ -5,9 +5,9 @@ import type {GameOptions,HeroClass,RoomPreview} from '../../game/types';
 import {HEROES,HERO_ART_RATIO,SCENE_FOR_BIOME} from '../../game/presets';
 import type {Role} from '../../game/presets';
 import {normalizePartyCode,partyCodeComplete} from './party';
-import {HeroArt} from './Art';
 import {RealmButton,RealmTools,Portrait,Check} from './RealmKit';
 import {HeroStep} from './QuestSetup';
+import {CUSTOM_FACE,customHeroArt} from './hero-figure';
 import './quest-setup.css';
 import './party-camp.css';
 
@@ -85,7 +85,7 @@ export default function JoinParty({onBack,onStart,busy,initialCode=''}:Props){
       <div className="jp-invite-head"><h2>{preview.title}</h2><p>Hosted by {preview.host}{preview.world?` · ${preview.world}`:''}</p></div>
       <p className="realm-eyebrow">Already at the fire</p>
       <ul className="jp-party">{preview.players.map((p,i)=>{const h=p.heroId?HEROES.find(x=>x.id===p.heroId):undefined;return <li key={i}>
-       {h?<Portrait art={h.art} face={h.face} ratio={HERO_ART_RATIO} width={64} height={64} scale={1.6}/>:<span className="jp-art"><HeroArt heroClass={p.heroClass} color="#a3bbf0"/></span>}
+       <Portrait art={h?.art??customHeroArt({name:p.name,heroClass:p.heroClass,color:'#a3bbf0'})} face={h?.face??CUSTOM_FACE} ratio={HERO_ART_RATIO} width={64} height={64} scale={1.6}/>
        <span>{p.name}</span></li>;})}</ul>
       <p className="jp-seats"><strong>{preview.players.length} of {preview.capacity} seats taken</strong> · {seatsLeft} open {seatsLeft===1?'seat':'seats'}</p>
       <p className="qs-note">After joining, you choose your hero. Heroes already at the fire are marked taken.</p>

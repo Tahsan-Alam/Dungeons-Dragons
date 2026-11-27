@@ -5,7 +5,8 @@ import {fileURLToPath} from 'node:url';
 import {ENEMIES,LONG_CREATURE} from '../../game/engine.ts';
 import {HEROES} from '../../game/presets.ts';
 import {ENEMY_ART} from './enemy-art-data.ts';
-import {enemyArtKey,heroArtFor,heroPlacement,enemyPlacement,KEEPER_NAME,KEEPER_BY_BIOME,TILE} from './actor-art.ts';
+import {HERO_COLORS} from '../../game/types.ts';
+import {enemyArtKey,heroArtFor,heroDrawing,heroPlacement,enemyPlacement,KEEPER_NAME,KEEPER_BY_BIOME,TILE} from './actor-art.ts';
 
 const publicFile=(src:string)=>fileURLToPath(new URL(`../../public${src}`,import.meta.url));
 
@@ -38,12 +39,20 @@ test('every art file named in the placement table ships with the game',()=>{
  for(const[key,art]of Object.entries(ENEMY_ART))assert.ok(existsSync(publicFile(art.src)),`${key}: ${art.src}`);
  for(const hero of HEROES)assert.ok(existsSync(publicFile(hero.art)),hero.art);
 });
-test('heroes resolve by name or short name, then by class',()=>{
+test('roster heroes resolve by name or short name and their class; everyone else is drawn for themselves',()=>{
  for(const hero of HEROES){assert.equal(heroArtFor({name:hero.name,heroClass:hero.profile.heroClass})?.id,hero.id);assert.equal(heroArtFor({name:hero.short,heroClass:hero.profile.heroClass})?.id,hero.id)}
- assert.equal(heroArtFor({name:'Someone new',heroClass:'cleric'})?.profile.heroClass,'cleric');
+ assert.equal(heroArtFor({name:'Someone new',heroClass:'cleric'}),undefined);
+ // The party's companion Pip is a ranger, not the roster's rogue.
+ assert.equal(heroArtFor({name:'Pip',heroClass:'ranger'}),undefined);
+ const corin=heroDrawing({name:'Corin Vale',heroClass:'knight',color:HERO_COLORS[0]});
+ assert.equal(corin.preset?.id,'corin');assert.equal(corin.art,'/art/heroes/corin.svg');
+ const pip=heroDrawing({name:'Pip',heroClass:'ranger',color:HERO_COLORS[2]});
+ assert.equal(pip.preset,undefined);assert.match(pip.art,/^data:image\/svg\+xml/);
 });
 test('figures stand on their tile at the shared hero scale',()=>{
- const corin=heroPlacement(HEROES[0]);
+ const corin=heroPlacement(heroDrawing(HEROES[0].profile));
+ const drawn=heroPlacement(heroDrawing({name:'Juniper',heroClass:'cleric',color:HERO_COLORS[1]}));
+ assert.equal(drawn.y,corin.y);assert.equal(drawn.height,corin.height);
  assert.ok(Math.abs(corin.y+corin.height*.955)<1e-9,'boots on the tile point');
  assert.ok(corin.height>1.7*TILE&&corin.height<1.9*TILE);
  for(const key of Object.keys(ENEMY_ART) as (keyof typeof ENEMY_ART)[]){
