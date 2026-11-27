@@ -1,5 +1,5 @@
 'use client';
-import {memo,useMemo,useRef,useState,useEffect,useLayoutEffect,useImperativeHandle,useCallback,useId,type Ref,type ReactNode} from 'react';
+import {memo,type ReactNode,type Ref,useCallback,useEffect,useEffectEvent,useId,useImperativeHandle,useLayoutEffect,useMemo,useRef,useState} from 'react';
 import type {Actor,GameState} from '../../game/types';
 import {getReachable,getValidTargets} from '../../game/engine';
 import {Icon} from './Art';
@@ -14,7 +14,7 @@ import {ActorSprite,spriteTop} from './ActorArt';
 import {keeperYields} from './actor-art';
 import {KeeperMarks} from './KeeperMarks';
 import {TacticalChest,TacticalGateway,TacticalTerrain,TacticalToken} from './TacticalArt';
-import {nightLights,nightLitTiles,nightRim} from './night-light';
+import {nightLighting,nightRim} from './night-light';
 import {healthLevel} from './readability';
 import {sameBoardTerrain,rovingBoardTile,nextBoardTile,resizedBoardPan,revealedBoardPan,type BoardDirection} from './board-interaction';
 import './board-motion.css';
@@ -27,8 +27,10 @@ const BoardTerrain=memo(function BoardTerrain({game,grid,projection}:{game:GameS
 },(before,after)=>before.grid===after.grid&&before.projection===after.projection&&sameBoardTerrain(before.game,after.game));
 function useActorMotion(game:GameState,projection:BoardProjection,focusId:string|undefined,enabled:boolean,resetKey:string|number|undefined,reducedMotion:boolean,onChange?:((moving:boolean)=>void)){
  const nodes=useRef(new Map<string,SVGGElement>()),animations=useRef(new Map<string,{animation:Animation;x:number;y:number;path:BoardPoint[];duration:number}>()),previous=useRef<GameState|null>(null),lastReset=useRef(resetKey),lastProjection=useRef(projection);
- const[depthPositions,setDepthPositions]=useState<Record<string,BoardPoint>>({}),depthFrame=useRef(0),projectionMode=useRef(projection.mode);projectionMode.current=projection.mode;
- const[moving,setMoving]=useState(false),movingRef=useRef(false),focus=useRef(focusId),callback=useRef(onChange);focus.current=focusId;callback.current=onChange;
+ const[depthPositions,setDepthPositions]=useState<Record<string,BoardPoint>>({}),depthFrame=useRef(0),projectionMode=useRef(projection.mode);
+ const[moving,setMoving]=useState(false),movingRef=useRef(false),focus=useRef(focusId),callback=useRef(onChange);
+ // The animation callbacks read these; they are brought up to date before the layout effects below run.
+ useLayoutEffect(()=>{projectionMode.current=projection.mode;focus.current=focusId;callback.current=onChange});
  function updateDepth(){
   depthFrame.current=0;if(projectionMode.current!=='2.5d'||!animations.current.size){setDepthPositions(previous=>Object.keys(previous).length?{}:previous);return}
   const next:Record<string,BoardPoint>={};
@@ -36,11 +38,11 @@ function useActorMotion(game:GameState,projection:BoardProjection,focusId:string
   setDepthPositions(previous=>Object.keys(previous).length===Object.keys(next).length&&Object.keys(next).every(id=>previous[id]?.x===next[id].x&&previous[id]?.y===next[id].y)?previous:next);
   depthFrame.current=requestAnimationFrame(updateDepth);
  }
- function report(){
+ const report=useEffectEvent(()=>{
   const next=!!focus.current&&animations.current.has(focus.current);if(next!==movingRef.current){movingRef.current=next;setMoving(next);callback.current?.(next)}
   if(projectionMode.current==='2.5d'&&animations.current.size){if(!depthFrame.current)depthFrame.current=requestAnimationFrame(updateDepth)}
   else{if(depthFrame.current)cancelAnimationFrame(depthFrame.current);depthFrame.current=0;setDepthPositions(previous=>Object.keys(previous).length?{}:previous)}
- }
+ });
  function cancel(id:string){const entry=animations.current.get(id);if(!entry)return;entry.animation.onfinish=null;entry.animation.oncancel=null;entry.animation.cancel();animations.current.delete(id)}
  useLayoutEffect(()=>{
   const before=previous.current;previous.current=game;const resetChanged=lastReset.current!==resetKey||lastProjection.current!==projection;lastReset.current=resetKey;lastProjection.current=projection;
@@ -88,7 +90,7 @@ export default function Board({game,actor,tool,onTile,onActor,selectedId,myTurn,
  const[focusedTile,setFocusedTile]=useState<BoardPoint|null>(null),keyboardHelpId=useId();
  const [zoom,setZoom]=useState(1),[pan,setPan]=useState({x:0,y:0}),[grid,setGrid]=useState(true),[dragging,setDragging]=useState(false);
  const svg=useRef<SVGSVGElement>(null),cameraTouched=useRef(false),cameraGame=useRef(game),frameTarget=useRef<BoardPoint>({x:0,y:0}); const drag=useRef<{x:number;y:number;px:number;py:number;move:boolean}|null>(null);const pointers=useRef(new Map<number,{x:number;y:number}>()),pinch=useRef<{distance:number;zoom:number;midX:number;midY:number;px:number;py:number}|null>(null),suppressClick=useRef(0);
- const camera=useRef({zoom,pan});camera.current={zoom,pan};
+ const camera=useRef({zoom,pan});
  const reachable=useMemo(()=>actor&&myTurn&&!motion.moving&&tool==='move'?getReachable(game,actor):[],[game,actor,myTurn,tool,motion.moving]);
  const reachableKeys=useMemo(()=>new Set(reachable.map(t=>`${t.x},${t.y}`)),[reachable]);
  const keyboardTile=useMemo(()=>rovingBoardTile(reachable,focusedTile,actor),[reachable,focusedTile,actor]);
@@ -96,18 +98,26 @@ export default function Board({game,actor,tool,onTile,onActor,selectedId,myTurn,
  // In Move, selecting an enemy already in reach attacks it; the board marks those enemies.
  const quickTargets=useMemo(()=>new Set(actor&&myTurn&&!motion.moving&&tool==='move'?getValidTargets(game,actor).filter(a=>a.enemy).map(a=>a.id):[]),[game,actor,myTurn,tool,motion.moving]);
  const route=useMemo(()=>previewTile&&actor&&!dragging&&reachableKeys.has(`${previewTile.x},${previewTile.y}`)?findBoardPath(game,actor,previewTile):null,[previewTile,actor,dragging,reachableKeys,game]);
- useEffect(()=>{setPreviewTile(null)},[game.eventSequence,tool,motion.moving]);
+ // A new event, tool or movement clears the route preview (adjusted during render).
+ const previewKey=`${game.eventSequence}|${tool}|${motion.moving}`,[previewFor,setPreviewFor]=useState(previewKey);
+ if(previewFor!==previewKey){setPreviewFor(previewKey);setPreviewTile(null);}
+ const boardMoving=useEffectEvent(()=>motion.isMoving());
  useEffect(()=>{
   const current=document.activeElement;
-  if(motion.isMoving()||!current?.hasAttribute('data-board-tile')||!svg.current?.contains(current))return;
+  if(boardMoving()||!current?.hasAttribute('data-board-tile')||!svg.current?.contains(current))return;
   if(keyboardTile){const next=svg.current.querySelector<SVGRectElement>(`[data-board-tile="${keyboardTile.x},${keyboardTile.y}"]`);if(next!==current)next?.focus({preventScroll:true})}
   else svg.current.focus({preventScroll:true});
  },[keyboardTile,motion.moving]);
  const w=projection.width,h=projection.height;
- frameTarget.current=game.actors.find(a=>a.id===focusId)||actor||{x:(game.width-1)/2,y:(game.height-1)/2};
+ // What the camera frames and where it is, for the observers and effects below (kept current before they run).
+ const frameOn=game.actors.find(a=>a.id===focusId)||actor||{x:(game.width-1)/2,y:(game.height-1)/2};
+ useLayoutEffect(()=>{frameTarget.current=frameOn;camera.current={zoom,pan}});
+ // A new scene, seed, size or view resets the camera's smoothing, the preview and any drag (adjusted during render).
+ const cameraKey=`${autoFrame}|${game.scene}|${game.options.seed}|${w}|${h}`,[cameraFor,setCameraFor]=useState({key:cameraKey,projection});
+ if(cameraFor.key!==cameraKey||cameraFor.projection!==projection){setCameraFor({key:cameraKey,projection});setSmoothCamera(false);setPreviewTile(null);setDragging(false);}
  useLayoutEffect(()=>{
-  cameraTouched.current=false;setSmoothCamera(false);setPreviewTile(null);
-  for(const id of pointers.current.keys())if(svg.current?.hasPointerCapture(id))svg.current.releasePointerCapture(id);pointers.current.clear();drag.current=null;pinch.current=null;setDragging(false);
+  cameraTouched.current=false;
+  for(const id of pointers.current.keys())if(svg.current?.hasPointerCapture(id))svg.current.releasePointerCapture(id);pointers.current.clear();drag.current=null;pinch.current=null;
   const el=svg.current;
   function frame(){
    const bounds=el?.getBoundingClientRect();
@@ -130,7 +140,7 @@ export default function Board({game,actor,tool,onTile,onActor,selectedId,myTurn,
   if(!target||!bounds)return;
   const movement=planActorMotions(before,game).find(plan=>plan.id===target.id);
   if(!movement)return;
-  const next=followBoardTarget(bounds,projection,{zoom,pan},target,projection.tileCenter);
+  const next=followBoardTarget(bounds,projection,camera.current,target,projection.tileCenter);
   if(next){setCameraDuration(movement.duration);setSmoothCamera(!reducedMotion);setPan(next)}
  },[game,autoFrame,focusId,actor?.id,reducedMotion,projection]);
  function reset(){cameraTouched.current=true;setCameraDuration(200);setSmoothCamera(!reducedMotion);setZoom(1);setPan({x:0,y:0})}
@@ -172,7 +182,7 @@ export default function Board({game,actor,tool,onTile,onActor,selectedId,myTurn,
  }
  // The scene camera faces the board from the front, so nearer rows (larger y) draw over farther ones.
  const scenery=useMemo(()=>game.tiles.filter(tile=>(tile.kind==='wall'||tile.decoration)&&!isGroundMark(tile.decoration)&&tile.decoration!=='span').map(tile=>({key:`prop-${tile.x}-${tile.y}`,depth:tile.y,x:tile.x,order:0,kind:'prop' as const,tile})),[game.tiles]);
- const lights=useMemo(()=>nightLights(game),[game.tiles]),nightLit=useMemo(()=>nightLitTiles(game,lights),[game.tiles,lights]);
+ const{lights,lit:nightLit}=nightLighting(game.tiles);
  const depthItems=useMemo(()=>viewMode==='2.5d'?[
   ...scenery.map(item=>({...item,faded:game.actors.some(a=>{const position=motion.depthPositions[a.id]||a;return !a.defeated&&Math.abs(position.x-item.tile.x)<=1&&item.tile.y-position.y>=0&&item.tile.y-position.y<=2})})),
   {key:'gateway',depth:game.exit.y,x:game.exit.x,order:1,kind:'gateway' as const},

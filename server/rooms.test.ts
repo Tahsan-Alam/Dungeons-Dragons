@@ -135,7 +135,7 @@ test('player cannot submit another actor, replace game state, or perform an out-
 test('presence updates return lightweight state and never roll back a concurrent command',async()=>{
   let now=100_000;const s=new RoomService(new MemoryRoomStore(),()=>now),host=await make(s);
   now+=16_000;
-  const [poll,update]=await Promise.all([s.get(host.session.code,host.session.token,host.room.version),command(s,host.session,host.room,{type:'addBot'})]);
+  const [,update]=await Promise.all([s.get(host.session.code,host.session.token,host.room.version),command(s,host.session,host.room,{type:'addBot'})]);
   assert.ok('room'in update);
   assert.equal((await roomOf(s,host.session)).players.length,2);
   const unchanged=await s.get(host.session.code,host.session.token,update.room.version);

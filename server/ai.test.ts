@@ -156,7 +156,7 @@ test('revoked seats cannot receive in-flight suggestions or speech, even without
   const ai={async choose(){entered();await wait;return null;},async speak(){entered();await wait;return 'data:audio/wav;base64,fixture';}} as unknown as GameAI;
   const pending=new RoomService(store,Date.now,ai).assist(room.code,session.token,{version:narrated.room.version,audio,text:'guard'});
   await started;const record=(await store.read(room.code))!;delete record.tokenHashes[session.playerId];const previous=record.revision;record.revision++;assert.ok(await store.compareAndSwap(room.code,previous,record));
-  release();await assert.rejects(pending,(e:any)=>e.code==='UNAUTHORIZED');
+  release();await assert.rejects(pending,(e:{code?:string})=>e.code==='UNAUTHORIZED');
  }
 });
 
@@ -172,7 +172,7 @@ test('explicit player opt-out prevents planning, narration, action interpretatio
 test('AI guidance carries story memory and direction, caches identical questions and never mutates the game',async()=>{
  const state=applyStoryDirection(game(),'Make the woods hopeful and full of curious foxes.');
  state.story!.memories=[{chapter:1,title:'Earlier crossing',summary:'Ada protected a courier.'}];
- const before=structuredClone(state);let calls=0,payload:any;
+ const before=structuredClone(state);let calls=0,payload:{input:string;tools?:unknown}={input:'{}'};
  const ai=new GameAI(config,new BudgetLedger(new MemoryLedger()),async(_url,init)=>{calls++;payload=JSON.parse(String(init?.body));return reply({reply:'Move toward the guardians, then choose a reachable target.'});});
  const result=await ai.guide('guide',state,'you','What next?');assert.equal(result.source,'openai');
  assert.deepEqual(await ai.guide('guide',state,'you','What next?'),result);assert.equal(calls,1);
@@ -205,7 +205,7 @@ test('only host steering changes the ending; guidance works outside a turn and s
  const seat=idlePlayer.playerId===host.session.playerId?host.session:guest.session;
  const help=await service.assist(host.room.code,seat.token,{version:started.room.version,guidance:true,text:'What do I do next?'});
  assert.ok('reply'in help);assert.match(help.reply!,/turn/);
- await assert.rejects(service.command(host.room.code,guest.session.token,{version:started.room.version,requestId:'guest-steer-story',command:{type:'steer',text:'End after this chapter.'}}),(e:any)=>e.code==='HOST_ONLY');
+ await assert.rejects(service.command(host.room.code,guest.session.token,{version:started.room.version,requestId:'guest-steer-story',command:{type:'steer',text:'End after this chapter.'}}),(e:{code?:string})=>e.code==='HOST_ONLY');
  const directed=await service.command(host.room.code,host.session.token,{version:started.room.version,requestId:'host-steer-story',command:{type:'steer',text:'End after this chapter.'}});assert.ok('room'in directed);
  assert.equal(storyGoal(directed.room.game!),1);assert.equal(directed.room.game!.status,'playing');assert.equal(directed.room.game!.relics,0);
  const resumed=await new RoomService(store).get(host.room.code,host.session.token);assert.ok('room'in resumed);assert.equal(storyGoal(resumed.room.game!),1);

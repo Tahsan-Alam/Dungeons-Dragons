@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-// @ts-ignore Node's built-in TypeScript runner needs the explicit source extension.
+// Node's built-in TypeScript runner needs the explicit source extension.
 import { applyAction, createGame, encounterCleared, getQuestAction, getReachable, getValidTargets, runBots } from './engine.ts';
 import type { GameState, GameOptions, PlayerSpec } from './types';
 

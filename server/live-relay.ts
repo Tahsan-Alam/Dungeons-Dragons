@@ -2,7 +2,7 @@ import {BudgetLedger} from './ai-ledger.ts';
 import {LIVE_CALL_WINDOWS,LIVE_LIMITS,LIVE_RATE,LIVE_RESERVATION,liveSession,parseLiveClient} from './live-protocol.ts';
 import type {LiveServerEvent,LiveStart} from './live-protocol.ts';
 
-export interface LiveSocket {accept():void;send(data:string):void;close(code?:number,reason?:string):void;addEventListener(type:string,listener:(event:any)=>void):void;removeEventListener(type:string,listener:(event:any)=>void):void;}
+export interface LiveSocket {accept():void;send(data:string):void;close(code?:number,reason?:string):void;addEventListener(type:string,listener:(event:{data:unknown})=>void):void;removeEventListener(type:string,listener:(event:{data:unknown})=>void):void;}
 export interface LiveClock {now:()=>number;setInterval:(callback:()=>void,ms:number)=>ReturnType<typeof setInterval>;clearInterval:(timer:ReturnType<typeof setInterval>)=>void;}
 // Worker timers require their global receiver; calling a copied host function
 // as clock.setInterval() throws before the WebSocket can be upgraded.
@@ -15,7 +15,8 @@ const silence=btoa('\0'.repeat(LIVE_RATE/10*2));
 export function attachLiveRelay(client:LiveSocket,options:{key:string;ledger:BudgetLedger;transport?:typeof fetch;clock?:LiveClock;background?:(task:Promise<unknown>)=>void}) {
  const timerClock=options.clock??clock,transport=options.transport??fetch;
  let upstream:LiveSocket|undefined,start:LiveStart|null=null,receipt='',ready=false,closing=false,done=false,reserving=false;
- let connectedAt=timerClock.now(),startedAt=0,lastUserAt=connectedAt,lastInputAt=connectedAt,lastOutputAt=0;
+ const connectedAt=timerClock.now();
+ let startedAt=0,lastUserAt=connectedAt,lastInputAt=connectedAt,lastOutputAt=0;
  let fundedDuration:number=LIVE_LIMITS.call;
  let bytesIn=0,bytesOut=0,events=0,clientControls=0,wireBytes=0,micMuted=true,heardOutput=false;
  let closeAt=0,reason='ended',userText='',delegationSnapshot='',sentContextAt=0,pendingDelegation='',delegatedAt=0,lastTranscriptAt=0,reportedSeconds=0;

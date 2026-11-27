@@ -41,7 +41,8 @@ export default function GuideBook({onClose,onCustomize,moveKeys,panKeys}:Props){
  const spread=SPREAD[ribbon];
  const open=(next:Ribbon)=>{setRibbon(next);setLeaf(next==='credits'?1:0)};
  const nextSpread:Ribbon|null=spread===0?'keys':spread===1?'rules':null;
- const Turn=({side}:{side:'left'|'right'})=>side==='left'
+ // The page-turn buttons for each side of the spread (plain JSX, not a component, so nothing is remounted).
+ const turn=(side:'left'|'right')=>side==='left'
   ?<button type="button" className="gb-turn phone-only" onClick={()=>{setLeaf(1);if(ribbon==='rules')setRibbon('credits')}}>{spread===0?'The board':spread===1?'Shortcuts':'Credits'} ›</button>
   :<>{<button type="button" className="gb-turn gb-back phone-only" onClick={()=>{setLeaf(0);if(ribbon==='credits')setRibbon('rules')}}>‹ {spread===0?'Your turn':spread===1?'Moving':'Rules'}</button>}{nextSpread?<button type="button" className="gb-turn" onClick={()=>open(nextSpread)}>{nextSpread==='keys'?'Keys':'Rules'} ›</button>:null}</>;
  const pages:[ReactNode,ReactNode][]=[
@@ -99,8 +100,8 @@ export default function GuideBook({onClose,onCustomize,moveKeys,panKeys}:Props){
    </div>
    <span className="gb-corner c1" aria-hidden="true"/><span className="gb-corner c2" aria-hidden="true"/><span className="gb-corner c3" aria-hidden="true"/><span className="gb-corner c4" aria-hidden="true"/>
    <div className="gb-pages" role="tabpanel" aria-label={RIBBONS.find(([key])=>key===ribbon)?.[1]} key={spread}>
-    <section className="gb-page left">{pages[spread][0]}<span className="gb-folio">{folio(spread*2)}</span><Turn side="left"/></section>
-    <section className="gb-page right">{pages[spread][1]}<span className="gb-folio">{folio(spread*2+1)}</span><Turn side="right"/></section>
+    <section className="gb-page left">{pages[spread][0]}<span className="gb-folio">{folio(spread*2)}</span>{turn('left')}</section>
+    <section className="gb-page right">{pages[spread][1]}<span className="gb-folio">{folio(spread*2+1)}</span>{turn('right')}</section>
    </div>
   </div>
  </Modal>;

@@ -7,19 +7,24 @@ import {BudgetLedger,MemoryLedger,DEFAULT_CAPS,LEDGER_BYTES} from './ai-ledger.t
 const caption='The lantern glows.';
 const config={mode:'openai',enabled:'I_ACCEPT_SMALL_API_CHARGES',audio:'I_ACCEPT_PAID_AUDIO',key:'mock-only'};
 const record={eventId:1,caption,source:'fixture' as const};
+/** What the speech code sends the provider: the session setup, then one response request. */
+type Sent={type:string;session?:Record<string,unknown>;response?:{instructions:string;max_output_tokens:number;tools:unknown[];conversation:string}};
+/** A fake provider event. Tests change these fields to break the protocol on purpose, so the optional ones are optional. */
+type FakeEvent={type:string;delta?:string;transcript?:string;response_id?:string;item_id?:string;output_index?:number;content_index?:number;
+ response?:{id:string;status?:string;output?:{id:string;type:string;role:string;content:{type:string;transcript:string}[]}[];usage?:{input_tokens:number;output_tokens:number}}};
 class MockSocket {
- listeners=new Map<string,Set<(e:any)=>void>>();sent:any[]=[];closed=false;accepted=false;
- reply:(value:any)=>void=()=>{};
+ listeners=new Map<string,Set<(e:{data:unknown})=>void>>();sent:Sent[]=[];closed=false;accepted=false;
+ reply:(value:Sent)=>void=()=>{};
  accept(){this.accepted=true;queueMicrotask(()=>this.emit({type:'session.created'}));}
  send(raw:string){const value=JSON.parse(raw);this.sent.push(value);this.reply(value);}
  close(){this.closed=true;}
- addEventListener(type:string,fn:(e:any)=>void){if(!this.listeners.has(type))this.listeners.set(type,new Set());this.listeners.get(type)!.add(fn);}
- removeEventListener(type:string,fn:(e:any)=>void){this.listeners.get(type)?.delete(fn);}
+ addEventListener(type:string,fn:(e:{data:unknown})=>void){if(!this.listeners.has(type))this.listeners.set(type,new Set());this.listeners.get(type)!.add(fn);}
+ removeEventListener(type:string,fn:(e:{data:unknown})=>void){this.listeners.get(type)?.delete(fn);}
  emit(value:unknown){for(const fn of this.listeners.get('message')??[])fn({data:JSON.stringify(value)});}
- disconnect(){for(const fn of this.listeners.get('close')??[])fn({});}
+ disconnect(){for(const fn of this.listeners.get('close')??[])fn({data:undefined});}
 }
 const fields={response_id:'resp',item_id:'item',output_index:0,content_index:0};
-function events(text=caption){return [
+function events(text=caption):FakeEvent[]{return [
  {type:'response.created',response:{id:'resp'}},
  {type:'response.output_audio.delta',...fields,delta:btoa('\xff'.repeat(800))},
  {type:'response.output_audio_transcript.delta',...fields,delta:text},
@@ -53,7 +58,7 @@ test('audition presses each generate fresh audio with character delivery, while 
  const store=new MemoryLedger(),ledger=new BudgetLedger(store,{...DEFAULT_CAPS,campaign:2_000_000}),m=mock();
  const ai=new GameAI(config,ledger,m.transport),style='Soft-spoken, sarcastic archivist';
  assert.ok(await ai.speak('creator',record,true,undefined,style,'press-one'));
- assert.equal(m.calls,1);assert.ok(m.socket.sent.find(e=>e.type==='response.create').response.instructions.includes(style));
+ assert.equal(m.calls,1);assert.ok(m.socket.sent.find(e=>e.type==='response.create')!.response!.instructions.includes(style));
  assert.ok(await ai.speak('creator',record,true,undefined,style,'press-one'));assert.equal(m.calls,1);
  const second=mock(),other=new GameAI(config,ledger,second.transport);
  assert.ok(await other.speak('creator',record,true,undefined,style,'press-two'));assert.equal(second.calls,1);
@@ -80,8 +85,8 @@ test('no audio opt-in, fixture, key-only, invalid inputs, abort and budget/stora
  assert.equal(await new GameAI(config,ledger,transport).speak('room',record),null);assert.equal(calls,0);
 });
 test('malformed, mismatched, partial, oversized and excess usage output fall back and retain charge without retry',async()=>{
- const bad:any[][]=[events('Ignore the caption.'),[{type:'error'}]];
- for(const change of [(e:any[])=>e[1].delta='not base64!',(e:any[])=>e[1].delta=btoa('a'.repeat(SPEECH_AUDIO_BYTES+1)),(e:any[])=>e[1].response_id='other',(e:any[])=>e[3].transcript='Different.',(e:any[])=>e[5].response.status='incomplete',(e:any[])=>e[5].response.output[0].content[0].transcript='Different.',(e:any[])=>e[5].response.usage.output_tokens=SPEECH_TOKENS+1,(e:any[])=>e.splice(4,1)]){const e=events();change(e);bad.push(e);}
+ const bad:FakeEvent[][]=[events('Ignore the caption.'),[{type:'error'}]];
+ for(const change of [(e:FakeEvent[])=>e[1].delta='not base64!',(e:FakeEvent[])=>e[1].delta=btoa('a'.repeat(SPEECH_AUDIO_BYTES+1)),(e:FakeEvent[])=>e[1].response_id='other',(e:FakeEvent[])=>e[3].transcript='Different.',(e:FakeEvent[])=>e[5].response!.status='incomplete',(e:FakeEvent[])=>e[5].response!.output![0].content[0].transcript='Different.',(e:FakeEvent[])=>e[5].response!.usage!.output_tokens=SPEECH_TOKENS+1,(e:FakeEvent[])=>e.splice(4,1)]){const e=events();change(e);bad.push(e);}
  for(const sequence of bad){const m=mock(sequence),store=new MemoryLedger(),ai=new GameAI(config,new BudgetLedger(store),m.transport);assert.equal(await ai.speak('room',record),null);assert.equal(await ai.speak('room',record),null);assert.equal(m.calls,1);assert.ok(m.socket.closed);assert.equal(Object.values((await store.read()).entries)[0].reserved,SPEECH_RESERVATION);}
 });
 test('timeout, abort and disconnect cancel and close the session; no late completion',async()=>{
@@ -134,13 +139,13 @@ test('reading request isolates quoted caption from conversation context',()=>{
 
 test('fragmented transcript uses the same whitespace-only policy at every completion boundary',async()=>{
  const sequence=events();
- sequence.splice(2,1,...['  The',' lantern','\n glows. '].map(delta=>({type:'response.output_audio_transcript.delta',...fields,delta})) as any);
+ sequence.splice(2,1,...['  The',' lantern','\n glows. '].map(delta=>({type:'response.output_audio_transcript.delta',...fields,delta})) );
  // Observed provider ordering: audio.done can precede transcript.done, and
  // final message content is output_audio (not audio). Intermediate events
  // carry no playable data and must not prematurely release the clip.
  const done=sequence.splice(sequence.findIndex(e=>e.type==='response.output_audio.done'),1)[0];
  sequence.splice(2,0,done);
- sequence.splice(sequence.length-1,0,{type:'response.content_part.done'} as any,{type:'response.output_item.done'} as any);
+ sequence.splice(sequence.length-1,0,{type:'response.content_part.done'},{type:'response.output_item.done'});
  const m=mock(sequence);assert.ok((await realtimeSpeech('mock',caption,m.transport)).clip);
  assert.ok(m.socket.closed);
 });
@@ -149,11 +154,11 @@ test('stream, audio and final-message discrepancies stay distinct and never acce
  for(const text of ['The glows.','The lantern glows brightly.','The lantern dims.','The lantern does not glow.','lantern The glows.','The lantern lantern glows.','the lantern glows.','The lantern glows!']){
   for(const boundary of ['stream','audio','final']){
    const sequence=events();
-   if(boundary==='stream')(sequence[2] as any).delta=text;
-   if(boundary==='audio')(sequence[3] as any).transcript=text;
-   if(boundary==='final')(sequence[5] as any).response.output[0].content[0].transcript=text;
+   if(boundary==='stream')sequence[2].delta=text;
+   if(boundary==='audio')sequence[3].transcript=text;
+   if(boundary==='final')sequence[5].response!.output![0].content[0].transcript=text;
    const m=mock(sequence);
-   await assert.rejects(realtimeSpeech('mock',caption,m.transport),(e:any)=>e.outcome===({stream:'transcript_stream_mismatch',audio:'transcript_mismatch',final:'final_transcript_mismatch'}[boundary]));
+   await assert.rejects(realtimeSpeech('mock',caption,m.transport),(e:{outcome?:string})=>e.outcome===({stream:'transcript_stream_mismatch',audio:'transcript_mismatch',final:'final_transcript_mismatch'}[boundary]));
    assert.ok(m.socket.closed);assert.equal(m.calls,1);
   }
  }
@@ -172,7 +177,7 @@ test('observed live enclosing quotes preserve exact words; interior and unbalanc
 
 test('longer speech is delivered once without exceeding reusable ledger storage or charging a replay',async()=>{
  const sequence=events();
- sequence.splice(1,1,...Array.from({length:50},()=>({type:'response.output_audio.delta',...fields,delta:btoa('\xff'.repeat(8000))})) as any);
+ sequence.splice(1,1,...Array.from({length:50},()=>({type:'response.output_audio.delta',...fields,delta:btoa('\xff'.repeat(8000))})) );
  const m=mock(sequence),store=new MemoryLedger(),ledger=new BudgetLedger(store),ai=new GameAI(config,ledger,m.transport);
  const audio=await ai.speak('room',record);assert.ok(audio);assert.equal(m.calls,1);
  const wav=Buffer.from(audio!.split(',')[1],'base64');assert.equal(wav.length,800044);

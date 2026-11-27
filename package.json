@@ -15,7 +15,7 @@
     "db:generate": "drizzle-kit generate",
     "typecheck": "tsc --noEmit",
     "test": "node --experimental-strip-types --test game/*.test.ts server/*.test.ts app/ui/*.test.ts app/ui/sound/*.test.ts scripts/*.test.mjs",
-    "check": "npm run typecheck && npm test && npm run build"
+    "check": "npm run typecheck && npm run lint && npm test && npm run build"
   },
   "dependencies": {
     "drizzle-orm": "0.45.2",

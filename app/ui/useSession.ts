@@ -1,6 +1,6 @@
 'use client';
 import {NARRATION_LIMIT} from '../../game/campaign';
-import { useEffect, useRef, useState } from 'react';
+import {useEffect,useEffectEvent,useRef,useState} from 'react';
 import type { GameState, GameOptions, HeroClass, RoomView, RoomPlayer, Session, GameAction, PlayerSpec } from '../../game/types';
 import { HERO_COLORS } from '../../game/types';
 import { createGame, applyAction, runBots } from '../../game/engine';
@@ -67,6 +67,8 @@ export function useSession(){
  const pendingAdmission=useRef<PendingAdmission|null>(null),pendingCommand=useRef<PendingCommand|null>(null);
  useEffect(()=>{
   mounted.current=true;
+  // The set of open requests is one object for the hook's life; it is aborted and emptied on unmount.
+  const open=controllers.current;
   const s=read(SOLO_KEY,localStorage),tabSession=read(SESSION_KEY,sessionStorage),r=validSession(tabSession)?tabSession:read(SESSION_KEY,localStorage);
   store.current=new AdventureStore();
   void store.current.migrate(s,r).then(()=>store.current!.all()).then(all=>{if(!mounted.current)return;records.current=new Map(all.map(r=>[r.meta.id,r]));persisted.current=new Map(all.map(r=>[r.meta.id,r.revision]));refreshLibrary();setLibraryReady(true);}).catch(e=>{if(mounted.current){setLibraryReady(true);setError(e instanceof Error?e.message:'Saved games could not be loaded.');}});
@@ -74,7 +76,7 @@ export function useSession(){
   if(object(admission)&&typeof admission.path==='string'&&['/api/rooms','/api/rooms/join'].includes(admission.path)&&object(admission.parameters)&&typeof admission.requestId==='string')pendingAdmission.current=admission as PendingAdmission;
   const command=read(COMMAND_KEY,sessionStorage);
   if(object(command)&&typeof command.code==='string'&&typeof command.playerId==='string'&&object(command.payload)&&typeof command.payload.requestId==='string'&&Number.isInteger(command.payload.version))pendingCommand.current=command as PendingCommand;
-  return()=>{mounted.current=false;for(const controller of controllers.current)controller.abort();controllers.current.clear();};
+  return()=>{mounted.current=false;for(const controller of open)controller.abort();open.clear();};
  },[]);
  function refreshLibrary(){
   const all=[...records.current.values()];setLibrary(sortedLibrary(all));
@@ -211,7 +213,9 @@ export function useSession(){
   }catch(e){setError(e instanceof Error?e.message:'Saved games could not be loaded.');}
  }
  function backToLibrary(){closeRoom(false);setSolo(null);select(null);void reloadLibrary();}
- useEffect(()=>{if(!inLibrary||!libraryReady)return;const refresh=()=>{if(!document.hidden)void reloadLibrary();};window.addEventListener('focus',refresh);return()=>window.removeEventListener('focus',refresh);},[inLibrary,libraryReady]);
+ // Effect events: the polling and refresh loops below always call the latest version of these, without restarting.
+ const refreshOnFocus=useEffectEvent(()=>{void reloadLibrary();});
+ useEffect(()=>{if(!inLibrary||!libraryReady)return;const refresh=()=>{if(!document.hidden)refreshOnFocus();};window.addEventListener('focus',refresh);return()=>window.removeEventListener('focus',refresh);},[inLibrary,libraryReady]);
  async function updateSaved(id:string,changes:{title?:string;pinned?:boolean;archived?:boolean}){
   const record=records.current.get(id);if(!record)return false;
   const title=changes.title===undefined?record.meta.title:changes.title.trim().slice(0,80);if(!title){setError('Give this game a name.');return false;}
@@ -270,6 +274,7 @@ export function useSession(){
   catch(error){setError(error instanceof Error?error.message:'Could not save story direction.');return false;}
  }
  // Refresh waiting rooms without heartbeat: being at Games must not claim a player is present at every table.
+ const savePolledRoom=useEffectEvent((room:RoomView,auth:Session)=>saveRoom(room,auth)),savePolledRecord=useEffectEvent((record:AdventureRecord)=>saveRecord(record));
  useEffect(()=>{
   if(!inLibrary||!libraryReady)return;
   let stopped=false,timer:ReturnType<typeof setTimeout>|undefined,index=0;
@@ -280,12 +285,13 @@ export function useSession(){
     const record=waiting.length?waiting[index++%waiting.length]:null;
     if(record?.session){try{
      const data=await api(`/api/rooms/${record.session.code}?version=${record.room?.version??-1}&background=1`,undefined,record.session);
-     if(!stopped&&data.room&&records.current.has(record.meta.id))saveRoom(data.room,record.session);
-    }catch(e){if(!stopped&&e instanceof ApiError&&e.terminal){const current=records.current.get(record.meta.id);if(current)void saveRecord({...current,session:null,revision:current.revision+1,meta:{...current.meta,status:current.game?.status==='playing'||!current.game?'unavailable':current.game.status,yourTurn:false}}).catch(()=>{});}}}
+     if(!stopped&&data.room&&records.current.has(record.meta.id))savePolledRoom(data.room,record.session);
+    }catch(e){if(!stopped&&e instanceof ApiError&&e.terminal){const current=records.current.get(record.meta.id);if(current)void savePolledRecord({...current,session:null,revision:current.revision+1,meta:{...current.meta,status:current.game?.status==='playing'||!current.game?'unavailable':current.game.status,yourTurn:false}}).catch(()=>{});}}}
    }
    if(!stopped)timer=setTimeout(poll,2500);
   };void poll();return()=>{stopped=true;if(timer)clearTimeout(timer);};
  },[inLibrary,libraryReady]);
+ const acceptPolledRoom=useEffectEvent((room:RoomView)=>acceptRoom(room)),closePolledRoom=useEffectEvent((forget:boolean)=>closeRoom(forget)),handlePollError=useEffectEvent((e:unknown)=>handleError(e));
  useEffect(()=>{
   if(!session)return;
   let stopped=false,timer:ReturnType<typeof setTimeout>|undefined,controller:AbortController|undefined,failures=0;
@@ -297,17 +303,17 @@ export function useSession(){
     controller=new AbortController();
     const data=await api(`/api/rooms/${session.code}?version=${current?.version??-1}`,undefined,session,controller.signal);
     if(stopped||latest.current.session?.token!==session.token)return;
-    if(data.room)acceptRoom(data.room);
+    if(data.room)acceptPolledRoom(data.room);
     else if(data.unchanged&&data.players&&data.version===latest.current.room?.version){
      const previous=latest.current.room;
-     if(previous)acceptRoom({...previous,players:mergePresence(previous.players,data.players),hostId:data.hostId??previous.hostId});
+     if(previous)acceptPolledRoom({...previous,players:mergePresence(previous.players,data.players),hostId:data.hostId??previous.hostId});
     }
     failures=0;setConnection('online');
    }catch(e){
     if(stopped||latest.current.session?.token!==session.token)return;
-    if(e instanceof ApiError&&e.terminal){stopped=true;handleError(e);return;}
+    if(e instanceof ApiError&&e.terminal){stopped=true;handlePollError(e);return;}
     failures++;
-    if(failures>=6){stopped=true;closeRoom(false);setError('The connection is still unavailable. Your seat is saved; return to the menu and reconnect when you’re ready.');return;}
+    if(failures>=6){stopped=true;closePolledRoom(false);setError('The connection is still unavailable. Your seat is saved; return to the menu and reconnect when you’re ready.');return;}
     setConnection('reconnecting');delay=e instanceof ApiError&&e.retryAfter?e.retryAfter*1000:Math.min(15_000,1200*2**failures);
    }finally{if(!stopped&&latest.current.session?.token===session.token)timer=setTimeout(poll,delay);}
   };
