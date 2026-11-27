@@ -4,16 +4,16 @@ import {GAME_MASTER_ART_RATIO} from '../../game/presets';
 import type {OwnGameMasterInput} from '../../game/own-game-master';
 import {Portrait} from './RealmKit';
 import {paintedFailed,usePaintedFigure} from './painted-portrait';
-import {useAIPreference} from './ai-preferences';
 
 type Access={imagesAvailable?:boolean;imagesPerDay?:number};
-/** Whether this server can paint and this device has AI on. Checked once per visit. */
+/** Whether this server can paint for this device. The server answers from its own painting setup and the
+    device's AI on/off cookie, so painting works even where the paid text AI isn't set up. Checked once per visit. */
 function useImageAccess(){
- const [access,setAccess]=useState<Access|null>(null),[ai]=useAIPreference();
+ const [access,setAccess]=useState<Access|null>(null);
  useEffect(()=>{const controller=new AbortController();
   fetch('/api/ai/access',{cache:'no-store',signal:controller.signal}).then(r=>r.ok?r.json() as Promise<Access>:null).then(setAccess).catch(()=>{});
   return()=>controller.abort();},[]);
- return ai&&access?.imagesAvailable?access:null;
+ return access?.imagesAvailable?access:null;
 }
 
 function Option({id,checked,onPick,label}:{id:string;checked:boolean;onPick:()=>void;label:string}){
