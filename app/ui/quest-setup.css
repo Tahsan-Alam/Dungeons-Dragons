@@ -2,7 +2,7 @@
 /* The setup is a full-window screen with no app header (its own Back leads home); it scrolls only when the window is too short. --qs-h is the height left for a step. */
 .app-root:is([data-screen=solo],[data-screen=online],[data-screen=join]) .app-header{display:none}
 .app-root:is([data-screen=solo],[data-screen=online],[data-screen=join])>.app-content>.qs{height:100%}
-.qs{--qs-h:calc(100dvh - 176px);box-sizing:border-box;display:grid;grid-template-columns:minmax(0,1fr);grid-template-rows:auto minmax(0,1fr) auto;gap:14px;width:100%;flex:1 1 auto;min-height:0;overflow-y:auto;overscroll-behavior:contain;padding:20px clamp(16px,3.6vw,48px) 20px;
+.qs{--qs-h:calc(100dvh - 176px);box-sizing:border-box;display:grid;grid-template-columns:minmax(0,1fr);grid-template-rows:auto 1fr auto;gap:14px;width:100%;flex:1 1 auto;min-height:0;overflow-y:auto;overscroll-behavior:contain;padding:20px clamp(16px,3.6vw,48px) 20px;
  background:radial-gradient(ellipse at 60% 40%,#18202c,#0a0e14 75%)}
 .qs-top{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}
 .qs-top h1{margin:0;font-size:clamp(26px,2.8vw,36px);line-height:1.1;outline:none}
@@ -174,7 +174,7 @@ html:root[data-color-mode][data-theme] body .realm button.qs-own-swatch[aria-che
  .qs-stage{height:auto;width:100%;max-width:340px}
  .qs-setout-scene{max-height:none}
  .qs-gm,.qs-hero,.qs-sheet,.qs-setout{grid-template-columns:minmax(0,1fr)}
- .qs-gm-cards{flex-direction:row;gap:8px;order:2}
+ .qs-gm-cards{flex-direction:row;gap:8px;order:-1}
  .qs-gm-card{flex-direction:column;align-items:flex-start;padding:8px;gap:6px}
  .qs-gm-card-text span{display:none}
  .qs-gm-card-text strong{font-size:14px}
@@ -270,16 +270,28 @@ html:root[data-color-mode][data-theme] body .realm button.tc-voice-btn:disabled{
 @keyframes qs-paint-pulse{50%{opacity:.5}}
 @media (prefers-reduced-motion:reduce){.qs-paint-loading{animation:none}}
 .qs-paint-unusable{opacity:.55;cursor:default}.qs-paint-unusable .qs-paint-loading{animation:none}
-/* Your own hero: the figure on the hero stage beside the builder, in the roster's right-hand column. */
-.qs-own-hero{display:grid;grid-template-columns:minmax(0,40%) minmax(0,1fr);align-items:start;gap:0;max-height:clamp(320px,var(--qs-h),760px)}
-.qs-own-hero .qs-stage{height:auto;width:100%;aspect-ratio:600/560}
-.qs-own-hero .qs-own-form{max-height:clamp(320px,var(--qs-h),760px);background:#0f141b;border:1px solid #2a3340}
+/* Create your own: leads each list with a dashed frame and a +, and opens a full workbench. */
+.qs-make{border-style:dashed !important}
+.qs-make:not([aria-checked="true"]){border-color:#6a7d92 !important}
+.qs-make-mark{flex:none;display:grid;place-items:center;width:84px;height:104px;border-radius:2px;background:radial-gradient(circle at 50% 40%,#243041,#121820);font:400 46px/1 var(--realm-serif,Georgia);color:#9CC9EA}
+.qs-tile .qs-make-mark{width:100%;height:58px;font-size:34px}
+.qs-or{margin:2px 0 -4px;font:600 11.5px Inter,system-ui,sans-serif;letter-spacing:.16em;text-transform:uppercase;color:#8d99a6;text-align:center}
+.qs-bench{display:grid;grid-template-columns:minmax(0,1fr) minmax(360px,520px);gap:24px;align-items:start}
+.qs-bench-stage{position:sticky;top:0;overflow:hidden;height:clamp(300px,var(--qs-h),720px);border:1px solid #3a4655;border-radius:3px;background:#10151c}
+.qs-bench-scene{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.qs-bench-figure{position:absolute;left:50%;bottom:17%;height:74%;max-width:92%;width:auto;transform:translateX(-50%);object-fit:contain;object-position:bottom;filter:drop-shadow(0 8px 18px rgba(0,0,0,.5))}
+.qs-bench-shadow{position:absolute;left:50%;bottom:calc(21.5% - 7px);width:30%;height:14px;transform:translateX(-50%);border-radius:50%;background:rgba(3,5,8,.72)}
+.qs-bench-stage.hero{height:auto;aspect-ratio:600/560;background:#0c1016}
+.qs-bench-stage.hero .qs-bench-scene{object-fit:contain}
+.qs-bench-form{box-sizing:border-box;display:flex;flex-direction:column;gap:16px;padding:22px 26px;background:#0f141b;border:1px solid #2a3340}
+.qs-bench-form .qs-own-classes,.qs-bench-form .qs-own-forms{grid-template-columns:repeat(4,minmax(0,1fr))}
 .qs-own-classes{grid-template-columns:repeat(4,minmax(0,1fr))}
 .qs-own-class-note{margin:6px 0 0;font:500 12.5px Inter,system-ui,sans-serif;color:#a9b3be}
 .qs-paint-drawing.hero{object-position:50% 18%}
 @media (max-width:900px){
- .qs-own-hero{grid-template-columns:minmax(0,1fr);max-height:none;order:-1}
- .qs-own-hero .qs-stage{max-width:340px;justify-self:center}
- .qs-own-hero .qs-own-form{max-height:none;overflow:visible}
- .qs-own-classes{grid-template-columns:repeat(4,minmax(0,1fr))}
+ .qs-or{display:none}
+ .qs-bench{grid-template-columns:minmax(0,1fr);gap:12px}
+ .qs-bench-stage{position:relative;height:260px}
+ .qs-bench-stage.hero{height:auto;max-width:340px;width:100%;justify-self:center}
+ .qs-bench-form{padding:16px}
 }

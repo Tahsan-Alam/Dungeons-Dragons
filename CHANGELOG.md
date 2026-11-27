@@ -4,6 +4,9 @@ Record user-visible changes at version checkpoints. Git history and pull request
 
 ## Unreleased
 
+- Create your own comes first: it leads the Game Master list and the hero roster, and opens a full workbench where shape, class and colour stay in view while you change them. Done keeps your creation; Back to the list returns to what you had.
+- A pause menu at the table: Esc or Menu opens Resume, Settings, How to play, Saved adventures and Return to the title.
+
 - Make your own hero: the Hero step's last card opens a builder for a name, one of the eight classes, a colour and who they are. With painting on, paint them too: the picture stands on the board, in the turn order, on their sheet and in replays. Each player gets 4 Game Master pictures and 4 hero pictures a day.
 
 - Paint your own Game Master: with AI on, the builder can turn your choices and a few words into a picture in the realm's style (FLUX with the team's style LoRA). Each try paints two; keep one or keep the drawing. Up to 4 pictures per player per day. Descriptions can't name characters from other stories (describe the look instead), a crown replaces the hat rather than sitting on it, and a picture with the figure cut off at the edge isn't offered. The picture stands in every scene, card and replay; the drawing stays as the fallback.

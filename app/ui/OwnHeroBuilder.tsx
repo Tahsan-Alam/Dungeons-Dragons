@@ -19,22 +19,22 @@ export function ownHeroPreset(own:OwnHeroInput,profile:HeroProfile|null,painted?
   profile:profile??{name,background:'',personality:['Brave'],heroClass:own.heroClass,color:own.color}};
 }
 
-/** The builder beside the roster: their figure on the hero stage, then name, class, colour, who they are and Paint them. */
-export default function OwnHeroBuilder({hero,own,setOwn}:{hero:HeroPreset;own:OwnHeroInput;setOwn:(own:OwnHeroInput)=>void}){
+/** The workbench for your own hero: their figure large on the hero stage, every choice in fixed rows beside it. */
+export default function OwnHeroBench({hero,own,setOwn}:{hero:HeroPreset;own:OwnHeroInput;setOwn:(own:OwnHeroInput)=>void}){
  // A new class or colour makes an earlier painting out of date.
  const set=(patch:Partial<OwnHeroInput>)=>setOwn({...own,...patch,...('heroClass' in patch||'color' in patch?{portrait:undefined}:{})});
  const named=!!own.name.trim(),drawing=customHeroArt({name:hero.name,heroClass:own.heroClass,color:own.color});
- return <section className="qs-hero-stage qs-own-hero" aria-label="Your own hero" style={{['--own-colour' as string]:own.color}}>
-  <div className="qs-stage" role="img" aria-label={`${hero.name}, ${hero.className}`}>
-   <img className="qs-stage-set" src="/art/scenes/hero-stage.svg" alt=""/>
+ return <div className="qs-bench" style={{['--own-colour' as string]:own.color}}>
+  <section className="qs-bench-stage hero" aria-label={`${hero.name}, ${hero.className}`}>
+   <img className="qs-bench-scene" src="/art/scenes/hero-stage.svg" alt=""/>
    <span className="qs-stage-figure" style={stagePlacement({id:'own'})} aria-hidden="true"><span className="qs-stage-shadow"/><img src={hero.art} alt=""/></span>
-  </div>
-  <div className="qs-own-form">
+  </section>
+  <div className="qs-bench-form">
    <label className="qs-own-name"><span className="realm-eyebrow">Their name</span>
     <input name="own-hero-name" value={own.name} maxLength={24} placeholder="Tamsin" autoComplete="off" spellCheck={false} onChange={e=>set({name:e.target.value})}/></label>
    {!named?<p className="qs-own-ideas"><span>Or borrow one:</span>{OWN_HERO_NAME_IDEAS.slice(0,4).map(n=><button key={n} type="button" className="qs-own-chip" onClick={()=>set({name:n})}>{n}</button>)}</p>:null}
    <fieldset className="qs-own-set"><legend className="realm-eyebrow">Their class</legend>
-    <div className="qs-own-forms qs-own-classes" role="radiogroup" aria-label="Their class">{HERO_CLASSES.map(c=><button key={c} type="button" role="radio" aria-checked={own.heroClass===c} aria-label={CLASS_INFO[c].name} data-tooltip={CLASS_INFO[c].description} className="realm-choice qs-own-form-pick" onClick={()=>set({heroClass:c})}>
+    <div className="qs-own-forms qs-own-classes" role="radiogroup" aria-label="Their class">{HERO_CLASSES.map(c=><button key={c} type="button" role="radio" aria-checked={own.heroClass===c} aria-label={ownHeroClassName(c)} data-tooltip={CLASS_INFO[c].description} className="realm-choice qs-own-form-pick" onClick={()=>set({heroClass:c})}>
      <Portrait art={customHeroArt({name:hero.name,heroClass:c,color:own.color})} face={CUSTOM_FACE} ratio={HERO_ART_RATIO} width={46} height={46} scale={1.9}/><span>{ownHeroClassName(c)}</span></button>)}</div>
     <p className="qs-own-class-note">{CLASS_INFO[own.heroClass].description} · {CLASS_INFO[own.heroClass].ability}</p>
    </fieldset>
@@ -47,5 +47,5 @@ export default function OwnHeroBuilder({hero,own,setOwn}:{hero:HeroPreset;own:Ow
     setPortrait={portrait=>setOwn({...own,portrait})} placeholder="A few words: freckles and a fox-fur collar"/>
    <p className="qs-own-note">Your hero plays as a {ownHeroClassName(own.heroClass).toLowerCase()}: the class sets every rule. Sealed notes belong to the sixteen heroes, so yours keeps none.</p>
   </div>
- </section>;
+ </div>;
 }

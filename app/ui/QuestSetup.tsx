@@ -1,7 +1,7 @@
 'use client';
 import {playSound} from './sound/engine';
 import {useEffect,useRef,useState} from 'react';
-import {DEFAULT_OPTIONS} from '../../game/types';
+import {DEFAULT_OPTIONS,HERO_COLORS as HERO_COLOURS} from '../../game/types';
 import type {GameOptions,HeroClass} from '../../game/types';
 import {GAME_MASTERS,TALES,HEROES,HERO_ART_RATIO,GAME_MASTER_ART_RATIO,SCENE_FOR_BIOME,SETTING} from '../../game/presets';
 import {settingLine} from '../../game/lore';
@@ -16,7 +16,7 @@ import {DRAWN_GM_FACE,customGameMasterArt} from './game-master-figure';
 import {CUSTOM_FACE,customHeroArt} from './hero-figure';
 import {usePaintedFigure,type PaintedFigure} from './painted-portrait';
 import PaintPanel from './PaintPanel';
-import OwnHeroBuilder,{ownHeroPreset,stagePlacement} from './OwnHeroBuilder';
+import OwnHeroBench,{ownHeroPreset,stagePlacement} from './OwnHeroBuilder';
 import {OWN_HERO_DEFAULT,ownHero,parseOwnHeroInput,type OwnHeroInput} from '../../game/own-hero';
 import {OWN_ACCESSORIES,OWN_DEFAULT,OWN_FORMS,OWN_NAME_IDEAS,OWN_TONES,ownGameMaster,ownNameTaken,ownVoice,parseOwnInput,type OwnGameMasterInput} from '../../game/own-game-master';
 import './quest-setup.css';
@@ -39,6 +39,8 @@ export default function QuestSetup({mode,onBack,onStart,busy,quick=false,onAISet
  const [savedAI]=useAIPreference();const creation=useCreation();
  const heading=useRef<HTMLHeadingElement>(null);
  const update=(patch:Partial<Saved>)=>setS(current=>({...current,...patch}));
+ // The workbench (Create your own) replaces the step while open; Back to the list restores the earlier choice.
+ const [bench,setBench]=useState<{kind:'gm'|'hero';from:string}|null>(null);
 
  // Restore the last setup, or open a ready-made quest on Set Out.
  useEffect(()=>{
@@ -87,9 +89,12 @@ export default function QuestSetup({mode,onBack,onStart,busy,quick=false,onAISet
  if(ready&&talking&&s.step===1)return <TaleConversation gm={gm} initialIdea={idea} initialStory={s.tale==='custom'?s.custom:null} onAISettings={onAISettings}
   onKeep={made=>{update({custom:made,tale:'custom'});setTalking(false);}} onBack={()=>setTalking(false)}/>;
 
- const title=['Who will tell your tale?','Which tale shall I tell?',sheet?hero.name:'Who will you be?','Ready to set out?'][s.step];
- const back=()=>sheet?setSheet(false):s.step===0?onBack():go(s.step-1);
- const forward=s.step===0?<RealmButton variant="primary" minWidth={190} disabled={s.gm==='own'&&!ownProfile} onClick={()=>go(1)}>{s.gm==='own'&&!ownProfile?'Name them first':'Continue'}<Arrow/></RealmButton>
+ const title=bench?.kind==='gm'?'Make your Game Master':bench?.kind==='hero'?'Make your hero':['Who will tell your tale?','Which tale shall I tell?',sheet?hero.name:'Who will you be?','Ready to set out?'][s.step];
+ const openBench=(kind:'gm'|'hero')=>{setSheet(false);setBench({kind,from:kind==='gm'?s.gm:s.hero});update(kind==='gm'?{gm:'own'}:{hero:'own'});};
+ const benchReady=bench?.kind==='gm'?!!ownProfile:bench?.kind==='hero'?!!ownHeroProfile:true;
+ const back=()=>bench?(update(bench.kind==='gm'?{gm:bench.from}:{hero:bench.from}),setBench(null)):sheet?setSheet(false):s.step===0?onBack():go(s.step-1);
+ const forward=bench?<RealmButton variant="primary" minWidth={190} disabled={!benchReady} onClick={()=>setBench(null)}>{benchReady?'Done':'Name them first'}<Arrow/></RealmButton>
+  :s.step===0?<RealmButton variant="primary" minWidth={190} disabled={s.gm==='own'&&!ownProfile} onClick={()=>go(1)}>{s.gm==='own'&&!ownProfile?'Name them first':'Continue'}<Arrow/></RealmButton>
   :s.step===1?<RealmButton variant="primary" minWidth={190} onClick={()=>go(2)}>Continue<Arrow/></RealmButton>
   :s.step===2?<RealmButton variant="primary" minWidth={220} disabled={!heroReady} onClick={()=>go(3)}>{heroReady?<>Play as {hero.short}</>:'Name them first'}<Arrow/></RealmButton>
   :<RealmButton variant="primary" minWidth={240} disabled={busy} onClick={begin}>{busy?'Preparing…':mode==='online'?'Gather the Party':'Begin Adventure'}<Arrow/></RealmButton>;
@@ -97,14 +102,16 @@ export default function QuestSetup({mode,onBack,onStart,busy,quick=false,onAISet
  return <main className="realm qs" aria-labelledby="qs-title">
   <header className="qs-top">
    <h1 id="qs-title" ref={heading} tabIndex={-1}>{title}</h1>
-   <div className="qs-top-end"><RealmTools/><QuestSteps current={s.step}/></div>
+   <div className="qs-top-end"><RealmTools/><QuestSteps current={bench?.kind==='hero'?2:bench?0:s.step}/></div>
   </header>
-  {!ready?null:s.step===0?<GameMasterStep gm={gm} pick={id=>update({gm:id})} own={s.own} setOwn={own=>update({own})} ownReady={!!ownProfile}/>
+  {!ready?null:bench?.kind==='gm'?<GameMasterBench gm={gm} own={s.own} setOwn={own=>update({own})} ownReady={!!ownProfile}/>
+   :bench?.kind==='hero'?<OwnHeroBench hero={hero} own={s.ownHero} setOwn={ownHero=>update({ownHero})}/>
+   :s.step===0?<GameMasterStep gm={gm} pick={id=>update({gm:id})} own={s.own} ownReady={!!ownProfile} openBench={()=>openBench('gm')}/>
    :s.step===1?<TaleStep s={s} gm={gm} story={story} art={taleArt.scene} pick={id=>update({tale:id})} idea={idea} setIdea={setIdea} shape={shape} tellAnother={tellAnother} pending={creation.pending} error={creation.error} onCreateWithNarrator={()=>setTalking(true)}/>
-   :s.step===2?<HeroStep hero={hero} role={role} setRole={setRole} pick={id=>update({hero:id})} sheet={sheet} openSheet={()=>setSheet(true)} sealed={s.gm!=='own'&&s.hero!=='own'} own={{input:s.ownHero,set:ownHero=>update({ownHero})}}/>
+   :s.step===2?<HeroStep hero={hero} role={role} setRole={setRole} pick={id=>update({hero:id})} sheet={sheet} openSheet={()=>setSheet(true)} sealed={s.gm!=='own'&&s.hero!=='own'} own={{input:s.ownHero,open:()=>openBench('hero')}}/>
    :<SetOutStep s={s} gm={gm} hero={hero} story={story} art={taleArt.scene} thumb={taleArt.thumb} update={update} advanced={advanced} setAdvanced={setAdvanced} mode={mode}/>}
   <footer className="qs-footer">
-   <RealmButton onClick={back}><BackArrow/>{sheet?'Back to heroes':'Back'}</RealmButton>
+   <RealmButton onClick={back}><BackArrow/>{bench?'Back to the list':sheet?'Back to heroes':'Back'}</RealmButton>
    {forward}
   </footer>
  </main>;
@@ -127,60 +134,42 @@ function GmFace({gm,size=44}:{gm:GameMasterPreset;size?:number}){
  return <Portrait art={gm.art} face={gm.face} ratio={GAME_MASTER_ART_RATIO} width={size} height={size} scale={2.4} eye={0.4}/>;
 }
 
-function GameMasterStep({gm,pick,own,setOwn,ownReady}:{gm:GameMasterPreset;pick:(id:string)=>void;own:OwnGameMasterInput;setOwn:(own:OwnGameMasterInput)=>void;ownReady:boolean}){
- // A new shape, colour, accessory or tone makes an earlier painting out of date, so it is cleared.
- const mine=gm.id===('own' as GameMasterPreset['id']),set=(patch:Partial<OwnGameMasterInput>)=>setOwn({...own,...patch,...(['form','color','accessory','tone'].some(k=>k in patch)?{portrait:undefined}:{})}),tone=OWN_TONES.find(t=>t.id===own.tone)!;
- // The drawing follows the name, so it settles a moment after typing stops instead of changing with every letter.
- const [drawnName,setDrawnName]=useState(gm.title);
- useEffect(()=>{const t=window.setTimeout(()=>setDrawnName(gm.title),450);return()=>window.clearTimeout(t)},[gm.title]);
- const drawing=ownArt(own,drawnName),painted=usePaintedFigure(own.portrait),figure=painted?.art??drawing,face=painted?.face??DRAWN_GM_FACE;
- // On a phone the cards sit below the preview: choosing your own Game Master brings its builder into view.
- const builder=useRef<HTMLElement>(null),wasMine=useRef(mine);
- useEffect(()=>{if(mine&&!wasMine.current&&window.matchMedia('(max-width:900px)').matches)builder.current?.scrollIntoView({block:'start',behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth'});wasMine.current=mine},[mine]);
+/** The drawn (or painted) figure of your own Game Master. The drawing follows the name, so it settles a moment
+    after typing stops instead of changing with every letter. */
+function useOwnFigure(own:OwnGameMasterInput,title:string){
+ const [drawnName,setDrawnName]=useState(title);
+ useEffect(()=>{const t=window.setTimeout(()=>setDrawnName(title),450);return()=>window.clearTimeout(t)},[title]);
+ const drawing=ownArt(own,drawnName),painted=usePaintedFigure(own.portrait);
+ return {drawnName,drawing,figure:painted?.art??drawing,face:painted?.face??DRAWN_GM_FACE};
+}
+
+/** Choose a Game Master: "Create your own" leads, the three built-ins follow. */
+function GameMasterStep({gm,pick,own,ownReady,openBench}:{gm:GameMasterPreset;pick:(id:string)=>void;own:OwnGameMasterInput;ownReady:boolean;openBench:()=>void}){
+ const mine=gm.id===('own' as GameMasterPreset['id']),tone=OWN_TONES.find(t=>t.id===own.tone)!,{figure,face}=useOwnFigure(own,gm.title);
  return <div className="qs-gm">
   <div className="qs-gm-cards" role="radiogroup" aria-label="Game Masters">
+   <button type="button" role="radio" aria-checked={mine} data-tooltip="none" className="realm-choice qs-gm-card qs-gm-card-own qs-make" onClick={openBench}>
+    {mine&&ownReady?<Portrait art={figure} face={face} ratio={GAME_MASTER_ART_RATIO} width={84} height={104} scale={2.1}/>:<span className="qs-make-mark" aria-hidden="true">+</span>}
+    <span className={`qs-gm-card-text${mine?' realm-tint':''}`}><strong>{mine&&ownReady?gm.title:'Create your own'}</strong><span>{mine&&ownReady?'Your own Game Master':'Shape, voice and colour'}</span><span>{mine&&ownReady?tone.tells:'Paint them, if you like'}</span></span>
+    {mine?<Diamond/>:null}
+   </button>
+   <p className="qs-or" aria-hidden="true">or choose one of ours</p>
    {GAME_MASTERS.map(g=><button key={g.id} type="button" role="radio" aria-checked={g.id===gm.id} data-tooltip="none" className="realm-choice qs-gm-card" onClick={()=>pick(g.id)}>
     <Portrait art={g.art} face={g.face} ratio={GAME_MASTER_ART_RATIO} width={84} height={104} scale={2.1}/>
     <span className={`qs-gm-card-text${g.id===gm.id?' realm-tint':''}`}><strong>{g.title}</strong><span>{g.mood}</span><span>{g.tone}</span></span>
     {g.id===gm.id?<Diamond/>:null}
    </button>)}
-   <button type="button" role="radio" aria-checked={mine} data-tooltip="none" className="realm-choice qs-gm-card qs-gm-card-own" onClick={()=>pick('own')}>
-    <Portrait art={figure} face={face} ratio={GAME_MASTER_ART_RATIO} width={84} height={104} scale={2.1}/>
-    <span className={`qs-gm-card-text${mine?' realm-tint':''}`}><strong>{mine&&ownReady?gm.title:'Your own'}</strong><span>{mine&&ownReady?'Your own Game Master':'Name them'}</span><span>{tone.tells}</span></span>
-    {mine?<Diamond/>:null}
-   </button>
   </div>
-  {mine?<section ref={builder} className="qs-gm-preview qs-own" aria-label="Your own Game Master" style={{['--own-colour' as string]:own.color}}>
+  {mine?<section className="qs-gm-preview" aria-label={`${gm.title}, your own Game Master`}>
    <div className="qs-gm-stage">
     <img className="qs-gm-scene" src="/art/scenes/camp.svg" alt=""/>
-    <span className="qs-own-shadow" aria-hidden="true"/>
-    <img className="qs-own-figure" src={figure} alt={`${gm.title}, full figure`}/>
-    <p className="qs-own-sample" aria-live="polite"><span className="realm-eyebrow">{ownReady?gm.title:'They say'}</span>“{tone.sample}”</p>
+    <span className="qs-gm-shadow" aria-hidden="true"/>
+    <img className="qs-gm-figure" src={figure} alt={`${gm.title}, full figure`}/>
    </div>
-   <div className="qs-own-form">
-    <label className="qs-own-name"><span className="realm-eyebrow">Their name</span>
-     <input name="own-name" value={own.name} maxLength={28} placeholder="The Lamplighter" autoComplete="off" spellCheck={false} onChange={e=>set({name:e.target.value})}/></label>
-    {ownNameTaken(own.name)?<p className="qs-own-taken" role="status">That name belongs to one of the Game Masters above. Choose another.</p>:null}
-    {!own.name.trim()?<p className="qs-own-ideas"><span>Or borrow one:</span>{OWN_NAME_IDEAS.slice(0,4).map(n=><button key={n} type="button" className="qs-own-chip" onClick={()=>set({name:n})}>{n}</button>)}</p>:null}
-    <label className="qs-own-who"><span className="realm-eyebrow">Who are they?</span>
-     <textarea name="own-who" value={own.who} maxLength={200} rows={2} placeholder="A retired lighthouse keeper who still counts the ships that never came home." onChange={e=>set({who:e.target.value})}/></label>
-    <fieldset className="qs-own-set"><legend className="realm-eyebrow">How they tell it</legend>
-     <div className="qs-own-tones" role="radiogroup" aria-label="How they tell it">{OWN_TONES.map(t=><button key={t.id} type="button" role="radio" aria-checked={own.tone===t.id} className="realm-choice qs-own-tone" onClick={()=>set({tone:t.id})}>{own.tone===t.id?<CheckBadge/>:null}<strong>{t.label}</strong><span>{t.tells}</span></button>)}</div>
-    </fieldset>
-    <fieldset className="qs-own-set"><legend className="realm-eyebrow">Their shape</legend>
-     <div className="qs-own-forms" role="radiogroup" aria-label="Their shape">{OWN_FORMS.map(f=><button key={f.id} type="button" role="radio" aria-checked={own.form===f.id} aria-label={f.label} data-tooltip={f.label} className="realm-choice qs-own-form-pick" onClick={()=>set({form:f.id})}>
-      <Portrait art={ownArt({...own,form:f.id},drawnName)} face={DRAWN_GM_FACE} ratio={GAME_MASTER_ART_RATIO} width={46} height={46} scale={2.4} eye={0.4}/><span>{f.label}</span></button>)}</div>
-    </fieldset>
-    <div className="qs-own-row">
-     <fieldset className="qs-own-set"><legend className="realm-eyebrow">They wear</legend>
-      <div className="qs-own-chips" role="radiogroup" aria-label="They wear">{OWN_ACCESSORIES.map(a=><button key={a.id} type="button" role="radio" aria-checked={own.accessory===a.id} className="qs-own-chip" onClick={()=>set({accessory:a.id})}>{a.label}</button>)}</div>
-     </fieldset>
-     <fieldset className="qs-own-set"><legend className="realm-eyebrow">Their colour</legend>
-      <div className="qs-own-swatches" role="radiogroup" aria-label="Their colour">{['#ef997c','#a3bbf0','#edcf75','#b19bd3','#8ac4ae','#f0a6b2','#87bdcf','#cbad81','#b2c877','#a4a4bf'].map(c=><button key={c} type="button" role="radio" aria-checked={own.color===c} aria-label={`Colour ${c}`} data-tooltip="Their colour" className="qs-own-swatch" style={{background:c}} onClick={()=>set({color:c})}/>)}</div>
-     </fieldset>
-    </div>
-    <PaintPanel key={`${own.form}|${own.color}|${own.accessory}|${own.tone}`} kind="gm" fields={{form:own.form,accessory:own.accessory,color:own.color,tone:own.tone}} name={ownReady?gm.title:''} portrait={own.portrait} drawing={drawing} setPortrait={portrait=>setOwn({...own,portrait})} placeholder="A few words: a one-eyed sailor with a parrot"/>
-    <p className="qs-own-note">Your own Game Master tells any tale in the Lantern Marches. Sealed notes belong to the three Game Masters above, so heroes keep none with yours.</p>
+   <div className="qs-gm-text" aria-live="polite">
+    <h2>{gm.title}</h2><p className="qs-gm-name">Your own Game Master</p><p className="realm-eyebrow">{tone.label} · {tone.tells}</p>
+    {gm.excerpt?<p className="qs-gm-excerpt">{gm.excerpt}</p>:null}<p className="qs-quote">“{tone.sample}”</p>
+    <RealmButton small onClick={openBench}>Change them</RealmButton>
    </div>
   </section>:<section className="qs-gm-preview" aria-label={`${gm.title}, ${gm.realName}`}>
    <div className="qs-gm-stage">
@@ -193,6 +182,46 @@ function GameMasterStep({gm,pick,own,setOwn,ownReady}:{gm:GameMasterPreset;pick:
     <p className="qs-gm-excerpt">{gm.excerpt}</p><p className="qs-quote">“{gm.quote}”</p>
    </div>
   </section>}
+ </div>;
+}
+
+/** The workbench for your own Game Master: their figure large on the left, every choice in fixed rows on the right. */
+function GameMasterBench({gm,own,setOwn,ownReady}:{gm:GameMasterPreset;own:OwnGameMasterInput;setOwn:(own:OwnGameMasterInput)=>void;ownReady:boolean}){
+ // A new shape, colour, accessory or tone makes an earlier painting out of date, so it is cleared.
+ const set=(patch:Partial<OwnGameMasterInput>)=>setOwn({...own,...patch,...(['form','color','accessory','tone'].some(k=>k in patch)?{portrait:undefined}:{})}),tone=OWN_TONES.find(t=>t.id===own.tone)!;
+ const {drawnName,drawing,figure}=useOwnFigure(own,gm.title);
+ return <div className="qs-bench" style={{['--own-colour' as string]:own.color}}>
+  <section className="qs-bench-stage" aria-label={`${ownReady?gm.title:'Your Game Master'}, full figure`}>
+   <img className="qs-bench-scene" src="/art/scenes/camp.svg" alt=""/>
+   <span className="qs-bench-shadow" aria-hidden="true"/>
+   <img className="qs-bench-figure gm" src={figure} alt=""/>
+   <p className="qs-own-sample" aria-live="polite"><span className="realm-eyebrow">{ownReady?gm.title:'They say'}</span>“{tone.sample}”</p>
+  </section>
+  <div className="qs-bench-form">
+   <label className="qs-own-name"><span className="realm-eyebrow">Their name</span>
+    <input name="own-name" value={own.name} maxLength={28} placeholder="The Lamplighter" autoComplete="off" spellCheck={false} onChange={e=>set({name:e.target.value})}/></label>
+   {ownNameTaken(own.name)?<p className="qs-own-taken" role="status">That name belongs to one of our Game Masters. Choose another.</p>:null}
+   {!own.name.trim()?<p className="qs-own-ideas"><span>Or borrow one:</span>{OWN_NAME_IDEAS.slice(0,4).map(n=><button key={n} type="button" className="qs-own-chip" onClick={()=>set({name:n})}>{n}</button>)}</p>:null}
+   <fieldset className="qs-own-set"><legend className="realm-eyebrow">Their shape</legend>
+    <div className="qs-own-forms" role="radiogroup" aria-label="Their shape">{OWN_FORMS.map(f=><button key={f.id} type="button" role="radio" aria-checked={own.form===f.id} aria-label={f.label} data-tooltip={f.label} className="realm-choice qs-own-form-pick" onClick={()=>set({form:f.id})}>
+     <Portrait art={ownArt({...own,form:f.id},drawnName)} face={DRAWN_GM_FACE} ratio={GAME_MASTER_ART_RATIO} width={46} height={46} scale={2.4} eye={0.4}/><span>{f.label}</span></button>)}</div>
+   </fieldset>
+   <fieldset className="qs-own-set"><legend className="realm-eyebrow">How they tell it</legend>
+    <div className="qs-own-tones" role="radiogroup" aria-label="How they tell it">{OWN_TONES.map(t=><button key={t.id} type="button" role="radio" aria-checked={own.tone===t.id} className="realm-choice qs-own-tone" onClick={()=>set({tone:t.id})}>{own.tone===t.id?<CheckBadge/>:null}<strong>{t.label}</strong><span>{t.tells}</span></button>)}</div>
+   </fieldset>
+   <div className="qs-own-row">
+    <fieldset className="qs-own-set"><legend className="realm-eyebrow">They wear</legend>
+     <div className="qs-own-chips" role="radiogroup" aria-label="They wear">{OWN_ACCESSORIES.map(a=><button key={a.id} type="button" role="radio" aria-checked={own.accessory===a.id} className="qs-own-chip" onClick={()=>set({accessory:a.id})}>{a.label}</button>)}</div>
+    </fieldset>
+    <fieldset className="qs-own-set"><legend className="realm-eyebrow">Their colour</legend>
+     <div className="qs-own-swatches" role="radiogroup" aria-label="Their colour">{HERO_COLOURS.map(c=><button key={c} type="button" role="radio" aria-checked={own.color===c} aria-label={`Colour ${c}`} data-tooltip="Their colour" className="qs-own-swatch" style={{background:c}} onClick={()=>set({color:c})}/>)}</div>
+    </fieldset>
+   </div>
+   <label className="qs-own-who"><span className="realm-eyebrow">Who are they?</span>
+    <textarea name="own-who" value={own.who} maxLength={200} rows={2} placeholder="A retired lighthouse keeper who still counts the ships that never came home." onChange={e=>set({who:e.target.value})}/></label>
+   <PaintPanel key={`${own.form}|${own.color}|${own.accessory}|${own.tone}`} kind="gm" fields={{form:own.form,accessory:own.accessory,color:own.color,tone:own.tone}} name={ownReady?gm.title:''} portrait={own.portrait} drawing={drawing} setPortrait={portrait=>setOwn({...own,portrait})} placeholder="A few words: a one-eyed sailor with a parrot"/>
+   <p className="qs-own-note">Your own Game Master tells any tale in the Lantern Marches. Sealed notes belong to our three Game Masters, so heroes keep none with yours.</p>
+  </div>
  </div>;
 }
 
@@ -237,7 +266,7 @@ function TaleStep({s,gm,story,art,pick,idea,setIdea,shape,tellAnother,pending,er
 
 /** The roster and the hero's stage. Also used when joining a party, where heroes already at the fire are marked taken. */
 export function HeroStep({hero,role,setRole,pick,sheet,openSheet,taken={},sealed=true,own}:{hero:HeroPreset;role:'All'|Role;setRole:(r:'All'|Role)=>void;pick:(id:string)=>void;sheet:boolean;openSheet:()=>void;taken?:Record<string,string>;sealed?:boolean;
- /** Offers "Your own" after the roster (quest setup only). */ own?:{input:OwnHeroInput;set:(own:OwnHeroInput)=>void}}){
+ /** Offers "Your own hero" first in the roster (quest setup only); choosing it opens the workbench. */ own?:{input:OwnHeroInput;open:()=>void}}){
  const mine=hero.id==='own';
  const wide=hero.id==='mira';
  const stage=<div className="qs-stage" aria-label={`${hero.name}, ${hero.className} ${hero.subclass}`} role="img">
@@ -246,6 +275,7 @@ export function HeroStep({hero,role,setRole,pick,sheet,openSheet,taken={},sealed
   {HEROES.map(h=><span key={h.id} className="realm-fade qs-stage-figure" style={{...stagePlacement(h),opacity:h.id===hero.id?1:0}} aria-hidden="true">
    <span className="qs-stage-shadow" style={h.id==='mira'?{left:'14%',width:'26%'}:undefined}/>{h.id==='mira'?<span className="qs-stage-shadow" style={{left:'48%',width:'34%'}}/>:null}
    <img src={h.art} alt=""/></span>)}
+  {mine?<span className="realm-fade qs-stage-figure" style={stagePlacement(hero)} aria-hidden="true"><span className="qs-stage-shadow"/><img src={hero.art} alt=""/></span>:null}
  </div>;
  if(sheet)return <div className="qs-hero qs-sheet">
   {stage}
@@ -269,29 +299,29 @@ export function HeroStep({hero,role,setRole,pick,sheet,openSheet,taken={},sealed
   <div className="qs-roster">
    <div className="qs-filters" role="group" aria-label="Filter by role">
     {ROLES.map(r=><button key={r} type="button" aria-pressed={role===r} className={`qs-filter${role===r?' on':''}`} onClick={()=>setRole(r)}>{r}</button>)}
-    <span>16 heroes · two may share a class</span>
+    <span>{own?'16 heroes or your own':'16 heroes'} · two may share a class</span>
    </div>
    <div className="qs-grid realm-panel" role="radiogroup" aria-label="Heroes">
+    {own?<button type="button" role="radio" aria-checked={mine} aria-label={mine&&own.input.name.trim()?`${hero.name}, your own hero`:'Make your own hero'} className="realm-choice qs-tile qs-tile-own qs-make" onClick={own.open}>
+     {mine&&own.input.name.trim()?<Portrait art={hero.art} face={hero.face} ratio={HERO_ART_RATIO} width={120} height={58} scale={1.33} eye={0.42}/>:<span className="qs-make-mark" aria-hidden="true">+</span>}
+     <span className={`qs-tile-name${mine?' realm-tint':''}`}><strong>{mine&&own.input.name.trim()?hero.name:'Your own hero'}</strong><span>{mine&&own.input.name.trim()?hero.className:'Make one'}</span></span>
+     {mine?<Diamond/>:null}
+    </button>:null}
     {shown.map(h=>{const by=taken[h.id];return <button key={h.id} type="button" role="radio" aria-checked={h.id===hero.id} aria-disabled={by?true:undefined} aria-label={by?`${h.name}, ${h.subclass}, taken by ${by}`:`${h.name}, ${h.subclass}`} className={`realm-choice qs-tile${by?' taken':''}`} onClick={()=>{if(!by)pick(h.id);}}>
      <Portrait art={h.art} face={h.face} ratio={HERO_ART_RATIO} width={120} height={58} scale={1.33} eye={0.42}/>
      <span className={`qs-tile-name${h.id===hero.id?' realm-tint':''}`}><strong>{h.name}</strong><span>{by?`Taken · ${by}`:h.subclass}</span></span>
      {h.id===hero.id?<Diamond/>:null}
     </button>;})}
-    {own?<button type="button" role="radio" aria-checked={mine} aria-label="Your own hero" className="realm-choice qs-tile qs-tile-own" onClick={()=>pick('own')}>
-     <Portrait art={mine?hero.art:customHeroArt({name:own.input.name||'Your own',heroClass:own.input.heroClass,color:own.input.color})} face={mine?hero.face:CUSTOM_FACE} ratio={HERO_ART_RATIO} width={120} height={58} scale={1.33} eye={0.42}/>
-     <span className={`qs-tile-name${mine?' realm-tint':''}`}><strong>{mine&&own.input.name.trim()?hero.name:'Your own'}</strong><span>{mine?hero.className:'Make a hero'}</span></span>
-     {mine?<Diamond/>:null}
-    </button>:null}
    </div>
   </div>
-  {mine&&own?<OwnHeroBuilder hero={hero} own={own.input} setOwn={own.set}/>:<section className="qs-hero-stage" aria-live="polite">
+  <section className="qs-hero-stage" aria-live="polite">
    {stage}
    <div className="qs-hero-info">
     <h2>{hero.name}</h2><p className="realm-eyebrow">{hero.className} · {hero.subclass} · {hero.role}</p>
     <p className="qs-epithet">{hero.epithet}</p>{hero.intro?<p className="qs-intro">{hero.intro}</p>:null}
-    <RealmButton small onClick={openSheet}>Read their story</RealmButton>
+    {mine&&own?<RealmButton small onClick={own.open}>Change them</RealmButton>:<RealmButton small onClick={openSheet}>Read their story</RealmButton>}
    </div>
-  </section>}
+  </section>
  </div>;
 }
 
