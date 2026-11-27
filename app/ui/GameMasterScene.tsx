@@ -2,9 +2,8 @@
 import {useOpenCue} from './sound/useCue';
 import {useLayoutEffect,useRef,type ReactNode} from 'react';
 import type {GameState} from '../../game/types';
-import {GAME_MASTERS} from '../../game/presets';
 import type {Biome} from '../../game/types';
-import NarratorAvatar from './NarratorAvatar';
+import {gameMasterDrawing} from './game-master-figure';
 import {useTheme} from './Theme';
 import './gm-scene.css';
 
@@ -23,12 +22,12 @@ export default function GameMasterScene({game,label,eyebrow,title,talking=false,
   const cancel=(e:Event)=>{e.preventDefault();close.current()};el?.addEventListener('cancel',cancel);
   return()=>{el?.removeEventListener('cancel',cancel);el?.close()};
  },[]);
- const narrator=game.options.creation?.narrator,gm=GAME_MASTERS.find(g=>g.profile.name===narrator?.name);
+ const figure=gameMasterDrawing(game.options.creation?.narrator);
  const night=useTheme().resolvedColorMode==='dark',scene=regionScene(game.options.biome,night);
  return <dialog ref={dialog} className={`gm-scene realm ${night?'dusk':'day'} ${className}`} aria-label={label}>
   <img className="gm-backdrop" src={scene} alt="" aria-hidden="true"/>
   <div className="gm-wash" aria-hidden="true"/>
-  <div className="gm-figure" aria-hidden="true">{gm?<img src={gm.art} alt=""/>:<NarratorAvatar profile={narrator} size={220} talking={talking}/>}<span className="gm-shadow"/></div>
+  <div className={`gm-figure${talking?' speaking':''}`} aria-hidden="true"><img src={figure.art} alt=""/><span className="gm-shadow"/></div>
   <header className="gm-title">{eyebrow?<p className="gm-eyebrow">{eyebrow}</p>:null}<h1>{title}</h1></header>
   <section className="gm-panel">{children}</section>
  </dialog>;

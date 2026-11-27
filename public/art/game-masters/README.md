@@ -6,4 +6,4 @@ Full-body figures for the three built-in Game Masters, drawn for Painted Realms 
 - `survivor.svg`: The Survivor, Liora Thorne
 - `cursed.svg`: The Cursed One, Ser Dorian Vane
 
-Card portraits are cropped from these files using the face centres in `game/presets.ts`. Custom Game Masters made with the AI continue to use the narrator avatar atlas in `public/art/narrators`.
+Card portraits are cropped from these files using the face centres in `game/presets.ts`. Your own Game Master and ones made with the AI are drawn in the same kit by `app/ui/game-master-figure.ts` (shape, colour and what they wear from the narrator profile; what they carry from their tone).

@@ -130,13 +130,11 @@ html:root[data-color-mode][data-theme] body .realm button.qs-seg-option[aria-che
 
 
 /* Your own Game Master: the fourth card, and a builder in the preview (design canvas, Your own Game Master). */
-.qs-own-card-face{flex:none;display:grid;place-items:center;width:84px;height:104px;overflow:hidden;border-radius:2px;background:radial-gradient(circle at 50% 40%,#2a3442,#141a22)}
-.qs-own-face{display:inline-grid;place-items:center;flex:none;overflow:hidden;border-radius:2px;background:radial-gradient(circle at 50% 40%,#2a3442,#141a22)}
 .qs-gm-preview.qs-own{display:grid;grid-template-columns:minmax(0,42%) minmax(0,1fr);aspect-ratio:auto;height:clamp(300px,var(--qs-h),760px);width:100%}
 .qs-own .qs-gm-stage{position:relative}
-.qs-own-glow{position:absolute;left:50%;top:6%;width:90%;height:62%;transform:translateX(-50%);background:radial-gradient(ellipse at 50% 50%,color-mix(in srgb,var(--own-colour,#87bdcf) 42%,transparent),transparent 68%);pointer-events:none}
+.qs-own-shadow{position:absolute;left:50%;bottom:calc(24.4% - 7px);width:34%;height:14px;transform:translateX(-50%);border-radius:50%;background:rgba(3,5,8,.72)}
 .qs-own .qs-gm-scene{filter:saturate(.9)}
-.qs-own-figure{position:absolute;left:50%;top:12%;width:min(74%,290px);transform:translateX(-50%);display:grid;place-items:center;filter:drop-shadow(0 10px 22px rgba(0,0,0,.55))}
+.qs-own-figure{position:absolute;left:50%;bottom:20%;height:72%;max-width:96%;width:auto;transform:translateX(-50%);object-fit:contain;object-position:bottom;filter:drop-shadow(0 8px 18px rgba(0,0,0,.5))}
 .qs-own-sample{position:absolute;left:16px;right:16px;bottom:14px;margin:0;padding:10px 14px;display:flex;flex-direction:column;gap:3px;background:rgba(10,14,20,.86);border:1px solid #2f3946;border-left:3px solid var(--own-colour,#87bdcf);font:italic 400 16px/1.4 var(--realm-prose);color:#E7DFD0}
 .qs-own-sample .realm-eyebrow{font-style:normal;text-align:left}
 .qs-own-form{box-sizing:border-box;min-height:0;overflow:auto;padding:22px 26px;display:flex;flex-direction:column;gap:14px;background:#0f141b;border-left:1px solid #2a3340}
@@ -166,8 +164,6 @@ html:root[data-color-mode][data-theme] body .realm button.qs-own-chip[aria-check
 html:root[data-color-mode][data-theme] body .realm button.qs-own-swatch,.qs-own-swatch{width:28px;height:28px;min-height:28px;padding:0;border:2px solid #0f141b;border-radius:50%;box-shadow:0 0 0 1px #435263;cursor:pointer}
 html:root[data-color-mode][data-theme] body .realm button.qs-own-swatch[aria-checked="true"],.qs-own-swatch[aria-checked="true"]{box-shadow:0 0 0 2px #F1E5CF}
 .qs-own-note{margin:0;padding-top:10px;border-top:1px solid #2a3340;font:500 12.5px/1.45 Inter,system-ui,sans-serif;color:#8d99a6}
-.qs-setout-own{display:grid;place-items:end center;width:24%}
-.tc-own{display:grid;place-items:end center}
 
 /* ---- Phones and narrow windows: one column, art first. ---- */
 @media(max-width:900px){
@@ -187,12 +183,11 @@ html:root[data-color-mode][data-theme] body .realm button.qs-own-swatch[aria-che
  .qs-gm-text{position:static;width:auto;padding:16px;background:#0c1016}
  .qs-tale{grid-template-columns:minmax(0,1fr);grid-template-areas:"preview" "side" "line"}
  .qs-gm-cards{display:grid;grid-template-columns:repeat(4,minmax(0,1fr))}
- .qs-own-card-face{width:100%;height:auto;aspect-ratio:84/104}
- .qs-gm-preview.qs-own{display:flex;flex-direction:column;height:auto}
+  .qs-gm-preview.qs-own{display:flex;flex-direction:column;height:auto}
  .qs-own .qs-gm-stage{aspect-ratio:auto;display:flex;flex-direction:column}
  .qs-own .qs-gm-stage>.qs-gm-scene{height:240px;position:absolute;inset:0 0 auto 0}
- .qs-own-glow{height:240px;top:0}
- .qs-own-figure{position:relative;left:auto;top:auto;transform:none;align-self:center;width:200px;height:240px;place-items:center}
+ .qs-own-shadow{bottom:auto;top:226px;width:110px}
+ .qs-own-figure{position:relative;left:auto;bottom:auto;transform:none;align-self:center;height:240px;width:auto}
  .qs-own-sample{position:relative;left:auto;right:auto;bottom:auto;margin:0 12px 4px}
  .qs-gm:has(.qs-own) {scroll-margin-top:12px}
  .qs-own-form{border-left:0;padding:16px;overflow:visible}

@@ -5,7 +5,9 @@ import {applyStoryDirection,guidanceFixture} from '../../game/campaign';
 import type {AudioPreferences} from './audio-preferences';
 import {currentNarration} from '../../game/ai';
 import {Icon} from './Art';
-import NarratorAvatar from './NarratorAvatar';
+import {Portrait} from './RealmKit';
+import {GAME_MASTER_ART_RATIO} from '../../game/presets';
+import {gameMasterDrawing} from './game-master-figure';
 import type {Exchange} from './narrator-thread';
 import './narrator.css';
 
@@ -105,8 +107,9 @@ export default function Storyteller({game,room,session,narrate,steer,busy,prefer
   finally{setPending(false);}
  }
 
+ const figure=gameMasterDrawing(game?.options.creation?.narrator);
  return <div className="pip-panel ai-summary">
-  <div className="pip-heading"><NarratorAvatar profile={game?.options.creation?.narrator} talking={talking||automaticSpeaking}/><div><h3>{narratorName}, your guide</h3></div></div>
+  <div className="pip-heading"><Portrait art={figure.art} face={figure.face} ratio={GAME_MASTER_ART_RATIO} width={64} height={64} scale={2.4} eye={0.4}/><div><h3>{narratorName}, your guide</h3></div></div>
   {game?<>
    <section className="pip-moment" aria-label="Current narration"><span className="pip-moment-label">{game.story?.campaign.title??'Your adventure'}</span><p>{caption}</p><div className="pip-audio-actions"><button type="button" className="text-button" disabled={pending} onClick={()=>void listen()}><Icon name={talking||automaticSpeaking?'close':'sound'} size={16}/>{talking||automaticSpeaking?'Stop reading':'Listen'}</button>{host?<button type="button" className="text-button" disabled={disabled} onClick={()=>void tellMoment()}>Tell this moment</button>:null}{pending&&cancelable?<button type="button" className="text-button" onClick={stop}>Cancel</button>:null}</div></section>
    {thread.length||asking?<div className="pip-thread" ref={log} role="log" aria-label={`Conversation with ${narratorName}`} tabIndex={0}>{thread.map(entry=><div className="pip-exchange" key={entry.id}><p className="pip-question"><span className="sr-only">You asked: </span>{entry.question}</p><p className="pip-reply"><span className="sr-only">{narratorName} replied: </span>{entry.answer}{entry.local?<small>Local guidance</small>:null}</p></div>)}{asking?<div className="pip-exchange"><p className="pip-question"><span className="sr-only">You asked: </span>{asking}</p></div>:null}</div>:null}

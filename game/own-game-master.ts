@@ -34,6 +34,9 @@ export const OWN_NAME_IDEAS=['The Lamplighter','Old Mother Reed','The Ferryman',
 export const ownNameTaken=(name:string)=>GAME_MASTERS.some(g=>[g.profile.name,g.title,g.realName].some(n=>n.toLowerCase()===clean(name).toLowerCase()));
 const clean=(text:string)=>text.replace(/[<>\u0000-\u001f\u007f]/g,'').replace(/\s+/g,' ').trim();
 
+/** The narration voice for a tone (it also picks what the drawing carries). */
+export const ownVoice=(tone:OwnTone)=>TRAITS[tone].voice;
+
 /** The narrator profile for these choices, or null while the name is missing or anything fails validation. */
 export function ownGameMaster(input:OwnGameMasterInput):NarratorProfile|null{
  const name=clean(input.name).slice(0,28),tone=TRAITS[input.tone],form=OWN_FORMS.find(f=>f.id===input.form);

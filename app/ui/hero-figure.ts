@@ -7,30 +7,30 @@ import type {HeroClass} from '../../game/types.ts';
    companion keeps their face across saves, replays and both board views. Presentation only. */
 
 export type HeroSpec={name:string;heroClass:HeroClass;color:string};
-const O='#26342f';
+export const O='#26342f';
 /** Where the face sits in the art, as a fraction of its width and height (the roster heroes' convention). */
 export const CUSTOM_FACE={x:.505,y:.28};
 
 // --- small helpers -------------------------------------------------------------------------------------------
-function hash(text:string){let h=2166136261;for(const c of text){h^=c.codePointAt(0)!;h=Math.imul(h,16777619)}return h>>>0}
-function random(seed:number){let a=seed;return()=>{a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
-type Rand=()=>number;
-const pick=<T,>(r:Rand,list:readonly T[])=>list[Math.floor(r()*list.length)];
-const chance=(r:Rand,p:number)=>r()<p;
+export function hash(text:string){let h=2166136261;for(const c of text){h^=c.codePointAt(0)!;h=Math.imul(h,16777619)}return h>>>0}
+export function random(seed:number){let a=seed;return()=>{a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+export type Rand=()=>number;
+export const pick=<T,>(r:Rand,list:readonly T[])=>list[Math.floor(r()*list.length)];
+export const chance=(r:Rand,p:number)=>r()<p;
 function rgb(hex:string){const v=/^#([0-9a-f]{6})$/i.exec(hex)?.[1]??'8a8f8c';return [0,2,4].map(i=>parseInt(v.slice(i,i+2),16))}
 /** Blend two colours; t=0 keeps the first. */
 export function mix(a:string,b:string,t:number){const x=rgb(a),y=rgb(b);return '#'+x.map((v,i)=>Math.round(v+(y[i]-v)*t).toString(16).padStart(2,'0')).join('')}
-const n=(v:number)=>Math.round(v*10)/10;
-const shape=(d:string,fill:string,w=4)=>`<path d="${d}" fill="${fill}" stroke="${O}" stroke-width="${w}"/>`;
-const stroke=(d:string,color:string,w:number,extra='')=>`<path d="${d}" stroke="${color}" stroke-width="${w}" fill="none"${extra}/>`;
-const dot=(x:number,y:number,r:number,fill:string,w=4,extra='')=>`<circle cx="${n(x)}" cy="${n(y)}" r="${r}" fill="${fill}"${w?` stroke="${O}" stroke-width="${w}"`:''}${extra}/>`;
-const limb=(pts:number[][],fill:string)=>{const d='M'+pts.map(p=>p.map(n).join(' ')).join('L');return stroke(d,O,29)+stroke(d,fill,21)};
-const at=(x:number,y:number,rot:number,body:string)=>`<g transform="translate(${n(x)} ${n(y)}) rotate(${rot})">${body}</g>`;
+export const n=(v:number)=>Math.round(v*10)/10;
+export const shape=(d:string,fill:string,w=4)=>`<path d="${d}" fill="${fill}" stroke="${O}" stroke-width="${w}"/>`;
+export const stroke=(d:string,color:string,w:number,extra='')=>`<path d="${d}" stroke="${color}" stroke-width="${w}" fill="none"${extra}/>`;
+export const dot=(x:number,y:number,r:number,fill:string,w=4,extra='')=>`<circle cx="${n(x)}" cy="${n(y)}" r="${r}" fill="${fill}"${w?` stroke="${O}" stroke-width="${w}"`:''}${extra}/>`;
+export const limb=(pts:number[][],fill:string)=>{const d='M'+pts.map(p=>p.map(n).join(' ')).join('L');return stroke(d,O,29)+stroke(d,fill,21)};
+export const at=(x:number,y:number,rot:number,body:string)=>`<g transform="translate(${n(x)} ${n(y)}) rotate(${rot})">${body}</g>`;
 
 // --- the look --------------------------------------------------------------------------------------------------
-const SKIN=['#f3d2b5','#e8b58e','#d9a37a','#c08a60','#8d5a3b','#5f3d29'] as const;
-const HAIR=['#1f1a1c','#3a2a22','#5a3a22','#8a5a34','#b5552a','#d9b25e','#b9b4ad'] as const;
-const HAIR_STYLES=['short','swept','bob','long','bun','curly','ponytail','braids','spiky','shaved'] as const;
+export const SKIN=['#f3d2b5','#e8b58e','#d9a37a','#c08a60','#8d5a3b','#5f3d29'] as const;
+export const HAIR=['#1f1a1c','#3a2a22','#5a3a22','#8a5a34','#b5552a','#d9b25e','#b9b4ad'] as const;
+export const HAIR_STYLES=['short','swept','bob','long','bun','curly','ponytail','braids','spiky','shaved'] as const;
 export type HairStyle=typeof HAIR_STYLES[number];
 export type Headgear='none'|'hood'|'helm'|'hat'|'cap'|'circlet'|'leaves'|'antlers'|'bandana';
 export interface HeroLook {
@@ -95,10 +95,10 @@ function outfit(c:HeroClass,look:HeroLook,r:Rand):Outfit{
 type Hold={arm:number[][];hand:number[];item:string;front?:string;over?:string};
 const sword=(x:number,y:number,rot:number)=>at(x,y,rot,shape('M-6 -18V-150l6-14 6 14V-18z','#dfe6ea',3)+stroke('M0 -24V-150','#b9c2c7',1.6)+shape('M-22 -24h44v10h-44z','#8a6a3a',3)+shape('M-5 -14h10v28h-10z','#5a3a22',3)+dot(0,18,6,'#8a6a3a',3));
 const dagger=(x:number,y:number,rot:number)=>at(x,y,rot,shape('M-5 -16V-70l5-12 5 12V-16z','#dfe6ea',3)+shape('M-14 -18h28v8h-28z','#5a4a3a',3)+shape('M-4 -10h8v18h-8z','#3a2a22',3));
-const shaft=(x:number,y:number,top:number,bottom:number,wood:string,w=6)=>at(x,y,0,stroke(`M0 ${top}V${bottom}`,O,w+8)+stroke(`M0 ${top}V${bottom}`,wood,w));
+export const shaft=(x:number,y:number,top:number,bottom:number,wood:string,w=6)=>at(x,y,0,stroke(`M0 ${top}V${bottom}`,O,w+8)+stroke(`M0 ${top}V${bottom}`,wood,w));
 const mace=(x:number,y:number)=>shaft(x,y,-60,60,'#6b4428',5)+at(x,y,0,shape('M-14 -96h28l6 18-6 18h-28l-6-18z','#c9ced2')+stroke('M0 -96v36',O,2.5));
 const hammer=(x:number,y:number)=>shaft(x,y,-80,70,'#6b4428',5)+at(x,y,0,shape('M-30 -112h52v34h-52z','#9aa4ab')+shape('M22 -104h12v18h-12z','#7a8288',3));
-const book=(x:number,y:number,rot:number,cover:string)=>at(x,y,rot,shape('M-24 -18h48v36h-48z',cover)+shape('M-19 -13h38v26h-38z','#f1e5cf',2.4)+stroke('M0 -13v26M-14 -6h9M-14 0h9M5 -6h9M5 0h9',O,1.6,' opacity=".6"'));
+export const book=(x:number,y:number,rot:number,cover:string)=>at(x,y,rot,shape('M-24 -18h48v36h-48z',cover)+shape('M-19 -13h38v26h-38z','#f1e5cf',2.4)+stroke('M0 -13v26M-14 -6h9M-14 0h9M5 -6h9M5 0h9',O,1.6,' opacity=".6"'));
 const bird=(x:number,y:number,body:string)=>at(x,y,0,shape('M-14 -6l-16 10 4-14z',body,3)+`<ellipse cx="0" cy="-14" rx="16" ry="11" transform="rotate(-18 0 -14)" fill="${body}" stroke="${O}" stroke-width="3.4"/>`+dot(12,-28,9,body,3.4)+shape('M20 -30l10 3-10 3z','#e0b04a',2.4)+dot(14,-30,1.8,'#f7f4ec',0)+stroke('M-8 -16q8 6 16 0',O,2,' opacity=".5"')+stroke('M-4 -2v6M4 -2v6',O,2.4));
 const notes=(x:number,y:number)=>stroke(`M${x} ${y}v-28l18-6v28`,O,3)+`<g fill="${O}"><ellipse cx="${x-5}" cy="${y}" rx="6" ry="4.6"/><ellipse cx="${x+13}" cy="${y-6}" rx="6" ry="4.6"/><ellipse cx="${x+25}" cy="${y-30}" rx="5.4" ry="4.2"/></g>`+stroke(`M${x+30} ${y-30}v-22`,O,3);
 const flame=(x:number,y:number)=>`<path d="M${x} ${y+16}c-16-4-20-20-10-34 2 8 6 10 8 4 0-12 6-20 16-26-4 12 6 18 6 30 0 14-8 24-20 26z" fill="#f6a03a" stroke="${O}" stroke-width="3.4"/><path d="M${x+1} ${y+12}c-6-4-6-12 0-18 2 6 8 6 8 12 0 4-4 6-8 6z" fill="#f6e34a"/>`;
@@ -155,7 +155,7 @@ function holds(c:HeroClass,look:HeroLook,r:Rand):[Hold,Hold]{
 const lute=(a:string,slung=false)=>at(slung?236:214,slung?250:290,slung?30:-38,stroke('M0 -40V-150',O,16)+stroke('M0 -40V-150','#8a5a34',8)+shape('M-9 -150h18l4-24h-26z','#6b4428',3)+`<ellipse cx="0" cy="0" rx="36" ry="46" fill="#c98a3e" stroke="${O}" stroke-width="4"/>`+dot(0,-4,10,'#3a2a22',3)+stroke('M-3 -150V30M3 -150V30','#f1e5cf',1.4)+shape('M-14 26h28v8h-28z',mix(a,O,.3),3));
 
 // --- the head ---------------------------------------------------------------------------------------------------
-function hairBack(look:HeroLook):string{
+export function hairBack(look:HeroLook):string{
  const h=look.hair;
  switch(look.hairStyle){
   case 'long':return shape('M158 140c-2-60 90-60 88 0l6 100c-14 10-28 8-36-2l-2-64h-28l-2 64c-8 10-22 12-36 2z',h);
@@ -165,7 +165,7 @@ function hairBack(look:HeroLook):string{
   default:return '';
  }
 }
-function hairFront(look:HeroLook):string{
+export function hairFront(look:HeroLook):string{
  const h=look.hair;
  switch(look.hairStyle){
   case 'short':case 'long':case 'ponytail':return shape('M162 142c-4-48 84-52 80 0-8-16-22-24-40-24s-32 8-40 24z',h);
@@ -180,7 +180,7 @@ function hairFront(look:HeroLook):string{
   case 'shaved':return `<path d="M164 136c4-40 72-42 76 0-10-12-24-18-38-18s-28 6-38 18z" fill="${h}" opacity=".45"/>`;
  }
 }
-function face(look:HeroLook):string{
+export function face(look:HeroLook):string{
  const s:string[]=[];
  s.push(dot(177,162,7,'#e58f7a',0,' opacity=".45"'),dot(227,162,7,'#e58f7a',0,' opacity=".45"'));
  if(look.freckles)s.push(`<g fill="${mix(look.skin,'#5a3a22',.55)}" opacity=".7">`+[[184,160],[190,163],[196,160],[208,160],[214,163],[220,160]].map(([x,y])=>`<circle cx="${x}" cy="${y}" r="1.6"/>`).join('')+'</g>');

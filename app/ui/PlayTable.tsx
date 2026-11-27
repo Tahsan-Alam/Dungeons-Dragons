@@ -6,14 +6,14 @@ import {CLASS,encounterCleared,getReachable,getQuestAction,getValidTargets} from
 import {currentNarration} from '../../game/ai';
 import {storyGoal} from '../../game/campaign';
 import {KEEPER_PROFILE,armorOf} from '../../game/keepers';
-import {GAME_MASTERS,GAME_MASTER_ART_RATIO} from '../../game/presets';
+import {GAME_MASTER_ART_RATIO} from '../../game/presets';
 import Board,{type Tool,type BoardControls} from './Board';
 import {Icon} from './Art';
 import {ActorPortrait} from './ActorArt';
 import {heroDrawing} from './actor-art';
 import Modal from './Modal';
 import {Portrait} from './RealmKit';
-import NarratorAvatar from './NarratorAvatar';
+import {gameMasterDrawing} from './game-master-figure';
 import ChapterMap from './ChapterMap';
 import {routeView} from './route-map';
 import JournalDrawer,{type JournalEntry,type JournalTab} from './JournalDrawer';
@@ -112,7 +112,7 @@ export default function PlayTable({game,room,session,busy,connection,onAction,on
  }
  const party=game.actors.filter(a=>!a.enemy),foes=game.actors.filter(a=>a.enemy&&!a.defeated&&a.hp>0);const turns=useMemo(()=>upcomingTurns(game),[game]);
  const entries=useMemo(()=>{const list:JournalEntry[]=[...game.events.slice(-45).map(event=>({key:`event-${event.id}`,at:event.id,event})),...(game.story?.narrations.slice(-10)??[]).map(narration=>({key:`narration-${narration.eventId}`,at:narration.eventId,narration}))];return list.sort((a,b)=>b.at-a.at||Number(!!b.narration)-Number(!!a.narration))},[game.events,game.story?.narrations]);
- const narrator=game.options.creation?.narrator,narratorName=narrator?.name??'Storyteller',gm=GAME_MASTERS.find(g=>g.profile.name===narrator?.name);
+ const narrator=game.options.creation?.narrator,narratorName=narrator?.name??'Storyteller',gmFigure=gameMasterDrawing(narrator);
  const caption=currentNarration(game),host=!room||room.hostId===session?.playerId;
  const turnRole=(a:Actor)=>a.enemy?'Enemy':a.id===mine?.id?'You':a.bot?'Companion':'Player';
  const turnWhen=(index:number)=>index===0?'acting now':index===1?'up next':`in ${index} turns`;
@@ -160,7 +160,7 @@ export default function PlayTable({game,room,session,busy,connection,onAction,on
   </section>
 
   <section className="ph-gm ph-glass ph-ui" aria-label={narratorName}>
-   {gm?<Portrait art={gm.art} face={gm.face} ratio={GAME_MASTER_ART_RATIO} width={44} height={44} scale={2.4} eye={0.4}/>:<NarratorAvatar profile={narrator} size={44} talking={speaking}/>}
+   <Portrait art={gmFigure.art} face={gmFigure.face} ratio={GAME_MASTER_ART_RATIO} width={44} height={44} scale={2.4} eye={0.4}/>
    <div><p>“{caption}”</p><span className="ph-row">{onListen?<button type="button" className="ph-link" onClick={()=>onListen(caption)}><Icon name="sound" size={13}/>Listen</button>:null}<button type="button" className="ph-link" onClick={onAI}><Icon name="book" size={13}/>Ask {narratorName}</button></span></div>
   </section>
 

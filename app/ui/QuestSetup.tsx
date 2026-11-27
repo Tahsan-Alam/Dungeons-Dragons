@@ -12,8 +12,8 @@ import {useCreation} from './useCreation';
 import {useAIPreference} from './ai-preferences';
 import {RealmButton,RealmTools,QuestSteps,Portrait,Diamond,CheckBadge} from './RealmKit';
 import TaleConversation from './TaleConversation';
-import NarratorAvatar from './NarratorAvatar';
-import {OWN_ACCESSORIES,OWN_DEFAULT,OWN_FORMS,OWN_NAME_IDEAS,OWN_TONES,ownGameMaster,ownNameTaken,parseOwnInput,type OwnGameMasterInput} from '../../game/own-game-master';
+import {DRAWN_GM_FACE,customGameMasterArt} from './game-master-figure';
+import {OWN_ACCESSORIES,OWN_DEFAULT,OWN_FORMS,OWN_NAME_IDEAS,OWN_TONES,ownGameMaster,ownNameTaken,ownVoice,parseOwnInput,type OwnGameMasterInput} from '../../game/own-game-master';
 import './quest-setup.css';
 
 type Props={mode:'solo'|'online';onBack:()=>void;onStart:(name:string,cls:HeroClass,options:GameOptions,code:string,heroId?:string)=>unknown;busy:boolean;quick?:boolean;onAISettings?:()=>void};
@@ -110,18 +110,22 @@ function ownPreset(own:OwnGameMasterInput,profile:ReturnType<typeof ownGameMaste
   wry:{tale:'Three tales, all of them trouble. Pick the one you can survive.',setOut:'Bring a light and low expectations. We will be fine. Probably.'},
   grave:{tale:'Every tale here has a cost. Choose the one you are willing to pay.',setOut:'The road is listening. Walk it as if every step will be remembered.'}}[tone.id];
  return {id:'own' as GameMasterPreset['id'],title:name,realName:'Your own Game Master',mood:tone.label,tone:tone.tells,style:profile?profile.speakingStyle.join(' · '):tone.label,
-  excerpt:profile?.persona??'',quote:tone.sample,art:'',scene:'/art/scenes/camp.svg',face:{x:.5,y:.3},lines,
+  excerpt:profile?.persona??'',quote:tone.sample,art:ownArt(own,name),scene:'/art/scenes/camp.svg',face:DRAWN_GM_FACE,lines,
   profile:profile??{name,persona:'',personality:['Warm'],speakingStyle:['Hopeful'],appearance:['Owl'],model:'cleric',color:own.color,avatar:{form:own.form,accessory:own.accessory}}};
 }
-/** A Game Master's face: the painted portrait, or your own Game Master's avatar. */
+/** Your own Game Master's drawing (app/ui/game-master-figure.ts): their shape, colour and what they wear, carrying what their tone carries. */
+const ownArt=(own:OwnGameMasterInput,name:string)=>customGameMasterArt({name,form:own.form,accessory:own.accessory,color:own.color,voice:ownVoice(own.tone)});
+/** A Game Master's face, cropped from their full figure. */
 function GmFace({gm,size=44}:{gm:GameMasterPreset;size?:number}){
- return gm.id===('own' as GameMasterPreset['id'])?<span className="qs-own-face" style={{width:size,height:size}}><NarratorAvatar profile={gm.profile} compact size={size}/></span>
-  :<Portrait art={gm.art} face={gm.face} ratio={GAME_MASTER_ART_RATIO} width={size} height={size} scale={2.4} eye={0.4}/>;
+ return <Portrait art={gm.art} face={gm.face} ratio={GAME_MASTER_ART_RATIO} width={size} height={size} scale={2.4} eye={0.4}/>;
 }
 
 function GameMasterStep({gm,pick,own,setOwn,ownReady}:{gm:GameMasterPreset;pick:(id:string)=>void;own:OwnGameMasterInput;setOwn:(own:OwnGameMasterInput)=>void;ownReady:boolean}){
  const mine=gm.id===('own' as GameMasterPreset['id']),set=(patch:Partial<OwnGameMasterInput>)=>setOwn({...own,...patch}),tone=OWN_TONES.find(t=>t.id===own.tone)!;
- const preview={...gm.profile,color:own.color,avatar:{form:own.form,accessory:own.accessory}};
+ // The drawing follows the name, so it settles a moment after typing stops instead of changing with every letter.
+ const [drawnName,setDrawnName]=useState(gm.title);
+ useEffect(()=>{const t=window.setTimeout(()=>setDrawnName(gm.title),450);return()=>window.clearTimeout(t)},[gm.title]);
+ const figure=ownArt(own,drawnName);
  // On a phone the cards sit below the preview: choosing your own Game Master brings its builder into view.
  const builder=useRef<HTMLElement>(null),wasMine=useRef(mine);
  useEffect(()=>{if(mine&&!wasMine.current&&window.matchMedia('(max-width:900px)').matches)builder.current?.scrollIntoView({block:'start',behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth'});wasMine.current=mine},[mine]);
@@ -133,7 +137,7 @@ function GameMasterStep({gm,pick,own,setOwn,ownReady}:{gm:GameMasterPreset;pick:
     {g.id===gm.id?<Diamond/>:null}
    </button>)}
    <button type="button" role="radio" aria-checked={mine} data-tooltip="none" className="realm-choice qs-gm-card qs-gm-card-own" onClick={()=>pick('own')}>
-    <span className="qs-own-card-face"><NarratorAvatar profile={preview} compact size={84}/></span>
+    <Portrait art={figure} face={DRAWN_GM_FACE} ratio={GAME_MASTER_ART_RATIO} width={84} height={104} scale={2.1}/>
     <span className={`qs-gm-card-text${mine?' realm-tint':''}`}><strong>{mine&&ownReady?gm.title:'Your own'}</strong><span>{mine&&ownReady?'Your own Game Master':'Name them'}</span><span>{tone.tells}</span></span>
     {mine?<Diamond/>:null}
    </button>
@@ -141,8 +145,8 @@ function GameMasterStep({gm,pick,own,setOwn,ownReady}:{gm:GameMasterPreset;pick:
   {mine?<section ref={builder} className="qs-gm-preview qs-own" aria-label="Your own Game Master" style={{['--own-colour' as string]:own.color}}>
    <div className="qs-gm-stage">
     <img className="qs-gm-scene" src="/art/scenes/camp.svg" alt=""/>
-    <span className="qs-own-glow" aria-hidden="true"/>
-    <div className="qs-own-figure"><NarratorAvatar profile={preview} speaking={false}/></div>
+    <span className="qs-own-shadow" aria-hidden="true"/>
+    <img className="qs-own-figure" src={figure} alt={`${gm.title}, full figure`}/>
     <p className="qs-own-sample" aria-live="polite"><span className="realm-eyebrow">{ownReady?gm.title:'They say'}</span>“{tone.sample}”</p>
    </div>
    <div className="qs-own-form">
@@ -157,7 +161,7 @@ function GameMasterStep({gm,pick,own,setOwn,ownReady}:{gm:GameMasterPreset;pick:
     </fieldset>
     <fieldset className="qs-own-set"><legend className="realm-eyebrow">Their shape</legend>
      <div className="qs-own-forms" role="radiogroup" aria-label="Their shape">{OWN_FORMS.map(f=><button key={f.id} type="button" role="radio" aria-checked={own.form===f.id} aria-label={f.label} data-tooltip={f.label} className="realm-choice qs-own-form-pick" onClick={()=>set({form:f.id})}>
-      <NarratorAvatar profile={{...preview,avatar:{form:f.id,accessory:own.accessory}}} compact size={46}/><span>{f.label}</span></button>)}</div>
+      <Portrait art={ownArt({...own,form:f.id},drawnName)} face={DRAWN_GM_FACE} ratio={GAME_MASTER_ART_RATIO} width={46} height={46} scale={2.4} eye={0.4}/><span>{f.label}</span></button>)}</div>
     </fieldset>
     <div className="qs-own-row">
      <fieldset className="qs-own-set"><legend className="realm-eyebrow">They wear</legend>
@@ -287,7 +291,7 @@ function SetOutStep({s,gm,hero,story,art,thumb,update,advanced,setAdvanced,mode}
     <img className="qs-setout-bg" src={art} alt=""/>
     <span className="qs-setout-label">{story.title}</span>
     <span className="qs-setout-shadow" style={{left:'26%'}} aria-hidden="true"/><span className="qs-setout-shadow" style={{left:'68%'}} aria-hidden="true"/>
-    {gm.art?<img className="qs-setout-gm" src={gm.art} alt=""/>:<span className="qs-setout-gm qs-setout-own"><NarratorAvatar profile={gm.profile}/></span>}<img className="qs-setout-hero" src={hero.art} alt=""/>
+    <img className="qs-setout-gm" src={gm.art} alt=""/><img className="qs-setout-hero" src={hero.art} alt=""/>
    </section>
    <div className="qs-line realm-panel"><GmFace gm={gm}/><p><span className="realm-eyebrow">{gm.title}</span>“{gm.lines.setOut}”</p></div>
   </div>
