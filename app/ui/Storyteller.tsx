@@ -7,7 +7,7 @@ import {currentNarration} from '../../game/ai';
 import {Icon} from './Art';
 import {Portrait} from './RealmKit';
 import {GAME_MASTER_ART_RATIO} from '../../game/presets';
-import {gameMasterDrawing} from './game-master-figure';
+import {useGameMasterDrawing} from './painted-portrait';
 import type {Exchange} from './narrator-thread';
 import './narrator.css';
 
@@ -107,7 +107,7 @@ export default function Storyteller({game,room,session,narrate,steer,busy,prefer
   finally{setPending(false);}
  }
 
- const figure=gameMasterDrawing(game?.options.creation?.narrator);
+ const figure=useGameMasterDrawing(game?.options.creation?.narrator);
  return <div className="pip-panel ai-summary">
   <div className="pip-heading"><Portrait art={figure.art} face={figure.face} ratio={GAME_MASTER_ART_RATIO} width={64} height={64} scale={2.4} eye={0.4}/><div><h3>{narratorName}, your guide</h3></div></div>
   {game?<>

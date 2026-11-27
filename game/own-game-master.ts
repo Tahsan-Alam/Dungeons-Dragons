@@ -1,5 +1,5 @@
 import {HERO_COLORS,type HeroClass} from './types.ts';
-import {NARRATOR_ACCESSORIES,NARRATOR_FORMS,parseNarrator,type NarratorAvatar,type NarratorProfile} from './creation.ts';
+import {NARRATOR_ACCESSORIES,NARRATOR_FORMS,isPortraitId,parseNarrator,type NarratorAvatar,type NarratorProfile} from './creation.ts';
 import {GAME_MASTERS} from './presets.ts';
 
 /**
@@ -8,7 +8,9 @@ import {GAME_MASTERS} from './presets.ts';
  * as an AI-made one. Your own Game Master keeps no sealed notes (those belong to the three built-in Game Masters).
  */
 export type OwnTone='hopeful'|'wry'|'grave';
-export interface OwnGameMasterInput {name:string;who:string;tone:OwnTone;form:NarratorAvatar['form'];accessory:NarratorAvatar['accessory'];color:string}
+export interface OwnGameMasterInput {name:string;who:string;tone:OwnTone;form:NarratorAvatar['form'];accessory:NarratorAvatar['accessory'];color:string;
+ /** A painted portrait the player chose (app/api/ai/paint); without one they keep their drawing. */
+ portrait?:string}
 
 export const OWN_TONES:readonly {id:OwnTone;label:string;tells:string;sample:string}[]=[
  {id:'hopeful',label:'Hopeful',tells:'Tells it with hope',sample:'Every road keeps a light somewhere. Let’s go and find this one.'},
@@ -45,7 +47,7 @@ export function ownGameMaster(input:OwnGameMasterInput):NarratorProfile|null{
  const accessory=OWN_ACCESSORIES.find(a=>a.id===input.accessory)!;
  const appearance=[form.label,...(input.accessory==='none'?[]:[accessory.label.replace(/^A /,'')])];
  return parseNarrator({name,persona:who,personality:tone.personality,speakingStyle:tone.speakingStyle,appearance,model:form.model,color:input.color,
-  avatar:{form:input.form,accessory:input.accessory},voice:tone.voice});
+  avatar:{form:input.form,accessory:input.accessory},voice:tone.voice,...(isPortraitId(input.portrait)?{portrait:input.portrait}:{})});
 }
 
 /** Restores saved choices, falling back to the defaults for anything that is no longer valid. */
@@ -57,5 +59,6 @@ export function parseOwnInput(raw:unknown):OwnGameMasterInput{
   form:OWN_FORMS.some(f=>f.id===v.form)?v.form!:OWN_DEFAULT.form,
   accessory:OWN_ACCESSORIES.some(a=>a.id===v.accessory)?v.accessory!:OWN_DEFAULT.accessory,
   color:HERO_COLORS.includes(String(v.color))?v.color!:OWN_DEFAULT.color,
+  ...(isPortraitId(v.portrait)?{portrait:v.portrait}:{}),
  };
 }

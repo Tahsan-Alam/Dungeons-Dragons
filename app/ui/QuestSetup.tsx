@@ -13,6 +13,8 @@ import {useAIPreference} from './ai-preferences';
 import {RealmButton,RealmTools,QuestSteps,Portrait,Diamond,CheckBadge} from './RealmKit';
 import TaleConversation from './TaleConversation';
 import {DRAWN_GM_FACE,customGameMasterArt} from './game-master-figure';
+import {usePaintedFigure,type PaintedFigure} from './painted-portrait';
+import PaintGameMaster from './PaintGameMaster';
 import {OWN_ACCESSORIES,OWN_DEFAULT,OWN_FORMS,OWN_NAME_IDEAS,OWN_TONES,ownGameMaster,ownNameTaken,ownVoice,parseOwnInput,type OwnGameMasterInput} from '../../game/own-game-master';
 import './quest-setup.css';
 
@@ -52,7 +54,8 @@ export default function QuestSetup({mode,onBack,onStart,busy,quick=false,onAISet
  useEffect(()=>{heading.current?.focus({preventScroll:true});},[s.step,sheet,talking]);
 
  const ownProfile=ownGameMaster(s.own);
- const gm=s.gm==='own'?ownPreset(s.own,ownProfile):GAME_MASTERS.find(g=>g.id===s.gm)??GAME_MASTERS[0];
+ const painted=usePaintedFigure(s.own.portrait);
+ const gm=s.gm==='own'?ownPreset(s.own,ownProfile,painted):GAME_MASTERS.find(g=>g.id===s.gm)??GAME_MASTERS[0];
  const hero=HEROES.find(h=>h.id===s.hero)??HEROES[0];
  const presetTale=TALES.find(t=>t.id===s.tale);
  const story:StoryBlueprint=s.tale==='custom'&&s.custom?s.custom:(presetTale??TALES[0]).story;
@@ -104,13 +107,13 @@ export default function QuestSetup({mode,onBack,onStart,busy,quick=false,onAISet
 }
 
 /** Your own Game Master, shaped like a built-in one so every setup screen can show them. They keep no sealed notes. */
-function ownPreset(own:OwnGameMasterInput,profile:ReturnType<typeof ownGameMaster>):GameMasterPreset{
+function ownPreset(own:OwnGameMasterInput,profile:ReturnType<typeof ownGameMaster>,painted?:PaintedFigure):GameMasterPreset{
  const tone=OWN_TONES.find(t=>t.id===own.tone)??OWN_TONES[0],name=profile?.name??(own.name.trim()||'Your own');
  const lines={hopeful:{tale:'Every road keeps a light somewhere. Pick a tale, or tell me yours.',setOut:'Good company and a long road. I could not ask for more.'},
   wry:{tale:'Three tales, all of them trouble. Pick the one you can survive.',setOut:'Bring a light and low expectations. We will be fine. Probably.'},
   grave:{tale:'Every tale here has a cost. Choose the one you are willing to pay.',setOut:'The road is listening. Walk it as if every step will be remembered.'}}[tone.id];
  return {id:'own' as GameMasterPreset['id'],title:name,realName:'Your own Game Master',mood:tone.label,tone:tone.tells,style:profile?profile.speakingStyle.join(' · '):tone.label,
-  excerpt:profile?.persona??'',quote:tone.sample,art:ownArt(own,name),scene:'/art/scenes/camp.svg',face:DRAWN_GM_FACE,lines,
+  excerpt:profile?.persona??'',quote:tone.sample,art:painted?.art??ownArt(own,name),scene:'/art/scenes/camp.svg',face:painted?.face??DRAWN_GM_FACE,lines,
   profile:profile??{name,persona:'',personality:['Warm'],speakingStyle:['Hopeful'],appearance:['Owl'],model:'cleric',color:own.color,avatar:{form:own.form,accessory:own.accessory}}};
 }
 /** Your own Game Master's drawing (app/ui/game-master-figure.ts): their shape, colour and what they wear, carrying what their tone carries. */
@@ -121,11 +124,12 @@ function GmFace({gm,size=44}:{gm:GameMasterPreset;size?:number}){
 }
 
 function GameMasterStep({gm,pick,own,setOwn,ownReady}:{gm:GameMasterPreset;pick:(id:string)=>void;own:OwnGameMasterInput;setOwn:(own:OwnGameMasterInput)=>void;ownReady:boolean}){
- const mine=gm.id===('own' as GameMasterPreset['id']),set=(patch:Partial<OwnGameMasterInput>)=>setOwn({...own,...patch}),tone=OWN_TONES.find(t=>t.id===own.tone)!;
+ // A new shape, colour, accessory or tone makes an earlier painting out of date, so it is cleared.
+ const mine=gm.id===('own' as GameMasterPreset['id']),set=(patch:Partial<OwnGameMasterInput>)=>setOwn({...own,...patch,...(['form','color','accessory','tone'].some(k=>k in patch)?{portrait:undefined}:{})}),tone=OWN_TONES.find(t=>t.id===own.tone)!;
  // The drawing follows the name, so it settles a moment after typing stops instead of changing with every letter.
  const [drawnName,setDrawnName]=useState(gm.title);
  useEffect(()=>{const t=window.setTimeout(()=>setDrawnName(gm.title),450);return()=>window.clearTimeout(t)},[gm.title]);
- const figure=ownArt(own,drawnName);
+ const drawing=ownArt(own,drawnName),painted=usePaintedFigure(own.portrait),figure=painted?.art??drawing,face=painted?.face??DRAWN_GM_FACE;
  // On a phone the cards sit below the preview: choosing your own Game Master brings its builder into view.
  const builder=useRef<HTMLElement>(null),wasMine=useRef(mine);
  useEffect(()=>{if(mine&&!wasMine.current&&window.matchMedia('(max-width:900px)').matches)builder.current?.scrollIntoView({block:'start',behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth'});wasMine.current=mine},[mine]);
@@ -137,7 +141,7 @@ function GameMasterStep({gm,pick,own,setOwn,ownReady}:{gm:GameMasterPreset;pick:
     {g.id===gm.id?<Diamond/>:null}
    </button>)}
    <button type="button" role="radio" aria-checked={mine} data-tooltip="none" className="realm-choice qs-gm-card qs-gm-card-own" onClick={()=>pick('own')}>
-    <Portrait art={figure} face={DRAWN_GM_FACE} ratio={GAME_MASTER_ART_RATIO} width={84} height={104} scale={2.1}/>
+    <Portrait art={figure} face={face} ratio={GAME_MASTER_ART_RATIO} width={84} height={104} scale={2.1}/>
     <span className={`qs-gm-card-text${mine?' realm-tint':''}`}><strong>{mine&&ownReady?gm.title:'Your own'}</strong><span>{mine&&ownReady?'Your own Game Master':'Name them'}</span><span>{tone.tells}</span></span>
     {mine?<Diamond/>:null}
    </button>
@@ -171,6 +175,7 @@ function GameMasterStep({gm,pick,own,setOwn,ownReady}:{gm:GameMasterPreset;pick:
       <div className="qs-own-swatches" role="radiogroup" aria-label="Their colour">{['#ef997c','#a3bbf0','#edcf75','#b19bd3','#8ac4ae','#f0a6b2','#87bdcf','#cbad81','#b2c877','#a4a4bf'].map(c=><button key={c} type="button" role="radio" aria-checked={own.color===c} aria-label={`Colour ${c}`} data-tooltip="Their colour" className="qs-own-swatch" style={{background:c}} onClick={()=>set({color:c})}/>)}</div>
      </fieldset>
     </div>
+    <PaintGameMaster key={`${own.form}|${own.color}|${own.accessory}|${own.tone}`} own={own} name={ownReady?gm.title:''} drawing={drawing} setPortrait={portrait=>setOwn({...own,portrait})}/>
     <p className="qs-own-note">Your own Game Master tells any tale in the Lantern Marches. Sealed notes belong to the three Game Masters above, so heroes keep none with yours.</p>
    </div>
   </section>:<section className="qs-gm-preview" aria-label={`${gm.title}, ${gm.realName}`}>

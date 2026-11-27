@@ -20,6 +20,17 @@ AI_ACCESS_MODE=open (also the default when unset) allows visitors to use configu
 
 An optional gate remains: set AI_ACCESS_MODE=password and supply a valid AI_ACCESS_PASSWORD_HASH from node scripts/team-password.mjs. It uses hashed opaque sessions and a PBKDF2 verifier. Missing/invalid verifier or an unknown access mode fails closed. Password mode is not required for normal team development.
 
+## Painting Game Masters
+
+Off unless all of these are set (locally in .dev.vars, on the host as secrets):
+
+- AI_ENABLE_IMAGES=I_ACCEPT_PAID_IMAGES.
+- FAL_KEY: the fal API key (fal.ai → Dashboard → Keys). Server-side only; never in frontend code or Git.
+- FAL_LORA_URL: the trained LoRA's weights URL (the "Diffusers Lora File" link from fal's training result).
+- A D1 binding with the painted_images table (drizzle/0004_painted_images.sql; npm run local:setup applies it).
+
+Players also need AI switched on for their device. Each player gets AI_IMAGES_PER_PLAYER_DAY pictures per UTC day (default 4, two per try, at most 12), counted per connection; every try also reserves $0.08 in the shared ledger, so the campaign/day/month caps still bound total spend. Set a monthly limit in fal's billing settings as well. Tests use a fake fal and need no key.
+
 ## Local database and server
 
 Run npm ci, then npm run local:setup, then npm run dev -- --port 5347 --hostname 127.0.0.1.

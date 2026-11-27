@@ -254,3 +254,19 @@ html:root[data-color-mode][data-theme] body .realm button.tc-voice-btn:disabled{
 }
 .qs-tile.taken .realm-portrait{opacity:.82}
 .qs-tile.taken .qs-tile-name span{display:inline-block;align-self:flex-start;margin-top:1px;padding:0 5px;background:#2a323d;color:#c4ccd5;font-weight:600}
+/* Paint them: the image model's options beside the drawing. */
+.qs-paint{display:flex;flex-direction:column;gap:8px}
+.qs-paint-note{margin:0;font:500 12.5px/1.45 Inter,system-ui,sans-serif;color:#a9b3be}
+.qs-paint-describe input{width:100%;box-sizing:border-box;min-height:40px;padding:8px 12px;border:1px solid #2f3946;border-radius:2px;background:#0f141b;color:#F1E5CF;font:italic 400 16px var(--realm-prose,Georgia)}
+.qs-paint-describe input:focus-visible{outline:1.5px solid #9CC9EA;outline-offset:2px}
+.qs-paint-row{display:flex;align-items:center;gap:12px}
+.qs-paint-hint{font:500 12.5px Inter,system-ui,sans-serif;color:#8d99a6}
+.qs-paint-options{display:flex;gap:8px;flex-wrap:wrap}
+.qs-paint-option{display:flex;flex-direction:column;align-items:center;gap:4px;padding:6px 6px 5px;min-width:80px}
+.qs-paint-option span{font:600 11.5px Inter,system-ui,sans-serif;color:#b3bcc6}
+.qs-paint-option[aria-checked="true"]{border-color:#9CC9EA !important;background:#1d2733 !important}
+.qs-paint-drawing{width:64px;height:78px;object-fit:cover;object-position:50% 12%;border-radius:2px;background:radial-gradient(circle at 50% 40%,#2a3442,#141a22)}
+.qs-paint-loading{width:64px;height:78px;border-radius:2px;background:#1a212b;animation:qs-paint-pulse 1.2s ease-in-out infinite}
+@keyframes qs-paint-pulse{50%{opacity:.5}}
+@media (prefers-reduced-motion:reduce){.qs-paint-loading{animation:none}}
+.qs-paint-unusable{opacity:.55;cursor:default}.qs-paint-unusable .qs-paint-loading{animation:none}

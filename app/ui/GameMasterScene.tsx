@@ -3,7 +3,7 @@ import {useOpenCue} from './sound/useCue';
 import {useLayoutEffect,useRef,type ReactNode} from 'react';
 import type {GameState} from '../../game/types';
 import type {Biome} from '../../game/types';
-import {gameMasterDrawing} from './game-master-figure';
+import {useGameMasterDrawing} from './painted-portrait';
 import {useTheme} from './Theme';
 import './gm-scene.css';
 
@@ -22,7 +22,7 @@ export default function GameMasterScene({game,label,eyebrow,title,talking=false,
   const cancel=(e:Event)=>{e.preventDefault();close.current()};el?.addEventListener('cancel',cancel);
   return()=>{el?.removeEventListener('cancel',cancel);el?.close()};
  },[]);
- const figure=gameMasterDrawing(game.options.creation?.narrator);
+ const figure=useGameMasterDrawing(game.options.creation?.narrator);
  const night=useTheme().resolvedColorMode==='dark',scene=regionScene(game.options.biome,night);
  return <dialog ref={dialog} className={`gm-scene realm ${night?'dusk':'day'} ${className}`} aria-label={label}>
   <img className="gm-backdrop" src={scene} alt="" aria-hidden="true"/>

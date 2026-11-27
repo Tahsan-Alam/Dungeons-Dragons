@@ -26,3 +26,12 @@ export const roomRateLimits = sqliteTable('room_rate_limits', {
   count: integer('count').notNull(),
   expiresAt: integer('expires_at').notNull(),
 }, table => [index('room_rate_limits_expiry_idx').on(table.expiresAt)]);
+
+// Game Master portraits painted with the image model (app/api/ai/paint). Immutable once written;
+// a save or room refers to one by its id, so every player and replay shows the same picture.
+export const paintedImages = sqliteTable('painted_images', {
+  id: text('id').primaryKey(),
+  contentType: text('content_type').notNull(),
+  bytes: text('bytes').notNull(),
+  createdAt: integer('created_at').notNull(),
+});
