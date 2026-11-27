@@ -1,7 +1,7 @@
 import {RoomError} from './rooms.ts';
 import type {BudgetLedger} from './ai-ledger.ts';
 import {creationText,NARRATOR_ACCESSORIES,NARRATOR_FORMS,isPortraitId} from '../game/creation.ts';
-import {HERO_COLORS} from '../game/types.ts';
+import {HERO_CLASSES,HERO_COLORS,type HeroClass} from '../game/types.ts';
 import {borrowedName} from '../game/paint-words.ts';
 
 /* Painting a Game Master with the image model (FLUX with the team's style LoRA, hosted on fal).
@@ -20,24 +20,40 @@ const FAL_ENDPOINT='https://fal.run/fal-ai/flux-lora';
 export function imagesConfigured(env:ImageEnv){
  return env.AI_ENABLE_IMAGES==='I_ACCEPT_PAID_IMAGES'&&!!env.FAL_KEY&&/^https:\/\/[a-z0-9.-]*fal\.(media|ai|run)\//.test(env.FAL_LORA_URL??'');
 }
-/** Images each player may make per UTC day; the owner can lower or raise it, never past 12. */
+/** Images each player may make per UTC day, for each kind (Game Master, hero); the owner can lower or raise it, never past 12. */
 export function imagesPerPlayerDay(env:ImageEnv){
  const value=env.AI_IMAGES_PER_PLAYER_DAY;
- return value===undefined?4:/^\d+$/.test(value)?Math.min(Number(value),12):0;
+ return value===undefined?2:/^\d+$/.test(value)?Math.min(Number(value),12):0;
 }
 
-export interface PaintRequest {name:string;form:typeof NARRATOR_FORMS[number];accessory:typeof NARRATOR_ACCESSORIES[number];color:string;tone:'hopeful'|'wry'|'grave';description:string;requestId:string}
-export function parsePaintRequest(v:Record<string,unknown>):PaintRequest|null{
+export interface PaintRequest {kind:'gm';name:string;form:typeof NARRATOR_FORMS[number];accessory:typeof NARRATOR_ACCESSORIES[number];color:string;tone:'hopeful'|'wry'|'grave';description:string;requestId:string}
+export interface HeroPaintRequest {kind:'hero';name:string;heroClass:HeroClass;color:string;description:string;requestId:string}
+export type AnyPaintRequest=PaintRequest|HeroPaintRequest;
+export function parsePaintRequest(v:Record<string,unknown>):AnyPaintRequest|null{
  const description=typeof v.description==='string'?v.description.replace(/\s+/g,' ').trim():'';
- if(!creationText(v.name,28)||!NARRATOR_FORMS.includes(v.form as never)||!NARRATOR_ACCESSORIES.includes(v.accessory as never)||!HERO_COLORS.includes(String(v.color))
+ if(v.kind==='hero'){
+  if(!creationText(v.name,24)||!HERO_CLASSES.includes(v.heroClass as HeroClass)||!HERO_COLORS.includes(String(v.color))||(description&&!creationText(description,80))||typeof v.requestId!=='string'||!/^[a-zA-Z0-9-]{8,64}$/.test(v.requestId))return null;
+  return {kind:'hero',name:String(v.name).trim(),heroClass:v.heroClass as HeroClass,color:String(v.color),description,requestId:v.requestId};
+ }
+ if((v.kind!==undefined&&v.kind!=='gm')||!creationText(v.name,28)||!NARRATOR_FORMS.includes(v.form as never)||!NARRATOR_ACCESSORIES.includes(v.accessory as never)||!HERO_COLORS.includes(String(v.color))
   ||!['hopeful','wry','grave'].includes(String(v.tone))||(description&&!creationText(description,80))||typeof v.requestId!=='string'||!/^[a-zA-Z0-9-]{8,64}$/.test(v.requestId))return null;
- return {name:String(v.name).trim(),form:v.form as PaintRequest['form'],accessory:v.accessory as PaintRequest['accessory'],color:String(v.color),tone:v.tone as PaintRequest['tone'],description,requestId:v.requestId};
+ return {kind:'gm',name:String(v.name).trim(),form:v.form as PaintRequest['form'],accessory:v.accessory as PaintRequest['accessory'],color:String(v.color),tone:v.tone as PaintRequest['tone'],description,requestId:v.requestId};
 }
 
 const COLOUR_NAMES:Record<string,string>={'#ef997c':'coral','#a3bbf0':'cornflower blue','#edcf75':'golden yellow','#b19bd3':'lavender','#8ac4ae':'sea green','#f0a6b2':'rose pink','#87bdcf':'sky blue','#cbad81':'tan','#b2c877':'moss green','#a4a4bf':'slate lilac'};
 const FORM_WORDS:Record<PaintRequest['form'],string>={human:'a human storyteller',spirit:'a glowing spirit storyteller with no feet, its robe fading into wisps',cat:'a cat storyteller standing upright',owl:'an owl storyteller standing upright',fox:'a fox storyteller standing upright',dragon:'a small dragon storyteller standing upright, with wings'};
 // The hat is kept apart so a crown can take its place: a crown on top of a hat reads as a mistake.
 const TONE_WORDS:Record<PaintRequest['tone'],{hat:string;rest:string}>={hopeful:{hat:'a wide traveller hat',rest:'warm and kind, holding up a lantern'},wry:{hat:'a feathered cap tipped to one side',rest:'a sly half smile, a cape over one shoulder, holding a book'},grave:{hat:'a tall pointed hat',rest:'solemn, a high collar and a long worn cloak, holding an hourglass'}};
+const CLASS_WORDS:Record<HeroClass,string>={
+ knight:'a knight in plate armour with a sword and a round shield',guardian:'a guardian in heavy armour with a tall shield and a spear',
+ rogue:'a rogue in a dark hood and leather with two daggers',ranger:'a ranger in a hood and cloak with a longbow and a quiver',
+ mage:'a mage in a long robe with a staff and a little magic in one hand',cleric:'a cleric in robes with a holy symbol and a mace',
+ bard:'a bard in a doublet and cape playing a lute',druid:'a druid with a gnarled wooden staff, leaves and a fur mantle',
+};
+/** A hero's prompt: the class sets the gear; the colour dresses them; the player's words fill one slot. */
+export function heroPaintPrompt(r:HeroPaintRequest){
+ return `PRSTYLE, full body from head to feet, fantasy hero, ${CLASS_WORDS[r.heroClass]}, dressed in ${COLOUR_NAMES[r.color]??'muted'} colours${r.description?`, ${r.description}`:''}, feet visible, whole figure inside the frame, standing, front view, centered, plain white background, no glow halo, no border, no text, no signature`;
+}
 /** The prompt is ours; the player's words only fill the description slot. */
 export function paintPrompt(r:PaintRequest){
  const tone=TONE_WORDS[r.tone],head=r.accessory==='crown'?'a small gold crown and no hat':tone.hat;
@@ -70,7 +86,7 @@ async function descriptionFlagged(text:string,env:ImageEnv,fetcher:typeof fetch,
  return !!data.results?.some(r=>r.flagged);
 }
 
-export async function paintGameMaster(request:PaintRequest,deps:{env:ImageEnv;ledger:BudgetLedger;store:ImageStore;fetcher?:typeof fetch;now?:number;signal?:AbortSignal}):Promise<{images:string[]}>{
+export async function paintGameMaster(request:AnyPaintRequest,deps:{env:ImageEnv;ledger:BudgetLedger;store:ImageStore;fetcher?:typeof fetch;now?:number;signal?:AbortSignal}):Promise<{images:string[]}>{
  const {env,ledger,store}=deps,fetcher=deps.fetcher??fetch,now=deps.now??Date.now();
  if(!imagesConfigured(env))throw new RoomError('Painting is not set up on this server. Your Game Master keeps their drawing.',503,'PAINT_UNAVAILABLE');
  const key=`paint:${request.requestId}`;
@@ -85,7 +101,7 @@ export async function paintGameMaster(request:PaintRequest,deps:{env:ImageEnv;le
  let outcome='failed';
  try{
   const response=await fetcher(FAL_ENDPOINT,{method:'POST',signal:deps.signal,headers:{authorization:`Key ${env.FAL_KEY}`,'content-type':'application/json'},
-   body:JSON.stringify({prompt:paintPrompt(request),loras:[{path:env.FAL_LORA_URL,scale:1.1}],image_size:{width:768,height:1024},num_images:IMAGES_PER_PAINT,num_inference_steps:28,guidance_scale:3.5,enable_safety_checker:true,output_format:'jpeg'})});
+   body:JSON.stringify({prompt:request.kind==='hero'?heroPaintPrompt(request):paintPrompt(request),loras:[{path:env.FAL_LORA_URL,scale:1.1}],image_size:{width:768,height:1024},num_images:IMAGES_PER_PAINT,num_inference_steps:28,guidance_scale:3.5,enable_safety_checker:true,output_format:'jpeg'})});
   if(!response.ok){outcome=`fal ${response.status}`;throw new RoomError('The painter could not finish. Your Game Master keeps their drawing.',503,'PAINT_UNAVAILABLE');}
   const data=await response.json() as {images?:{url?:string}[];has_nsfw_concepts?:boolean[]};
   const images:string[]=[];

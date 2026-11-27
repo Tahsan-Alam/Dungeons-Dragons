@@ -4,6 +4,8 @@ Record user-visible changes at version checkpoints. Git history and pull request
 
 ## Unreleased
 
+- Make your own hero: the Hero step's last card opens a builder for a name, one of the eight classes, a colour and who they are. With painting on, paint them too: the picture stands on the board, in the turn order, on their sheet and in replays. Each player gets 2 Game Master pictures and 2 hero pictures a day.
+
 - Paint your own Game Master: with AI on, the builder can turn your choices and a few words into a picture in the realm's style (FLUX with the team's style LoRA). Each try paints two; keep one or keep the drawing. Up to 4 pictures per player per day. Descriptions can't name characters from other stories (describe the look instead), a crown replaces the hat rather than sitting on it, and a picture with the figure cut off at the edge isn't offered. The picture stands in every scene, card and replay; the drawing stays as the fallback.
 
 - Your own Game Master, and Game Masters made with the AI, are now drawn as full figures in the same style as the Wanderer, the Survivor and the Cursed One, instead of the soft painted portrait with orbiting sparks. Pick a person, spirit, cat, owl, fox or dragon; their colour dresses them, glasses and crowns are drawn on, and how they tell it sets their silhouette, hat and what they carry: a wide hat and a lantern for hope, a feathered cap, a book and a tossed d20 for a smile, a tall hat, high collar and candle for a cost. Every one keeps a pouch of dice. They stand in their scene at setup, the chapter opening, Ask, the tale conversation and the ending, and their face sits in the play rail and journal like the built-ins.

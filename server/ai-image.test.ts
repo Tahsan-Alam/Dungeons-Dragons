@@ -1,12 +1,12 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {BudgetLedger,MemoryLedger} from './ai-ledger.ts';
-import {MemoryImageStore,imagesConfigured,imagesPerPlayerDay,paintGameMaster,paintPrompt,parsePaintRequest,type PaintRequest} from './ai-image.ts';
+import {MemoryImageStore,heroPaintPrompt,imagesConfigured,imagesPerPlayerDay,paintGameMaster,paintPrompt,parsePaintRequest,type PaintRequest} from './ai-image.ts';
 import {parseNarrator} from '../game/creation.ts';
 import {ownGameMaster} from '../game/own-game-master.ts';
 
 const env={FAL_KEY:'fal-test-only',FAL_LORA_URL:'https://v3b.fal.media/files/b/lora/pytorch_lora_weights.safetensors',AI_ENABLE_IMAGES:'I_ACCEPT_PAID_IMAGES'};
-const request:PaintRequest={name:'Mother Ash',form:'owl',accessory:'none',color:'#87bdcf',tone:'hopeful',description:'a retired lighthouse keeper',requestId:'paint-0001'};
+const request:PaintRequest={kind:'gm',name:'Mother Ash',form:'owl',accessory:'none',color:'#87bdcf',tone:'hopeful',description:'a retired lighthouse keeper',requestId:'paint-0001'};
 const jpeg=(n:number)=>new Uint8Array([0xff,0xd8,0xff,n,1,2,3]);
 
 function fakeFal(options:{nsfw?:boolean[];urls?:string[];status?:number;flagged?:boolean}={}){
@@ -45,7 +45,7 @@ test('painting needs the owner to switch it on and a daily allowance',()=>{
  assert.equal(imagesConfigured({...env,AI_ENABLE_IMAGES:'yes'}),false);
  assert.equal(imagesConfigured({...env,FAL_LORA_URL:'https://example.com/lora.safetensors'}),false);
  assert.equal(imagesConfigured(env),true);
- assert.equal(imagesPerPlayerDay({}),4);assert.equal(imagesPerPlayerDay({AI_IMAGES_PER_PLAYER_DAY:'40'}),12);assert.equal(imagesPerPlayerDay({AI_IMAGES_PER_PLAYER_DAY:'-1'}),0);
+ assert.equal(imagesPerPlayerDay({}),2);assert.equal(imagesPerPlayerDay({AI_IMAGES_PER_PLAYER_DAY:'40'}),12);assert.equal(imagesPerPlayerDay({AI_IMAGES_PER_PLAYER_DAY:'-1'}),0);
 });
 
 test('an unconfigured server never calls the painter',async()=>{
@@ -109,4 +109,20 @@ test('a description naming a character from another story is refused before anyt
  const {fetcher,calls}=fakeFal(),memory=new MemoryLedger();
  await assert.rejects(paintGameMaster({...request,description:'Avatar the last airbender'},{env,ledger:new BudgetLedger(memory),store:new MemoryImageStore(),fetcher}),{code:'PAINT_BORROWED'});
  assert.equal(calls.length,0);assert.deepEqual((await memory.read()).entries,{});
+});
+
+test('a hero paint request names a class, and the class sets the gear in the prompt',()=>{
+ const hero=parsePaintRequest({kind:'hero',name:'Tamsin',heroClass:'ranger',color:'#b2c877',description:'freckles and a fox-fur collar',requestId:'hero-0001'});
+ assert.deepEqual(hero,{kind:'hero',name:'Tamsin',heroClass:'ranger',color:'#b2c877',description:'freckles and a fox-fur collar',requestId:'hero-0001'});
+ assert.equal(parsePaintRequest({kind:'hero',name:'Tamsin',heroClass:'wizard',color:'#b2c877',requestId:'hero-0001'}),null);
+ assert.equal(parsePaintRequest({kind:'villain',name:'Tamsin',form:'owl',accessory:'none',color:'#87bdcf',tone:'hopeful',requestId:'hero-0001'}),null);
+ const prompt=heroPaintPrompt(hero as Parameters<typeof heroPaintPrompt>[0]);
+ assert.match(prompt,/^PRSTYLE, full body from head to feet, fantasy hero, a ranger in a hood and cloak with a longbow/);
+ assert.match(prompt,/moss green colours, freckles and a fox-fur collar/);
+});
+test('a hero is painted through the same checks and ledger',async()=>{
+ const {fetcher,calls}=fakeFal();
+ const result=await paintGameMaster({kind:'hero',name:'Tamsin',heroClass:'mage',color:'#a3bbf0',description:'',requestId:'hero-0002'},{env,ledger:new BudgetLedger(new MemoryLedger()),store:new MemoryImageStore(),fetcher});
+ assert.equal(result.images.length,2);
+ assert.match(JSON.parse(String(calls.find(c=>c.url.includes('fal.run'))!.init!.body)).prompt,/fantasy hero, a mage in a long robe/);
 });

@@ -1,6 +1,7 @@
 import type {Actor,Biome,KeeperKind} from '../../game/types.ts';
 import {HEROES,HERO_ART_RATIO,HERO_FEET,type FaceCentre,type HeroPreset} from '../../game/presets.ts';
 import {CUSTOM_FACE,customHeroArt} from './hero-figure.ts';
+import {paintedFigure} from './painted-portrait.ts';
 import {ENEMY_ART,type EnemyArtKey} from './enemy-art-data.ts';
 
 /* Which artwork stands for an actor. Presentation only: nothing here reads or changes the rules. */
@@ -53,7 +54,10 @@ export const heroAnchor=(hero:HeroPreset)=>hero.id==='mira'?.58:.5;
 /** The full-body drawing that stands for a hero: their roster painting, or one drawn for them from their name,
     class and colour (app/ui/hero-figure.ts). Both share the art size, ground line and face position. */
 export interface HeroDrawing {art:string;face:FaceCentre;anchor:number;preset?:HeroPreset}
-export function heroDrawing(actor:Pick<Actor,'name'|'heroClass'|'color'>):HeroDrawing{
+export function heroDrawing(actor:Pick<Actor,'name'|'heroClass'|'color'>&{portrait?:string}):HeroDrawing{
+ // A painted portrait the player chose comes first, once the browser has cut it out; the drawing stands in meanwhile.
+ const painted=actor.portrait?paintedFigure(actor.portrait,'hero'):undefined;
+ if(painted)return {art:painted.art,face:painted.face,anchor:.5};
  const preset=heroArtFor(actor);
  return preset?{art:preset.art,face:preset.face,anchor:heroAnchor(preset),preset}:{art:customHeroArt(actor),face:CUSTOM_FACE,anchor:.5};
 }

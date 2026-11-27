@@ -13,7 +13,7 @@ import {ActorPortrait} from './ActorArt';
 import {heroDrawing} from './actor-art';
 import Modal from './Modal';
 import {Portrait} from './RealmKit';
-import {useGameMasterDrawing} from './painted-portrait';
+import {useGameMasterDrawing,usePaintedTick} from './painted-portrait';
 import ChapterMap from './ChapterMap';
 import {routeView} from './route-map';
 import JournalDrawer,{type JournalEntry,type JournalTab} from './JournalDrawer';
@@ -112,6 +112,7 @@ export default function PlayTable({game,room,session,busy,connection,onAction,on
  }
  const party=game.actors.filter(a=>!a.enemy),foes=game.actors.filter(a=>a.enemy&&!a.defeated&&a.hp>0);const turns=useMemo(()=>upcomingTurns(game),[game]);
  const entries=useMemo(()=>{const list:JournalEntry[]=[...game.events.slice(-45).map(event=>({key:`event-${event.id}`,at:event.id,event})),...(game.story?.narrations.slice(-10)??[]).map(narration=>({key:`narration-${narration.eventId}`,at:narration.eventId,narration}))];return list.sort((a,b)=>b.at-a.at||Number(!!b.narration)-Number(!!a.narration))},[game.events,game.story?.narrations]);
+ usePaintedTick(); // the hero sheet reads painted pictures directly
  const narrator=game.options.creation?.narrator,narratorName=narrator?.name??'Storyteller',gmFigure=useGameMasterDrawing(narrator);
  const caption=currentNarration(game),host=!room||room.hostId===session?.playerId;
  const turnRole=(a:Actor)=>a.enemy?'Enemy':a.id===mine?.id?'You':a.bot?'Companion':'Player';

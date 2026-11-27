@@ -28,9 +28,10 @@ test('the paint route keeps to the switch, the daily allowance and serves stored
   assert.deepEqual([...new Uint8Array(await picture.arrayBuffer())],[255,216,255,1]);
   assert.equal((await mf.dispatchFetch(`http://localhost/api/ai/image/${'0'.repeat(32)}`)).status,404);
   assert.equal((await mf.dispatchFetch('http://localhost/api/ai/image/not-an-id')).status,404);
-  assert.equal((await post({...paint,requestId:'paint-worker-2'})).status,200);
-  // Four pictures a day: the third try is refused before fal is called.
-  const third=await post({...paint,requestId:'paint-worker-3'});assert.equal(third.status,429);assert.equal((await third.json() as {code?:string}).code,'PAINT_DAILY_LIMIT');
+  // Two pictures a day for each kind: a second Game Master try is refused before fal is called, a hero still paints.
+  const second=await post({...paint,requestId:'paint-worker-2'});assert.equal(second.status,429);assert.equal((await second.json() as {code?:string}).code,'PAINT_DAILY_LIMIT');
+  assert.equal((await post({kind:'hero',name:'Tamsin',heroClass:'ranger',color:'#b2c877',description:'',requestId:'paint-worker-3'})).status,200);
+  assert.equal((await post({kind:'hero',name:'Tamsin',heroClass:'ranger',color:'#b2c877',description:'',requestId:'paint-worker-4'})).status,429);
   mock.assertNoPendingInterceptors();
  }finally{await mf.dispose();}
 });

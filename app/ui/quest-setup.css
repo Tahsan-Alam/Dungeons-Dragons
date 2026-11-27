@@ -270,3 +270,16 @@ html:root[data-color-mode][data-theme] body .realm button.tc-voice-btn:disabled{
 @keyframes qs-paint-pulse{50%{opacity:.5}}
 @media (prefers-reduced-motion:reduce){.qs-paint-loading{animation:none}}
 .qs-paint-unusable{opacity:.55;cursor:default}.qs-paint-unusable .qs-paint-loading{animation:none}
+/* Your own hero: the figure on the hero stage beside the builder, in the roster's right-hand column. */
+.qs-own-hero{display:grid;grid-template-columns:minmax(0,40%) minmax(0,1fr);align-items:start;gap:0;max-height:clamp(320px,var(--qs-h),760px)}
+.qs-own-hero .qs-stage{height:auto;width:100%;aspect-ratio:600/560}
+.qs-own-hero .qs-own-form{max-height:clamp(320px,var(--qs-h),760px);background:#0f141b;border:1px solid #2a3340}
+.qs-own-classes{grid-template-columns:repeat(4,minmax(0,1fr))}
+.qs-own-class-note{margin:6px 0 0;font:500 12.5px Inter,system-ui,sans-serif;color:#a9b3be}
+.qs-paint-drawing.hero{object-position:50% 18%}
+@media (max-width:900px){
+ .qs-own-hero{grid-template-columns:minmax(0,1fr);max-height:none;order:-1}
+ .qs-own-hero .qs-stage{max-width:340px;justify-self:center}
+ .qs-own-hero .qs-own-form{max-height:none;overflow:visible}
+ .qs-own-classes{grid-template-columns:repeat(4,minmax(0,1fr))}
+}

@@ -1,15 +1,18 @@
 'use client';
 import {useSyncExternalStore} from 'react';
-import type {FaceCentre} from '../../game/presets';
-import type {NarratorProfile} from '../../game/creation';
-import {gameMasterDrawing} from './game-master-figure';
+import type {FaceCentre} from '../../game/presets.ts';
+import type {NarratorProfile} from '../../game/creation.ts';
+import {gameMasterDrawing} from './game-master-figure.ts';
 
 /* A painted Game Master arrives as a picture on a plain light background. Before it stands in a scene it is
    cut out and placed in the built-in Game Masters' frame (400 × 520, feet on y 488, centred), so every crop,
    card and scene that fits the Wanderer fits it too. The work happens once per picture, in the browser. */
 
 export interface PaintedFigure {art:string;face:FaceCentre}
-const W=400,H=520,GROUND=488,TOP=34;
+/** Where a cut-out stands: a Game Master in the built-in Game Masters' 400 × 520 frame, a hero in the roster
+    heroes' 376 × 488 frame (feet on its ground line, about the same height as a roster hero). */
+export type PaintedKind='gm'|'hero';
+const FRAMES:Record<PaintedKind,{W:number;H:number;GROUND:number;TOP:number}>={gm:{W:400,H:520,GROUND:488,TOP:34},hero:{W:376,H:488,GROUND:466,TOP:72}};
 const done=new Map<string,PaintedFigure|'failed'>(),running=new Set<string>(),listeners=new Set<()=>void>();
 const notify=()=>{for(const l of listeners)l()};
 export const portraitUrl=(id:string)=>`/api/ai/image/${id}`;
@@ -34,7 +37,8 @@ export function cutOut(data:Uint8ClampedArray,width:number,height:number){
  return maxX<0?null:{minX,minY,maxX,maxY};
 }
 
-async function prepare(id:string){
+async function prepare(id:string,kind:PaintedKind){
+ const {W,H,GROUND,TOP}=FRAMES[kind];
  const image=new Image();image.crossOrigin='anonymous';image.src=portraitUrl(id);await image.decode();
  const source=document.createElement('canvas');source.width=image.naturalWidth;source.height=image.naturalHeight;
  const sctx=source.getContext('2d',{willReadFrequently:true})!;sctx.drawImage(image,0,0);
@@ -53,16 +57,21 @@ async function prepare(id:string){
 }
 
 /** The cut-out figure for a painted portrait, or undefined while it is loading or if it could not be used. */
-export function paintedFigure(id:string|undefined):PaintedFigure|undefined{
+export function paintedFigure(id:string|undefined,kind:PaintedKind='gm'):PaintedFigure|undefined{
  if(!id||typeof document==='undefined')return undefined;
- const ready=done.get(id);if(ready)return ready==='failed'?undefined:ready;
- if(!running.has(id)){running.add(id);prepare(id).then(f=>done.set(id,f),()=>done.set(id,'failed')).finally(()=>{running.delete(id);notify();});}
+ const key=`${kind}:${id}`,ready=done.get(key);if(ready)return ready==='failed'?undefined:ready;
+ if(!running.has(key)){running.add(key);prepare(id,kind).then(f=>done.set(key,f),()=>done.set(key,'failed')).finally(()=>{running.delete(key);version++;notify();});}
  return undefined;
 }
+let version=0;
 const subscribe=(l:()=>void)=>{listeners.add(l);return()=>{listeners.delete(l)}};
 /** React hook form of paintedFigure: re-renders when the cut-out is ready. */
-export function usePaintedFigure(id:string|undefined){
- return useSyncExternalStore(subscribe,()=>paintedFigure(id),()=>undefined);
+export function usePaintedFigure(id:string|undefined,kind:PaintedKind='gm'){
+ return useSyncExternalStore(subscribe,()=>paintedFigure(id,kind),()=>undefined);
+}
+/** Re-renders a screen whenever any painted picture finishes cutting out, for code that reads paintedFigure directly. */
+export function usePaintedTick(){
+ return useSyncExternalStore(subscribe,()=>version,()=>0);
 }
 
 /** The figure that stands for a narrator: their painted portrait once it is ready, otherwise their drawing
@@ -72,4 +81,4 @@ export function useGameMasterDrawing(profile?:NarratorProfile|null):PaintedFigur
  return painted??gameMasterDrawing(profile);
 }
 /** True once a picture has been tried and could not be cut out. */
-export const paintedFailed=(id:string)=>done.get(id)==='failed';
+export const paintedFailed=(id:string,kind:PaintedKind='gm')=>done.get(`${kind}:${id}`)==='failed';

@@ -14,5 +14,5 @@ AI_MONTH_MICRO_USD=4000000
 AI_ENABLE_IMAGES=DISABLED
 FAL_KEY=
 FAL_LORA_URL=
-# Pictures per player per UTC day (two per try). Default 4, at most 12.
-AI_IMAGES_PER_PLAYER_DAY=4
+# Pictures per player per UTC day for each kind (Game Master, hero), two per try. Default 2, at most 12.
+AI_IMAGES_PER_PLAYER_DAY=2

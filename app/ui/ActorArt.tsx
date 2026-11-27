@@ -1,4 +1,5 @@
 'use client';
+import {usePaintedTick} from './painted-portrait';
 import {memo} from 'react';
 import type {Actor,Biome} from '../../game/types';
 import {HeroArt} from './Art';
@@ -14,6 +15,7 @@ export function actorFigure(actor:Actor,biome:Biome):{src:string;place:Placement
 
 /** An upright figure standing on its tile in the scene view. The image ignores the pointer; a body-sized area takes clicks. */
 export const ActorSprite=memo(function ActorSprite({actor,biome}:{actor:Actor;biome:Biome}){
+ usePaintedTick(); // A painted hero swaps in once the browser has cut it out.
  const figure=actorFigure(actor,biome);
  if(!figure)return <svg x="-25" y="-45" width="50" height="58" viewBox="0 0 80 90"><HeroArt heroClass={actor.heroClass} color={actor.color} enemy={actor.enemy}/></svg>;
  const {src,place,enemy}=figure,hitTop=Math.max(place.top,-110);
@@ -27,6 +29,7 @@ export function spriteTop(actor:Actor,biome:Biome){return actorFigure(actor,biom
 
 /** A head-and-shoulders crop from the same artwork, for turn order, lists and detail panels. */
 export const ActorPortrait=memo(function ActorPortrait({actor,biome}:{actor:Actor;biome:Biome}){
+ usePaintedTick();
  const key=actor.enemy?enemyArtKey(actor,biome):undefined,hero=actor.enemy?undefined:heroDrawing(actor);
  const box=key?enemyPortraitBox(key):hero?heroPortraitBox(hero):null,src=key?ENEMY_ART[key].src:hero?.art;
  if(!box||!src)return <HeroArt heroClass={actor.heroClass} color={actor.color} enemy={actor.enemy}/>;

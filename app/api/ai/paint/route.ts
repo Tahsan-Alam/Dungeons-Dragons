@@ -7,7 +7,7 @@ import {BudgetLedger,D1Ledger} from '../../../../server/ai-ledger';
 import {D1RateLimiter} from '../../../../server/rate-limit';
 import {D1ImageStore,IMAGES_PER_PAINT,imagesConfigured,imagesPerPlayerDay,paintGameMaster,parsePaintRequest} from '../../../../server/ai-image';
 
-/** Paint your own Game Master: two options from the image model, stored and returned by id. */
+/** Paint your own Game Master or hero: two options from the image model, stored and returned by id. */
 export async function POST(request:Request){
  return handle(async()=>{
   const input=parsePaintRequest(await body(request));
@@ -19,8 +19,10 @@ export async function POST(request:Request){
   // Each player (by connection) gets a few paintings per UTC day, on top of the site-wide ledger caps.
   const paints=Math.floor(imagesPerPlayerDay(env)/IMAGES_PER_PAINT);
   const identity=request.headers.get('cf-connecting-ip')??'local-preview';
-  if(paints<1||!await new D1RateLimiter(env.DB!).consume('paint',identity,Date.now(),paints,86_400_000))
-   throw new RoomError('You’ve used today’s paintings. Your Game Master keeps their drawing; try again tomorrow.',429,'PAINT_DAILY_LIMIT');
+  // Game Masters and heroes have separate allowances.
+  const who=input.kind==='hero'?'hero':'Game Master';
+  if(paints<1||!await new D1RateLimiter(env.DB!).consume(input.kind==='hero'?'paint-hero':'paint',identity,Date.now(),paints,86_400_000))
+   throw new RoomError(`You’ve used today’s ${who} paintings. They keep their drawing; try again tomorrow.`,429,'PAINT_DAILY_LIMIT');
   return paintGameMaster(input,{env,ledger:new BudgetLedger(new D1Ledger(env.DB!),aiCaps(env)),store:new D1ImageStore(env.DB!),signal:request.signal});
  });
 }

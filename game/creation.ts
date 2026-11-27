@@ -16,7 +16,9 @@ export const NARRATOR_VOICES=['vesper','willow','stone','marin','cedar','gleam',
 export interface NarratorAvatar {form:typeof NARRATOR_FORMS[number];accessory:typeof NARRATOR_ACCESSORIES[number];}
 export interface NarratorProfile {name:string;persona:string;personality:string[];speakingStyle:string[];appearance:string[];model:HeroClass;color:string;avatar?:NarratorAvatar;voice?:typeof NARRATOR_VOICES[number];portrait?:string;}
 export interface StoryBlueprint {title:string;synopsis:string;timeline:string;world:string;locations:string[];biome:Biome;}
-export interface HeroProfile {name:string;background:string;personality:string[];heroClass:HeroClass;color:string;}
+export interface HeroProfile {name:string;background:string;personality:string[];heroClass:HeroClass;color:string;
+ /** A painted portrait the player chose for their own hero (app/api/ai/paint), as a server id. Presentation only. */
+ portrait?:string;}
 export interface AdventureBlueprint {narrator:NarratorProfile;story:StoryBlueprint;hero:HeroProfile;}
 export type CreationAction='narrators'|'story'|'heroes'|'hero'|'trait'|'sample'|'guide';
 export type CreatorFocus='narrator'|'story'|'hero';
@@ -48,7 +50,7 @@ export function parseStory(v:unknown,editing=false):StoryBlueprint|null {
 }
 export function parseHero(v:unknown,editing=false):HeroProfile|null {
  v=prose(v);const text=(value:unknown,max:number)=>creationText(value,max)||(editing&&value==='');
- if(!object(v)||!exact(v,['name','background','personality','heroClass','color'])||!text(v.name,24)||!text(v.background,240)||(!list(v.personality)&&!(editing&&Array.isArray(v.personality)&&v.personality.length===0))||!model(v.heroClass)||!HERO_COLORS.includes(String(v.color)))return null;
+ if(!object(v)||!exact(v,['name','background','personality','heroClass','color',...('portrait'in v?['portrait']:[])])||!text(v.name,24)||!text(v.background,240)||(!list(v.personality)&&!(editing&&Array.isArray(v.personality)&&v.personality.length===0))||!model(v.heroClass)||!HERO_COLORS.includes(String(v.color))||(v.portrait!==undefined&&!isPortraitId(v.portrait)))return null;
  return structuredClone(v) as unknown as HeroProfile;
 }
 export function parseBlueprint(v:unknown):AdventureBlueprint|null {
