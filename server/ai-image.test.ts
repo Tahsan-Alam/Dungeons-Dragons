@@ -33,9 +33,11 @@ test('a paint request accepts the builder choices and a short description only',
 
 test('the prompt is built by the game and carries the style trigger',()=>{
  const prompt=paintPrompt(request);
- assert.match(prompt,/^PRSTYLE, full-body fantasy game master, an owl storyteller/);
- assert.match(prompt,/sky blue clothes/);assert.match(prompt,/holding up a lantern/);assert.match(prompt,/a retired lighthouse keeper/);
- assert.match(prompt,/no text, no signature$/);
+ assert.match(prompt,/^PRSTYLE, full body from head to feet, fantasy storyteller, an owl storyteller/);
+ assert.match(prompt,/sky blue clothes/);assert.match(prompt,/wearing a wide traveller hat/);assert.match(prompt,/holding up a lantern/);assert.match(prompt,/a retired lighthouse keeper/);
+ assert.match(prompt,/feet visible/);assert.match(prompt,/no text, no signature$/);
+ const crowned=paintPrompt({...request,accessory:'crown'});
+ assert.match(crowned,/wearing a small gold crown and no hat/);assert.doesNotMatch(crowned,/traveller hat/);
 });
 
 test('painting needs the owner to switch it on and a daily allowance',()=>{
@@ -101,4 +103,10 @@ test('a narrator carries a painted portrait only as a server id',()=>{
  assert.equal(own.portrait,'a'.repeat(32));
  assert.equal(parseNarrator({...own,portrait:'https://example.com/x.png'}),null);
  assert.equal(ownGameMaster({name:'Mother Ash',who:'',tone:'hopeful',form:'owl',accessory:'none',color:'#87bdcf',portrait:'nope'})!.portrait,undefined);
+});
+
+test('a description naming a character from another story is refused before anything is reserved',async()=>{
+ const {fetcher,calls}=fakeFal(),memory=new MemoryLedger();
+ await assert.rejects(paintGameMaster({...request,description:'Avatar the last airbender'},{env,ledger:new BudgetLedger(memory),store:new MemoryImageStore(),fetcher}),{code:'PAINT_BORROWED'});
+ assert.equal(calls.length,0);assert.deepEqual((await memory.read()).entries,{});
 });

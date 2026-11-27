@@ -41,6 +41,8 @@ async function prepare(id:string){
  const pixels=sctx.getImageData(0,0,source.width,source.height),box=cutOut(pixels.data,source.width,source.height);
  // A picture whose background could not be cleared (a frame or a scene behind the figure) is not used.
  if(!box||((box.maxX-box.minX)>source.width*.9&&(box.maxY-box.minY)>source.height*.9))throw new Error('background');
+ // A figure cut off by the picture's edge (only head and shoulders, or feet out of frame) can't stand in a scene.
+ const edge=3;if(box.minX<edge||box.minY<edge||box.maxX>=source.width-edge||box.maxY>=source.height-edge)throw new Error('cropped');
  sctx.putImageData(pixels,0,0);
  const bw=box.maxX-box.minX+1,bh=box.maxY-box.minY+1,scale=Math.min((GROUND-TOP)/bh,(W-16)/bw);
  const out=document.createElement('canvas');out.width=W;out.height=H;const ctx=out.getContext('2d')!;

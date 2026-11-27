@@ -2,6 +2,7 @@ import {RoomError} from './rooms.ts';
 import type {BudgetLedger} from './ai-ledger.ts';
 import {creationText,NARRATOR_ACCESSORIES,NARRATOR_FORMS,isPortraitId} from '../game/creation.ts';
 import {HERO_COLORS} from '../game/types.ts';
+import {borrowedName} from '../game/paint-words.ts';
 
 /* Painting a Game Master with the image model (FLUX with the team's style LoRA, hosted on fal).
    The server builds the prompt from the builder's choices and one short, checked description, reserves
@@ -35,11 +36,14 @@ export function parsePaintRequest(v:Record<string,unknown>):PaintRequest|null{
 
 const COLOUR_NAMES:Record<string,string>={'#ef997c':'coral','#a3bbf0':'cornflower blue','#edcf75':'golden yellow','#b19bd3':'lavender','#8ac4ae':'sea green','#f0a6b2':'rose pink','#87bdcf':'sky blue','#cbad81':'tan','#b2c877':'moss green','#a4a4bf':'slate lilac'};
 const FORM_WORDS:Record<PaintRequest['form'],string>={human:'a human storyteller',spirit:'a glowing spirit storyteller with no feet, its robe fading into wisps',cat:'a cat storyteller standing upright',owl:'an owl storyteller standing upright',fox:'a fox storyteller standing upright',dragon:'a small dragon storyteller standing upright, with wings'};
-const TONE_WORDS:Record<PaintRequest['tone'],string>={hopeful:'warm and kind, wide traveller hat, holding up a lantern',wry:'a sly half smile, feathered cap tipped to one side, holding a book',grave:'solemn, tall hat and high collar, long worn cloak, holding an hourglass'};
+// The hat is kept apart so a crown can take its place: a crown on top of a hat reads as a mistake.
+const TONE_WORDS:Record<PaintRequest['tone'],{hat:string;rest:string}>={hopeful:{hat:'a wide traveller hat',rest:'warm and kind, holding up a lantern'},wry:{hat:'a feathered cap tipped to one side',rest:'a sly half smile, a cape over one shoulder, holding a book'},grave:{hat:'a tall pointed hat',rest:'solemn, a high collar and a long worn cloak, holding an hourglass'}};
 /** The prompt is ours; the player's words only fill the description slot. */
 export function paintPrompt(r:PaintRequest){
- const wear=r.accessory==='glasses'?', wearing round glasses':r.accessory==='crown'?', wearing a small gold crown':'';
- return `PRSTYLE, full-body fantasy game master, ${FORM_WORDS[r.form]}, dressed in ${COLOUR_NAMES[r.color]??'muted'} clothes, ${TONE_WORDS[r.tone]}${wear}${r.description?`, ${r.description}`:''}, simple clear silhouette, flat colours, thick dark outline, standing, front view, isolated on a plain flat white background, no border, no text, no signature`;
+ const tone=TONE_WORDS[r.tone],head=r.accessory==='crown'?'a small gold crown and no hat':tone.hat;
+ const wear=r.accessory==='glasses'?', round glasses':'';
+ // Matches the training captions (full body, centred, plain white) so the picture can be cut out and stood on the ground.
+ return `PRSTYLE, full body from head to feet, fantasy storyteller, ${FORM_WORDS[r.form]}, dressed in ${COLOUR_NAMES[r.color]??'muted'} clothes, wearing ${head}${wear}, ${tone.rest}${r.description?`, ${r.description}`:''}, feet visible, whole figure inside the frame, standing, front view, centered, plain white background, no glow halo, no border, no text, no signature`;
 }
 
 export interface ImageStore {put(id:string,contentType:string,base64:string,now:number):Promise<void>;get(id:string):Promise<{contentType:string;base64:string}|null>}
@@ -72,6 +76,8 @@ export async function paintGameMaster(request:PaintRequest,deps:{env:ImageEnv;le
  const key=`paint:${request.requestId}`;
  const cached=await ledger.cached(key) as {images:string[]}|null;
  if(cached){if(!cached.images.length)throw new RoomError('That painting did not finish. Try again.',503,'PAINT_UNAVAILABLE');return cached;}
+ const borrowed=borrowedName(request.description);
+ if(borrowed)throw new RoomError(`“${borrowed}” belongs to another story. Describe how they look instead.`,400,'PAINT_BORROWED');
  if(await descriptionFlagged(request.description,env,fetcher,deps.signal))throw new RoomError('That description can’t be painted. Try different words.',400,'PAINT_REJECTED');
  const reservation=await ledger.reserve(key,`paint:${new Date(now).toISOString().slice(0,10)}`,PAINT_RESERVE_MICRO_USD,4_000);
  if(reservation==='blocked')throw new RoomError('Today’s painting allowance is used up. Your Game Master keeps their drawing.',503,'PAINT_ALLOWANCE');

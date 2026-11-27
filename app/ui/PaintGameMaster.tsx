@@ -3,6 +3,7 @@ import {useEffect,useState} from 'react';
 import {GAME_MASTER_ART_RATIO} from '../../game/presets';
 import type {OwnGameMasterInput} from '../../game/own-game-master';
 import {Portrait} from './RealmKit';
+import {borrowedName} from '../../game/paint-words';
 import {paintedFailed,usePaintedFigure} from './painted-portrait';
 
 type Access={imagesAvailable?:boolean;imagesPerDay?:number};
@@ -18,7 +19,7 @@ function useImageAccess(){
 
 function Option({id,checked,onPick,label}:{id:string;checked:boolean;onPick:()=>void;label:string}){
  const figure=usePaintedFigure(id),failed=paintedFailed(id);
- if(failed)return <span className="realm-choice qs-paint-option qs-paint-unusable" title="The painter left a background that can’t be cleared."><span className="qs-paint-loading" aria-hidden="true"/><span>Can’t use</span></span>;
+ if(failed)return <span className="realm-choice qs-paint-option qs-paint-unusable" title="The figure can’t be cut out cleanly: a background or frame behind it, or part of it outside the picture."><span className="qs-paint-loading" aria-hidden="true"/><span>Can’t use</span></span>;
  return <button type="button" role="radio" aria-checked={checked} aria-label={label} className="realm-choice qs-paint-option" onClick={onPick} disabled={!figure}>
   {figure?<Portrait art={figure.art} face={figure.face} ratio={GAME_MASTER_ART_RATIO} width={64} height={78} scale={1.7}/>:<span className="qs-paint-loading" aria-hidden="true"/>}
   <span>{label}</span></button>;
@@ -30,8 +31,9 @@ export default function PaintGameMaster({own,name,drawing,setPortrait}:{own:OwnG
  const access=useImageAccess();
  const [description,setDescription]=useState(''),[pending,setPending]=useState(false),[error,setError]=useState(''),[options,setOptions]=useState<string[]>(own.portrait?[own.portrait]:[]);
  if(!access)return null;
+ const borrowed=borrowedName(description);
  async function paint(){
-  if(pending||!name.trim())return;setPending(true);setError('');
+  if(pending||!name.trim()||borrowed)return;setPending(true);setError('');
   try{
    const response=await fetch('/api/ai/paint',{method:'POST',headers:{'Content-Type':'application/json'},
     body:JSON.stringify({name,form:own.form,accessory:own.accessory,color:own.color,tone:own.tone,description,requestId:crypto.randomUUID()})});
@@ -47,9 +49,10 @@ export default function PaintGameMaster({own,name,drawing,setPortrait}:{own:OwnG
   <label className="qs-paint-describe"><span className="sr-only">A few words for the painter</span>
    <input name="paint-description" value={description} maxLength={80} placeholder="A few words: a one-eyed sailor with a parrot" autoComplete="off" onChange={e=>setDescription(e.target.value)}/></label>
   <div className="qs-paint-row">
-   <button type="button" className="qs-own-chip qs-paint-go" onClick={()=>void paint()} disabled={pending||!name.trim()}>{pending?'Painting…':options.length?'Paint again':'Paint them'}</button>
+   <button type="button" className="qs-own-chip qs-paint-go" onClick={()=>void paint()} disabled={pending||!name.trim()||!!borrowed}>{pending?'Painting…':options.length?'Paint again':'Paint them'}</button>
    {!name.trim()?<span className="qs-paint-hint">Name them first.</span>:null}
   </div>
+  {borrowed?<p className="qs-own-taken" role="status">“{borrowed}” belongs to another story. Describe how they look instead.</p>:null}
   {error?<p className="qs-own-taken" role="status">{error}</p>:null}
   {options.length?<div className="qs-paint-options" role="radiogroup" aria-label="Choose their picture">
    <button type="button" role="radio" aria-checked={!own.portrait} aria-label="Keep the drawing" className="realm-choice qs-paint-option" onClick={()=>setPortrait(undefined)}>
